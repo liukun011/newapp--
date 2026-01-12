@@ -1,0 +1,157 @@
+import React from 'react';
+import { ArrowLeft, Pencil, FileText, Mic, ChevronRight, FilePlus } from 'lucide-react';
+import Button from '../components/Button';
+import Mascot from '../components/Mascot';
+import { ROCKET_MASCOT_URL, COLORS } from '../constants';
+import { DealRecord } from '../types';
+
+interface DueDiligencePageProps {
+  deal: DealRecord | null;
+  onBack: () => void;
+  onNavigateToRecording: () => void;
+  onNavigateToMaterials: () => void;
+  onEditInfo?: () => void;
+}
+
+const DueDiligencePage: React.FC<DueDiligencePageProps> = ({ 
+  deal,
+  onBack, 
+  onNavigateToRecording,
+  onNavigateToMaterials,
+  onEditInfo
+}) => {
+  return (
+    <div className="flex flex-col min-h-screen bg-[#F7F8FA] relative">
+      {/* Background Gradient for Top Section */}
+      <div 
+        className="absolute top-0 left-0 right-0 h-[400px] z-0 pointer-events-none"
+        style={{
+          background: `linear-gradient(180deg, ${COLORS.backgroundStart} 0%, rgba(247,248,250,0) 100%)`
+        }}
+      />
+
+      {/* NavBar */}
+      <div className="relative z-10 flex items-center justify-between px-4 py-3">
+        <button onClick={onBack} className="p-2 -ml-2 text-slate-700 hover:bg-white/50 rounded-full">
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="text-lg font-bold text-slate-800">{deal?.interviewCust || '尽调详情'}</h1>
+        <button 
+          onClick={onEditInfo}
+          className="p-2 -mr-2 text-slate-700 hover:bg-white/50 rounded-full"
+        >
+          <Pencil size={20} />
+        </button>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-4 pb-8 relative z-10 space-y-4">
+        
+        {/* Status Bar / Mascot Message */}
+        <div className="flex items-end mt-2 mb-4 relative">
+          <div className="w-16 h-16 mr-3 flex-shrink-0 relative z-20">
+            <Mascot size="small" />
+          </div>
+          
+          <div className="bg-white rounded-tr-2xl rounded-br-2xl rounded-bl-2xl p-3 shadow-sm relative z-10 flex-1 mb-2">
+            <p className="text-sm text-slate-700 font-medium">记录创建成功，赶紧开始访谈吧...</p>
+          </div>
+
+          {/* Floating Timer */}
+          <div className="absolute right-0 top-6 bg-white rounded-full pl-2 pr-4 py-2 shadow-lg flex items-center gap-2 border border-teal-50 z-30 transform translate-y-[-50%]">
+             <div className="w-5 h-5 rounded-full border-[3px] border-teal-400 flex items-center justify-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+             </div>
+             <span className="text-teal-600 font-mono font-bold text-sm tracking-wide">60:16</span>
+          </div>
+        </div>
+
+        {/* Advice Card */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <h2 className="text-slate-900 font-bold text-[16px] mb-3">尽调建议</h2>
+          <p className="text-slate-600 text-sm leading-relaxed text-justify">
+            A公司2024年营收显著下滑，建议深入考察其经营层面。上传流水，可获更详尽的专项分析。
+          </p>
+        </div>
+
+        {/* Report Card */}
+        <div className="rounded-3xl p-5 shadow-lg relative overflow-hidden text-white" 
+             style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #7062ff 100%)' }}>
+          <div className="relative z-10 max-w-[65%]">
+            <h2 className="text-xl font-bold mb-6">A公司尽调报告</h2>
+            
+            <div className="flex gap-3">
+              <button className="px-4 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform">
+                立即生成
+              </button>
+              <button className="px-4 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium hover:bg-white/10 active:scale-95 transition-transform">
+                更换模板
+              </button>
+            </div>
+          </div>
+
+          {/* Rocket Mascot Image */}
+          <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-40 h-40">
+            <img 
+               src={ROCKET_MASCOT_URL} 
+               alt="Rocket Mascot"
+               className="w-full h-full object-cover mix-blend-normal drop-shadow-2xl scale-110"
+               style={{ maskImage: 'linear-gradient(to left, black 70%, transparent 100%)' }}
+            />
+          </div>
+          {/* Decorative circles */}
+          <div className="absolute top-[-20px] right-[-20px] w-20 h-20 bg-white/10 rounded-full blur-xl" />
+          <div className="absolute bottom-[-10px] left-[30%] w-16 h-16 bg-white/10 rounded-full blur-lg" />
+        </div>
+
+        {/* Action Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Materials */}
+          <div 
+            className="bg-white rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[140px] cursor-pointer active:scale-95 transition-transform"
+            onClick={onNavigateToMaterials}
+          >
+            <div>
+               <h3 className="font-bold text-slate-800 text-[16px]">尽调资料</h3>
+               <p className="text-xs text-gray-400 mt-1">AI智能解析</p>
+            </div>
+            
+            <div className="flex items-end justify-between mt-4">
+               <button className="px-3 py-1.5 rounded-full bg-gray-50 text-gray-500 text-xs font-medium border border-gray-100">
+                 立即添加
+               </button>
+               <FilePlus className="text-gray-300 w-10 h-10 opacity-50" strokeWidth={1.5} />
+            </div>
+          </div>
+
+          {/* Recording */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[140px]">
+             <div>
+               <h3 className="font-bold text-slate-800 text-[16px]">访谈录音</h3>
+               <p className="text-xs text-gray-400 mt-1">AI智能转写</p>
+            </div>
+
+            <div className="flex items-end justify-between mt-4">
+               <button 
+                onClick={onNavigateToRecording}
+                className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100"
+               >
+                 +访谈录音
+               </button>
+               <Mic className="text-indigo-200 w-10 h-10" strokeWidth={1.5} />
+            </div>
+          </div>
+        </div>
+
+        {/* Questions Cell */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer">
+          <span className="font-bold text-slate-800">问题集合 12/88</span>
+          <ChevronRight className="text-gray-300" size={20} />
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default DueDiligencePage;

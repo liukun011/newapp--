@@ -1,0 +1,7 @@
+{
+  "name": "Little Fox AI",
+  "description": "A minimalist AI assistant app for interviews and due diligence recording, featuring real-time transcription and analysis.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

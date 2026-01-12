@@ -1,0 +1,4 @@
+/* 调整 SwipeCell 定位以隐藏边线 */
+.rv-swipe-cell__wrapper {
+  right: -1px !important;
+}
