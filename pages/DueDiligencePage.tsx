@@ -1,8 +1,7 @@
 import React from 'react';
-import { ArrowLeft, Pencil, FileText, Mic, ChevronRight, FilePlus } from 'lucide-react';
-import Button from '../components/Button';
+import { ArrowLeft, Pencil, Mic, ChevronRight, FilePlus } from 'lucide-react';
 import Mascot from '../components/Mascot';
-import { ROCKET_MASCOT_URL, COLORS } from '../constants';
+import { COLORS } from '../constants';
 import { DealRecord } from '../types';
 
 interface DueDiligencePageProps {
@@ -96,12 +95,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           </div>
 
           {/* Rocket Mascot Image */}
-          <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-40 h-40">
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 mt-1.5 w-36 h-36">
             <img 
-               src={ROCKET_MASCOT_URL} 
+               src="/assets/rocketxiaoli.png" 
                alt="Rocket Mascot"
-               className="w-full h-full object-cover mix-blend-normal drop-shadow-2xl scale-110"
-               style={{ maskImage: 'linear-gradient(to left, black 70%, transparent 100%)' }}
+               className="w-full h-full object-contain drop-shadow-2xl"
             />
           </div>
           {/* Decorative circles */}

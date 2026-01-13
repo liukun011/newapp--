@@ -7,14 +7,14 @@ import { dealService } from '../services/dealService';
 
 interface TemplateSelectionPageProps {
   onBack: () => void;
-  onSelectTemplate: (template: ReportTemplate) => void;
+  onPreview: (name: string, url: string) => void;
   currentTemplateId?: string;
   dealId?: string; // 尽调实例 ID
 }
 
 const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({ 
   onBack, 
-  onSelectTemplate,
+  onPreview,
   currentTemplateId,
   dealId
 }) => {
@@ -24,19 +24,33 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
   const [selectedId, setSelectedId] = useState<string | undefined>(currentTemplateId);
 
   useEffect(() => {
-    fetchTemplates();
-  }, []);
+    fetchData();
+  }, [dealId]);
 
-  const fetchTemplates = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      // 使用新接口查询报告模板列表
-      const res = await templateService.getTemplateList();
-      if (res.success && res.data) {
-        setTemplates(res.data);
+      // 同时获取模板列表和尽调详情
+      const [templatesRes, detailRes] = await Promise.all([
+        templateService.getTemplateList(),
+        dealId ? dealService.getDealInstDetail(dealId) : Promise.resolve(null),
+      ]);
+
+      // 设置模板列表
+      if (templatesRes.success && templatesRes.data) {
+        setTemplates(templatesRes.data);
+      }
+
+      // 从尽调详情中获取已绑定的模板 ID
+      if (detailRes && detailRes.success && detailRes.data) {
+        const boundTemplateId = detailRes.data.templateId;
+        if (boundTemplateId) {
+          // templateId 可能是数字或字符串，统一转为字符串匹配
+          setSelectedId(String(boundTemplateId));
+        }
       }
     } catch (error) {
-      console.error('Failed to fetch templates:', error);
+      console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
     }
@@ -47,6 +61,11 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
   );
 
   const handleSelect = async (template: ReportTemplate) => {
+    // 如果点击的是已选中的模板，不重复调用接口
+    if (selectedId === template.id) {
+      return;
+    }
+
     if (!dealId) {
       Toast.fail('未找到尽调实例');
       return;
@@ -127,7 +146,12 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
                     className="p-2 text-gray-400 hover:text-gray-600"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // TODO: 预览功能
+                      // 预览模板文件
+                      if (template.outTemplateUrl) {
+                        onPreview(template.reportTemplateName, template.outTemplateUrl);
+                      } else {
+                        Toast.info('暂无预览文件');
+                      }
                     }}
                   >
                     <Eye size={20} />

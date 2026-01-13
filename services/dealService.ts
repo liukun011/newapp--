@@ -57,4 +57,15 @@ export const dealService = {
       data: params,
     });
   },
+
+  /**
+   * 查询尽调详情（尽调清单）
+   * POST /deal/dealInstDetail
+   */
+  getDealInstDetail: (id: string) => {
+    return request<ApiResponse<DealRecord>>('/deal/dealInstDetail', {
+      method: 'POST',
+      data: { id },
+    });
+  },
 };

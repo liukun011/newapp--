@@ -10,6 +10,7 @@ import CorporateEditPage from './pages/CorporateEditPage';
 import MyTemplatesPage from './pages/MyTemplatesPage';
 import UploadTemplatePage from './pages/UploadTemplatePage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
+import TemplatePreviewPage from './pages/TemplatePreviewPage';
 import { View, DealRecord } from './types';
 import { COLORS } from './constants';
 
@@ -19,6 +20,8 @@ const App: React.FC = () => {
   const [previousView, setPreviousView] = useState<View>(View.HOME);
   // Track current selected deal
   const [currentDeal, setCurrentDeal] = useState<DealRecord | null>(null);
+  // 模板预览数据
+  const [previewTemplate, setPreviewTemplate] = useState<{ name: string; url: string } | null>(null);
 
   // Background Gradient Style
   // Using a fixed background to prevent repaint on scroll
@@ -151,13 +154,19 @@ const App: React.FC = () => {
         {currentView === View.TEMPLATE_SELECTION && (
           <TemplateSelectionPage 
             onBack={() => setCurrentView(previousView)}
-            onSelectTemplate={(template) => {
-              // TODO: 保存选中的模板到 currentDeal
-              console.log('Selected template:', template);
-              setCurrentView(previousView);
+            onPreview={(name, url) => {
+              setPreviewTemplate({ name, url });
+              setCurrentView(View.TEMPLATE_PREVIEW);
             }}
             currentTemplateId={currentDeal?.templateId}
             dealId={currentDeal?.id}
+          />
+        )}
+        {currentView === View.TEMPLATE_PREVIEW && previewTemplate && (
+          <TemplatePreviewPage 
+            templateName={previewTemplate.name}
+            templateUrl={previewTemplate.url}
+            onBack={() => setCurrentView(View.TEMPLATE_SELECTION)}
           />
         )}
       </div>

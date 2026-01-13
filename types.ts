@@ -10,6 +10,7 @@ export enum View {
   MY_TEMPLATES = 'MY_TEMPLATES',      // MyTemplatesPage - 我的模板页
   UPLOAD_TEMPLATE = 'UPLOAD_TEMPLATE',// UploadTemplatePage - 上传访谈模板页
   TEMPLATE_SELECTION = 'TEMPLATE_SELECTION', // TemplateSelectionPage - 模板选择页
+  TEMPLATE_PREVIEW = 'TEMPLATE_PREVIEW',     // TemplatePreviewPage - 模板预览页
 }
 
 export interface Question {
