@@ -11,6 +11,7 @@ interface DueDiligencePageProps {
   onNavigateToRecording: () => void;
   onNavigateToMaterials: () => void;
   onEditInfo?: () => void;
+  onChangeTemplate?: () => void;
 }
 
 const DueDiligencePage: React.FC<DueDiligencePageProps> = ({ 
@@ -18,7 +19,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   onBack, 
   onNavigateToRecording,
   onNavigateToMaterials,
-  onEditInfo
+  onEditInfo,
+  onChangeTemplate
 }) => {
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F8FA] relative">
@@ -84,7 +86,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               <button className="px-4 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform">
                 立即生成
               </button>
-              <button className="px-4 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium hover:bg-white/10 active:scale-95 transition-transform">
+              <button 
+                className="px-4 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium hover:bg-white/10 active:scale-95 transition-transform"
+                onClick={onChangeTemplate}
+              >
                 更换模板
               </button>
             </div>

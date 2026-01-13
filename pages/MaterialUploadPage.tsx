@@ -10,6 +10,7 @@ interface MaterialUploadPageProps {
   onStartInterview: () => void;
   onGenerateAI: () => void;
   onEditInfo?: () => void;
+  onChangeTemplate?: () => void;
 }
 
 const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({ 
@@ -17,7 +18,8 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   onBack, 
   onStartInterview, 
   onGenerateAI,
-  onEditInfo
+  onEditInfo,
+  onChangeTemplate
 }) => {
   const [activeTab, setActiveTab] = useState('upload');
 
@@ -154,6 +156,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                           variant="primary" 
                           size="small" 
                           className="!h-8 !px-4 !bg-[#4E3EF8] !rounded-full !shadow-indigo-200 !font-normal"
+                          onClick={onChangeTemplate}
                         >
                            <RefreshCw size={14} className="mr-1.5" /> 更换
                         </Button>

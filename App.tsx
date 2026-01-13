@@ -9,6 +9,7 @@ import AiGenerationPage from './pages/AiGenerationPage';
 import CorporateEditPage from './pages/CorporateEditPage';
 import MyTemplatesPage from './pages/MyTemplatesPage';
 import UploadTemplatePage from './pages/UploadTemplatePage';
+import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import { View, DealRecord } from './types';
 import { COLORS } from './constants';
 
@@ -73,6 +74,10 @@ const App: React.FC = () => {
             }}
             onNavigateToMaterials={() => setCurrentView(View.MATERIALS_LIST)}
             onEditInfo={handleEditCorporateInfo}
+            onChangeTemplate={() => {
+              setPreviousView(View.DUE_DILIGENCE);
+              setCurrentView(View.TEMPLATE_SELECTION);
+            }}
           />
         )}
         {currentView === View.MATERIALS_LIST && (
@@ -95,6 +100,10 @@ const App: React.FC = () => {
             }}
             onGenerateAI={() => setCurrentView(View.AI_GENERATION)}
             onEditInfo={handleEditCorporateInfo}
+            onChangeTemplate={() => {
+              setPreviousView(View.MATERIAL_UPLOAD);
+              setCurrentView(View.TEMPLATE_SELECTION);
+            }}
           />
         )}
         {currentView === View.AI_GENERATION && (
@@ -110,12 +119,13 @@ const App: React.FC = () => {
           <CorporateEditPage 
             deal={currentDeal}
             onBack={() => setCurrentView(previousView)}
-            onConfirm={(updatedName) => {
-              // 更新 currentDeal 的企业名称
+            onConfirm={(updatedName, updatedLogo) => {
+              // 更新 currentDeal 的企业名称和 logo
               if (currentDeal) {
                 setCurrentDeal({
                   ...currentDeal,
                   interviewCust: updatedName,
+                  logo: updatedLogo,
                 });
               }
               setCurrentView(previousView);
@@ -136,6 +146,18 @@ const App: React.FC = () => {
               // 提交成功后返回模板列表
               setCurrentView(View.MY_TEMPLATES);
             }}
+          />
+        )}
+        {currentView === View.TEMPLATE_SELECTION && (
+          <TemplateSelectionPage 
+            onBack={() => setCurrentView(previousView)}
+            onSelectTemplate={(template) => {
+              // TODO: 保存选中的模板到 currentDeal
+              console.log('Selected template:', template);
+              setCurrentView(previousView);
+            }}
+            currentTemplateId={currentDeal?.templateId}
+            dealId={currentDeal?.id}
           />
         )}
       </div>

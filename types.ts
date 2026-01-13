@@ -9,6 +9,7 @@ export enum View {
   CORPORATE_EDIT = 'CORPORATE_EDIT',  // CorporateEditPage - 企业信息编辑页
   MY_TEMPLATES = 'MY_TEMPLATES',      // MyTemplatesPage - 我的模板页
   UPLOAD_TEMPLATE = 'UPLOAD_TEMPLATE',// UploadTemplatePage - 上传访谈模板页
+  TEMPLATE_SELECTION = 'TEMPLATE_SELECTION', // TemplateSelectionPage - 模板选择页
 }
 
 export interface Question {

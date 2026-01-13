@@ -2,7 +2,7 @@ import { request } from '../request';
 import { ApiResponse } from '../types';
 
 /**
- * 模板信息（后端返回的实际数据结构）
+ * 模板信息（后端返回的实际数据结构）- 用于 /reportApprove 接口
  */
 export interface TemplateRecord {
   id: string;
@@ -17,6 +17,23 @@ export interface TemplateRecord {
   lastModifiedUser: number;
   errorMsg: string | null; // 错误信息
   recStatus: string | null;
+}
+
+/**
+ * 报告模板信息 - 用于 /template 接口
+ */
+export interface ReportTemplate {
+  id: string;
+  businessId: string;
+  centerUserId: string | null;
+  dealInstId: string | null;
+  dealInstTitle: string | null;
+  outTemplateId: string;
+  outTemplateUrl: string; // 模板文件URL
+  questionId: number;
+  recStatus: string;
+  reportTemplateName: string; // 模板名称
+  reportTemplateStatus: string; // 模板状态
 }
 
 /**
@@ -113,6 +130,54 @@ export const templateService = {
    */
   clickApproveReport: (id: string) => {
     return request<ApiResponse<any>>('/reportApprove/clickApproveReport', {
+      method: 'POST',
+      data: { id },
+    });
+  },
+
+  // ========== 报告模板接口 ==========
+
+  /**
+   * 查询报告模板列表
+   * GET /template/list
+   */
+  getTemplateList: () => {
+    return request<ApiResponse<ReportTemplate[]>>('/template/list', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * 查询报告模板详情
+   * GET /template/detail
+   */
+  getTemplateDetail: (id: string) => {
+    return request<ApiResponse<TemplateRecord>>('/template/detail', {
+      method: 'GET',
+      params: { id },
+    });
+  },
+
+  /**
+   * 创建模板
+   * POST /template/insert
+   */
+  insertTemplate: (params: {
+    templateName: string;
+    templateUrl?: string;
+  }) => {
+    return request<ApiResponse<any>>('/template/insert', {
+      method: 'POST',
+      data: params,
+    });
+  },
+
+  /**
+   * 删除模板
+   * POST /template/delete
+   */
+  deleteTemplate: (id: string) => {
+    return request<ApiResponse<any>>('/template/delete', {
       method: 'POST',
       data: { id },
     });

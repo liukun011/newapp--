@@ -26,6 +26,7 @@ export const dealService = {
   createOrUpdateDealInst: (params: {
     id?: string;
     interviewCust?: string;
+    logo?: string;
   }) => {
     return request<ApiResponse<DealRecord>>('/deal/createOrUpdateDealInst', {
       method: 'POST',
@@ -40,6 +41,20 @@ export const dealService = {
     return request<ApiResponse<any>>('/deal/delete', {
       method: 'POST',
       data: { id },
+    });
+  },
+
+  /**
+   * 更换尽调报告模板
+   * POST /deal/changeReportTemplate
+   */
+  changeReportTemplate: (params: {
+    id: string;      // 尽调实例 ID
+    templateId: string; // 模板 ID
+  }) => {
+    return request<ApiResponse<any>>('/deal/changeReportTemplate', {
+      method: 'POST',
+      data: params,
     });
   },
 };
