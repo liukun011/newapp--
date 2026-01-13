@@ -10,13 +10,19 @@ const instance = axios.create({
   },
 });
 
-// 请求拦截器：注入 Token
+// 请求拦截器：注入 Token 并处理 FormData
 instance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('zov-user-token');
     if (token && config.headers) {
       config.headers.Authorization = `${token}`;
     }
+    
+    // 如果是 FormData，删除 Content-Type，让浏览器自动设置（包含 boundary）
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+    
     return config;
   },
   (error) => {

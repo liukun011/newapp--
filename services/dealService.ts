@@ -23,10 +23,13 @@ export const dealService = {
   /**
    * 创建或更新尽调实例
    */
-  createOrUpdateDealInst: (params?: any) => {
+  createOrUpdateDealInst: (params: {
+    id?: string;
+    interviewCust?: string;
+  }) => {
     return request<ApiResponse<DealRecord>>('/deal/createOrUpdateDealInst', {
       method: 'POST',
-      data: params || {},
+      data: params,
     });
   },
 

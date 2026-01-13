@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Sparkles, Check, FileSpreadsheet, Eye, RefreshCw } from 'lucide-react';
 import Button from '../components/Button';
 import { COLORS } from '../constants';
+import { DealRecord } from '../types';
 
 interface MaterialUploadPageProps {
+  deal: DealRecord | null;
   onBack: () => void;
   onStartInterview: () => void;
   onGenerateAI: () => void;
@@ -11,6 +13,7 @@ interface MaterialUploadPageProps {
 }
 
 const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({ 
+  deal,
   onBack, 
   onStartInterview, 
   onGenerateAI,
@@ -40,7 +43,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           <ArrowLeft size={24} />
         </button>
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-bold text-slate-800">被访企业名称</h1>
+          <h1 className="text-lg font-bold text-slate-800">{deal?.interviewCust || ''}</h1>
           <button onClick={onEditInfo} className="p-1 hover:bg-gray-100 rounded-full">
              <Pencil size={16} className="text-gray-400" />
           </button>

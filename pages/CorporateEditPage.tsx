@@ -1,15 +1,46 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Plus } from 'lucide-react';
+import { Toast } from 'react-vant';
 import Button from '../components/Button';
-import { COLORS } from '../constants';
+import { DealRecord } from '../types';
+import { dealService } from '../services/dealService';
 
 interface CorporateEditPageProps {
+  deal: DealRecord | null;
   onBack: () => void;
-  onConfirm: () => void;
+  onConfirm: (updatedName: string) => void;
 }
 
-const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ onBack, onConfirm }) => {
-  const [companyName, setCompanyName] = useState('A公司流贷尽调');
+const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onConfirm }) => {
+  const [companyName, setCompanyName] = useState(deal?.interviewCust || '');
+  const [loading, setLoading] = useState(false);
+
+  // 处理确认按钮点击
+  const handleConfirm = async () => {
+    if (!companyName.trim()) {
+      Toast.info('请输入企业名称');
+      return;
+    }
+
+    if (!deal?.id) {
+      Toast.fail('未找到尽调信息');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await dealService.createOrUpdateDealInst({
+        id: deal.id,
+        interviewCust: companyName.trim(),
+      });
+      Toast.success('更新成功');
+      onConfirm(companyName.trim());
+    } catch (error: any) {
+      Toast.fail(error.message || '更新失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F8FA] relative">
@@ -62,7 +93,9 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ onBack, onConfirm
             variant="primary" 
             block 
             className="flex-1 !rounded-full !h-12 !text-[16px] shadow-indigo-500/25"
-            onClick={onConfirm}
+            onClick={handleConfirm}
+            loading={loading}
+            disabled={loading}
          >
            确认
          </Button>

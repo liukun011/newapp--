@@ -3,9 +3,12 @@ import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import DueDiligencePage from './pages/DueDiligencePage';
 import RecordingPage from './pages/RecordingPage';
+import MaterialsListPage from './pages/MaterialsListPage';
 import MaterialUploadPage from './pages/MaterialUploadPage';
 import AiGenerationPage from './pages/AiGenerationPage';
 import CorporateEditPage from './pages/CorporateEditPage';
+import MyTemplatesPage from './pages/MyTemplatesPage';
+import UploadTemplatePage from './pages/UploadTemplatePage';
 import { View, DealRecord } from './types';
 import { COLORS } from './constants';
 
@@ -41,24 +44,55 @@ const App: React.FC = () => {
           <LoginPage onLogin={() => setCurrentView(View.HOME)} />
         )}
         {currentView === View.HOME && (
-          <HomePage onNavigateToDetail={(deal) => {
-            setCurrentDeal(deal);
-            setCurrentView(View.DUE_DILIGENCE);
-          }} />
+          <HomePage 
+            onNavigateToDetail={(deal) => {
+              setCurrentDeal(deal);
+              setCurrentView(View.DUE_DILIGENCE);
+            }}
+            onCreateNewDeal={(deal) => {
+              setCurrentDeal(deal);
+              setCurrentView(View.MATERIAL_UPLOAD);
+            }}
+            onNavigateToRecording={(deal) => {
+              setCurrentDeal(deal);
+              setPreviousView(View.HOME);
+              setCurrentView(View.RECORDING);
+            }}
+            onNavigateToTemplates={() => {
+              setCurrentView(View.MY_TEMPLATES);
+            }}
+          />
         )}
         {currentView === View.DUE_DILIGENCE && (
           <DueDiligencePage 
             deal={currentDeal}
             onBack={() => setCurrentView(View.HOME)}
-            onNavigateToRecording={() => setCurrentView(View.RECORDING)}
-            onNavigateToMaterials={() => setCurrentView(View.MATERIAL_UPLOAD)}
+            onNavigateToRecording={() => {
+              setPreviousView(View.DUE_DILIGENCE);
+              setCurrentView(View.RECORDING);
+            }}
+            onNavigateToMaterials={() => setCurrentView(View.MATERIALS_LIST)}
             onEditInfo={handleEditCorporateInfo}
+          />
+        )}
+        {currentView === View.MATERIALS_LIST && (
+          <MaterialsListPage 
+            onBack={() => setCurrentView(View.DUE_DILIGENCE)}
+            onGenerateReport={() => setCurrentView(View.AI_GENERATION)}
+            onSelectUploadType={(type) => {
+              // Handle upload type selection - could navigate to camera, gallery, etc.
+              console.log('Selected upload type:', type);
+            }}
           />
         )}
         {currentView === View.MATERIAL_UPLOAD && (
           <MaterialUploadPage 
-            onBack={() => setCurrentView(View.DUE_DILIGENCE)}
-            onStartInterview={() => setCurrentView(View.RECORDING)}
+            deal={currentDeal}
+            onBack={() => setCurrentView(View.HOME)}
+            onStartInterview={() => {
+              setPreviousView(View.DUE_DILIGENCE);
+              setCurrentView(View.RECORDING);
+            }}
             onGenerateAI={() => setCurrentView(View.AI_GENERATION)}
             onEditInfo={handleEditCorporateInfo}
           />
@@ -70,12 +104,38 @@ const App: React.FC = () => {
           />
         )}
         {currentView === View.RECORDING && (
-          <RecordingPage onBack={() => setCurrentView(View.DUE_DILIGENCE)} />
+          <RecordingPage onBack={() => setCurrentView(previousView)} />
         )}
         {currentView === View.CORPORATE_EDIT && (
           <CorporateEditPage 
+            deal={currentDeal}
             onBack={() => setCurrentView(previousView)}
-            onConfirm={() => setCurrentView(previousView)}
+            onConfirm={(updatedName) => {
+              // 更新 currentDeal 的企业名称
+              if (currentDeal) {
+                setCurrentDeal({
+                  ...currentDeal,
+                  interviewCust: updatedName,
+                });
+              }
+              setCurrentView(previousView);
+            }}
+          />
+        )}
+        {currentView === View.MY_TEMPLATES && (
+          <MyTemplatesPage 
+            onBack={() => setCurrentView(View.HOME)}
+            onUpload={() => setCurrentView(View.UPLOAD_TEMPLATE)}
+          />
+        )}
+        {currentView === View.UPLOAD_TEMPLATE && (
+          <UploadTemplatePage 
+            onBack={() => setCurrentView(View.MY_TEMPLATES)}
+            onCancel={() => setCurrentView(View.MY_TEMPLATES)}
+            onSubmit={() => {
+              // 提交成功后返回模板列表
+              setCurrentView(View.MY_TEMPLATES);
+            }}
           />
         )}
       </div>
