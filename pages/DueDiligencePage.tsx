@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Pencil, Mic, ChevronRight, FilePlus, Camera, Image as ImageIcon, FileText } from 'lucide-react';
 import { Toast } from 'react-vant';
 import Mascot from '../components/Mascot';
@@ -11,8 +11,10 @@ interface DueDiligencePageProps {
   onBack: () => void;
   onNavigateToRecording: () => void;
   onNavigateToMaterials: () => void;
+  onNavigateToQuestions?: () => void;
   onEditInfo?: () => void;
   onChangeTemplate?: () => void;
+  onDealDetailLoaded?: (detail: DealRecord) => void;
 }
 
 const DueDiligencePage: React.FC<DueDiligencePageProps> = ({ 
@@ -20,9 +22,41 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   onBack, 
   onNavigateToRecording,
   onNavigateToMaterials,
+  onNavigateToQuestions,
   onEditInfo,
-  onChangeTemplate
+  onChangeTemplate,
+  onDealDetailLoaded
 }) => {
+  // 详情数据
+  const [dealDetail, setDealDetail] = useState<DealRecord | null>(null);
+  
+  // 使用 ref 保存回调，避免依赖变化导致重复请求
+  const onDealDetailLoadedRef = React.useRef(onDealDetailLoaded);
+  onDealDetailLoadedRef.current = onDealDetailLoaded;
+
+  // 进入页面时请求详情（只在 deal.id 变化时请求）
+  useEffect(() => {
+    const fetchDealDetail = async () => {
+      if (!deal?.id) return;
+      
+      try {
+        const res = await dealService.getDealInstDetail(deal.id);
+        if (res.success && res.data) {
+          setDealDetail(res.data);
+          // 通知父组件更新数据
+          onDealDetailLoadedRef.current?.(res.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch deal detail:', error);
+      }
+    };
+    
+    fetchDealDetail();
+  }, [deal?.id]);
+
+  // 使用详情数据，如果没有则使用传入的 deal
+  const currentDeal = dealDetail || deal;
+
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
   const galleryInputRef = React.useRef<HTMLInputElement>(null);
@@ -46,7 +80,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
-    if (!deal?.id) {
+    if (!currentDeal?.id) {
       Toast.fail('未找到尽调实例');
       return;
     }
@@ -54,7 +88,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     const file = files[0];
     try {
       Toast.loading({ message: '上传中...', duration: 0 });
-      const res = await dealService.uploadDealMaterial(deal.id, file);
+      const res = await dealService.uploadDealMaterial(currentDeal.id, file);
       Toast.clear();
 
       if (res.success) {
@@ -115,7 +149,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         <button onClick={onBack} className="p-2 -ml-2 text-slate-700 hover:bg-white/50 rounded-full">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-lg font-bold text-slate-800">{deal?.interviewCust || '尽调详情'}</h1>
+        <h1 className="text-lg font-bold text-slate-800">{currentDeal?.interviewCust || '尽调详情'}</h1>
         <button 
           onClick={onEditInfo}
           className="p-2 -mr-2 text-slate-700 hover:bg-white/50 rounded-full"
@@ -237,10 +271,20 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         </div>
 
         {/* Questions Cell */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer">
-          <span className="font-bold text-slate-800">问题集合 12/88</span>
-          <ChevronRight className="text-gray-300" size={20} />
-        </div>
+        {(() => {
+          const questionList = currentDeal?.questionInfoList || [];
+          const totalCount = questionList.length;
+          const checkedCount = questionList.filter((q) => q.CHECKED === true).length;
+          return (
+            <div 
+              className="bg-white rounded-2xl p-5 shadow-sm flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer"
+              onClick={onNavigateToQuestions}
+            >
+              <span className="font-bold text-slate-800">问题集合 {checkedCount}/{totalCount}</span>
+              <ChevronRight className="text-gray-300" size={20} />
+            </div>
+          );
+        })()}
 
       </div>
     </div>

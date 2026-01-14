@@ -11,7 +11,42 @@ export enum View {
   UPLOAD_TEMPLATE = 'UPLOAD_TEMPLATE',// UploadTemplatePage - 上传访谈模板页
   TEMPLATE_SELECTION = 'TEMPLATE_SELECTION', // TemplateSelectionPage - 模板选择页
   TEMPLATE_PREVIEW = 'TEMPLATE_PREVIEW',     // TemplatePreviewPage - 模板预览页
+  QUESTIONS_LIST = 'QUESTIONS_LIST',  // QuestionsListPage - 常用问题集合页
 }
+
+// 尽调状态枚举
+export enum DealStatusEnum {
+  PREPARE = 1,        // 尽调创建成功
+  INTERVIEW = 2,      // 访谈创建成功
+  INTERVIEWING = 3,   // 访谈中，已开始录音
+  END = 4,            // 访谈完成
+  ARCHIVE = 5,        // 已归档
+}
+
+// 尽调状态描述映射
+export const DealStatusDescription: Record<DealStatusEnum, string> = {
+  [DealStatusEnum.PREPARE]: '尽调创建成功',
+  [DealStatusEnum.INTERVIEW]: '访谈创建成功',
+  [DealStatusEnum.INTERVIEWING]: '访谈中，已开始录音',
+  [DealStatusEnum.END]: '访谈完成',
+  [DealStatusEnum.ARCHIVE]: '已归档',
+};
+
+// 报告生成状态枚举
+export enum DealReportStatusEnum {
+  REPORT_NOT_GENERATED = 1,  // 报告未生成
+  REPORT_GENERATING = 2,     // 报告生成中
+  REPORT_GENERATED = 3,      // 报告已生成
+  REPORT_FAILED = 4,         // 报告生成失败
+}
+
+// 报告状态描述映射
+export const DealReportStatusDescription: Record<DealReportStatusEnum, string> = {
+  [DealReportStatusEnum.REPORT_NOT_GENERATED]: '报告未生成',
+  [DealReportStatusEnum.REPORT_GENERATING]: '报告生成中',
+  [DealReportStatusEnum.REPORT_GENERATED]: '报告已生成',
+  [DealReportStatusEnum.REPORT_FAILED]: '报告生成失败',
+};
 
 export interface Question {
   id: number;
@@ -54,6 +89,20 @@ export interface Resource {
   fileCreateFinishTime: string | null;
 }
 
+// 问题信息
+export interface QuestionInfo {
+  id: string;
+  questionName: string;
+  questionIndex: number;
+  questionAnswer: string | null;
+  questionAnswerTime: string | null;
+  questionStatus: string;
+  templateId: string;
+  agencyId: string;
+  recStatus: string;
+  CHECKED?: boolean;
+}
+
 export interface DealRecord {
   id: string;
   interviewCust: string;
@@ -64,7 +113,7 @@ export interface DealRecord {
   interviewDealAbstract: any;
   interviewInstList: any;
   questionId: any;
-  questionInfoList: any;
+  questionInfoList: QuestionInfo[];
   report: any;
   reportStatus: any;
   reportTemplate: any;

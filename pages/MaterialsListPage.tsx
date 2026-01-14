@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Camera, Image as ImageIcon, FileText, Mic, MinusCircle } from 'lucide-react';
+import { ArrowLeft, Camera, Image as ImageIcon, FileText, Mic, MinusCircle, Pencil } from 'lucide-react';
 import { Toast } from 'react-vant';
 import Button from '../components/Button';
 import VoiceInputModal from '../components/VoiceInputModal';
@@ -19,6 +19,11 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
 }) => {
   const [resources, setResources] = useState<Resource[]>([]);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
+  
+  // 重命名弹框状态
+  const [renameModalVisible, setRenameModalVisible] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<Resource | null>(null);
+  const [newFileName, setNewFileName] = useState('');
 
   // 获取尽调详情数据
   const fetchDealDetail = useCallback(async () => {
@@ -118,19 +123,75 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     }
   };
 
-  // 根据文件类型获取图标样式
-  const getFileIcon = (fileName: string) => {
-    const ext = fileName.split('.').pop()?.toLowerCase() || '';
-    if (['xlsx', 'xls'].includes(ext)) {
-      return { bg: 'bg-green-100', text: 'text-green-600', label: 'E' };
-    } else if (['doc', 'docx'].includes(ext)) {
-      return { bg: 'bg-blue-100', text: 'text-blue-600', label: 'W' };
-    } else if (['pdf'].includes(ext)) {
-      return { bg: 'bg-red-100', text: 'text-red-600', label: 'P' };
-    } else if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
-      return { bg: 'bg-purple-100', text: 'text-purple-600', label: 'I' };
+  // 打开重命名弹框
+  const handleOpenRenameModal = (resource: Resource) => {
+    // 提取文件名（不含后缀）
+    const nameParts = resource.fileName.split('.');
+    if (nameParts.length > 1) nameParts.pop(); // 移除后缀
+    const baseName = nameParts.join('.');
+    
+    setRenameTarget(resource);
+    setNewFileName(baseName);
+    setRenameModalVisible(true);
+  };
+
+  // 确认重命名
+  const handleConfirmRename = async () => {
+    if (!renameTarget) {
+      Toast.fail('参数错误');
+      return;
     }
-    return { bg: 'bg-gray-100', text: 'text-gray-600', label: 'F' };
+
+    if (!newFileName.trim()) {
+      Toast.fail('文件名不能为空');
+      return;
+    }
+
+    // 获取原文件后缀
+    const nameParts = renameTarget.fileName.split('.');
+    const ext = nameParts.length > 1 ? nameParts.pop() : '';
+    const fullNewName = ext ? `${newFileName.trim()}.${ext}` : newFileName.trim();
+
+    try {
+      Toast.loading({ message: '重命名中...', duration: 0 });
+      const res = await dealService.renameDealMaterial(renameTarget.id, fullNewName);
+      Toast.clear();
+
+      if (res.success) {
+        Toast.success('重命名成功');
+        setRenameModalVisible(false);
+        setRenameTarget(null);
+        // 刷新资料列表
+        fetchDealDetail();
+      } else {
+        Toast.fail(res.message || '重命名失败');
+      }
+    } catch (error) {
+      Toast.clear();
+      console.error('Rename failed:', error);
+      Toast.fail('重命名失败');
+    }
+  };
+
+  // 根据文件类型获取图标图片路径
+  // 支持6种类型：excel、word、pdf、txt、ppt、image
+  const getFileIconSrc = (fileName: string): string => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    if (['xlsx', 'xls', 'csv'].includes(ext)) {
+      return '/assets/excel.png';
+    } else if (['doc', 'docx'].includes(ext)) {
+      return '/assets/word.png';
+    } else if (['pdf'].includes(ext)) {
+      return '/assets/pdf.png';
+    } else if (['txt', 'text'].includes(ext)) {
+      return '/assets/txt.png';
+    } else if (['ppt', 'pptx'].includes(ext)) {
+      return '/assets/ppt.png';
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) {
+      return '/assets/image.png';
+    }
+    // 默认使用 txt 图标
+    return '/assets/txt.png';
   };
 
   const uploadOptions = [
@@ -196,24 +257,37 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
 
       {/* Resource List or Empty State */}
       {resources.length > 0 ? (
-        <div className="flex-1 overflow-y-auto px-6 pb-24">
+        <div className="flex-1 overflow-y-auto px-6 pb-24 mt-2">
           <div className="divide-y divide-gray-100">
             {resources.map((resource) => {
-              const iconStyle = getFileIcon(resource.fileName);
+              const iconSrc = getFileIconSrc(resource.fileName);
               return (
                 <div 
                   key={resource.id} 
                   className="flex items-center py-4 gap-3"
+                  style={{ paddingLeft: '0.46rem' }}
                 >
                   {/* File Icon */}
-                  <div className={`w-10 h-10 rounded-lg ${iconStyle.bg} flex items-center justify-center flex-shrink-0`}>
-                    <span className={`text-lg font-bold ${iconStyle.text}`}>{iconStyle.label}</span>
+                  <div className="w-10 h-10 flex-shrink-0">
+                    <img 
+                      src={iconSrc} 
+                      alt="file icon" 
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                   
                   {/* File Name */}
                   <span className="flex-1 text-sm text-slate-800 truncate">
                     {resource.fileName}
                   </span>
+                  
+                  {/* Edit Button */}
+                  <button 
+                    onClick={() => handleOpenRenameModal(resource)}
+                    className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
+                  >
+                    <Pencil size={18} strokeWidth={2} />
+                  </button>
                   
                   {/* Delete Button */}
                   <button 
@@ -308,6 +382,50 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
           Toast.success('保存成功');
         }}
       />
+
+      {/* Rename Modal */}
+      {renameModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setRenameModalVisible(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative bg-white rounded-2xl w-[85%] max-w-sm p-6 shadow-xl">
+            <h3 className="text-center text-lg font-bold text-slate-800 mb-6">文件重命名</h3>
+            
+            {/* Input */}
+            <div className="relative mb-8">
+              <input
+                type="text"
+                value={newFileName}
+                onChange={(e) => setNewFileName(e.target.value)}
+                className="w-full px-4 py-3 text-base text-slate-800 border border-gray-200 rounded-full focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+                placeholder="请输入文件名"
+              />
+            </div>
+            
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRenameModalVisible(false)}
+                className="flex-1 py-3 text-base font-medium text-slate-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmRename}
+                className="flex-1 py-3 text-base font-medium text-white rounded-full transition-colors"
+                style={{ background: 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)' }}
+              >
+                确认
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

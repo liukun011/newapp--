@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Edit2 } from 'lucide-react';
-import Mascot from '../components/Mascot';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { LOGIN_SLIDES } from '../constants';
@@ -37,7 +36,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         {/* Top Carousel Area */}
         <div className="flex-1 flex flex-col items-center justify-center pb-32 px-6 pt-10 text-center transition-all duration-500">
            {/* Text Content */}
-           <div className="mb-8 min-h-[120px] flex flex-col justify-center">
+           <div className="mb-8 mt-12 min-h-[120px] flex flex-col justify-center">
               <h2 className="text-2xl font-bold text-[#4E3EF8] mb-4 leading-snug">
                 {slide.title}
               </h2>
@@ -46,9 +45,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               </p>
            </div>
            
-           {/* Mascot */}
-           <div className="transform scale-110">
-              <Mascot size="large" />
+           {/* Slide Image */}
+           <div className="w-96 h-96" style={{ marginTop: '-5px' }}>
+             <img 
+               src={`/assets/login${slide.id}.png`} 
+               alt={slide.title}
+               className="w-full h-full object-contain"
+             />
            </div>
 
            {/* Carousel Indicators */}
@@ -115,8 +118,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   <span className="text-indigo-600 mx-1">用户协议</span>
                   和
                   <span className="text-indigo-600 mx-1">隐私政策</span>
-                  以及
-                  <span className="text-indigo-600 mx-1">中国移动认证服务条款</span>
                 </span>
              </label>
           </div>

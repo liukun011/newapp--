@@ -11,6 +11,7 @@ import MyTemplatesPage from './pages/MyTemplatesPage';
 import UploadTemplatePage from './pages/UploadTemplatePage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import TemplatePreviewPage from './pages/TemplatePreviewPage';
+import QuestionsListPage from './pages/QuestionsListPage';
 import { View, DealRecord } from './types';
 import { COLORS } from './constants';
 
@@ -76,11 +77,13 @@ const App: React.FC = () => {
               setCurrentView(View.RECORDING);
             }}
             onNavigateToMaterials={() => setCurrentView(View.MATERIALS_LIST)}
+            onNavigateToQuestions={() => setCurrentView(View.QUESTIONS_LIST)}
             onEditInfo={handleEditCorporateInfo}
             onChangeTemplate={() => {
               setPreviousView(View.DUE_DILIGENCE);
               setCurrentView(View.TEMPLATE_SELECTION);
             }}
+            onDealDetailLoaded={(detail) => setCurrentDeal(detail)}
           />
         )}
         {currentView === View.MATERIALS_LIST && (
@@ -164,6 +167,14 @@ const App: React.FC = () => {
             templateName={previewTemplate.name}
             templateUrl={previewTemplate.url}
             onBack={() => setCurrentView(View.TEMPLATE_SELECTION)}
+          />
+        )}
+        {currentView === View.QUESTIONS_LIST && (
+          <QuestionsListPage 
+            dealName={currentDeal?.interviewCust}
+            dealLogo={currentDeal?.logo}
+            questionInfoList={currentDeal?.questionInfoList || []}
+            onBack={() => setCurrentView(View.DUE_DILIGENCE)}
           />
         )}
       </div>

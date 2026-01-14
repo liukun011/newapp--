@@ -101,4 +101,17 @@ export const dealService = {
       data: { id: dealId, fileId: resourceId },
     });
   },
+
+  /**
+   * 重命名尽调资料
+   * POST /deal/rename
+   * @param fileId 资料 ID
+   * @param fileName 新文件名
+   */
+  renameDealMaterial: (fileId: string, fileName: string) => {
+    return request<ApiResponse<any>>('/deal/rename', {
+      method: 'POST',
+      data: { fileId, fileName },
+    });
+  },
 };

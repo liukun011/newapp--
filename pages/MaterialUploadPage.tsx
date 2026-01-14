@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Sparkles, Check, FileSpreadsheet, Eye, RefreshCw } from 'lucide-react';
 import { Toast } from 'react-vant';
 import Button from '../components/Button';
+import VoiceInputModal from '../components/VoiceInputModal';
 import { DealRecord } from '../types';
 import { dealService } from '../services/dealService';
 
@@ -23,6 +24,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   onChangeTemplate
 }) => {
   const [activeTab, setActiveTab] = useState('upload');
+  const [voiceModalVisible, setVoiceModalVisible] = useState(false);
   
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
@@ -41,7 +43,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         fileInputRef.current?.click();
         break;
       case 'voice':
-        // 语音录入逻辑，暂不实现或调用原生
+        setVoiceModalVisible(true);
         break;
     }
   };
@@ -275,6 +277,16 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
          </Button>
       </div>
 
+      {/* Voice Input Modal */}
+      <VoiceInputModal
+        visible={voiceModalVisible}
+        onClose={() => setVoiceModalVisible(false)}
+        onSave={(content) => {
+          // TODO: 处理语音录入的内容
+          console.log('Material upload voice input content:', content);
+          Toast.success('录入成功');
+        }}
+      />
     </div>
   );
 };
