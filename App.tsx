@@ -85,12 +85,9 @@ const App: React.FC = () => {
         )}
         {currentView === View.MATERIALS_LIST && (
           <MaterialsListPage 
+            dealId={currentDeal?.id}
             onBack={() => setCurrentView(View.DUE_DILIGENCE)}
             onGenerateReport={() => setCurrentView(View.AI_GENERATION)}
-            onSelectUploadType={(type) => {
-              // Handle upload type selection - could navigate to camera, gallery, etc.
-              console.log('Selected upload type:', type);
-            }}
           />
         )}
         {currentView === View.MATERIAL_UPLOAD && (

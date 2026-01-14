@@ -125,6 +125,3 @@ export const MOCK_INTERVIEWS: Interview[] = [
 
 // Placeholder for the 3D Fox Mascot
 export const MASCOT_IMAGE_URL = "/assets/mascot.png";
-
-// Rocket Mascot for Reports
-export const ROCKET_MASCOT_URL = "https://img.freepik.com/premium-photo/3d-fox-cartoon-character-riding-rocket-blue-background-generative-ai_438099-13275.jpg?w=740";

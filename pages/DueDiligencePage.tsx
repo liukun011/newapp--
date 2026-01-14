@@ -1,8 +1,10 @@
 import React from 'react';
-import { ArrowLeft, Pencil, Mic, ChevronRight, FilePlus } from 'lucide-react';
+import { ArrowLeft, Pencil, Mic, ChevronRight, FilePlus, Camera, Image as ImageIcon, FileText } from 'lucide-react';
+import { Toast } from 'react-vant';
 import Mascot from '../components/Mascot';
 import { COLORS } from '../constants';
 import { DealRecord } from '../types';
+import { dealService } from '../services/dealService';
 
 interface DueDiligencePageProps {
   deal: DealRecord | null;
@@ -21,8 +23,85 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   onEditInfo,
   onChangeTemplate
 }) => {
+  // 引用隐藏的 input 元素
+  const cameraInputRef = React.useRef<HTMLInputElement>(null);
+  const galleryInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = (id: string) => {
+    switch (id) {
+      case 'camera':
+        cameraInputRef.current?.click();
+        break;
+      case 'gallery':
+        galleryInputRef.current?.click();
+        break;
+      case 'file':
+        fileInputRef.current?.click();
+        break;
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    if (!deal?.id) {
+      Toast.fail('未找到尽调实例');
+      return;
+    }
+
+    const file = files[0];
+    try {
+      Toast.loading({ message: '上传中...', duration: 0 });
+      const res = await dealService.uploadDealMaterial(deal.id, file);
+      Toast.clear();
+
+      if (res.success) {
+        Toast.success('上传成功');
+      } else {
+        Toast.fail(res.message || '上传失败');
+      }
+    } catch (error) {
+      Toast.clear();
+      console.error('Upload failed:', error);
+      Toast.fail('上传失败');
+    }
+    
+    // 清空 input 以便再次选择同一文件
+    e.target.value = '';
+  };
+
+  const uploadOptions = [
+    { id: 'camera', label: '相机', icon: Camera },
+    { id: 'gallery', label: '相册', icon: ImageIcon },
+    { id: 'file', label: '文件', icon: FileText },
+  ];
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F8FA] relative">
+      {/* 隐藏的文件输入框 */}
+      <input 
+        type="file" 
+        ref={cameraInputRef} 
+        accept="image/*" 
+        capture="environment" 
+        className="hidden" 
+        onChange={handleFileChange}
+      />
+      <input 
+        type="file" 
+        ref={galleryInputRef} 
+        accept="image/*" 
+        className="hidden" 
+        onChange={handleFileChange}
+      />
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        onChange={handleFileChange}
+      />
+
       {/* Background Gradient for Top Section */}
       <div 
         className="absolute top-0 left-0 right-0 h-[400px] z-0 pointer-events-none"
@@ -111,7 +190,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         <div className="grid grid-cols-2 gap-4">
           {/* Materials */}
           <div 
-            className="bg-white rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[140px] cursor-pointer active:scale-95 transition-transform"
+            className="bg-white rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[140px] cursor-pointer active:scale-[0.98] transition-all"
             onClick={onNavigateToMaterials}
           >
             <div>
@@ -119,11 +198,22 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                <p className="text-xs text-gray-400 mt-1">AI智能解析</p>
             </div>
             
-            <div className="flex items-end justify-between mt-4">
-               <button className="px-3 py-1.5 rounded-full bg-gray-50 text-gray-500 text-xs font-medium border border-gray-100">
-                 立即添加
-               </button>
-               <FilePlus className="text-gray-300 w-10 h-10 opacity-50" strokeWidth={1.5} />
+            <div className="flex items-center justify-between mt-4">
+               <div className="flex gap-2">
+                 {uploadOptions.map(opt => (
+                   <button 
+                    key={opt.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUploadClick(opt.id);
+                    }}
+                    className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-slate-500 active:bg-gray-100 transition-colors"
+                   >
+                     <opt.icon size={16} strokeWidth={2} />
+                   </button>
+                 ))}
+               </div>
+               <FilePlus className="text-gray-300 w-8 h-8 opacity-50" strokeWidth={1.5} />
             </div>
           </div>
 

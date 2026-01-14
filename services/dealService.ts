@@ -68,4 +68,37 @@ export const dealService = {
       data: { id },
     });
   },
+
+  /**
+   * 上传尽调资料
+   * POST /deal/upload
+   * @param dealId 尽调实例 ID
+   * @param file 文件
+   */
+  uploadDealMaterial: (dealId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('id', dealId);
+    formData.append('file', file);
+    
+    return request<ApiResponse<any>>('/deal/upload', {
+      method: 'POST',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  /**
+   * 删除尽调资料
+   * POST /deal/delete-file
+   * @param dealId 尽调实例 ID
+   * @param resourceId 资料 ID
+   */
+  deleteDealMaterial: (dealId: string, resourceId: string) => {
+    return request<ApiResponse<any>>('/deal/delete-file', {
+      method: 'POST',
+      data: { id: dealId, fileId: resourceId },
+    });
+  },
 };

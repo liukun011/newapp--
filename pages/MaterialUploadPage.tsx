@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Sparkles, Check, FileSpreadsheet, Eye, RefreshCw } from 'lucide-react';
+import { Toast } from 'react-vant';
 import Button from '../components/Button';
-import { COLORS } from '../constants';
 import { DealRecord } from '../types';
+import { dealService } from '../services/dealService';
 
 interface MaterialUploadPageProps {
   deal: DealRecord | null;
@@ -22,6 +23,58 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   onChangeTemplate
 }) => {
   const [activeTab, setActiveTab] = useState('upload');
+  
+  // 引用隐藏的 input 元素
+  const cameraInputRef = React.useRef<HTMLInputElement>(null);
+  const galleryInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = (id: string) => {
+    switch (id) {
+      case 'camera':
+        cameraInputRef.current?.click();
+        break;
+      case 'gallery':
+        galleryInputRef.current?.click();
+        break;
+      case 'file':
+        fileInputRef.current?.click();
+        break;
+      case 'voice':
+        // 语音录入逻辑，暂不实现或调用原生
+        break;
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    if (!deal?.id) {
+      Toast.fail('未找到尽调实例');
+      return;
+    }
+
+    const file = files[0];
+    try {
+      Toast.loading({ message: '上传中...', duration: 0 });
+      const res = await dealService.uploadDealMaterial(deal.id, file);
+      Toast.clear();
+
+      if (res.success) {
+        Toast.success('上传成功');
+      } else {
+        Toast.fail(res.message || '上传失败');
+      }
+    } catch (error) {
+      Toast.clear();
+      console.error('Upload failed:', error);
+      Toast.fail('上传失败');
+    }
+    
+    // 清空 input 以便再次选择同一文件
+    e.target.value = '';
+  };
 
   const uploadOptions = [
     { id: 'camera', label: '相机', icon: Camera },
@@ -39,6 +92,29 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
   return (
     <div className="flex flex-col min-h-screen bg-white relative">
+      {/* 隐藏的文件输入框 */}
+      <input 
+        type="file" 
+        ref={cameraInputRef} 
+        accept="image/*" 
+        capture="environment" 
+        className="hidden" 
+        onChange={handleFileChange}
+      />
+      <input 
+        type="file" 
+        ref={galleryInputRef} 
+        accept="image/*" 
+        className="hidden" 
+        onChange={handleFileChange}
+      />
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        onChange={handleFileChange}
+      />
+
       {/* NavBar */}
       <div className="flex items-center justify-between px-4 py-3 sticky top-0 bg-white z-10">
         <button onClick={onBack} className="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-full">
@@ -89,6 +165,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 {uploadOptions.map((opt) => (
                   <button 
                     key={opt.id}
+                    onClick={() => handleUploadClick(opt.id)}
                     className="flex flex-col items-center justify-center py-4 rounded-xl active:bg-gray-50 transition-colors"
                   >
                     <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mb-2 text-slate-700">

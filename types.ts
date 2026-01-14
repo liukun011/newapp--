@@ -39,6 +39,21 @@ export interface Interview {
   type: string;
 }
 
+// 尽调资料
+export interface Resource {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  type: string;
+  createDate: string;
+  lastModifiedTime: string;
+  relationId: string;
+  matchNum: number;
+  total: number;
+  finishTime: string | null;
+  fileCreateFinishTime: string | null;
+}
+
 export interface DealRecord {
   id: string;
   interviewCust: string;
@@ -53,7 +68,7 @@ export interface DealRecord {
   report: any;
   reportStatus: any;
   reportTemplate: any;
-  resources: any;
+  resources: Resource[];
   supplementary: any;
   templateId: any;
 }
