@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Check } from 'lucide-react';
 import Button from '../components/Button';
 import Mascot from '../components/Mascot';
-import { COLORS } from '../constants';
 
 // Mock generated questions based on the prototype
 const GENERATED_QUESTIONS = [

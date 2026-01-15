@@ -134,3 +134,15 @@ export interface PageData<T> {
   pageNum: number;
   pageSize: number;
 }
+
+export interface LoginResponse {
+  ticket: string;
+  userId: string;
+  accessToken: string;
+  tokenType: string;
+  refreshToken: string | null;
+  clientId: string;
+  expiresIn: string;
+  refreshExpireIn: string | null;
+  openId: string | null;
+}

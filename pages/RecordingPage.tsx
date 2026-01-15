@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, History, Pause, Mic, Square } from 'lucide-react';
 import SoundWave from '../components/SoundWave';
 import Button from '../components/Button';
-import { COLORS, MOCK_QUESTIONS, MOCK_CHAT } from '../constants';
+import { MOCK_QUESTIONS, MOCK_CHAT } from '../constants';
 import { Question } from '../types';
 
 interface RecordingPageProps {

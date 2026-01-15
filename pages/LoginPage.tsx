@@ -3,6 +3,8 @@ import { ArrowLeft, Edit2 } from 'lucide-react';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { LOGIN_SLIDES } from '../constants';
+import { authService } from '../services/authService';
+import { Toast } from 'react-vant';
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -17,6 +19,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
   const [agreed, setAgreed] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  // Countdown timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   // Auto-play carousel
   useEffect(() => {
@@ -73,7 +85,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           
           {/* Phone Number Display */}
           <div className="flex items-center justify-center mb-8 gap-3">
-            <span className="text-2xl font-bold text-slate-900 tracking-wider">188****9898</span>
+            <span className="text-2xl font-bold text-slate-900 tracking-wider">132****2398</span>
             <button 
               className="text-slate-400 hover:text-indigo-600 transition-colors flex justify-center items-center gap-1"
               onClick={() => setViewState('SMS')}
@@ -88,9 +100,23 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <Button 
               block 
               size="large" 
-              onClick={() => {
-                localStorage.setItem('zov-user-token', '75fc0e80-efae-4bb2-b35f-1f03c4c712b5');
-                onLogin();
+              onClick={async () => {
+                if (!agreed) {
+                  Toast.info('请先阅读并同意用户协议和隐私政策');
+                  return;
+                }
+                try {
+                  const res = await authService.login('13278852398', 'Jwx1998...');
+                  if (res.successful && res.data) {
+                    localStorage.setItem('zov-user-token', res.data.accessToken);
+                    localStorage.setItem('zov-userinfo', JSON.stringify({ userId: res.data.userId }));
+                    onLogin();
+                  } else {
+                    Toast.fail(res.message || '登录失败');
+                  }
+                } catch (error) {
+                  console.error('Login error:', error);
+                }
               }} 
               className="shadow-xl shadow-indigo-500/20"
             >
@@ -185,10 +211,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <Button 
                 variant="text" 
                 size="small" 
-                onClick={() => alert('Code sent!')}
-                className="font-normal"
+                disabled={countdown > 0}
+                onClick={async () => {
+                  if (!phone) {
+                    Toast.info('请输入手机号');
+                    return;
+                  }
+                  try {
+                    const res = await authService.sendSms(phone);
+                    if (res.successful) {
+                      setCountdown(60);
+                      Toast.success('验证码已发送');
+                    } else {
+                      Toast.fail(res.message || '发送失败');
+                    }
+                  } catch (error) {
+                    console.error('Send SMS error:', error);
+                  }
+                }}
+                className="font-normal min-w-[5em]"
               >
-                获取验证码
+                {countdown > 0 ? `${countdown}s` : '获取验证码'}
               </Button>
             }
           />
@@ -214,9 +257,38 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <Button 
         block 
         size="large" 
-        onClick={() => {
-          localStorage.setItem('zov-user-token', '75fc0e80-efae-4bb2-b35f-1f03c4c712b5');
-          onLogin();
+        onClick={async () => {
+          if (!agreed) {
+            Toast.info('请先阅读并同意用户协议和隐私政策');
+            return;
+          }
+          if (isPasswordMode) {
+            try {
+              const res = await authService.login(phone, password);
+              if (res.successful && res.data) {
+                localStorage.setItem('zov-user-token', res.data.accessToken);
+                localStorage.setItem('zov-userinfo', JSON.stringify({ userId: res.data.userId }));
+                onLogin();
+              } else {
+                 Toast.fail(res.message || '登录失败');
+              }
+            } catch (error) {
+              console.error('Login error:', error);
+            }
+          } else {
+             try {
+               const res = await authService.loginWithPhoneCode(phone, code);
+               if (res.successful && res.data) {
+                 localStorage.setItem('zov-user-token', res.data.accessToken);
+                 localStorage.setItem('zov-userinfo', JSON.stringify({ userId: res.data.userId }));
+                 onLogin();
+               } else {
+                 Toast.fail(res.message || '登录失败');
+               }
+             } catch (error) {
+               console.error('Login error:', error);
+             }
+          }
         }}
         disabled={!phone || (isPasswordMode ? !password : !code)}
         className="shadow-xl shadow-indigo-500/20"

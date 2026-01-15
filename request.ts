@@ -1,5 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import envConfig from './config';
+import { Toast } from 'react-vant';
+import 'react-vant/lib/index.css';
 
 // 创建 axios 实例
 const instance = axios.create({
@@ -15,7 +17,7 @@ instance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('zov-user-token');
     if (token && config.headers) {
-      config.headers.Authorization = `${token}`;
+      config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
     }
     
     // 如果是 FormData，删除 Content-Type，让浏览器自动设置（包含 boundary）
@@ -31,12 +33,26 @@ instance.interceptors.request.use(
 );
 
 // 响应拦截器：处理状态码
+// 响应拦截器：处理状态码
 instance.interceptors.response.use(
   (response) => {
     return response.data;
   },
   (error) => {
     const message = error.response?.data?.message || error.message || '网络错误';
+    
+    // 抛出错误提示
+    Toast.fail(message);
+
+    if (error.response?.status === 401) {
+      localStorage.removeItem('zov-user-token');
+      localStorage.removeItem('zov-userinfo');
+      // 延迟触发跳转事件，让用户能看清提示 (可选，如果不延迟，Toast 可能会因为页面切换闪烁，但 react-vant Toast 默认是单例 portal，应该没问题)
+      setTimeout(() => {
+        window.dispatchEvent(new Event('unauthorized'));
+      }, 1000); 
+    }
+    
     return Promise.reject(new Error(message));
   }
 );

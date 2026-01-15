@@ -21,24 +21,49 @@ const App: React.FC = () => {
   // 启动页状态
   const [showSplash, setShowSplash] = useState(true);
   
-  const [currentView, setCurrentView] = useState<View>(View.LOGIN);
+  const [currentView, setCurrentView] = useState<View>(() => {
+    const token = localStorage.getItem('zov-user-token');
+    if (!token) return View.LOGIN;
+    const savedView = sessionStorage.getItem('zov-current-view');
+    return (savedView as View) || View.HOME;
+  });
   // Track the previous view to support returning from the Edit screen
   const [previousView, setPreviousView] = useState<View>(View.HOME);
   // Track current selected deal
-  const [currentDeal, setCurrentDeal] = useState<DealRecord | null>(null);
+  const [currentDeal, setCurrentDeal] = useState<DealRecord | null>(() => {
+    try {
+      const savedDeal = sessionStorage.getItem('zov-current-deal');
+      return savedDeal ? JSON.parse(savedDeal) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   // 模板预览数据
   const [previewTemplate, setPreviewTemplate] = useState<{ name: string; url: string } | null>(null);
   // 记住资料上传页的当前标签页
   const [materialUploadTab, setMaterialUploadTab] = useState<string>('upload');
   
-  // 导航方向：forward (前进) 或 backward (后退)
-  const [navDirection, setNavDirection] = useState<'forward' | 'backward'>('forward');
+  // 导航方向：forward (前进) 或 backward (后退) 或 root (重置/根页面)
+  const [navDirection, setNavDirection] = useState<'forward' | 'backward' | 'root'>('forward');
   
   // 页面滚动位置缓存
   const [scrollPositions, setScrollPositions] = useState<Record<View, number>>({} as Record<View, number>);
-  
-  // 动画状态：用于延迟加载重资源
-  const [isAnimating, setIsAnimating] = useState(false);
+
+  // 状态持久化
+  useEffect(() => {
+    if (currentView === View.LOGIN) {
+      sessionStorage.removeItem('zov-current-view');
+      sessionStorage.removeItem('zov-current-deal');
+    } else {
+      sessionStorage.setItem('zov-current-view', currentView);
+    }
+  }, [currentView]);
+
+  useEffect(() => {
+    if (currentDeal) {
+      sessionStorage.setItem('zov-current-deal', JSON.stringify(currentDeal));
+    }
+  }, [currentDeal]);
 
   // Background Gradient Style
   // Using a fixed background to prevent repaint on scroll
@@ -59,26 +84,21 @@ const App: React.FC = () => {
     setScrollPositions(prev => ({ ...prev, [currentView]: scrollTop }));
     
     setNavDirection('forward');
-    setIsAnimating(true);
     setCurrentView(view);
     
-    // 动画结束后重置状态，延迟加载重资源
+    // 动画结束后滚动到顶部
     setTimeout(() => {
-      setIsAnimating(false);
-      // 新页面滚动到顶部
       window.scrollTo(0, 0);
-    }, 400); // 略长于动画时长
+    }, 400);
   };
 
   // 后退导航（返回上一页）
   const navigateBackward = (view: View) => {
     setNavDirection('backward');
-    setIsAnimating(true);
     setCurrentView(view);
     
     // 动画结束后恢复滚动位置
     setTimeout(() => {
-      setIsAnimating(false);
       const savedPosition = scrollPositions[view] || 0;
       window.scrollTo(0, savedPosition);
     }, 400);
@@ -91,6 +111,19 @@ const App: React.FC = () => {
     }, 1500); // 1.5秒后隐藏启动页
 
     return () => clearTimeout(timer);
+  }, []);
+
+  // 监听 401 未授权事件
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setNavDirection('root');
+      setCurrentView(View.LOGIN);
+      // 可选：重置当前 Deal 等状态
+      setCurrentDeal(null);
+    };
+
+    window.addEventListener('unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('unauthorized', handleUnauthorized);
   }, []);
 
   const handleEditCorporateInfo = () => {
@@ -127,23 +160,26 @@ const App: React.FC = () => {
             <motion.div
               key={currentView}
               initial={{ 
-                x: navDirection === 'forward' ? '100%' : '-100%',
+                x: navDirection === 'root' ? 0 : (navDirection === 'forward' ? '100%' : '-100%'),
+                opacity: navDirection === 'root' ? 0 : 1,
                 zIndex: 10
               }}
               animate={{ 
                 x: 0,
+                opacity: 1,
                 zIndex: 10
               }}
               exit={{ 
-                x: navDirection === 'forward' ? '-30%' : '100%',
-                opacity: navDirection === 'forward' ? 0.8 : 1,
+                x: navDirection === 'root' ? 0 : (navDirection === 'forward' ? '-30%' : '100%'),
+                opacity: navDirection === 'root' ? 0 : (navDirection === 'forward' ? 0.8 : 1),
                 zIndex: 1
               }}
               transition={{ 
-                type: 'spring',
+                type: navDirection === 'root' ? 'tween' : 'spring',
                 stiffness: 300,
                 damping: 30,
-                mass: 0.8
+                mass: 0.8,
+                duration: navDirection === 'root' ? 0.3 : undefined
               }}
               style={{
                 position: 'absolute',
