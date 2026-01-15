@@ -203,7 +203,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col h-full bg-white">
       {/* 隐藏的文件输入框 */}
       <input 
         type="file" 

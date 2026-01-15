@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, FileText, Pencil, ArrowUp, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, FileText, Pencil, ArrowUp, Plus, Trash2 } from 'lucide-react';
+import { Toast } from 'react-vant';
 import { QuestionInfo } from '../types';
 
 interface QuestionsListPageProps {
@@ -103,6 +104,10 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   // 编辑弹框状态
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionInfo | null>(null);
+  
+  // 删除确认弹框状态
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deletingQuestion, setDeletingQuestion] = useState<QuestionInfo | null>(null);
 
   // 监听滚动显示回到顶部按钮
   useEffect(() => {
@@ -147,15 +152,30 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
         ...editingQuestion,
         questionName,
       });
+      Toast.success('修改成功');
     }
     handleCloseEditModal();
   };
 
-  // 删除问题
-  const handleDeleteQuestion = (questionId: string) => {
-    if (onDeleteQuestion) {
-      onDeleteQuestion(questionId);
+  // 打开删除确认弹框
+  const handleOpenDeleteModal = (question: QuestionInfo) => {
+    setDeletingQuestion(question);
+    setDeleteModalVisible(true);
+  };
+
+  // 关闭删除确认弹框
+  const handleCloseDeleteModal = () => {
+    setDeleteModalVisible(false);
+    setDeletingQuestion(null);
+  };
+
+  // 确认删除问题
+  const handleConfirmDelete = () => {
+    if (deletingQuestion && onDeleteQuestion) {
+      onDeleteQuestion(deletingQuestion.id);
+      Toast.success('删除成功');
     }
+    handleCloseDeleteModal();
   };
 
   // 按 questionIndex 排序
@@ -221,10 +241,10 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                     </button>
                     {/* 删除按钮 */}
                     <button 
-                      onClick={() => handleDeleteQuestion(question.id)}
+                      onClick={() => handleOpenDeleteModal(question)}
                       className="p-2 text-gray-300 hover:text-red-500 transition-colors"
                     >
-                      <Minus size={16} className="border border-current rounded-full" />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
@@ -270,6 +290,47 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
         onClose={handleCloseEditModal}
         onConfirm={handleConfirmEdit}
       />
+
+      {/* 删除确认弹框 */}
+      {deleteModalVisible && deletingQuestion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/50"
+            onClick={handleCloseDeleteModal}
+          />
+          
+          {/* Modal */}
+          <div className="relative bg-white rounded-2xl w-[85%] max-w-[320px] shadow-xl animate-fadeIn overflow-hidden">
+            {/* Header */}
+            <div className="pt-6 pb-4 px-6 text-center">
+              <div className="w-14 h-14 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
+                <Trash2 size={24} className="text-red-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">删除问题</h3>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                确定要删除该问题吗？删除后无法恢复。
+              </p>
+            </div>
+            
+            {/* Footer Buttons */}
+            <div className="flex border-t border-gray-100">
+              <button
+                onClick={handleCloseDeleteModal}
+                className="flex-1 py-4 text-center text-slate-600 font-medium hover:bg-gray-50 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 py-4 text-center text-white font-medium bg-red-500 hover:bg-red-600 transition-colors"
+              >
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -340,6 +340,28 @@ const App: React.FC = () => {
             dealLogo={currentDeal?.logo}
             questionInfoList={currentDeal?.questionInfoList || []}
             onBack={() => navigateBackward(View.DUE_DILIGENCE)}
+            onUpdateQuestion={(updatedQuestion) => {
+              if (currentDeal) {
+                const updatedList = currentDeal.questionInfoList?.map(q => 
+                  q.id === updatedQuestion.id ? updatedQuestion : q
+                ) || [];
+                setCurrentDeal({
+                  ...currentDeal,
+                  questionInfoList: updatedList,
+                });
+              }
+            }}
+            onDeleteQuestion={(questionId) => {
+              if (currentDeal) {
+                const updatedList = currentDeal.questionInfoList?.filter(q => 
+                  q.id !== questionId
+                ) || [];
+                setCurrentDeal({
+                  ...currentDeal,
+                  questionInfoList: updatedList,
+                });
+              }
+            }}
           />
         )}
         {currentView === View.SETTINGS && (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Sparkles, Check, FileSpreadsheet, Eye, RefreshCw, MinusCircle } from 'lucide-react';
+import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Sparkles, Check, FileSpreadsheet, Eye, RefreshCw, MinusCircle, Trash2 } from 'lucide-react';
 import { Toast } from 'react-vant';
 import Button from '../components/Button';
 import VoiceInputModal from '../components/VoiceInputModal';
@@ -49,6 +49,15 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [renameTarget, setRenameTarget] = useState<Resource | null>(null);
   const [newFileName, setNewFileName] = useState('');
+  
+  // 问题编辑弹框状态
+  const [questionEditModalVisible, setQuestionEditModalVisible] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<QuestionInfo | null>(null);
+  const [editedQuestionName, setEditedQuestionName] = useState('');
+  
+  // 问题删除确认弹框状态
+  const [questionDeleteModalVisible, setQuestionDeleteModalVisible] = useState(false);
+  const [deletingQuestion, setDeletingQuestion] = useState<QuestionInfo | null>(null);
   
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
@@ -313,7 +322,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-white relative">
+    <div className="flex flex-col h-full bg-white relative">
       {/* 隐藏的文件输入框 */}
       <input 
         type="file" 
@@ -379,31 +388,34 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden bg-[#F7F8FA] p-4">
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto bg-[#F7F8FA] pb-28">
         
         {/* Tab 1: Upload */}
         {activeTab === 'upload' && (
           <div className="space-y-4">
             {/* Upload Grid */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
-              <div className="grid grid-cols-4 gap-2">
-                {uploadOptions.map((opt) => (
-                  <button 
-                    key={opt.id}
-                    onClick={() => handleUploadClick(opt.id)}
-                    className="flex flex-col items-center justify-center py-4 rounded-xl active:bg-gray-50 transition-colors"
-                  >
-                    <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mb-2 text-slate-700">
-                       <opt.icon size={24} strokeWidth={1.5} />
-                    </div>
-                    <span className="text-xs text-gray-500 font-medium">{opt.label}</span>
-                  </button>
-                ))}
+            <div className="sticky top-0 z-30 px-4 pt-4 pb-2 bg-[#F7F8FA]">
+              <div className="bg-white rounded-2xl p-4 shadow-sm">
+                <div className="grid grid-cols-4 gap-2">
+                  {uploadOptions.map((opt) => (
+                    <button 
+                      key={opt.id}
+                      onClick={() => handleUploadClick(opt.id)}
+                      className="flex flex-col items-center justify-center py-4 rounded-xl active:bg-gray-50 transition-colors"
+                    >
+                      <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mb-2 text-slate-700">
+                        <opt.icon size={24} strokeWidth={1.5} />
+                      </div>
+                      <span className="text-xs text-gray-500 font-medium">{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* AI Analysis Card */}
-            <div className="rounded-2xl p-4 flex items-center justify-between relative overflow-hidden shadow-sm"
+            <div className="mx-4 rounded-2xl p-4 flex items-center justify-between relative overflow-hidden shadow-sm"
                  style={{ background: 'linear-gradient(90deg, #Eef2ff 0%, #F5f3ff 100%)' }}>
                <div className="flex items-center gap-4 relative z-10">
                   <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm text-indigo-500">
@@ -424,10 +436,13 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
             </div>
 
             {/* Uploaded Files List */}
+            {/* Uploaded Files List */}
             {resources.length > 0 && (
-              <div className="bg-white rounded-2xl p-4 shadow-sm">
-                <h3 className="text-sm font-bold text-slate-800 mb-3">已上传资料 ({resources.length})</h3>
-                <div className="divide-y divide-gray-100">
+              <div className="mx-4 bg-white rounded-2xl shadow-sm pb-4">
+                <div className="sticky top-[154px] z-20 bg-white px-4 py-4 rounded-t-2xl border-b border-gray-100">
+                  <h3 className="text-sm font-bold text-slate-800">已上传资料 ({resources.length})</h3>
+                </div>
+                <div className="px-4 divide-y divide-gray-100">
                   {resources.map((resource) => {
                     const iconSrc = getFileIconSrc(resource.fileName);
                     return (
@@ -593,10 +608,10 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                     {questions.map((question) => (
                       <div 
                         key={question.id}
-                        className="flex items-start py-3 px-4 gap-3"
+                        className="flex items-center py-3 px-4 gap-2"
                       >
                         {/* Question Index */}
-                        <span className="text-sm font-medium text-indigo-600 flex-shrink-0 w-8">
+                        <span className="text-sm font-medium text-indigo-600 flex-shrink-0 w-6">
                           {question.questionIndex}.
                         </span>
                         
@@ -604,6 +619,31 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                         <span className="flex-1 text-sm text-slate-800">
                           {question.questionName}
                         </span>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {/* 编辑按钮 */}
+                          <button 
+                            onClick={() => {
+                              setEditingQuestion(question);
+                              setEditedQuestionName(question.questionName);
+                              setQuestionEditModalVisible(true);
+                            }}
+                            className="p-2 text-gray-300 hover:text-indigo-500 transition-colors"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          {/* 删除按钮 */}
+                          <button 
+                            onClick={() => {
+                              setDeletingQuestion(question);
+                              setQuestionDeleteModalVisible(true);
+                            }}
+                            className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -690,6 +730,93 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 style={{ background: 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)' }}
               >
                 确认
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Question Edit Modal */}
+      {questionEditModalVisible && editingQuestion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setQuestionEditModalVisible(false)}
+          />
+          <div className="relative bg-white rounded-2xl w-[85%] max-w-[340px] shadow-xl animate-fadeIn">
+            <div className="pt-5 pb-3 text-center">
+              <h3 className="text-lg font-semibold text-slate-800">编辑问题</h3>
+            </div>
+            <div className="px-5 pb-5">
+              <textarea
+                value={editedQuestionName}
+                onChange={(e) => setEditedQuestionName(e.target.value)}
+                className="w-full min-h-[120px] p-4 text-base text-slate-700 bg-gray-50 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none resize-none transition-all"
+                placeholder="请输入问题内容"
+              />
+            </div>
+            <div className="flex border-t border-gray-100">
+              <button
+                onClick={() => setQuestionEditModalVisible(false)}
+                className="flex-1 py-4 text-center text-slate-600 font-medium hover:bg-gray-50 rounded-bl-2xl transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  if (editedQuestionName.trim()) {
+                    setQuestions(prev => prev.map(q => 
+                      q.id === editingQuestion.id 
+                        ? { ...q, questionName: editedQuestionName.trim() } 
+                        : q
+                    ));
+                    Toast.success('修改成功');
+                  }
+                  setQuestionEditModalVisible(false);
+                }}
+                className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors"
+                style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+              >
+                确认
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Question Delete Confirm Modal */}
+      {questionDeleteModalVisible && deletingQuestion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setQuestionDeleteModalVisible(false)}
+          />
+          <div className="relative bg-white rounded-2xl w-[85%] max-w-[320px] shadow-xl animate-fadeIn overflow-hidden">
+            <div className="pt-6 pb-4 px-6 text-center">
+              <div className="w-14 h-14 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
+                <Trash2 size={24} className="text-red-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">删除问题</h3>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                确定要删除该问题吗？删除后无法恢复。
+              </p>
+            </div>
+            <div className="flex border-t border-gray-100">
+              <button
+                onClick={() => setQuestionDeleteModalVisible(false)}
+                className="flex-1 py-4 text-center text-slate-600 font-medium hover:bg-gray-50 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  setQuestions(prev => prev.filter(q => q.id !== deletingQuestion.id));
+                  Toast.success('删除成功');
+                  setQuestionDeleteModalVisible(false);
+                }}
+                className="flex-1 py-4 text-center text-white font-medium bg-red-500 hover:bg-red-600 transition-colors"
+              >
+                确认删除
               </button>
             </div>
           </div>
