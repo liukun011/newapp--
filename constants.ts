@@ -124,4 +124,4 @@ export const MOCK_INTERVIEWS: Interview[] = [
 ];
 
 // Placeholder for the 3D Fox Mascot
-export const MASCOT_IMAGE_URL = "/assets/mascot.png";
+export const MASCOT_IMAGE_URL = `${import.meta.env.BASE_URL || '/'}assets/mascot.png`;

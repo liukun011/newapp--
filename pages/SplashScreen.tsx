@@ -1,11 +1,13 @@
 import React from 'react';
 
 const SplashScreen: React.FC = () => {
+  const basePath = import.meta.env.BASE_URL || '/';
+  
   return (
     <div 
       className="flex flex-col items-center justify-center min-h-screen relative overflow-hidden"
       style={{
-        backgroundImage: 'url(/assets/homebegin.png)',
+        backgroundImage: `url(${basePath}assets/homebegin.png)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
@@ -25,7 +27,7 @@ const SplashScreen: React.FC = () => {
         {/* Mascot Image */}
         <div className="relative z-10 flex items-center justify-center">
           <img 
-            src="/assets/homebeginimg.png" 
+            src={`${basePath}assets/homebeginimg.png`}
             alt="小狸AI吉祥物" 
             className="object-contain animate-fadeIn"
             style={{ width: '450px', height: '450px', animationDelay: '0.2s' }}

@@ -27,6 +27,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   onChangeTemplate,
   onDealDetailLoaded
 }) => {
+  const basePath = import.meta.env.BASE_URL || '/';
   // 详情数据
   const [dealDetail, setDealDetail] = useState<DealRecord | null>(null);
   
@@ -210,7 +211,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           {/* Rocket Mascot Image */}
           <div className="absolute right-1 top-1/2 -translate-y-1/2 mt-1.5 w-36 h-36">
             <img 
-               src="/assets/rocketxiaoli.png" 
+               src={`${basePath}assets/rocketxiaoli.png`}
                alt="Rocket Mascot"
                className="w-full h-full object-contain drop-shadow-2xl"
             />

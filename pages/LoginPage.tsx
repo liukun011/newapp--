@@ -13,6 +13,7 @@ interface LoginPageProps {
 type ViewState = 'LANDING' | 'SMS' | 'PASSWORD';
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+  const basePath = import.meta.env.BASE_URL || '/';
   const [viewState, setViewState] = useState<ViewState>('LANDING');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [phone, setPhone] = useState('');
@@ -60,7 +61,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
            {/* Slide Image */}
            <div className="w-96 h-96 flex items-center justify-center" style={{ marginTop: '-66px' }}>
              <img 
-               src={`/assets/login${slide.id}.png`} 
+               src={`${basePath}assets/login${slide.id}.png`} 
                alt={slide.title}
                className="w-full h-full object-contain"
              />

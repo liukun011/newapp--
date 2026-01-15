@@ -17,6 +17,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
   onBack, 
   onGenerateReport
 }) => {
+  const basePath = import.meta.env.BASE_URL || '/';
   const [resources, setResources] = useState<Resource[]>([]);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
   
@@ -178,20 +179,20 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
   const getFileIconSrc = (fileName: string): string => {
     const ext = fileName.split('.').pop()?.toLowerCase() || '';
     if (['xlsx', 'xls', 'csv'].includes(ext)) {
-      return '/assets/excel.png';
+      return `${basePath}assets/excel.png`;
     } else if (['doc', 'docx'].includes(ext)) {
-      return '/assets/word.png';
+      return `${basePath}assets/word.png`;
     } else if (['pdf'].includes(ext)) {
-      return '/assets/pdf.png';
+      return `${basePath}assets/pdf.png`;
     } else if (['txt', 'text'].includes(ext)) {
-      return '/assets/txt.png';
+      return `${basePath}assets/txt.png`;
     } else if (['ppt', 'pptx'].includes(ext)) {
-      return '/assets/ppt.png';
+      return `${basePath}assets/ppt.png`;
     } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) {
-      return '/assets/image.png';
+      return `${basePath}assets/image.png`;
     }
     // 默认使用 txt 图标
-    return '/assets/txt.png';
+    return `${basePath}assets/txt.png`;
   };
 
   const uploadOptions = [
