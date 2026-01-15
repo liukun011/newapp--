@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Sparkles, Check, FileSpreadsheet, Eye, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Sparkles, Check, FileSpreadsheet, Eye, RefreshCw, MinusCircle } from 'lucide-react';
 import { Toast } from 'react-vant';
 import Button from '../components/Button';
 import VoiceInputModal from '../components/VoiceInputModal';
-import { DealRecord } from '../types';
+import { DealRecord, Resource, QuestionInfo } from '../types';
 import { dealService } from '../services/dealService';
+import { templateService, ReportTemplate } from '../services/templateService';
+import { questionService, TemplateInfo } from '../services/questionService';
 
 interface MaterialUploadPageProps {
   deal: DealRecord | null;
@@ -13,6 +15,9 @@ interface MaterialUploadPageProps {
   onGenerateAI: () => void;
   onEditInfo?: () => void;
   onChangeTemplate?: () => void;
+  onPreviewTemplate?: (name: string, url: string) => void;
+  initialTab?: string; // 初始激活的标签页
+  onTabChange?: (tab: string) => void; // 标签页切换时的回调
 }
 
 const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({ 
@@ -21,15 +26,138 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   onStartInterview, 
   onGenerateAI,
   onEditInfo,
-  onChangeTemplate
+  onChangeTemplate,
+  onPreviewTemplate,
+  initialTab = 'upload',
+  onTabChange
 }) => {
-  const [activeTab, setActiveTab] = useState('upload');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
+  const [currentTemplate, setCurrentTemplate] = useState<ReportTemplate | null>(null);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [questions, setQuestions] = useState<QuestionInfo[]>([]);
+  
+  // 模板分类列表和选中的分类
+  const [templateCategories, setTemplateCategories] = useState<TemplateInfo[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  
+  // 标记各个 tab 的数据是否已加载
+  const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set());
+  
+  // 重命名弹框状态
+  const [renameModalVisible, setRenameModalVisible] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<Resource | null>(null);
+  const [newFileName, setNewFileName] = useState('');
   
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
   const galleryInputRef = React.useRef<HTMLInputElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // 获取尽调详情（包括资源列表）
+  const fetchDealDetail = async () => {
+    if (!deal?.id) return;
+    
+    try {
+      const res = await dealService.getDealInstDetail(deal.id);
+      if (res.success && res.data) {
+        setResources(res.data.resources || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch deal detail:', error);
+    }
+  };
+
+  // 获取问题列表
+  const fetchQuestions = async () => {
+    // 优先使用当前模板的 questionId，否则使用 deal 的 questionId
+    const questionIdToUse = currentTemplate?.questionId 
+      ? String(currentTemplate.questionId) 
+      : deal?.questionId;
+    
+    if (!questionIdToUse) {
+      setQuestions([]);
+      setTemplateCategories([]);
+      return;
+    }
+    
+    try {
+      // 调用接口，传入 questionId
+      const categoriesRes = await questionService.queryTemplateCategories(questionIdToUse);
+      if (categoriesRes.success && categoriesRes.data) {
+        setTemplateCategories(categoriesRes.data);
+        
+        // 在 templateInfoVos 中查找 id === questionId 的分类
+        const matchedCategory = categoriesRes.data.find(c => c.id === questionIdToUse);
+        
+        if (matchedCategory) {
+          // 找到匹配的分类，选中它并显示其问题列表
+          setSelectedCategoryId(matchedCategory.id);
+          setQuestions(matchedCategory.questionList || []);
+        } else if (categoriesRes.data.length > 0) {
+          // 如果没找到匹配的，默认选中第一个
+          const firstCategory = categoriesRes.data[0];
+          setSelectedCategoryId(firstCategory.id);
+          setQuestions(firstCategory.questionList || []);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch questions:', error);
+    }
+  };
+
+  // 获取模板详情
+  const fetchTemplateDetail = async () => {
+    if (!deal?.templateId) {
+      setCurrentTemplate(null);
+      return;
+    }
+    
+    try {
+      const res = await templateService.getTemplateDetail(deal.templateId);
+      if (res.success && res.data) {
+        setCurrentTemplate(res.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch template detail:', error);
+    }
+  };
+
+  // 当 activeTab 变化时，懒加载对应 tab 的数据
+  useEffect(() => {
+    const loadTabData = async () => {
+      // 如果该 tab 的数据已加载过，跳过
+      if (loadedTabs.has(activeTab)) return;
+      
+      switch (activeTab) {
+        case 'upload':
+          await fetchDealDetail();
+          break;
+        case 'template':
+          await fetchTemplateDetail();
+          break;
+        case 'questions':
+          await fetchQuestions();
+          break;
+      }
+      
+      // 标记该 tab 已加载
+      setLoadedTabs(prev => new Set(prev).add(activeTab));
+    };
+    
+    loadTabData();
+  }, [activeTab, deal?.id, deal?.templateId, deal?.questionId]);
+
+  // 当模板的 questionId 变化时，清除问题列表的加载标记
+  useEffect(() => {
+    if (currentTemplate?.questionId) {
+      setLoadedTabs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('questions');
+        return newSet;
+      });
+    }
+  }, [currentTemplate?.questionId]);
 
   const handleUploadClick = (id: string) => {
     switch (id) {
@@ -65,6 +193,8 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
       if (res.success) {
         Toast.success('上传成功');
+        // 刷新资源列表
+        await fetchDealDetail();
       } else {
         Toast.fail(res.message || '上传失败');
       }
@@ -78,18 +208,107 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     e.target.value = '';
   };
 
+  // 删除资料
+  const handleDeleteResource = async (resourceId: string) => {
+    if (!deal?.id) {
+      Toast.fail('未找到尽调实例');
+      return;
+    }
+
+    try {
+      Toast.loading({ message: '删除中...', duration: 0 });
+      const res = await dealService.deleteDealMaterial(deal.id, resourceId);
+      Toast.clear();
+
+      if (res.success) {
+        Toast.success('删除成功');
+        // 刷新资源列表
+        await fetchDealDetail();
+      } else {
+        Toast.fail(res.message || '删除失败');
+      }
+    } catch (error) {
+      Toast.clear();
+      console.error('Delete failed:', error);
+      Toast.fail('删除失败');
+    }
+  };
+
+  // 打开重命名弹框
+  const handleOpenRenameModal = (resource: Resource) => {
+    // 提取文件名（不含后缀）
+    const nameParts = resource.fileName.split('.');
+    if (nameParts.length > 1) nameParts.pop(); // 移除后缀
+    const baseName = nameParts.join('.');
+    
+    setRenameTarget(resource);
+    setNewFileName(baseName);
+    setRenameModalVisible(true);
+  };
+
+  // 确认重命名
+  const handleConfirmRename = async () => {
+    if (!renameTarget) {
+      Toast.fail('参数错误');
+      return;
+    }
+
+    if (!newFileName.trim()) {
+      Toast.fail('文件名不能为空');
+      return;
+    }
+
+    // 获取原文件后缀
+    const nameParts = renameTarget.fileName.split('.');
+    const ext = nameParts.length > 1 ? nameParts.pop() : '';
+    const fullNewName = ext ? `${newFileName.trim()}.${ext}` : newFileName.trim();
+
+    try {
+      Toast.loading({ message: '重命名中...', duration: 0 });
+      const res = await dealService.renameDealMaterial(renameTarget.id, fullNewName);
+      Toast.clear();
+
+      if (res.success) {
+        Toast.success('重命名成功');
+        setRenameModalVisible(false);
+        setRenameTarget(null);
+        // 刷新资源列表
+        await fetchDealDetail();
+      } else {
+        Toast.fail(res.message || '重命名失败');
+      }
+    } catch (error) {
+      Toast.clear();
+      console.error('Rename failed:', error);
+      Toast.fail('重命名失败');
+    }
+  };
+
+  // 根据文件类型获取图标图片路径
+  const getFileIconSrc = (fileName: string): string => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    if (['xlsx', 'xls', 'csv'].includes(ext)) {
+      return '/assets/excel.png';
+    } else if (['doc', 'docx'].includes(ext)) {
+      return '/assets/word.png';
+    } else if (['pdf'].includes(ext)) {
+      return '/assets/pdf.png';
+    } else if (['txt', 'text'].includes(ext)) {
+      return '/assets/txt.png';
+    } else if (['ppt', 'pptx'].includes(ext)) {
+      return '/assets/ppt.png';
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) {
+      return '/assets/image.png';
+    }
+    // 默认使用 txt 图标
+    return '/assets/txt.png';
+  };
+
   const uploadOptions = [
     { id: 'camera', label: '相机', icon: Camera },
     { id: 'gallery', label: '相册', icon: ImageIcon },
     { id: 'file', label: '文件', icon: FileText },
     { id: 'voice', label: '语音录入', icon: Mic },
-  ];
-
-  const templates = [
-    { id: 1, title: '小微企业授信业务尽职调查报告', isDefault: true },
-    { id: 2, title: '个人经营性贷款调查报告', isDefault: false },
-    { id: 3, title: '固定资产贷款尽职调查报告', isDefault: false },
-    { id: 4, title: '科技型企业科创属性评估报告', isDefault: false },
   ];
 
   return (
@@ -141,7 +360,10 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
            return (
             <button
               key={tab}
-              onClick={() => setActiveTab(tabId)}
+              onClick={() => {
+                setActiveTab(tabId);
+                onTabChange?.(tabId);
+              }}
               className={`pb-3 pt-2 text-[15px] font-medium relative transition-colors ${
                 isActive ? 'text-slate-900 font-bold' : 'text-gray-400'
               }`}
@@ -156,7 +378,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto bg-[#F7F8FA] p-4">
+      <div className="flex-1 overflow-hidden bg-[#F7F8FA] p-4">
         
         {/* Tab 1: Upload */}
         {activeTab === 'upload' && (
@@ -199,28 +421,76 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                  去生成
                </button>
             </div>
+
+            {/* Uploaded Files List */}
+            {resources.length > 0 && (
+              <div className="bg-white rounded-2xl p-4 shadow-sm">
+                <h3 className="text-sm font-bold text-slate-800 mb-3">已上传资料 ({resources.length})</h3>
+                <div className="divide-y divide-gray-100">
+                  {resources.map((resource) => {
+                    const iconSrc = getFileIconSrc(resource.fileName);
+                    return (
+                      <div 
+                        key={resource.id} 
+                        className="flex items-center py-3 gap-3"
+                      >
+                        {/* File Icon */}
+                        <div className="w-10 h-10 flex-shrink-0">
+                          <img 
+                            src={iconSrc} 
+                            alt="file icon" 
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        
+                        {/* File Name */}
+                        <span className="flex-1 text-sm text-slate-800 truncate">
+                          {resource.fileName}
+                        </span>
+
+                        {/* Edit Button */}
+                        <button 
+                          onClick={() => handleOpenRenameModal(resource)}
+                          className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
+                        >
+                          <Pencil size={18} strokeWidth={2} />
+                        </button>
+                        
+                        {/* Delete Button */}
+                        <button 
+                          onClick={() => handleDeleteResource(resource.id)}
+                          className="p-2 text-indigo-400 hover:text-red-500 transition-colors"
+                        >
+                          <MinusCircle size={22} strokeWidth={2} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Tab 2: Templates */}
         {activeTab === 'template' && (
           <div className="space-y-3">
-             {templates.map(template => (
-               <div key={template.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col gap-4">
+             {currentTemplate ? (
+               <div key={currentTemplate.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col gap-4">
                   {/* Card Header */}
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-lg bg-[#E8F8F0] flex items-center justify-center flex-shrink-0 text-[#07C160]">
                        <FileSpreadsheet size={24} strokeWidth={1.5} />
                     </div>
                     <h3 className="text-[15px] font-bold text-slate-800 leading-snug pt-1">
-                      {template.title}
+                      {currentTemplate.reportTemplateName}
                     </h3>
                   </div>
                   
                   {/* Card Footer */}
                   <div className="flex items-center justify-between pt-1">
-                     <div className={`px-2 py-1 rounded-md text-[10px] font-medium ${template.isDefault ? 'bg-gray-100 text-gray-500' : 'bg-transparent text-transparent'}`}>
-                       {template.isDefault ? '默认使用' : ''}
+                     <div className="px-2 py-1 rounded-md text-[10px] font-medium bg-gray-100 text-gray-500">
+                       默认使用
                      </div>
                      
                      <div className="flex gap-3">
@@ -228,6 +498,11 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                           variant="secondary" 
                           size="small" 
                           className="!h-8 !px-4 !border-gray-200 !text-gray-600 !rounded-full !font-normal"
+                          onClick={() => {
+                            if (onPreviewTemplate && currentTemplate) {
+                              onPreviewTemplate(currentTemplate.reportTemplateName, currentTemplate.outTemplateUrl);
+                            }
+                          }}
                         >
                            <Eye size={14} className="mr-1.5" /> 预览
                         </Button>
@@ -242,16 +517,104 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                      </div>
                   </div>
                </div>
-             ))}
+             ) : (
+               <div className="py-12 text-center text-gray-400 text-sm">
+                 暂无模板信息
+               </div>
+             )}
           </div>
         )}
         
-        {/* Tab 3: Questions Placeholder */}
+        {/* Tab 3: Questions */}
         {activeTab === 'questions' && (
-           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-             <FileText size={48} className="mb-4 opacity-20" />
-             <p className="text-sm">问题集合加载中...</p>
-           </div>
+          <div className="space-y-3">
+            {/* Category Selector and Refresh Button */}
+            <div className="flex items-center gap-3">
+              {/* Category Dropdown */}
+              <div className="flex-1 relative">
+                <select
+                  value={selectedCategoryId}
+                  onChange={(e) => {
+                    const newCategoryId = e.target.value;
+                    setSelectedCategoryId(newCategoryId);
+                    
+                    // 查找对应的分类并更新问题列表
+                    const category = templateCategories.find(c => c.id === newCategoryId);
+                    if (category) {
+                      setQuestions(category.questionList || []);
+                    }
+                  }}
+                  className="w-full h-12 px-4 pr-10 bg-white text-slate-800 text-sm rounded-xl border border-gray-200 appearance-none focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+                >
+                  {templateCategories.length === 0 && <option value="">请选择分类</option>}
+                  {templateCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.templateName}
+                    </option>
+                  ))}
+                </select>
+                {/* Dropdown Arrow */}
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Refresh Button */}
+              <button
+                onClick={async () => {
+                  // 清除问题列表缓存并重新加载
+                  setLoadedTabs(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete('questions');
+                    return newSet;
+                  });
+                  await fetchQuestions();
+                }}
+                className="w-12 h-12 flex items-center justify-center bg-white rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
+              >
+                <RefreshCw size={20} />
+              </button>
+            </div>
+
+            {/* Questions List */}
+            {questions.length > 0 ? (
+              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                {/* Fixed Header */}
+                <div className="p-4 border-b border-gray-100">
+                  <h3 className="text-sm font-bold text-slate-800">问题列表 ({questions.length})</h3>
+                </div>
+                
+                {/* Scrollable Content */}
+                <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 380px)' }}>
+                  <div className="divide-y divide-gray-100">
+                    {questions.map((question) => (
+                      <div 
+                        key={question.id}
+                        className="flex items-start py-3 px-4 gap-3"
+                      >
+                        {/* Question Index */}
+                        <span className="text-sm font-medium text-indigo-600 flex-shrink-0 w-8">
+                          {question.questionIndex}.
+                        </span>
+                        
+                        {/* Question Name */}
+                        <span className="flex-1 text-sm text-slate-800">
+                          {question.questionName}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                <FileText size={48} className="mb-4 opacity-20" />
+                <p className="text-sm">暂无问题</p>
+              </div>
+            )}
+          </div>
         )}
 
       </div>
@@ -287,6 +650,50 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           Toast.success('录入成功');
         }}
       />
+
+      {/* Rename Modal */}
+      {renameModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setRenameModalVisible(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative bg-white rounded-2xl w-[85%] max-w-sm p-6 shadow-xl">
+            <h3 className="text-center text-lg font-bold text-slate-800 mb-6">文件重命名</h3>
+            
+            {/* Input */}
+            <div className="relative mb-8">
+              <input
+                type="text"
+                value={newFileName}
+                onChange={(e) => setNewFileName(e.target.value)}
+                className="w-full px-4 py-3 text-base text-slate-800 border border-gray-200 rounded-full focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+                placeholder="请输入文件名"
+              />
+            </div>
+            
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRenameModalVisible(false)}
+                className="flex-1 py-3 text-base font-medium text-slate-600 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmRename}
+                className="flex-1 py-3 text-base font-medium text-white rounded-full transition-colors"
+                style={{ background: 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)' }}
+              >
+                确认
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

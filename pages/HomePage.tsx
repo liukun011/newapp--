@@ -33,6 +33,10 @@ const HomePage: React.FC<HomePageProps> = ({
   const [searchQuery, setSearchQuery] = useState(""); // 实际用于查询的值
   const [loading, setLoading] = useState(false);
   const [deals, setDeals] = useState<DealRecord[]>([]);
+  
+  // 删除确认弹框
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingDealId, setDeletingDealId] = useState<string | null>(null);
 
   const isFirstRender = useRef(true);
 
@@ -93,18 +97,33 @@ const HomePage: React.FC<HomePageProps> = ({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("确定要删除这个访谈吗？")) {
-      return;
-    }
+    // 显示确认弹框
+    setDeletingDealId(id);
+    setShowDeleteConfirm(true);
+  };
+
+  // 确认删除
+  const confirmDelete = async () => {
+    if (!deletingDealId) return;
+    
     try {
-      const res = await dealService.deleteDealInst(id);
+      const res = await dealService.deleteDealInst(deletingDealId);
       if (res.success) {
         // 删除成功后刷新列表
         fetchDeals();
       }
     } catch (error) {
       console.error("Failed to delete deal:", error);
+    } finally {
+      setShowDeleteConfirm(false);
+      setDeletingDealId(null);
     }
+  };
+
+  // 取消删除
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setDeletingDealId(null);
   };
 
   return (
@@ -290,31 +309,76 @@ const HomePage: React.FC<HomePageProps> = ({
       </div>
 
       {/* Floating Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent pt-10 z-20">
-        <Button
-          block
-          size="large"
-          onClick={async () => {
-            try {
-              const res = await dealService.createOrUpdateDealInst({});
-              if (res.success && res.data) {
-                // 如果提供了 onCreateNewDeal，使用它（导航到 MaterialUploadPage）
-                // 否则使用 onNavigateToDetail（导航到 DueDiligencePage）
-                if (onCreateNewDeal) {
-                  onCreateNewDeal(res.data);
-                } else {
-                  onNavigateToDetail(res.data);
+      <div className="fixed bottom-0 left-0 right-0 z-20 flex justify-center">
+        <div className="w-full max-w-md px-4 pb-6 pt-10 bg-gradient-to-t from-white via-white to-transparent">
+          <Button
+            block
+            size="large"
+            onClick={async () => {
+              try {
+                const res = await dealService.createOrUpdateDealInst({});
+                if (res.success && res.data) {
+                  // 如果提供了 onCreateNewDeal，使用它（导航到 MaterialUploadPage）
+                  // 否则使用 onNavigateToDetail（导航到 DueDiligencePage）
+                  if (onCreateNewDeal) {
+                    onCreateNewDeal(res.data);
+                  } else {
+                    onNavigateToDetail(res.data);
+                  }
                 }
+              } catch (error) {
+                console.error("Failed to create deal:", error);
               }
-            } catch (error) {
-              console.error("Failed to create deal:", error);
-            }
-          }}
-          className="shadow-xl shadow-indigo-500/30 !rounded-2xl h-14 text-lg"
-        >
-          <Plus size={20} className="mr-2" /> 新建访谈
-        </Button>
+            }}
+            className="shadow-xl shadow-indigo-500/30 !rounded-2xl h-14 text-lg"
+          >
+            <Plus size={20} className="mr-2" /> 新建访谈
+          </Button>
+        </div>
       </div>
+
+      {/* 删除确认弹框 */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* 半透明背景 */}
+          <div 
+            className="absolute inset-0 bg-black/40"
+            onClick={cancelDelete}
+          />
+          
+          {/* 弹框内容 */}
+          <div className="relative bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-fadeIn">
+            {/* 标题 */}
+            <h3 className="text-center text-lg font-semibold text-slate-800 mb-4">
+              提示
+            </h3>
+            
+            {/* 提示文字 */}
+            <p className="text-center text-slate-600 mb-6">
+              是否确认删除当前访谈?
+            </p>
+            
+            {/* 按钮组 */}
+            <div className="flex gap-3">
+              {/* 取消按钮 */}
+              <button
+                onClick={cancelDelete}
+                className="flex-1 h-12 rounded-full border-2 border-gray-200 text-slate-700 font-medium hover:bg-gray-50 active:scale-95 transition-all"
+              >
+                取消
+              </button>
+              
+              {/* 确认按钮 */}
+              <button
+                onClick={confirmDelete}
+                className="flex-1 h-12 rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30"
+              >
+                确认
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

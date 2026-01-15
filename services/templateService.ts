@@ -152,9 +152,9 @@ export const templateService = {
    * GET /template/detail
    */
   getTemplateDetail: (id: string) => {
-    return request<ApiResponse<TemplateRecord>>('/template/detail', {
+    return request<ApiResponse<ReportTemplate>>('/template/detail', {
       method: 'GET',
-      params: { id },
+      params: { templateId: id },
     });
   },
 

@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import SplashScreen from './pages/SplashScreen';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import DueDiligencePage from './pages/DueDiligencePage';
@@ -16,6 +18,9 @@ import { View, DealRecord } from './types';
 import { COLORS } from './constants';
 
 const App: React.FC = () => {
+  // 启动页状态
+  const [showSplash, setShowSplash] = useState(true);
+  
   const [currentView, setCurrentView] = useState<View>(View.LOGIN);
   // Track the previous view to support returning from the Edit screen
   const [previousView, setPreviousView] = useState<View>(View.HOME);
@@ -23,6 +28,17 @@ const App: React.FC = () => {
   const [currentDeal, setCurrentDeal] = useState<DealRecord | null>(null);
   // 模板预览数据
   const [previewTemplate, setPreviewTemplate] = useState<{ name: string; url: string } | null>(null);
+  // 记住资料上传页的当前标签页
+  const [materialUploadTab, setMaterialUploadTab] = useState<string>('upload');
+  
+  // 导航方向：forward (前进) 或 backward (后退)
+  const [navDirection, setNavDirection] = useState<'forward' | 'backward'>('forward');
+  
+  // 页面滚动位置缓存
+  const [scrollPositions, setScrollPositions] = useState<Record<View, number>>({} as Record<View, number>);
+  
+  // 动画状态：用于延迟加载重资源
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Background Gradient Style
   // Using a fixed background to prevent repaint on scroll
@@ -36,67 +52,159 @@ const App: React.FC = () => {
     zIndex: -1,
   };
 
+  // 前进导航（跳转到新页面）
+  const navigateForward = (view: View) => {
+    // 保存当前页面的滚动位置
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    setScrollPositions(prev => ({ ...prev, [currentView]: scrollTop }));
+    
+    setNavDirection('forward');
+    setIsAnimating(true);
+    setCurrentView(view);
+    
+    // 动画结束后重置状态，延迟加载重资源
+    setTimeout(() => {
+      setIsAnimating(false);
+      // 新页面滚动到顶部
+      window.scrollTo(0, 0);
+    }, 400); // 略长于动画时长
+  };
+
+  // 后退导航（返回上一页）
+  const navigateBackward = (view: View) => {
+    setNavDirection('backward');
+    setIsAnimating(true);
+    setCurrentView(view);
+    
+    // 动画结束后恢复滚动位置
+    setTimeout(() => {
+      setIsAnimating(false);
+      const savedPosition = scrollPositions[view] || 0;
+      window.scrollTo(0, savedPosition);
+    }, 400);
+  };
+
+  // 启动页定时器
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 1500); // 1.5秒后隐藏启动页
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleEditCorporateInfo = () => {
     setPreviousView(currentView);
-    setCurrentView(View.CORPORATE_EDIT);
+    navigateForward(View.CORPORATE_EDIT);
   };
 
   return (
     <>
       <div style={backgroundStyle} />
-      <div className="w-full max-w-md mx-auto min-h-screen relative overflow-hidden bg-transparent">
-        {currentView === View.LOGIN && (
-          <LoginPage onLogin={() => setCurrentView(View.HOME)} />
-        )}
-        {currentView === View.HOME && (
-          <HomePage 
-            onNavigateToDetail={(deal) => {
-              setCurrentDeal(deal);
-              setCurrentView(View.DUE_DILIGENCE);
-            }}
-            onCreateNewDeal={(deal) => {
-              setCurrentDeal(deal);
-              setCurrentView(View.MATERIAL_UPLOAD);
-            }}
-            onNavigateToRecording={(deal) => {
-              setCurrentDeal(deal);
-              setPreviousView(View.HOME);
-              setCurrentView(View.RECORDING);
-            }}
-            onNavigateToTemplates={() => {
-              setCurrentView(View.MY_TEMPLATES);
-            }}
-          />
-        )}
-        {currentView === View.DUE_DILIGENCE && (
-          <DueDiligencePage 
-            deal={currentDeal}
-            onBack={() => setCurrentView(View.HOME)}
-            onNavigateToRecording={() => {
-              setPreviousView(View.DUE_DILIGENCE);
-              setCurrentView(View.RECORDING);
-            }}
-            onNavigateToMaterials={() => setCurrentView(View.MATERIALS_LIST)}
-            onNavigateToQuestions={() => setCurrentView(View.QUESTIONS_LIST)}
-            onEditInfo={handleEditCorporateInfo}
-            onChangeTemplate={() => {
-              setPreviousView(View.DUE_DILIGENCE);
-              setCurrentView(View.TEMPLATE_SELECTION);
-            }}
-            onDealDetailLoaded={(detail) => setCurrentDeal(detail)}
-          />
-        )}
+      
+      {/* Splash Screen with fade out animation */}
+      {showSplash ? (
+        <motion.div
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5 }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 9999,
+            backgroundColor: 'white',
+          }}
+        >
+          <SplashScreen />
+        </motion.div>
+      ) : (
+        /* Main App - only render after splash is hidden */
+        <div className="w-full max-w-md mx-auto min-h-screen relative overflow-hidden bg-transparent">
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={currentView}
+              initial={{ 
+                x: navDirection === 'forward' ? '100%' : '-100%',
+                zIndex: 10
+              }}
+              animate={{ 
+                x: 0,
+                zIndex: 10
+              }}
+              exit={{ 
+                x: navDirection === 'forward' ? '-30%' : '100%',
+                opacity: navDirection === 'forward' ? 0.8 : 1,
+                zIndex: 1
+              }}
+              transition={{ 
+                type: 'spring',
+                stiffness: 300,
+                damping: 30,
+                mass: 0.8
+              }}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+              }}
+            >
+            {currentView === View.LOGIN && (
+              <LoginPage onLogin={() => navigateForward(View.HOME)} />
+            )}
+            {currentView === View.HOME && (
+              <HomePage 
+                onNavigateToDetail={(deal) => {
+                  setCurrentDeal(deal);
+                  navigateForward(View.DUE_DILIGENCE);
+                }}
+                onCreateNewDeal={(deal) => {
+                  setCurrentDeal(deal);
+                  navigateForward(View.MATERIAL_UPLOAD);
+                }}
+                onNavigateToRecording={(deal) => {
+                  setCurrentDeal(deal);
+                  setPreviousView(View.HOME);
+                  navigateForward(View.RECORDING);
+                }}
+                onNavigateToTemplates={() => {
+                  navigateForward(View.MY_TEMPLATES);
+                }}
+              />
+            )}
+            {currentView === View.DUE_DILIGENCE && (
+              <DueDiligencePage 
+                deal={currentDeal}
+                onBack={() => navigateBackward(View.HOME)}
+                onNavigateToRecording={() => {
+                  setPreviousView(View.DUE_DILIGENCE);
+                  navigateForward(View.RECORDING);
+                }}
+                onNavigateToMaterials={() => navigateForward(View.MATERIALS_LIST)}
+                onNavigateToQuestions={() => navigateForward(View.QUESTIONS_LIST)}
+                onEditInfo={handleEditCorporateInfo}
+                onChangeTemplate={() => {
+                  setPreviousView(View.DUE_DILIGENCE);
+                  navigateForward(View.TEMPLATE_SELECTION);
+                }}
+                onDealDetailLoaded={(detail) => setCurrentDeal(detail)}
+              />
+            )}
         {currentView === View.MATERIALS_LIST && (
           <MaterialsListPage 
             dealId={currentDeal?.id}
-            onBack={() => setCurrentView(View.DUE_DILIGENCE)}
+            onBack={() => navigateBackward(View.DUE_DILIGENCE)}
             onGenerateReport={() => setCurrentView(View.AI_GENERATION)}
           />
         )}
         {currentView === View.MATERIAL_UPLOAD && (
           <MaterialUploadPage 
             deal={currentDeal}
-            onBack={() => setCurrentView(View.HOME)}
+            onBack={() => navigateBackward(View.HOME)}
             onStartInterview={() => {
               setPreviousView(View.DUE_DILIGENCE);
               setCurrentView(View.RECORDING);
@@ -107,21 +215,28 @@ const App: React.FC = () => {
               setPreviousView(View.MATERIAL_UPLOAD);
               setCurrentView(View.TEMPLATE_SELECTION);
             }}
+            onPreviewTemplate={(name, url) => {
+              setPreviewTemplate({ name, url });
+              setPreviousView(View.MATERIAL_UPLOAD);
+              setCurrentView(View.TEMPLATE_PREVIEW);
+            }}
+            initialTab={materialUploadTab}
+            onTabChange={setMaterialUploadTab}
           />
         )}
         {currentView === View.AI_GENERATION && (
           <AiGenerationPage 
-            onBack={() => setCurrentView(View.MATERIAL_UPLOAD)}
+            onBack={() => navigateBackward(View.MATERIAL_UPLOAD)}
             onConfirm={() => setCurrentView(View.DUE_DILIGENCE)}
           />
         )}
         {currentView === View.RECORDING && (
-          <RecordingPage onBack={() => setCurrentView(previousView)} />
+          <RecordingPage onBack={() => navigateBackward(previousView)} />
         )}
         {currentView === View.CORPORATE_EDIT && (
           <CorporateEditPage 
             deal={currentDeal}
-            onBack={() => setCurrentView(previousView)}
+            onBack={() => navigateBackward(previousView)}
             onConfirm={(updatedName, updatedLogo) => {
               // 更新 currentDeal 的企业名称和 logo
               if (currentDeal) {
@@ -137,13 +252,13 @@ const App: React.FC = () => {
         )}
         {currentView === View.MY_TEMPLATES && (
           <MyTemplatesPage 
-            onBack={() => setCurrentView(View.HOME)}
+            onBack={() => navigateBackward(View.HOME)}
             onUpload={() => setCurrentView(View.UPLOAD_TEMPLATE)}
           />
         )}
         {currentView === View.UPLOAD_TEMPLATE && (
           <UploadTemplatePage 
-            onBack={() => setCurrentView(View.MY_TEMPLATES)}
+            onBack={() => navigateBackward(View.MY_TEMPLATES)}
             onCancel={() => setCurrentView(View.MY_TEMPLATES)}
             onSubmit={() => {
               // 提交成功后返回模板列表
@@ -153,20 +268,29 @@ const App: React.FC = () => {
         )}
         {currentView === View.TEMPLATE_SELECTION && (
           <TemplateSelectionPage 
-            onBack={() => setCurrentView(previousView)}
+            onBack={() => navigateBackward(previousView)}
             onPreview={(name, url) => {
               setPreviewTemplate({ name, url });
               setCurrentView(View.TEMPLATE_PREVIEW);
             }}
             currentTemplateId={currentDeal?.templateId}
             dealId={currentDeal?.id}
+            onTemplateChanged={(newTemplateId) => {
+              // 更新 currentDeal 的 templateId
+              if (currentDeal) {
+                setCurrentDeal({
+                  ...currentDeal,
+                  templateId: newTemplateId,
+                });
+              }
+            }}
           />
         )}
         {currentView === View.TEMPLATE_PREVIEW && previewTemplate && (
           <TemplatePreviewPage 
             templateName={previewTemplate.name}
             templateUrl={previewTemplate.url}
-            onBack={() => setCurrentView(View.TEMPLATE_SELECTION)}
+            onBack={() => navigateBackward(previousView)}
           />
         )}
         {currentView === View.QUESTIONS_LIST && (
@@ -174,10 +298,13 @@ const App: React.FC = () => {
             dealName={currentDeal?.interviewCust}
             dealLogo={currentDeal?.logo}
             questionInfoList={currentDeal?.questionInfoList || []}
-            onBack={() => setCurrentView(View.DUE_DILIGENCE)}
+            onBack={() => navigateBackward(View.DUE_DILIGENCE)}
           />
         )}
+          </motion.div>
+        </AnimatePresence>
       </div>
+      )}
     </>
   );
 };

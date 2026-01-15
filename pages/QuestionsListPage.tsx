@@ -178,54 +178,58 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
       {/* Content */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-4 pb-24"
+        className="flex-1 overflow-hidden px-4 pb-24"
       >
         {/* Deal Info Card */}
-        <div className="mt-4 bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              {/* 尽调 Logo */}
-              <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center overflow-hidden">
-                {dealLogo ? (
-                  <img src={dealLogo} alt="logo" className="w-full h-full object-cover" />
-                ) : (
-                  <FileText size={20} className="text-indigo-600" />
-                )}
+        <div className="mt-4 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          {/* Fixed Header */}
+          <div className="p-4 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {/* 尽调 Logo */}
+                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center overflow-hidden">
+                  {dealLogo ? (
+                    <img src={dealLogo} alt="logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <FileText size={20} className="text-indigo-600" />
+                  )}
+                </div>
+                <span className="font-bold text-slate-800">{dealName}</span>
               </div>
-              <span className="font-bold text-slate-800">{dealName}</span>
+              <span className="text-sm text-gray-400">共{totalQuestions}个问题</span>
             </div>
-            <span className="text-sm text-gray-400">共{totalQuestions}个问题</span>
           </div>
 
-          {/* Questions List */}
-          <div className="divide-y divide-gray-100">
-            {sortedQuestions.map((question) => (
-              <div 
-                key={question.id}
-                className="flex items-center justify-between py-4"
-              >
-                <span className={`text-sm flex-1 pr-2 ${question.CHECKED ? 'text-indigo-600 underline' : 'text-slate-700'}`}>
-                  {question.questionIndex}.{question.questionName}
-                </span>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {/* 编辑按钮 */}
-                  <button 
-                    onClick={() => handleEditQuestion(question)}
-                    className="p-2 text-gray-300 hover:text-indigo-500 transition-colors"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  {/* 删除按钮 */}
-                  <button 
-                    onClick={() => handleDeleteQuestion(question.id)}
-                    className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                  >
-                    <Minus size={16} className="border border-current rounded-full" />
-                  </button>
+          {/* Scrollable Questions List */}
+          <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+            <div className="divide-y divide-gray-100 px-4">
+              {sortedQuestions.map((question) => (
+                <div 
+                  key={question.id}
+                  className="flex items-center justify-between py-4"
+                >
+                  <span className={`text-sm flex-1 pr-2 ${question.CHECKED ? 'text-indigo-600 underline' : 'text-slate-700'}`}>
+                    {question.questionIndex}.{question.questionName}
+                  </span>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* 编辑按钮 */}
+                    <button 
+                      onClick={() => handleEditQuestion(question)}
+                      className="p-2 text-gray-300 hover:text-indigo-500 transition-colors"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    {/* 删除按钮 */}
+                    <button 
+                      onClick={() => handleDeleteQuestion(question.id)}
+                      className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                    >
+                      <Minus size={16} className="border border-current rounded-full" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Empty State */}

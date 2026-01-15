@@ -10,13 +10,15 @@ interface TemplateSelectionPageProps {
   onPreview: (name: string, url: string) => void;
   currentTemplateId?: string;
   dealId?: string; // 尽调实例 ID
+  onTemplateChanged?: (newTemplateId: string) => void; // 模板更换成功的回调
 }
 
 const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({ 
   onBack, 
   onPreview,
   currentTemplateId,
-  dealId
+  dealId,
+  onTemplateChanged
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
@@ -82,6 +84,8 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
       if (res.success) {
         setSelectedId(template.id);
         Toast.success('更换成功');
+        // 通知父组件模板已更换
+        onTemplateChanged?.(template.id);
       } else {
         Toast.fail(res.message || '更换失败');
       }
