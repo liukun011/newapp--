@@ -12,6 +12,7 @@ export enum View {
   TEMPLATE_SELECTION = 'TEMPLATE_SELECTION', // TemplateSelectionPage - 模板选择页
   TEMPLATE_PREVIEW = 'TEMPLATE_PREVIEW',     // TemplatePreviewPage - 模板预览页
   QUESTIONS_LIST = 'QUESTIONS_LIST',  // QuestionsListPage - 常用问题集合页
+  SETTINGS = 'SETTINGS',              // SettingsPage - 设置页
 }
 
 // 尽调状态枚举

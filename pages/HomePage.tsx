@@ -20,13 +20,15 @@ interface HomePageProps {
   onCreateNewDeal?: (deal: DealRecord) => void;
   onNavigateToRecording?: (deal: DealRecord) => void;
   onNavigateToTemplates?: () => void;
+  onNavigateToSettings?: () => void;
 }
 
 const HomePage: React.FC<HomePageProps> = ({ 
   onNavigateToDetail, 
   onCreateNewDeal, 
   onNavigateToRecording,
-  onNavigateToTemplates 
+  onNavigateToTemplates,
+  onNavigateToSettings,
 }) => {
   const [activeTab, setActiveTab] = useState<"ongoing" | "archived">("ongoing");
   const [searchTerm, setSearchTerm] = useState(""); // 输入框的值
@@ -164,7 +166,10 @@ const HomePage: React.FC<HomePageProps> = ({
             <LayoutTemplate size={20} strokeWidth={2} />
             <span className="text-[11px] mt-0.5 font-medium">模板</span>
           </button>
-          <button className="flex flex-col items-center justify-center min-w-[48px] text-slate-600 hover:text-indigo-600 active:scale-95 transition-all">
+          <button 
+            onClick={onNavigateToSettings}
+            className="flex flex-col items-center justify-center min-w-[48px] text-slate-600 hover:text-indigo-600 active:scale-95 transition-all"
+          >
             <Settings size={20} strokeWidth={2} />
             <span className="text-[11px] mt-0.5 font-medium">设置</span>
           </button>

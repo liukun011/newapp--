@@ -2,8 +2,6 @@
 
 这是一个基于 React 和 Vite 构建的移动端 AI 访谈助手应用。
 
-View your app in AI Studio: https://ai.studio/apps/drive/1Fcik8PNkdNTmy1PjZx1AlMs3hhvKsp_F
-
 ## 环境配置
 
 项目支持三种环境配置：

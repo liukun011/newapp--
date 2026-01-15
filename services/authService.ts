@@ -42,4 +42,11 @@ export const authService = {
       },
     });
   },
+
+  // 退出登录
+  logout: async (): Promise<AuthResponse> => {
+    return request<AuthResponse>('https://user.binarysee.com/api/iam/token/logout', {
+      method: 'POST',
+    });
+  },
 };

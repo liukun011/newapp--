@@ -14,6 +14,7 @@ import UploadTemplatePage from './pages/UploadTemplatePage';
 import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import TemplatePreviewPage from './pages/TemplatePreviewPage';
 import QuestionsListPage from './pages/QuestionsListPage';
+import SettingsPage from './pages/SettingsPage';
 import { View, DealRecord } from './types';
 import { COLORS } from './constants';
 
@@ -156,12 +157,12 @@ const App: React.FC = () => {
       ) : (
         /* Main App - only render after splash is hidden */
         <div className="w-full max-w-md mx-auto min-h-screen relative overflow-hidden bg-transparent">
-          <AnimatePresence initial={false}>
+          <AnimatePresence initial={false} mode={navDirection === 'root' ? 'wait' : 'sync'}>
             <motion.div
               key={currentView}
               initial={{ 
                 x: navDirection === 'root' ? 0 : (navDirection === 'forward' ? '100%' : '-100%'),
-                opacity: navDirection === 'root' ? 0 : 1,
+                opacity: 1,
                 zIndex: 10
               }}
               animate={{ 
@@ -172,14 +173,15 @@ const App: React.FC = () => {
               exit={{ 
                 x: navDirection === 'root' ? 0 : (navDirection === 'forward' ? '-30%' : '100%'),
                 opacity: navDirection === 'root' ? 0 : (navDirection === 'forward' ? 0.8 : 1),
-                zIndex: 1
+                zIndex: 1,
+                transition: { duration: navDirection === 'root' ? 0 : 0.3 }
               }}
               transition={{ 
                 type: navDirection === 'root' ? 'tween' : 'spring',
                 stiffness: 300,
                 damping: 30,
                 mass: 0.8,
-                duration: navDirection === 'root' ? 0.3 : undefined
+                duration: navDirection === 'root' ? 0.2 : undefined
               }}
               style={{
                 position: 'absolute',
@@ -209,6 +211,9 @@ const App: React.FC = () => {
                 }}
                 onNavigateToTemplates={() => {
                   navigateForward(View.MY_TEMPLATES);
+                }}
+                onNavigateToSettings={() => {
+                  navigateForward(View.SETTINGS);
                 }}
               />
             )}
@@ -335,6 +340,20 @@ const App: React.FC = () => {
             dealLogo={currentDeal?.logo}
             questionInfoList={currentDeal?.questionInfoList || []}
             onBack={() => navigateBackward(View.DUE_DILIGENCE)}
+          />
+        )}
+        {currentView === View.SETTINGS && (
+          <SettingsPage 
+            onBack={() => navigateBackward(View.HOME)}
+            onLogout={() => {
+              localStorage.removeItem('zov-user-token');
+              localStorage.removeItem('zov-userinfo');
+              sessionStorage.removeItem('zov-current-view');
+              sessionStorage.removeItem('zov-current-deal');
+              setNavDirection('root');
+              setCurrentView(View.LOGIN);
+              setCurrentDeal(null);
+            }}
           />
         )}
           </motion.div>
