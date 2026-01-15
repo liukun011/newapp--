@@ -9,6 +9,8 @@
 # 生产构建
 /dist
 /build
+/talk-assistant
+talk-assistant.zip
 
 # 环境变量 (保留 .env.example 作为模板)
 .env.local
