@@ -15,7 +15,7 @@ import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import TemplatePreviewPage from './pages/TemplatePreviewPage';
 import QuestionsListPage from './pages/QuestionsListPage';
 import SettingsPage from './pages/SettingsPage';
-import { View, DealRecord } from './types';
+import { View, DealRecord, QuestionInfo } from './types';
 import { COLORS } from './constants';
 
 const App: React.FC = () => {
@@ -356,6 +356,27 @@ const App: React.FC = () => {
                 const updatedList = currentDeal.questionInfoList?.filter(q => 
                   q.id !== questionId
                 ) || [];
+                setCurrentDeal({
+                  ...currentDeal,
+                  questionInfoList: updatedList,
+                });
+              }
+            }}
+            onAddQuestion={(questionName) => {
+              if (currentDeal) {
+                const newQuestion: QuestionInfo = {
+                  id: `temp_${Date.now()}`,
+                  questionName: questionName,
+                  questionIndex: (currentDeal.questionInfoList?.length || 0) + 1,
+                  recStatus: '1',
+                  questionAnswer: null,
+                  questionAnswerTime: null,
+                  questionStatus: '0',
+                  templateId: '',
+                  agencyId: '',
+                  CHECKED: false,
+                };
+                const updatedList = [...(currentDeal.questionInfoList || []), newQuestion];
                 setCurrentDeal({
                   ...currentDeal,
                   questionInfoList: updatedList,

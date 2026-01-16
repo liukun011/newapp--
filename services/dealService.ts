@@ -27,6 +27,8 @@ export const dealService = {
     id?: string;
     interviewCust?: string;
     logo?: string;
+    questionInfoList?: any[];
+    [key: string]: any;
   }) => {
     return request<ApiResponse<DealRecord>>('/deal/createOrUpdateDealInst', {
       method: 'POST',

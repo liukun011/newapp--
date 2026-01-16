@@ -10,6 +10,7 @@ interface QuestionsListPageProps {
   onBack: () => void;
   onUpdateQuestion?: (question: QuestionInfo) => void;
   onDeleteQuestion?: (questionId: string) => void;
+  onAddQuestion?: (questionName: string) => void;
 }
 
 // 编辑问题弹框组件
@@ -19,6 +20,83 @@ interface EditQuestionModalProps {
   onClose: () => void;
   onConfirm: (questionName: string) => void;
 }
+
+// 新增问题弹框组件
+interface AddQuestionModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onConfirm: (questionName: string) => void;
+}
+
+const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
+  visible,
+  onClose,
+  onConfirm,
+}) => {
+  const [newQuestionName, setNewQuestionName] = useState('');
+
+  // 每次打开弹框清空输入
+  useEffect(() => {
+    if (visible) {
+      setNewQuestionName('');
+    }
+  }, [visible]);
+
+  if (!visible) return null;
+
+  const handleConfirm = () => {
+    if (newQuestionName.trim()) {
+      onConfirm(newQuestionName.trim());
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/50"
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className="relative bg-white rounded-2xl w-[85%] max-w-[340px] shadow-xl animate-fadeIn">
+        {/* Header */}
+        <div className="pt-5 pb-3 text-center">
+          <h3 className="text-lg font-semibold text-slate-800">新增问题</h3>
+        </div>
+        
+        {/* Content */}
+        <div className="px-5 pb-5">
+          <div className="relative">
+            <textarea
+              value={newQuestionName}
+              onChange={(e) => setNewQuestionName(e.target.value)}
+              className="w-full min-h-[120px] p-4 text-base text-slate-700 bg-gray-50 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none resize-none transition-all"
+              placeholder="请输入问题内容"
+            />
+          </div>
+        </div>
+        
+        {/* Footer Buttons */}
+        <div className="flex border-t border-gray-100">
+          <button
+            onClick={onClose}
+            className="flex-1 py-4 text-center text-slate-600 font-medium hover:bg-gray-50 rounded-bl-2xl transition-colors"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors"
+            style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+          >
+            确认
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   visible,
@@ -97,6 +175,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   onBack,
   onUpdateQuestion,
   onDeleteQuestion,
+  onAddQuestion,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -104,6 +183,9 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   // 编辑弹框状态
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionInfo | null>(null);
+  
+  // 新增弹框状态
+  const [addModalVisible, setAddModalVisible] = useState(false);
   
   // 删除确认弹框状态
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -127,10 +209,18 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 添加新问题
-  const handleAddQuestion = () => {
-    // TODO: 实现添加问题逻辑
-    console.log('Add new question');
+  // 点击添加按钮
+  const handleAddQuestionClick = () => {
+    setAddModalVisible(true);
+  };
+
+  // 确认添加
+  const handleConfirmAdd = (questionName: string) => {
+    if (onAddQuestion) {
+      onAddQuestion(questionName);
+      Toast.success('添加成功');
+    }
+    setAddModalVisible(false);
   };
 
   // 点击编辑按钮，打开弹框
@@ -275,13 +365,20 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
         
         {/* Add Question Button */}
         <button 
-          onClick={handleAddQuestion}
+          onClick={handleAddQuestionClick}
           className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95"
           style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
         >
           <Plus size={24} />
         </button>
       </div>
+
+      {/* 新增问题弹框 */}
+      <AddQuestionModal
+        visible={addModalVisible}
+        onClose={() => setAddModalVisible(false)}
+        onConfirm={handleConfirmAdd}
+      />
 
       {/* 编辑问题弹框 */}
       <EditQuestionModal

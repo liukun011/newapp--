@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Sparkles, Check, FileSpreadsheet, Eye, RefreshCw, MinusCircle, Trash2 } from 'lucide-react';
-import { Toast } from 'react-vant';
+import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Sparkles, Check, FileSpreadsheet, Eye, RefreshCw, MinusCircle, Trash2, Plus } from 'lucide-react';
+import { Toast, Dialog } from 'react-vant';
 import Button from '../components/Button';
 import VoiceInputModal from '../components/VoiceInputModal';
 import { DealRecord, Resource, QuestionInfo } from '../types';
@@ -58,6 +58,10 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   // 问题删除确认弹框状态
   const [questionDeleteModalVisible, setQuestionDeleteModalVisible] = useState(false);
   const [deletingQuestion, setDeletingQuestion] = useState<QuestionInfo | null>(null);
+
+  // 新增问题弹框状态
+  const [questionAddModalVisible, setQuestionAddModalVisible] = useState(false);
+  const [newQuestionName, setNewQuestionName] = useState('');
   
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
@@ -389,7 +393,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
       {/* Main Content */}
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto bg-[#F7F8FA] pb-28">
+      <div className="flex-1 overflow-y-auto bg-[#F7F8FA]">
         
         {/* Tab 1: Upload */}
         {activeTab === 'upload' && (
@@ -490,7 +494,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
         {/* Tab 2: Templates */}
         {activeTab === 'template' && (
-          <div className="space-y-3">
+          <div className="space-y-3 p-4">
              {currentTemplate ? (
                <div key={currentTemplate.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col gap-4">
                   {/* Card Header */}
@@ -543,7 +547,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         
         {/* Tab 3: Questions */}
         {activeTab === 'questions' && (
-          <div className="space-y-3">
+          <div className="flex flex-col h-full p-4 pb-2 overflow-hidden relative">
             {/* Category Selector and Refresh Button */}
             <div className="flex items-center gap-3">
               {/* Category Dropdown */}
@@ -552,13 +556,23 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                   value={selectedCategoryId}
                   onChange={(e) => {
                     const newCategoryId = e.target.value;
-                    setSelectedCategoryId(newCategoryId);
                     
-                    // 查找对应的分类并更新问题列表
-                    const category = templateCategories.find(c => c.id === newCategoryId);
-                    if (category) {
-                      setQuestions(category.questionList || []);
-                    }
+                    Dialog.confirm({
+                      title: '切换确认',
+                      message: '切换模板分类将重置之前新增或修改的问题，是否确认切换？',
+                    })
+                    .then(() => {
+                      setSelectedCategoryId(newCategoryId);
+                      
+                      // 查找对应的分类并更新问题列表
+                      const category = templateCategories.find(c => c.id === newCategoryId);
+                      if (category) {
+                        setQuestions(category.questionList || []);
+                      }
+                    })
+                    .catch(() => {
+                      // 取消切换
+                    });
                   }}
                   className="w-full h-12 px-4 pr-10 bg-white text-slate-800 text-sm rounded-xl border border-gray-200 appearance-none focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
                 >
@@ -596,14 +610,14 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
             {/* Questions List */}
             {questions.length > 0 ? (
-              <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-sm overflow-hidden mt-3">
                 {/* Fixed Header */}
-                <div className="p-4 border-b border-gray-100">
+                <div className="p-4 border-b border-gray-100 flex-shrink-0">
                   <h3 className="text-sm font-bold text-slate-800">问题列表 ({questions.length})</h3>
                 </div>
                 
-                {/* Scrollable Content */}
-                <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 380px)' }}>
+                {/* Scrollable Questions Content */}
+                <div className="flex-1 overflow-y-auto pb-20">
                   <div className="divide-y divide-gray-100">
                     {questions.map((question) => (
                       <div 
@@ -645,16 +659,28 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                           </button>
                         </div>
                       </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+              ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-gray-400 mt-3">
                 <FileText size={48} className="mb-4 opacity-20" />
                 <p className="text-sm">暂无问题</p>
               </div>
             )}
+            
+            {/* Add Question Button */}
+            <button 
+              onClick={() => {
+                setNewQuestionName('');
+                setQuestionAddModalVisible(true);
+              }}
+              className="absolute right-6 bottom-6 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+            >
+              <Plus size={24} />
+            </button>
           </div>
         )}
 
@@ -763,14 +789,39 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 取消
               </button>
               <button
-                onClick={() => {
-                  if (editedQuestionName.trim()) {
-                    setQuestions(prev => prev.map(q => 
+                onClick={async () => {
+                  if (editedQuestionName.trim() && editingQuestion) {
+                    const updatedList = questions.map(q => 
                       q.id === editingQuestion.id 
                         ? { ...q, questionName: editedQuestionName.trim() } 
                         : q
-                    ));
-                    Toast.success('修改成功');
+                    );
+                    
+                    if (deal?.id) {
+                      Toast.loading({ message: '修改中...', duration: 0 });
+                      try {
+                        const res = await dealService.createOrUpdateDealInst({
+                          id: deal.id,
+                          questionId: deal.questionId,
+                          questionInfoList: updatedList
+                        });
+                        Toast.clear();
+                        if (res.success) {
+                          setQuestions(updatedList);
+                          Toast.success('修改成功');
+                        } else {
+                          Toast.fail(res.message || '修改失败');
+                          return;
+                        }
+                      } catch (error) {
+                        Toast.clear();
+                        Toast.fail('修改失败');
+                        return;
+                      }
+                    } else {
+                      setQuestions(updatedList);
+                      Toast.success('修改成功');
+                    }
                   }
                   setQuestionEditModalVisible(false);
                 }}
@@ -809,14 +860,124 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 取消
               </button>
               <button
-                onClick={() => {
-                  setQuestions(prev => prev.filter(q => q.id !== deletingQuestion.id));
-                  Toast.success('删除成功');
+                onClick={async () => {
+                  if (deletingQuestion) {
+                    const updatedList = questions.filter(q => q.id !== deletingQuestion.id);
+                    
+                    if (deal?.id) {
+                      Toast.loading({ message: '删除中...', duration: 0 });
+                      try {
+                        const res = await dealService.createOrUpdateDealInst({
+                          id: deal.id,
+                          questionId: deal.questionId,
+                          questionInfoList: updatedList
+                        });
+                        Toast.clear();
+                        if (res.success) {
+                          setQuestions(updatedList);
+                          Toast.success('删除成功');
+                        } else {
+                          Toast.fail(res.message || '删除失败');
+                          return;
+                        }
+                      } catch (error) {
+                        Toast.clear();
+                        Toast.fail('删除失败');
+                        return;
+                      }
+                    } else {
+                      setQuestions(updatedList);
+                      Toast.success('删除成功');
+                    }
+                  }
                   setQuestionDeleteModalVisible(false);
                 }}
                 className="flex-1 py-4 text-center text-white font-medium bg-red-500 hover:bg-red-600 transition-colors"
               >
                 确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Question Add Modal */}
+      {questionAddModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div 
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setQuestionAddModalVisible(false)}
+          />
+          <div className="relative bg-white rounded-2xl w-[85%] max-w-[340px] shadow-xl animate-fadeIn">
+            <div className="pt-5 pb-3 text-center">
+              <h3 className="text-lg font-semibold text-slate-800">新增问题</h3>
+            </div>
+            <div className="px-5 pb-5">
+              <textarea
+                value={newQuestionName}
+                onChange={(e) => setNewQuestionName(e.target.value)}
+                className="w-full min-h-[120px] p-4 text-base text-slate-700 bg-gray-50 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none resize-none transition-all"
+                placeholder="请输入问题内容"
+              />
+            </div>
+            <div className="flex border-t border-gray-100">
+              <button
+                onClick={() => setQuestionAddModalVisible(false)}
+                className="flex-1 py-4 text-center text-slate-600 font-medium hover:bg-gray-50 rounded-bl-2xl transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={async () => {
+                  if (newQuestionName.trim()) {
+                    const newQuestion: QuestionInfo = {
+                      // id: `temp_${Date.now()}`,
+                      questionName: newQuestionName.trim(),
+                      questionIndex: questions.length + 1,
+                      recStatus: '1',
+                      questionAnswer: null,
+                      questionAnswerTime: null,
+                      questionStatus: '0',
+                      templateId: '',
+                      agencyId: '',
+                      CHECKED: false,
+                    };
+                    
+                    const updatedList = [...questions, newQuestion];
+                    
+                    if (deal?.id) {
+                      Toast.loading({ message: '添加中...', duration: 0 });
+                      try {
+                        const res = await dealService.createOrUpdateDealInst({
+                          id: deal.id,
+                          questionId: deal.questionId,
+                          questionInfoList: updatedList
+                        });
+                        Toast.clear();
+                        if (res.success) {
+                          setQuestions(updatedList);
+                          Toast.success('添加成功');
+                        } else {
+                          Toast.fail(res.message || '添加失败');
+                          return;
+                        }
+                      } catch (error) {
+                        Toast.clear();
+                        console.error('Update questions failed:', error);
+                        Toast.fail('添加失败');
+                        return;
+                      }
+                    } else {
+                      setQuestions(updatedList);
+                      Toast.success('添加成功');
+                    }
+                  }
+                  setQuestionAddModalVisible(false);
+                }}
+                className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors"
+                style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+              >
+                确认
               </button>
             </div>
           </div>
