@@ -197,7 +197,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
           <div className="absolute inset-0 z-50 bg-white flex flex-col items-center pt-24">
             <div className="w-56 h-56 flex items-center justify-center relative">
                <img 
-                 src="/talk-assistant/assets/startrecorde5.png" 
+                 src="/talk-assistant/assets/startrecorde.png" 
                  alt="Countdown Bear"
                  className="w-full h-full object-contain"
                />

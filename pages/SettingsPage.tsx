@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronRight, FileText, PenTool, HelpCircle, Settings, LogOut, User, Layers, Edit2 } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { authService } from '../services/authService';
@@ -109,10 +110,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
 
 
-      {/* Custom Logout Confirmation Dialog */}
-      {showLogoutDialog && (
+      {/* Custom Logout Confirmation Dialog - Portaled to body to overlay Bottom Bar */}
+      {showLogoutDialog && createPortal(
         <div 
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-[2px] animate-fadeIn"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-[2px] animate-fadeIn"
           onClick={() => setShowLogoutDialog(false)}
         >
           <div 
@@ -146,7 +147,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       
       <style>{`

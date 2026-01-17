@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowLeft, FileText, Pencil, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { QuestionInfo } from '../types';
@@ -50,8 +51,8 @@ const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50"
@@ -94,7 +95,8 @@ const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -120,8 +122,8 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50"
@@ -164,7 +166,8 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -388,9 +391,9 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
         onConfirm={handleConfirmEdit}
       />
 
-      {/* 删除确认弹框 */}
-      {deleteModalVisible && deletingQuestion && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* 删除确认弹框 - Portal to Body */}
+      {deleteModalVisible && deletingQuestion && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/50"
@@ -426,7 +429,8 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   Search,
   Trash2,
@@ -342,9 +343,9 @@ const HomePage: React.FC<HomePageProps> = ({
 
 
 
-      {/* 删除确认弹框 */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* 删除确认弹框 - Portal to Body */}
+      {showDeleteConfirm && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           {/* 半透明背景 */}
           <div 
             className="absolute inset-0 bg-black/40"
@@ -382,7 +383,8 @@ const HomePage: React.FC<HomePageProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
