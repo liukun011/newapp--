@@ -13,6 +13,8 @@ export enum View {
   TEMPLATE_PREVIEW = 'TEMPLATE_PREVIEW',     // TemplatePreviewPage - 模板预览页
   QUESTIONS_LIST = 'QUESTIONS_LIST',  // QuestionsListPage - 常用问题集合页
   SETTINGS = 'SETTINGS',              // SettingsPage - 设置页
+  HISTORY = 'HISTORY',                // HistoryRecordsPage - 历史访谈页
+  HISTORY_DETAIL = 'HISTORY_DETAIL',  // HistoryDetailPage - 历史访谈详情页
 }
 
 // 尽调状态枚举
@@ -50,7 +52,7 @@ export const DealReportStatusDescription: Record<DealReportStatusEnum, string> =
 };
 
 export interface Question {
-  id: number;
+  id: number | string;
   text: string;
   isAnswered: boolean;
   details?: string;

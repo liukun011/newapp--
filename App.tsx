@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { Home, User, Plus } from 'lucide-react';
+import { Toast } from 'react-vant';
+import { useRecordingStore } from './store/useRecordingStore';
+import { dealService } from './services/dealService';
 import SplashScreen from './pages/SplashScreen';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
@@ -15,10 +19,15 @@ import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import TemplatePreviewPage from './pages/TemplatePreviewPage';
 import QuestionsListPage from './pages/QuestionsListPage';
 import SettingsPage from './pages/SettingsPage';
+import HistoryRecordsPage from './pages/HistoryRecordsPage';
+import HistoryDetailPage from './pages/HistoryDetailPage';
 import { View, DealRecord, QuestionInfo } from './types';
 import { COLORS } from './constants';
 
 const App: React.FC = () => {
+  const appContainerRef = useRef<HTMLDivElement>(null);
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const bubbleControls = useAnimation();
   // 启动页状态
   const [showSplash, setShowSplash] = useState(true);
   
@@ -39,6 +48,17 @@ const App: React.FC = () => {
       return null;
     }
   });
+  // 录音状态管理 (使用 Zustand Store)
+  const {
+    currentInterviewInstId,
+    currentInterviewInstTitle,
+    isRecording,
+    recordingSeconds,
+    setIsRecording,
+    setRecordingSeconds,
+    setData
+  } = useRecordingStore();
+
   // 模板预览数据
   const [previewTemplate, setPreviewTemplate] = useState<{ name: string; url: string } | null>(null);
   // 记住资料上传页的当前标签页
@@ -50,6 +70,17 @@ const App: React.FC = () => {
   // 页面滚动位置缓存
   const [scrollPositions, setScrollPositions] = useState<Record<View, number>>({} as Record<View, number>);
 
+  // 记录录音页面的返回路径 (用于从历史记录返回录音页时恢复正确的返回路径)
+  const [recordingBackView, setRecordingBackView] = useState<View>(View.HOME);
+
+  // 悬浮窗显示时的入场动画
+  useEffect(() => {
+
+    if (currentInterviewInstId && currentView !== View.LOGIN && currentView !== View.RECORDING) {
+      bubbleControls.start({ scale: 1, opacity: 1, x: 0 });
+    }
+  }, [currentInterviewInstId, currentView, bubbleControls]);
+  
   // 状态持久化
   useEffect(() => {
     if (currentView === View.LOGIN) {
@@ -65,6 +96,28 @@ const App: React.FC = () => {
       sessionStorage.setItem('zov-current-deal', JSON.stringify(currentDeal));
     }
   }, [currentDeal]);
+
+  // 全局计时器
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingSeconds((s: number) => s + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording, setRecordingSeconds]);
+
+  const formatTime = (totalSeconds: number) => {
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    // 如果有小时，格式化为 HH:MM:SS，否则 MM:SS
+    if (hrs > 0) {
+      return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Background Gradient Style
   // Using a fixed background to prevent repaint on scroll
@@ -156,7 +209,7 @@ const App: React.FC = () => {
         </motion.div>
       ) : (
         /* Main App - only render after splash is hidden */
-        <div className="w-full max-w-md mx-auto min-h-screen relative overflow-hidden bg-transparent">
+        <div ref={appContainerRef} className="w-full max-w-md mx-auto min-h-screen relative overflow-hidden bg-transparent">
           <AnimatePresence initial={false} mode={navDirection === 'root' ? 'wait' : 'sync'}>
             <motion.div
               key={currentView}
@@ -204,10 +257,53 @@ const App: React.FC = () => {
                   setCurrentDeal(deal);
                   navigateForward(View.MATERIAL_UPLOAD);
                 }}
-                onNavigateToRecording={(deal) => {
-                  setCurrentDeal(deal);
-                  setPreviousView(View.HOME);
-                  navigateForward(View.RECORDING);
+                onNavigateToRecording={async (deal) => {
+                  try {
+                    // 调用接口创建访谈实例
+                    Toast.loading({ message: '准备访谈中...', duration: 0, forbidClick: true });
+                    // 1. 创建访谈实例
+                    const createRes = await dealService.createInterviewInst({
+                      interviewDealInstId: deal.id,
+                      interviewCustom: deal.interviewCust
+                    });
+                    
+                    if (createRes.success && createRes.data) {
+                       // 假设返回的数据直接是 ID，或者包含 interviewInstId 字段的对象
+                       const instId = typeof createRes.data === 'string' ? createRes.data : createRes.data?.interviewInstId;
+                       const instTitle = typeof createRes.data === 'string' ? '' : createRes.data?.interviewInstTitle;
+                       
+                       // 如果切换了访谈对象（ID不一致），则重置录音状态（初始化页面）
+                       const currentStore = useRecordingStore.getState();
+                       if (currentStore.currentInterviewInstId && currentStore.currentInterviewInstId !== instId) {
+                         currentStore.reset();
+                       }
+
+                       // 更新 Zustand Store
+                       setData({
+                        dealId: deal.id,
+                        interviewInstId: instId,
+                        title: instTitle || ''
+                       });
+                    }
+
+                    // 获取最新的尽调详情（包含问题清单）
+                    const detailRes = await dealService.getDealInstDetail(deal.id);
+                    if (detailRes.success && detailRes.data) {
+                      setCurrentDeal(detailRes.data);
+                    } else {
+                      setCurrentDeal(deal);
+                    }
+                    
+                    Toast.clear();
+
+                    setRecordingBackView(View.HOME);
+                    setPreviousView(View.HOME);
+                    navigateForward(View.RECORDING);
+                  } catch (error) {
+                    Toast.clear();
+                    Toast.fail('创建访谈失败');
+                    console.error('Failed to create interview instance:', error);
+                  }
                 }}
                 onNavigateToTemplates={() => {
                   navigateForward(View.MY_TEMPLATES);
@@ -222,6 +318,7 @@ const App: React.FC = () => {
                 deal={currentDeal}
                 onBack={() => navigateBackward(View.HOME)}
                 onNavigateToRecording={() => {
+                  setRecordingBackView(View.DUE_DILIGENCE);
                   setPreviousView(View.DUE_DILIGENCE);
                   navigateForward(View.RECORDING);
                 }}
@@ -238,7 +335,7 @@ const App: React.FC = () => {
         {currentView === View.MATERIALS_LIST && (
           <MaterialsListPage 
             dealId={currentDeal?.id}
-            onBack={() => navigateBackward(View.DUE_DILIGENCE)}
+            onBack={() => navigateBackward(previousView === View.RECORDING ? View.RECORDING : View.DUE_DILIGENCE)}
             onGenerateReport={() => setCurrentView(View.AI_GENERATION)}
           />
         )}
@@ -247,6 +344,7 @@ const App: React.FC = () => {
             deal={currentDeal}
             onBack={() => navigateBackward(View.HOME)}
             onStartInterview={() => {
+              setRecordingBackView(View.DUE_DILIGENCE);
               setPreviousView(View.DUE_DILIGENCE);
               setCurrentView(View.RECORDING);
             }}
@@ -272,7 +370,53 @@ const App: React.FC = () => {
           />
         )}
         {currentView === View.RECORDING && (
-          <RecordingPage onBack={() => navigateBackward(previousView)} />
+          <RecordingPage 
+            deal={currentDeal} 
+            onBack={() => navigateBackward(previousView)} 
+            onHistoryClick={() => {
+              navigateForward(View.HISTORY);
+            }}
+            isRecording={isRecording}
+            seconds={recordingSeconds}
+            onToggleRecording={() => setIsRecording(!isRecording)}
+            interviewInstId={currentInterviewInstId || undefined}
+            interviewInstTitle={currentInterviewInstTitle || undefined}
+            onFinish={() => {
+               // 确保回到尽调详情页, 并重置返回路径为首页
+               setPreviousView(View.HOME);
+               navigateBackward(View.DUE_DILIGENCE);
+            }}
+          />
+        )}
+        {currentView === View.HISTORY && (
+          <HistoryRecordsPage
+            dealId={currentDeal?.id}
+            onBack={() => {
+                setPreviousView(recordingBackView);
+                navigateBackward(View.RECORDING);
+            }}
+            onStartInterview={() => {
+                setPreviousView(recordingBackView);
+                navigateBackward(View.RECORDING);
+            }}
+            onRecordClick={(record) => {
+               setData({
+                 dealId: currentDeal?.id,
+                 interviewInstId: record.interviewInstId || record.id,
+                 title: record.interviewInstTitle
+               });
+               setPreviousView(View.HISTORY);
+               navigateForward(View.HISTORY_DETAIL);
+            }}
+          />
+        )}
+        {currentView === View.HISTORY_DETAIL && (
+          <HistoryDetailPage
+             deal={currentDeal}
+             interviewInstId={currentInterviewInstId || ''}
+             interviewInstTitle={currentInterviewInstTitle || ''}
+             onBack={() => navigateBackward(View.HISTORY)}
+          />
         )}
         {currentView === View.CORPORATE_EDIT && (
           <CorporateEditPage 
@@ -397,10 +541,128 @@ const App: React.FC = () => {
               setCurrentView(View.LOGIN);
               setCurrentDeal(null);
             }}
+            onNavigateToHome={() => {
+              setNavDirection('backward');
+              setCurrentView(View.HOME);
+            }}
+            onCreateNewDeal={(deal) => {
+              setCurrentDeal(deal);
+              navigateForward(View.MATERIAL_UPLOAD);
+            }}
+            onNavigateToDetail={(deal) => {
+              setCurrentDeal(deal);
+              navigateForward(View.DUE_DILIGENCE);
+            }}
           />
         )}
           </motion.div>
         </AnimatePresence>
+        {/* 全局录音悬浮窗 - 胶囊样式 */}
+        {currentInterviewInstId && (recordingSeconds > 0 || isRecording) && currentView !== View.LOGIN && currentView !== View.RECORDING && (
+          <motion.div 
+            ref={bubbleRef}
+            drag
+            dragConstraints={appContainerRef}
+            dragMomentum={false}
+            whileDrag={{ scale: 1.1 }}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={bubbleControls}
+            exit={{ scale: 0.8, opacity: 0 }}
+            onDragEnd={(event, info) => {
+              // 吸附逻辑：松手时判断中心点位置，吸附到最近的屏幕边缘
+              const winW = window.innerWidth;
+              const rect = bubbleRef.current?.getBoundingClientRect();
+              if (rect) {
+                const centerX = rect.left + rect.width / 2;
+                // 如果中心点在左半屏，吸附到左边；否则吸附到右边
+                if (centerX < winW / 2) {
+                  // x 是相对于初始位置 (fixed right:16px) 的偏移
+                  // 目标：Visual Left = 16px
+                  // Initial Visual Left = WinW - 16px - RectW
+                  // Visual Left = Initial + x => x = Visual Left - Initial
+                  // x = 16 - (WinW - 16 - RectW) = 32 + RectW - WinW
+                  bubbleControls.start({ x: 32 + rect.width - winW, transition: { type: 'spring', stiffness: 400, damping: 30 } });
+                } else {
+                  // 目标：Visual Right = 16px => x = 0
+                  bubbleControls.start({ x: 0, transition: { type: 'spring', stiffness: 400, damping: 30 } });
+                }
+              }
+            }}
+            className="fixed right-4 top-[120px] z-50 touch-none cursor-move"
+          >
+            <button
+              onClick={() => {
+                // 如果当前在历史记录页，点击浮窗返回录音页时不更新 previousView，
+                // 这样录音页的返回按钮依然指向之前的来源（如首页），避免死循环
+                if (currentView !== View.HISTORY) {
+                  setPreviousView(currentView);
+                }
+                setNavDirection('forward');
+                setCurrentView(View.RECORDING);
+              }}
+              className="bg-white rounded-full pl-2 pr-4 py-2 shadow-lg flex items-center gap-2 border border-teal-50 active:scale-95 transition-transform"
+            >
+              <div className={`w-5 h-5 rounded-full border-[3px] flex items-center justify-center relative ${isRecording ? 'border-teal-400' : 'border-red-400'}`}>
+                 <div className={`w-1.5 h-1.5 rounded-full ${isRecording ? 'bg-teal-500' : 'bg-red-500'}`} />
+                 {isRecording && (
+                   <div className="absolute inset-0 rounded-full border-[3px] border-teal-400 animate-ping opacity-20" />
+                 )}
+              </div>
+              <span className={`${isRecording ? 'text-teal-600' : 'text-red-500'} font-mono font-bold text-sm tracking-wide min-w-[48px]`}>
+                {isRecording ? formatTime(recordingSeconds) : '已暂停'}
+              </span>
+            </button>
+          </motion.div>
+        )}
+        
+        {/* Global Fixed Bottom Navigation Bar - Only for Home and Settings */}
+        {(currentView === View.HOME || currentView === View.SETTINGS) && (
+          <div className="fixed bottom-0 left-0 right-0 h-[70px] bg-white border-t border-gray-100 z-40 flex items-center justify-around pb-1 shadow-[0_-4px_8px_rgba(0,0,0,0.02)]">
+             <button 
+               className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
+               onClick={() => {
+                 if (currentView !== View.HOME) {
+                    setNavDirection('backward');
+                    setCurrentView(View.HOME);
+                 }
+               }}
+             >
+                <Home size={26} className={currentView === View.HOME ? "text-slate-800" : "text-gray-400"} strokeWidth={2.5} />
+                <span className={`text-[11px] font-bold ${currentView === View.HOME ? "text-slate-800" : "text-gray-400"}`}>首页</span>
+             </button>
+
+             <button 
+               className="w-[64px] h-[64px] rounded-full bg-[#4E3EF8] shadow-xl shadow-indigo-500/40 flex items-center justify-center -mt-12 active:scale-95 transition-transform z-50"
+               onClick={async () => {
+                  try {
+                    const res = await dealService.createOrUpdateDealInst({});
+                    if (res.success && res.data) {
+                       setCurrentDeal(res.data);
+                       setNavDirection('forward');
+                       setCurrentView(View.MATERIAL_UPLOAD);
+                    }
+                  } catch (error) {
+                    console.error("Failed to create deal:", error);
+                  }
+               }}
+             >
+                <Plus size={32} className="text-white" strokeWidth={3} />
+             </button>
+
+             <button 
+               className="flex flex-col items-center gap-1 min-w-[64px] pt-1 group"
+               onClick={() => {
+                  if (currentView !== View.SETTINGS) {
+                    setNavDirection('forward');
+                    setCurrentView(View.SETTINGS);
+                  }
+               }}
+             >
+                <User size={26} className={currentView === View.SETTINGS ? "text-slate-800" : "text-gray-400"} strokeWidth={2.5} />
+                <span className={`text-[11px] font-bold ${currentView === View.SETTINGS ? "text-slate-800" : "text-gray-400"}`}>我的</span>
+             </button>
+          </div>
+        )}
       </div>
       )}
     </>

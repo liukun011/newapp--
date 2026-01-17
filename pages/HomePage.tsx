@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Search,
-  Settings,
-  FileText,
-  Mic,
-  Plus,
-  LayoutTemplate,
   Trash2,
+  Check,
+  Bell,
+  FileText,
+  Plus,
 } from "lucide-react";
-import { SwipeCell } from "react-vant";
-import Button from "../components/Button";
+import { SwipeCell, PullRefresh } from "react-vant";
 import Mascot from "../components/Mascot";
 import { COLORS } from "../constants";
 import { DealRecord } from "../types";
@@ -25,16 +23,14 @@ interface HomePageProps {
 
 const HomePage: React.FC<HomePageProps> = ({ 
   onNavigateToDetail, 
-  onCreateNewDeal, 
   onNavigateToRecording,
-  onNavigateToTemplates,
-  onNavigateToSettings,
 }) => {
   const [activeTab, setActiveTab] = useState<"ongoing" | "archived">("ongoing");
   const [searchTerm, setSearchTerm] = useState(""); // 输入框的值
   const [searchQuery, setSearchQuery] = useState(""); // 实际用于查询的值
   const [loading, setLoading] = useState(false);
   const [deals, setDeals] = useState<DealRecord[]>([]);
+  const [showLimitTips, setShowLimitTips] = useState(false);
   
   // 删除确认弹框
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -55,15 +51,23 @@ const HomePage: React.FC<HomePageProps> = ({
     fetchDeals();
   }, [activeTab, searchQuery]);
 
-  const fetchDeals = async () => {
-    setLoading(true);
+  const fetchDeals = async (showGlobalLoading = true) => {
+    if (showGlobalLoading) setLoading(true);
     try {
-      const res = await dealService.queryDealInstList({
+      // 如果是下拉刷新，人为增加一点延迟，让Loading动画展示得更清楚
+      const apiPromise = dealService.queryDealInstList({
         pageNo: 0,
         pageSize: 50,
         dealInstTitle: searchQuery,
-        status: activeTab === "ongoing" ? ["1"] : ["2"], // 状态是字符串数组
+        status: activeTab === "ongoing" ? ["1"] : ["2"], 
       });
+      
+      const delayPromise = !showGlobalLoading 
+        ? new Promise(resolve => setTimeout(resolve, 800)) 
+        : Promise.resolve();
+
+      const [res] = await Promise.all([apiPromise, delayPromise]);
+
       if (res.success && res.data) {
         console.log(res.data);
         setDeals(res.data.records || []);
@@ -71,7 +75,7 @@ const HomePage: React.FC<HomePageProps> = ({
     } catch (error) {
       console.error("Failed to fetch deals:", error);
     } finally {
-      setLoading(false);
+      if (showGlobalLoading) setLoading(false);
     }
   };
 
@@ -139,9 +143,21 @@ const HomePage: React.FC<HomePageProps> = ({
       />
 
       {/* Header Area */}
-      <div className="relative z-10 px-4 pt-4 pb-2">
-        {/* Top Bar */}
-        <div className="flex items-center gap-2 mb-4">
+      <div className="bg-gradient-to-b from-[#E0EAFF] to-[#F7F8FA] px-4 pt-12 pb-4 flex-shrink-0 relative">
+        
+        {/* Custom Limit Tips Toast */}
+        {showLimitTips && (
+           <div className="fixed top-24 left-4 right-4 z-50 animate-[slideDown_0.3s_ease-out_forwards] flex justify-center">
+             <div className="bg-black/30 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
+               <span className="text-sm font-medium tracking-wide">
+                 您正有一个访谈正在进行中，暂时不支持开启新任务。
+               </span>
+             </div>
+           </div>
+        )}
+
+        {/* Header: Search & Bell */}
+        <div className="flex items-center gap-3 mb-6">
           {/* Search Box */}
           <div className="flex-1 relative">
             <input
@@ -150,197 +166,181 @@ const HomePage: React.FC<HomePageProps> = ({
               value={searchTerm}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              className="w-full h-[42px] px-4 pr-11 bg-white border-2 border-indigo-400 rounded-[30px] text-sm text-slate-800 placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full h-[44px] px-5 bg-white rounded-full text-[15px] text-slate-800 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
             />
             <button
               onClick={handleSearch}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-indigo-600 active:scale-95 transition-all"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-indigo-600 active:scale-95 transition-all"
             >
-              <Search size={18} />
+              <Search size={20} />
             </button>
           </div>
-          <button 
-            onClick={onNavigateToTemplates}
-            className="flex flex-col items-center justify-center min-w-[48px] text-slate-600 hover:text-indigo-600 active:scale-95 transition-all"
-          >
-            <LayoutTemplate size={20} strokeWidth={2} />
-            <span className="text-[11px] mt-0.5 font-medium">模板</span>
-          </button>
-          <button 
-            onClick={onNavigateToSettings}
-            className="flex flex-col items-center justify-center min-w-[48px] text-slate-600 hover:text-indigo-600 active:scale-95 transition-all"
-          >
-            <Settings size={20} strokeWidth={2} />
-            <span className="text-[11px] mt-0.5 font-medium">设置</span>
+          
+          <button className="relative w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm active:scale-95 transition-transform">
+             <Bell size={20} className="text-slate-700" />
+             <div className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
           </button>
         </div>
 
-        {/* Welcome Card */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between relative overflow-hidden">
-          <div className="relative z-10">
-            <h2 className="text-lg font-bold text-slate-800 mb-1">
-              你好，我是你的访谈助手，小狸！
-            </h2>
-            <p className="text-xs text-slate-500">
-              今日已有 {deals.filter((d) => d.status === "1").length}{" "}
-              个进行中的访谈任务
-            </p>
-            <div className="mt-3 flex gap-2">
-              <span className="inline-flex items-center px-2 py-1 rounded-md bg-indigo-50 text-indigo-600 text-[10px] font-medium">
-                尽调助手
-              </span>
-              <span className="inline-flex items-center px-2 py-1 rounded-md bg-orange-50 text-orange-600 text-[10px] font-medium">
-                会议记录
-              </span>
-            </div>
+        {/* AI Analysis Banner */}
+        <div className="bg-gradient-to-r from-[#EAF2FF] to-[#DCE9FF] rounded-2xl p-5 mb-2 relative overflow-hidden shadow-sm">
+          <div className="relative z-10 max-w-[60%]">
+             <h2 className="text-[19px] font-black text-[#1A4B8B] mb-2 leading-tight">
+               AI 智能资料分析
+             </h2>
+             <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90">
+               AI赋能，全方位深度挖掘资料细节与潜在规律，智能提炼高价值关键信息
+             </p>
+             <div className="mt-3 flex gap-1">
+               <div className="w-1.5 h-1.5 rounded-full bg-white/60"></div>
+               <div className="w-4 h-1.5 rounded-full bg-white"></div>
+               <div className="w-1.5 h-1.5 rounded-full bg-white/60"></div>
+             </div>
           </div>
-          <div className="w-24 h-24 -mr-2 -my-4 relative">
-            <Mascot size="small" />
-            <div className="absolute inset-0 z-20" />{" "}
-            {/* Transparent overlay to prevent image interaction */}
+          
+          {/* Right Image */}
+          <div className="absolute top-0 right-0 bottom-0 w-[45%]">
+             <img 
+               src="/talk-assistant/assets/home.png" 
+               alt="AI Analysis" 
+               className="w-full h-full object-contain object-right-bottom scale-110 translate-y-2 translate-x-2"
+             />
           </div>
-          {/* Decorative background circle */}
-          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-indigo-50 rounded-full z-0 opacity-50" />
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col relative z-10 mt-2 min-h-0">
-        {/* Tabs */}
-        <div className="flex px-4 border-b border-gray-100 bg-transparent flex-shrink-0">
+      <div className="flex-1 flex flex-col relative z-10 min-h-0 bg-[#F7F8FA] rounded-t-3xl -mt-4 px-4 pt-6">
+        
+        <h3 className="text-lg font-bold text-slate-800 mb-4 px-1">访谈记录</h3>
+
+        {/* Tabs - Segmented Control Style */}
+        <div className="bg-gray-100 p-1 rounded-xl flex mb-4">
           <button
-            className={`mr-6 py-3 text-[15px] font-bold relative transition-colors ${
-              activeTab === "ongoing" ? "text-slate-800" : "text-gray-400"
+            className={`flex-1 py-2 text-[14px] font-bold rounded-lg transition-all ${
+              activeTab === "ongoing" 
+                ? "bg-white text-indigo-600 shadow-sm" 
+                : "text-gray-500 hover:text-gray-600"
             }`}
             onClick={() => setActiveTab("ongoing")}
           >
             进行中
-            {activeTab === "ongoing" && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-indigo-600 rounded-full" />
-            )}
           </button>
           <button
-            className={`py-3 text-[15px] font-bold relative transition-colors ${
-              activeTab === "archived" ? "text-slate-800" : "text-gray-400"
+            className={`flex-1 py-2 text-[14px] font-bold rounded-lg transition-all ${
+              activeTab === "archived" 
+                ? "bg-white text-indigo-600 shadow-sm" 
+                : "text-gray-500 hover:text-gray-600"
             }`}
             onClick={() => setActiveTab("archived")}
           >
             已归档
-            {activeTab === "archived" && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-indigo-600 rounded-full" />
-            )}
           </button>
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-24 min-h-0">
+        <div className="flex-1 overflow-y-auto space-y-3 pb-24 min-h-0 -mx-4 px-4 scroll-smooth">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
               <p className="text-gray-400 text-sm mt-4">加载中...</p>
             </div>
           ) : (
-            <>
+            <PullRefresh 
+              onRefresh={() => fetchDeals(false)}
+              successText={
+                <div className="flex items-center justify-center gap-1 text-gray-600">
+                  <Check size={16} />
+                  <span>加载成功</span>
+                </div>
+              }
+            >
               {deals.map((item) => (
-                <SwipeCell
-                  key={item.id}
-                  className="mb-3"
-                  rightAction={
-                    <button
-                      className="h-full px-6 bg-red-500 text-white flex items-center justify-center rounded-r-2xl"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  }
-                >
-                  <div
-                    onClick={() => onNavigateToDetail(item)}
-                    className="bg-white rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center gap-4 active:scale-[0.99] transition-transform"
+                <div key={item.id} className="mb-2">
+                  <SwipeCell
+                    rightAction={
+                      <button
+                        className="h-full px-6 bg-red-500 text-white flex items-center justify-center rounded-r-2xl"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    }
                   >
-                    {/* Icon/Logo */}
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-inner bg-indigo-50 text-indigo-500 overflow-hidden">
-                      {item.logo ? (
-                        <img 
-                          src={item.logo} 
-                          alt={item.interviewCust}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <FileText size={24} className="drop-shadow-sm" />
-                      )}
-                    </div>
+                    <div
+                      onClick={() => onNavigateToDetail(item)}
+                      className="bg-white rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex gap-4 active:scale-[0.99] transition-transform"
+                    >
+                      {/* Icon/Logo */}
+                      <div className="w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center shadow-inner bg-indigo-50 text-indigo-500 overflow-hidden">
+                        {item.logo ? (
+                          <img 
+                            src={item.logo} 
+                            alt={item.interviewCust}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <FileText size={30} className="drop-shadow-sm" />
+                        )}
+                      </div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-[15px] font-bold text-slate-800 truncate mb-1">
-                        {item.interviewCust}
-                      </h3>
-                      <div className="flex items-center text-xs text-gray-400">
-                        <span className="mr-2">进度: {item.progress}%</span>
-                        <span className="w-1 h-1 rounded-full bg-gray-300 mr-2" />
-                        <span>
-                          状态: {item.status === "1" ? "进行中" : "已归档"}
-                        </span>
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-between h-16">
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-[16px] font-bold text-slate-800 truncate mb-1">
+                            {item.interviewCust}
+                          </h3>
+                          {item.status === '3' && (
+                            <span className="px-2.5 py-1 bg-[#E0F7FA] text-[#00B5B5] text-[11px] font-medium rounded-lg">
+                              访谈中
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div>
+                           <button
+                             className="bg-[#4E3EF8] text-white text-[13px] font-medium px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-md shadow-indigo-200 active:scale-95 transition-transform"
+                             onClick={(e) => {
+                                e.stopPropagation();
+                                
+                                const activeDeal = deals.find(d => d.status === '3');
+                                if (activeDeal && activeDeal.id !== item.id) {
+                                  setShowLimitTips(true);
+                                  setTimeout(() => setShowLimitTips(false), 3000);
+                                  return;
+                                }
+
+                                if (onNavigateToRecording) {
+                                  onNavigateToRecording(item);
+                                } else {
+                                  onNavigateToDetail(item);
+                                }
+                             }}
+                           >
+                             <Plus size={14} strokeWidth={2.5} /> 访谈录音
+                           </button>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Action */}
-                    <button
-                      className="w-8 h-8 rounded-full border border-indigo-100 flex items-center justify-center text-indigo-600 hover:bg-indigo-50"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onNavigateToRecording) {
-                          onNavigateToRecording(item);
-                        } else {
-                          onNavigateToDetail(item);
-                        }
-                      }}
-                    >
-                      <Mic size={16} />
-                    </button>
-                  </div>
-                </SwipeCell>
+                  </SwipeCell>
+                </div>
               ))}
 
               {deals.length === 0 && (
-                <div className="text-center py-10 text-gray-400 text-sm">
-                  暂无访谈记录
+                <div className="flex flex-col items-center justify-center py-20 opacity-80">
+                   <div className="w-24 h-24 relative mb-2">
+                     <Mascot size="small" />
+                   </div>
+                   <p className="text-xs text-gray-400">小狸可以帮你做访谈记录，写尽调报告</p>
                 </div>
               )}
-            </>
+            </PullRefresh>
           )}
+          
         </div>
       </div>
 
-      {/* Floating Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 flex justify-center">
-        <div className="w-full max-w-md px-4 pb-6 pt-10 bg-gradient-to-t from-white via-white to-transparent">
-          <Button
-            block
-            size="large"
-            onClick={async () => {
-              try {
-                const res = await dealService.createOrUpdateDealInst({});
-                if (res.success && res.data) {
-                  // 如果提供了 onCreateNewDeal，使用它（导航到 MaterialUploadPage）
-                  // 否则使用 onNavigateToDetail（导航到 DueDiligencePage）
-                  if (onCreateNewDeal) {
-                    onCreateNewDeal(res.data);
-                  } else {
-                    onNavigateToDetail(res.data);
-                  }
-                }
-              } catch (error) {
-                console.error("Failed to create deal:", error);
-              }
-            }}
-            className="shadow-xl shadow-indigo-500/30 !rounded-2xl h-14 text-lg"
-          >
-            <Plus size={20} className="mr-2" /> 新建访谈
-          </Button>
-        </div>
-      </div>
+
 
       {/* 删除确认弹框 */}
       {showDeleteConfirm && (

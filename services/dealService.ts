@@ -21,6 +21,100 @@ export const dealService = {
   },
 
   /**
+   * 创建访谈实例
+   */
+  createInterviewInst: (params: {
+    interviewDealInstId: string; // 尽调id
+    interviewCustom: string;     // 访谈实例对象(客户名称)
+  }) => {
+    return request<ApiResponse<any>>('/interview/createInterviewInst', {
+      method: 'POST',
+      data: params,
+    });
+  },
+
+  /**
+   * 查询访谈实例内容列表（录音转写）
+   */
+  queryInterviewInstContentListByPage: (params: {
+    interviewInstId: string;
+    pageNum: number;
+    pageSize: number;
+  }) => {
+    return request<ApiResponse<PageData<any>>>('/interview/queryInterviewInstContentListByPage', {
+      method: 'POST',
+      data: params,
+    });
+  },
+
+  /**
+   * 查询访谈实例列表
+   */
+  queryInterviewInstListByPage: (params: {
+    interviewDealInstId: string; // 尽调 ID
+    pageNum?: number;
+    pageSize?: number;
+  }) => {
+    return request<ApiResponse<PageData<any>>>('/interview/queryInterviewInstListByPage', {
+      method: 'POST',
+      data: params,
+    });
+  },
+
+  /**
+   * 查询访谈实例原始录音文件
+   */
+  queryInterviewRecordFileInstByInterviewInstId: (params: {
+    interviewInstId: string;
+  }) => {
+    return request<ApiResponse<any>>('/interview/queryInterviewRecordFileInstByInterviewInstId', {
+      method: 'POST',
+      data: params,
+    });
+  },
+
+  /**
+   * 上传访谈实例录音文件
+   */
+  uploadInterviewInstRecordFile: (interviewInstId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('interviewInstId', interviewInstId);
+    formData.append('file', file);
+    
+    return request<ApiResponse<any>>('/interview/uploadInterviewInstRecordFile', {
+      method: 'POST',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  /**
+   * 结束访谈实例
+   */
+  overInterviewInst: (interviewInstId: string) => {
+    return request<ApiResponse<any>>('/interview/overInterviewInst', {
+      method: 'POST',
+      data: { interviewInstId },
+    });
+  },
+
+  /**
+   * 更新访谈实例
+   */
+  updateInterviewInst: (params: {
+    interviewInstId: string;
+    interviewInstTitle: string;
+    interviewCustom: string;
+  }) => {
+    return request<ApiResponse<any>>('/interview/updateInterviewInst', {
+      method: 'POST',
+      data: params,
+    });
+  },
+
+  /**
    * 创建或更新尽调实例
    */
   createOrUpdateDealInst: (params: {

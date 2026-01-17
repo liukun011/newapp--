@@ -57,6 +57,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
   // 使用详情数据，如果没有则使用传入的 deal
   const currentDeal = dealDetail || deal;
+  const isFinishedInterview = currentDeal?.status === '4';
 
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
@@ -169,15 +170,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           </div>
           
           <div className="bg-white rounded-tr-2xl rounded-br-2xl rounded-bl-2xl p-3 shadow-sm relative z-10 flex-1 mb-2">
-            <p className="text-sm text-slate-700 font-medium">记录创建成功，赶紧开始访谈吧...</p>
-          </div>
-
-          {/* Floating Timer */}
-          <div className="absolute right-0 top-6 bg-white rounded-full pl-2 pr-4 py-2 shadow-lg flex items-center gap-2 border border-teal-50 z-30 transform translate-y-[-50%]">
-             <div className="w-5 h-5 rounded-full border-[3px] border-teal-400 flex items-center justify-center">
-                <div className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-             </div>
-             <span className="text-teal-600 font-mono font-bold text-sm tracking-wide">60:16</span>
+            <p className="text-sm text-slate-700 font-medium">
+              {isFinishedInterview 
+                ? '本次访谈已完成，可查看历史记录或生成报告' 
+                : '记录创建成功，赶紧开始访谈吧...'}
+            </p>
           </div>
         </div>
 
@@ -193,7 +190,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         <div className="rounded-3xl p-5 shadow-lg relative overflow-hidden text-white" 
              style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #7062ff 100%)' }}>
           <div className="relative z-10 max-w-[65%]">
-            <h2 className="text-xl font-bold mb-6">A公司尽调报告</h2>
+            <h2 className="text-xl font-bold mb-1.5">尽调报告</h2>
+            <p className="text-white/80 text-xs mb-4 font-light">访谈既报告，洞察更高效。小狸智能捕捉核心要点。</p>
             
             <div className="flex gap-3">
               <button className="px-4 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform">
@@ -209,7 +207,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           </div>
 
           {/* Rocket Mascot Image */}
-          <div className="absolute right-1 top-1/2 -translate-y-1/2 mt-1.5 w-36 h-36">
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 mt-[20px] w-36 h-36">
             <img 
                src={`${basePath}assets/rocketxiaoli.png`}
                alt="Rocket Mascot"
