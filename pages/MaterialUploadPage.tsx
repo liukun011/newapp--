@@ -931,7 +931,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 onClick={async () => {
                   if (newQuestionName.trim()) {
                     const newQuestion: QuestionInfo = {
-                      // id: `temp_${Date.now()}`,
+
                       questionName: newQuestionName.trim(),
                       questionIndex: questions.length + 1,
                       recStatus: '1',

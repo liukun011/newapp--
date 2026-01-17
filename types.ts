@@ -15,6 +15,7 @@ export enum View {
   SETTINGS = 'SETTINGS',              // SettingsPage - 设置页
   HISTORY = 'HISTORY',                // HistoryRecordsPage - 历史访谈页
   HISTORY_DETAIL = 'HISTORY_DETAIL',  // HistoryDetailPage - 历史访谈详情页
+  MESSAGE_CENTER = 'MESSAGE_CENTER',  // MessageCenterPage - 消息中心页
 }
 
 // 尽调状态枚举
@@ -94,7 +95,7 @@ export interface Resource {
 
 // 问题信息
 export interface QuestionInfo {
-  id: string;
+  id?: string;
   questionName: string;
   questionIndex: number;
   questionAnswer: string | null;

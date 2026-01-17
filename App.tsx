@@ -19,6 +19,7 @@ import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import TemplatePreviewPage from './pages/TemplatePreviewPage';
 import QuestionsListPage from './pages/QuestionsListPage';
 import SettingsPage from './pages/SettingsPage';
+import MessageCenterPage from './pages/MessageCenterPage';
 import HistoryRecordsPage from './pages/HistoryRecordsPage';
 import HistoryDetailPage from './pages/HistoryDetailPage';
 import { View, DealRecord, QuestionInfo } from './types';
@@ -311,6 +312,9 @@ const App: React.FC = () => {
                 onNavigateToSettings={() => {
                   navigateForward(View.SETTINGS);
                 }}
+                onNavigateToMessages={() => {
+                  navigateForward(View.MESSAGE_CENTER);
+                }}
               />
             )}
             {currentView === View.DUE_DILIGENCE && (
@@ -531,7 +535,7 @@ const App: React.FC = () => {
         )}
         {currentView === View.SETTINGS && (
           <SettingsPage 
-            onBack={() => navigateBackward(View.HOME)}
+
             onLogout={() => {
               localStorage.removeItem('zov-user-token');
               localStorage.removeItem('zov-userinfo');
@@ -541,18 +545,12 @@ const App: React.FC = () => {
               setCurrentView(View.LOGIN);
               setCurrentDeal(null);
             }}
-            onNavigateToHome={() => {
-              setNavDirection('backward');
-              setCurrentView(View.HOME);
-            }}
-            onCreateNewDeal={(deal) => {
-              setCurrentDeal(deal);
-              navigateForward(View.MATERIAL_UPLOAD);
-            }}
-            onNavigateToDetail={(deal) => {
-              setCurrentDeal(deal);
-              navigateForward(View.DUE_DILIGENCE);
-            }}
+
+          />
+        )}
+        {currentView === View.MESSAGE_CENTER && (
+          <MessageCenterPage 
+            onBack={() => navigateBackward(View.HOME)} 
           />
         )}
           </motion.div>
@@ -568,7 +566,7 @@ const App: React.FC = () => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={bubbleControls}
             exit={{ scale: 0.8, opacity: 0 }}
-            onDragEnd={(event, info) => {
+            onDragEnd={(_event, _info) => {
               // 吸附逻辑：松手时判断中心点位置，吸附到最近的屏幕边缘
               const winW = window.innerWidth;
               const rect = bubbleRef.current?.getBoundingClientRect();

@@ -265,7 +265,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   // 确认删除问题
   const handleConfirmDelete = () => {
     if (deletingQuestion && onDeleteQuestion) {
-      onDeleteQuestion(deletingQuestion.id);
+      onDeleteQuestion(deletingQuestion.id!);
       Toast.success('删除成功');
     }
     handleCloseDeleteModal();

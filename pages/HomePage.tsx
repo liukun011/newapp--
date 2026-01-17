@@ -20,11 +20,13 @@ interface HomePageProps {
   onNavigateToRecording?: (deal: DealRecord) => void;
   onNavigateToTemplates?: () => void;
   onNavigateToSettings?: () => void;
+  onNavigateToMessages?: () => void;
 }
 
 const HomePage: React.FC<HomePageProps> = ({ 
   onNavigateToDetail, 
   onNavigateToRecording,
+  onNavigateToMessages,
 }) => {
   const [activeTab, setActiveTab] = useState<"ongoing" | "archived">("ongoing");
   const [searchTerm, setSearchTerm] = useState(""); // 输入框的值
@@ -177,7 +179,10 @@ const HomePage: React.FC<HomePageProps> = ({
             </button>
           </div>
           
-          <button className="relative w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm active:scale-95 transition-transform">
+          <button 
+            className="relative w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm active:scale-95 transition-transform"
+            onClick={onNavigateToMessages}
+          >
              <Bell size={20} className="text-slate-700" />
              <div className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
           </button>

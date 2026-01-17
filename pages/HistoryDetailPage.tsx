@@ -30,8 +30,8 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
   // 同步问题清单数据
   useEffect(() => {
     if (deal?.questionInfoList && deal.questionInfoList.length > 0) {
-      const backendQuestions: Question[] = deal.questionInfoList.map(item => ({
-        id: item.id,
+      const backendQuestions: Question[] = deal.questionInfoList.map((item, index) => ({
+        id: item.id || String(index),
         text: item.questionName,
         isAnswered: !!item.CHECKED,
         details: item.questionAnswer || undefined

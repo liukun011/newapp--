@@ -1,28 +1,34 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronRight, FileText, PenTool, HelpCircle, Settings, LogOut, User, Layers, Edit2 } from 'lucide-react';
+import { ChevronRight, FileText, PenTool, HelpCircle, Settings, LogOut, Layers, Edit2 } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { authService } from '../services/authService';
 import Button from '../components/Button';
-import { DealRecord } from '../types';
+
 
 interface SettingsPageProps {
-  onBack: () => void;
   onLogout: () => void;
-  onNavigateToHome: () => void;
-  onCreateNewDeal?: (deal: DealRecord) => void;
-  onNavigateToDetail?: (deal: DealRecord) => void;
 }
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ 
-  onBack, 
   onLogout,
-  onNavigateToHome,
-  onCreateNewDeal,
-  onNavigateToDetail
 }) => {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userName, setUserName] = useState('');
+
+  React.useEffect(() => {
+    try {
+      const userInfoStr = localStorage.getItem('zov-userinfo');
+      console.log('User Info String:', userInfoStr);
+      if (userInfoStr) {
+        const userInfo = JSON.parse(userInfoStr);
+        setUserName(userInfo.userId || userInfo.account || '用户');
+      }
+    } catch (e) {
+      console.error('Failed to parse user info', e);
+    }
+  }, []);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -77,14 +83,17 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       <div className="flex flex-col items-center py-8 bg-white mb-3 shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
         <div className="relative mb-3">
            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100">
-             {/* Simple User Placeholder Icon since we don't have the 3D avatar */}
-             <User size={40} className="text-gray-300" />
+             <img 
+               src="/talk-assistant/assets/mascot.png" 
+               alt="User Avatar" 
+               className="w-full h-full object-cover"
+             />
            </div>
            <button className="absolute bottom-0 right-0 bg-[#4E3EF8] rounded-full p-1.5 border-2 border-white shadow-sm active:scale-95 transition-transform">
               <Edit2 size={10} className="text-white" />
            </button>
         </div>
-        <h2 className="text-[18px] font-bold text-slate-800">吴俊杰</h2>
+        <h2 className="text-[18px] font-bold text-slate-800">{userName || '未登录'}</h2>
       </div>
 
       {/* Menu Groups */}

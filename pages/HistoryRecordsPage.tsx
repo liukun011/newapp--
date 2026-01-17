@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Edit2 } from 'lucide-react';
 import { Dialog, Toast } from 'react-vant';
-import Button from '../components/Button';
+
 import Mascot from '../components/Mascot';
 import { dealService } from '../services/dealService';
 
@@ -12,7 +12,7 @@ interface HistoryRecordsPageProps {
   onRecordClick?: (record: any) => void;
 }
 
-const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, onStartInterview, dealId, onRecordClick }) => {
+const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId, onRecordClick }) => {
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const basePath = import.meta.env.BASE_URL || '/';
