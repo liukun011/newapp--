@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Sparkles, Check, FileSpreadsheet, Eye, RefreshCw, MinusCircle, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Check, FileSpreadsheet, Eye, RefreshCw, MinusCircle, Trash2, Plus } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import Button from '../components/Button';
 import VoiceInputModal from '../components/VoiceInputModal';
@@ -24,7 +24,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   deal,
   onBack,
   onStartInterview,
-  onGenerateAI,
+
   onEditInfo,
   onChangeTemplate,
   onPreviewTemplate,

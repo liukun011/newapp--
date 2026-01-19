@@ -26,7 +26,6 @@ interface HomePageProps {
 const HomePage: React.FC<HomePageProps> = ({ 
   onNavigateToDetail, 
   onNavigateToRecording,
-  onNavigateToMessages,
 }) => {
   const [activeTab, setActiveTab] = useState<"ongoing" | "archived">("ongoing");
   const [searchTerm, setSearchTerm] = useState(""); // 输入框的值
