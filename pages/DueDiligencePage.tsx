@@ -191,7 +191,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
              style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #7062ff 100%)' }}>
           <div className="relative z-10 max-w-[65%]">
             <h2 className="text-xl font-bold mb-1.5">尽调报告</h2>
-            <p className="text-white/80 text-xs mb-4 font-light">访谈既报告，洞察更高效。小狸智能捕捉核心要点。</p>
+            <p className="text-white text-xs mb-4 font-light">访谈既报告，洞察更高效。小狸智能捕捉核心要点。</p>
             
             <div className="flex gap-3">
               <button className="px-4 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform">

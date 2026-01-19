@@ -8,7 +8,7 @@ import {
   FileText,
   Plus,
 } from "lucide-react";
-import { SwipeCell, PullRefresh } from "react-vant";
+import { SwipeCell, PullRefresh, Toast } from "react-vant";
 import Mascot from "../components/Mascot";
 import { COLORS } from "../constants";
 import { DealRecord } from "../types";
@@ -39,6 +39,26 @@ const HomePage: React.FC<HomePageProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingDealId, setDeletingDealId] = useState<string | null>(null);
 
+  // SwipeCell 强制刷新 key
+  const [swipeCellKey, setSwipeCellKey] = useState(0);
+
+  // AI Banner 轮播状态
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const bannerItems = [
+    {
+      title: "AI 智能资料分析",
+      description: "AI赋能，全方位深度挖掘资料细节与潜在规律，智能提炼高价值关键信息"
+    },
+    {
+      title: "智能问题生成",
+      description: "基于上传资料自动生成专业访谈问题，提升尽调效率与质量"
+    },
+    {
+      title: "实时语音转写",
+      description: "访谈过程实时转写记录，AI智能匹配问题答案，自动生成结构化报告"
+    }
+  ];
+
   const isFirstRender = useRef(true);
 
   // 统一处理所有数据获取
@@ -54,6 +74,15 @@ const HomePage: React.FC<HomePageProps> = ({
     fetchDeals();
   }, [activeTab, searchQuery]);
 
+  // AI Banner 自动轮播
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % bannerItems.length);
+    }, 3000); // 每3秒切换一次
+
+    return () => clearInterval(interval);
+  }, [bannerItems.length]);
+
   const fetchDeals = async (showGlobalLoading = true) => {
     if (showGlobalLoading) setLoading(true);
     try {
@@ -62,7 +91,7 @@ const HomePage: React.FC<HomePageProps> = ({
         pageNo: 0,
         pageSize: 50,
         dealInstTitle: searchQuery,
-        status: activeTab === "ongoing" ? ["1"] : ["2"], 
+        status: activeTab === "ongoing" ? ["1"] : ["5"], 
       });
       
       const delayPromise = !showGlobalLoading 
@@ -74,6 +103,10 @@ const HomePage: React.FC<HomePageProps> = ({
       if (res.success && res.data) {
         console.log(res.data);
         setDeals(res.data.records || []);
+        // 强制 SwipeCell 重新渲染，确保滑动功能正常
+        setTimeout(() => {
+          setSwipeCellKey(prev => prev + 1);
+        }, 100);
       }
     } catch (error) {
       console.error("Failed to fetch deals:", error);
@@ -118,11 +151,15 @@ const HomePage: React.FC<HomePageProps> = ({
     try {
       const res = await dealService.deleteDealInst(deletingDealId);
       if (res.success) {
+        Toast.success('删除成功');
         // 删除成功后刷新列表
         fetchDeals();
+      } else {
+        Toast.fail(res.message || '删除失败');
       }
     } catch (error) {
       console.error("Failed to delete deal:", error);
+      Toast.fail('删除失败');
     } finally {
       setShowDeleteConfirm(false);
       setDeletingDealId(null);
@@ -181,26 +218,37 @@ const HomePage: React.FC<HomePageProps> = ({
           
           <button 
             className="relative w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm active:scale-95 transition-transform"
-            onClick={onNavigateToMessages}
+            onClick={() => Toast.info({ 
+              message: '功能开发中，敬请期待！',
+            })}
           >
              <Bell size={20} className="text-slate-700" />
              <div className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
           </button>
         </div>
 
-        {/* AI Analysis Banner */}
+        {/* AI Analysis Banner - Carousel */}
         <div className="bg-gradient-to-r from-[#EAF2FF] to-[#DCE9FF] rounded-2xl p-5 mb-2 relative overflow-hidden shadow-sm">
           <div className="relative z-10 max-w-[60%]">
-             <h2 className="text-[19px] font-black text-[#1A4B8B] mb-2 leading-tight">
-               AI 智能资料分析
+             <h2 className="text-[19px] font-black text-[#1A4B8B] mb-2 leading-tight transition-all duration-500">
+               {bannerItems[currentBannerIndex].title}
              </h2>
-             <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90">
-               AI赋能，全方位深度挖掘资料细节与潜在规律，智能提炼高价值关键信息
+             <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90 transition-all duration-500">
+               {bannerItems[currentBannerIndex].description}
              </p>
-             <div className="mt-3 flex gap-1">
-               <div className="w-1.5 h-1.5 rounded-full bg-white/60"></div>
-               <div className="w-4 h-1.5 rounded-full bg-white"></div>
-               <div className="w-1.5 h-1.5 rounded-full bg-white/60"></div>
+             <div className="mt-3 flex gap-1.5">
+               {bannerItems.map((_, index) => (
+                 <button
+                   key={index}
+                   onClick={() => setCurrentBannerIndex(index)}
+                   className={`h-1.5 rounded-full transition-all duration-300 ${
+                     index === currentBannerIndex 
+                       ? 'w-4 bg-white' 
+                       : 'w-1.5 bg-white/60 hover:bg-white/80'
+                   }`}
+                   aria-label={`切换到第${index + 1}个横幅`}
+                 />
+               ))}
              </div>
           </div>
           
@@ -245,7 +293,7 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto space-y-3 pb-24 min-h-0 -mx-4 px-4 scroll-smooth">
+        <div className="flex-1 overflow-y-auto pb-24 min-h-0 -mx-4 px-4 scroll-smooth">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -260,10 +308,14 @@ const HomePage: React.FC<HomePageProps> = ({
                   <span>加载成功</span>
                 </div>
               }
+              headHeight={60}
+              style={{ minHeight: '100%' }}
             >
-              {deals.map((item) => (
+              <div className="flex flex-col pb-4">
+                {deals.map((item) => (
                 <div key={item.id} className="mb-2">
                   <SwipeCell
+                    key={`${item.id}-${swipeCellKey}`}
                     rightAction={
                       <button
                         className="h-full px-6 bg-red-500 text-white flex items-center justify-center rounded-r-2xl"
@@ -340,6 +392,7 @@ const HomePage: React.FC<HomePageProps> = ({
                    <p className="text-xs text-gray-400">小狸可以帮你做访谈记录，写尽调报告</p>
                 </div>
               )}
+              </div>
             </PullRefresh>
           )}
           

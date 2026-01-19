@@ -114,8 +114,25 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // 模板预览数据
-  const [previewTemplate, setPreviewTemplate] = useState<{ name: string; url: string } | null>(null);
+
+  // 模板预览数据 - 从 sessionStorage 恢复
+  const [previewTemplate, setPreviewTemplate] = useState<{ name: string; url: string } | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('zov-preview-template');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  // 持久化预览数据
+  useEffect(() => {
+    if (previewTemplate) {
+      sessionStorage.setItem('zov-preview-template', JSON.stringify(previewTemplate));
+    } else {
+      sessionStorage.removeItem('zov-preview-template');
+    }
+  }, [previewTemplate]);
   // 记住资料上传页的当前标签页
   const [materialUploadTab, setMaterialUploadTab] = useState<string>('upload');
 
@@ -381,6 +398,13 @@ const App: React.FC = () => {
                   deal={currentDeal}
                   onBack={() => navigateBackward(View.HOME)}
                   onNavigateToRecording={() => {
+                    // 检查是否切换了尽调对象，如果是则重置录音状态
+                    const currentStore = useRecordingStore.getState();
+                    if (currentDeal?.id && currentStore.currentDealId && currentStore.currentDealId !== currentDeal.id) {
+                      console.log('[App] Switching deal, resetting recording state');
+                      currentStore.reset();
+                    }
+                    
                     setRecordingBackView(View.DUE_DILIGENCE);
                     setPreviousView(View.DUE_DILIGENCE);
                     navigateForward(View.RECORDING);
@@ -400,6 +424,11 @@ const App: React.FC = () => {
                   dealId={currentDeal?.id}
                   onBack={() => navigateBackward(previousView === View.RECORDING ? View.RECORDING : View.DUE_DILIGENCE)}
                   onGenerateReport={() => setCurrentView(View.AI_GENERATION)}
+                  onPreviewFile={(name, url) => {
+                    setPreviewTemplate({ name, url });
+                    setPreviousView(View.MATERIALS_LIST);
+                    navigateForward(View.TEMPLATE_PREVIEW);
+                  }}
                 />
               )}
               {currentView === View.MATERIAL_UPLOAD && (
@@ -407,6 +436,13 @@ const App: React.FC = () => {
                   deal={currentDeal}
                   onBack={() => navigateBackward(View.HOME)}
                   onStartInterview={() => {
+                    // 检查是否切换了尽调对象，如果是则重置录音状态
+                    const currentStore = useRecordingStore.getState();
+                    if (currentDeal?.id && currentStore.currentDealId && currentStore.currentDealId !== currentDeal.id) {
+                      console.log('[App] Switching deal, resetting recording state');
+                      currentStore.reset();
+                    }
+                    
                     setRecordingBackView(View.DUE_DILIGENCE);
                     setPreviousView(View.DUE_DILIGENCE);
                     setCurrentView(View.RECORDING);
@@ -531,6 +567,8 @@ const App: React.FC = () => {
                         templateId: newTemplateId,
                       });
                     }
+                    // 更换成功后返回到之前的页面
+                    navigateBackward(previousView);
                   }}
                 />
               )}

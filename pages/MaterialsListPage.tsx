@@ -10,12 +10,14 @@ interface MaterialsListPageProps {
   dealId?: string;
   onBack: () => void;
   onGenerateReport: () => void;
+  onPreviewFile?: (name: string, url: string) => void;
 }
 
 const MaterialsListPage: React.FC<MaterialsListPageProps> = ({ 
   dealId,
   onBack, 
-  onGenerateReport
+  onGenerateReport,
+  onPreviewFile
 }) => {
   const basePath = import.meta.env.BASE_URL || '/';
   const [resources, setResources] = useState<Resource[]>([]);
@@ -277,10 +279,23 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                     />
                   </div>
                   
-                  {/* File Name */}
-                  <span className="flex-1 text-sm text-slate-800 truncate">
+                  {/* File Name - Clickable for Preview */}
+                  <button
+                    onClick={() => {
+                      if (resource.fileUrl) {
+                        if (onPreviewFile) {
+                          onPreviewFile(resource.fileName, resource.fileUrl);
+                        } else {
+                          window.open(resource.fileUrl, '_blank');
+                        }
+                      } else {
+                        Toast.info('暂无预览链接');
+                      }
+                    }}
+                    className="flex-1 text-sm text-slate-800 truncate text-left hover:text-indigo-600 transition-colors active:scale-[0.98]"
+                  >
                     {resource.fileName}
-                  </span>
+                  </button>
                   
                   {/* Edit Button */}
                   <button 

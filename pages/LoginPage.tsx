@@ -118,7 +118,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 // } catch (error) {
                 //   console.error('Login error:', error);
                 // }
-                Toast.fail('功能暂未放开！');
+                Toast.info({ 
+                  message: '功能开发中，敬请期待！', 
+                });
               }} 
               className="shadow-xl shadow-indigo-500/20"
             >

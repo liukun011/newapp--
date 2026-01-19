@@ -465,8 +465,9 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               </div>
             </div>
 
-            {/* AI Analysis Card */}
-            <div className="mx-4 rounded-2xl p-4 flex items-center justify-between relative overflow-hidden shadow-sm"
+
+            {/* AI Analysis Card - Temporarily Hidden */}
+            {/* <div className="mx-4 rounded-2xl p-4 flex items-center justify-between relative overflow-hidden shadow-sm"
               style={{ background: 'linear-gradient(90deg, #Eef2ff 0%, #F5f3ff 100%)' }}>
               <div className="flex items-center gap-4 relative z-10">
                 <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm text-indigo-500">
@@ -484,7 +485,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               >
                 去生成
               </button>
-            </div>
+            </div> */}
 
             {/* Uploaded Files List */}
             {/* Uploaded Files List */}
@@ -510,10 +511,25 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                           />
                         </div>
 
-                        {/* File Name */}
-                        <span className="flex-1 text-sm text-slate-800 truncate">
+                        {/* File Name - Clickable for Preview */}
+                        <button
+                          onClick={() => {
+                            if (resource.fileUrl) {
+                              // 使用预览页面打开文件
+                              if (onPreviewTemplate) {
+                                onPreviewTemplate(resource.fileName, resource.fileUrl);
+                              } else {
+                                // 降级方案：在新窗口打开
+                                window.open(resource.fileUrl, '_blank');
+                              }
+                            } else {
+                              Toast.info('暂无预览链接');
+                            }
+                          }}
+                          className="flex-1 text-sm text-slate-800 truncate text-left hover:text-indigo-600 transition-colors active:scale-[0.98]"
+                        >
                           {resource.fileName}
-                        </span>
+                        </button>
 
                         {/* Edit Button */}
                         <button
@@ -648,6 +664,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                     return newSet;
                   });
                   await fetchQuestions();
+                  Toast.success('刷新成功');
                 }}
                 className="w-12 h-12 flex items-center justify-center bg-white rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
               >

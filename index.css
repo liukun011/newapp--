@@ -1,6 +1,6 @@
 /* 调整 SwipeCell 定位以隐藏边线 */
-.rv-swipe-cell__wrapper {
-  right: -1px !important;
+.rv-swipe-cell__right {
+  right: -2px !important;
 }
 
 /* 弹框淡入动画 */
@@ -18,3 +18,4 @@
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out forwards;
 }
+
