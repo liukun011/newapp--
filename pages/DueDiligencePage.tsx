@@ -178,13 +178,13 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           </div>
         </div>
 
-        {/* Advice Card */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
+        {/* Advice Card - 暂时隐藏，后续开放 */}
+        {/* <div className="bg-white rounded-2xl p-5 shadow-sm">
           <h2 className="text-slate-900 font-bold text-[16px] mb-3">尽调建议</h2>
           <p className="text-slate-600 text-sm leading-relaxed text-justify">
             A公司2024年营收显著下滑，建议深入考察其经营层面。上传流水，可获更详尽的专项分析。
           </p>
-        </div>
+        </div> */}
 
         {/* Report Card */}
         <div className="rounded-3xl p-5 shadow-lg relative overflow-hidden text-white" 

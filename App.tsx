@@ -435,17 +435,53 @@ const App: React.FC = () => {
                 <MaterialUploadPage
                   deal={currentDeal}
                   onBack={() => navigateBackward(View.HOME)}
-                  onStartInterview={() => {
-                    // 检查是否切换了尽调对象，如果是则重置录音状态
-                    const currentStore = useRecordingStore.getState();
-                    if (currentDeal?.id && currentStore.currentDealId && currentStore.currentDealId !== currentDeal.id) {
-                      console.log('[App] Switching deal, resetting recording state');
-                      currentStore.reset();
+                  onStartInterview={async () => {
+                    if (!currentDeal) return;
+                    try {
+                      Toast.loading({ message: '准备访谈中...', duration: 0, forbidClick: true });
+                      // 1. 创建访谈实例
+                      const createRes = await dealService.createInterviewInst({
+                        interviewDealInstId: currentDeal.id,
+                        interviewCustom: currentDeal.interviewCust
+                      });
+
+                      if (createRes.success && createRes.data) {
+                        const instId = typeof createRes.data === 'string' ? createRes.data : createRes.data?.interviewInstId;
+                        const instTitle = typeof createRes.data === 'string' ? '' : createRes.data?.interviewInstTitle;
+
+                        const currentStore = useRecordingStore.getState();
+                        // 如果切换了访谈实例，重置
+                        if (currentStore.currentInterviewInstId && currentStore.currentInterviewInstId !== instId) {
+                          currentStore.reset();
+                        }
+                        
+                        // 更新 Store
+                        setData({
+                          dealId: currentDeal.id,
+                          interviewInstId: instId,
+                          title: instTitle || ''
+                        });
+                      }
+
+                      // 获取最新详情
+                      const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+                      if (detailRes.success && detailRes.data) {
+                        setCurrentDeal(detailRes.data);
+                      }
+
+                      Toast.clear();
+                      
+                      // 这里的回退逻辑，通常从新建流程过来，我们希望它回退到哪里？
+                      // 既然是“去掉多余的页面”，可能用户希望回退到详情页，或者首页？
+                      // 暂时保持回退到 DUE_DILIGENCE，因为这是逻辑上的上一级
+                      setRecordingBackView(View.DUE_DILIGENCE);
+                      setPreviousView(View.MATERIAL_UPLOAD);
+                      navigateForward(View.RECORDING);
+                    } catch (error) {
+                      Toast.clear();
+                      console.error("Failed to start interview:", error);
+                      Toast.fail('进入访谈失败');
                     }
-                    
-                    setRecordingBackView(View.DUE_DILIGENCE);
-                    setPreviousView(View.DUE_DILIGENCE);
-                    setCurrentView(View.RECORDING);
                   }}
                   onGenerateAI={() => setCurrentView(View.AI_GENERATION)}
                   onEditInfo={handleEditCorporateInfo}
