@@ -20,10 +20,10 @@ interface MaterialUploadPageProps {
   onTabChange?: (tab: string) => void; // 标签页切换时的回调
 }
 
-const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({ 
+const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   deal,
-  onBack, 
-  onStartInterview, 
+  onBack,
+  onStartInterview,
   onGenerateAI,
   onEditInfo,
   onChangeTemplate,
@@ -37,24 +37,24 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const [currentTemplate, setCurrentTemplate] = useState<ReportTemplate | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
   const [questions, setQuestions] = useState<QuestionInfo[]>([]);
-  
+
   // 模板分类列表和选中的分类
   const [templateCategories, setTemplateCategories] = useState<TemplateInfo[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
-  
+
   // 标记各个 tab 的数据是否已加载
   const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set());
-  
+
   // 重命名弹框状态
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [renameTarget, setRenameTarget] = useState<Resource | null>(null);
   const [newFileName, setNewFileName] = useState('');
-  
+
   // 问题编辑弹框状态
   const [questionEditModalVisible, setQuestionEditModalVisible] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionInfo | null>(null);
   const [editedQuestionName, setEditedQuestionName] = useState('');
-  
+
   // 问题删除确认弹框状态
   const [questionDeleteModalVisible, setQuestionDeleteModalVisible] = useState(false);
   const [deletingQuestion, setDeletingQuestion] = useState<QuestionInfo | null>(null);
@@ -62,7 +62,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   // 新增问题弹框状态
   const [questionAddModalVisible, setQuestionAddModalVisible] = useState(false);
   const [newQuestionName, setNewQuestionName] = useState('');
-  
+
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
   const galleryInputRef = React.useRef<HTMLInputElement>(null);
@@ -71,7 +71,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   // 获取尽调详情（包括资源列表）
   const fetchDealDetail = async () => {
     if (!deal?.id) return;
-    
+
     try {
       const res = await dealService.getDealInstDetail(deal.id);
       if (res.success && res.data) {
@@ -85,25 +85,25 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   // 获取问题列表
   const fetchQuestions = async () => {
     // 优先使用当前模板的 questionId，否则使用 deal 的 questionId
-    const questionIdToUse = currentTemplate?.questionId 
-      ? String(currentTemplate.questionId) 
+    const questionIdToUse = currentTemplate?.questionId
+      ? String(currentTemplate.questionId)
       : deal?.questionId;
-    
+
     if (!questionIdToUse) {
       setQuestions([]);
       setTemplateCategories([]);
       return;
     }
-    
+
     try {
       // 调用接口，传入 questionId
       const categoriesRes = await questionService.queryTemplateCategories(questionIdToUse);
       if (categoriesRes.success && categoriesRes.data) {
         setTemplateCategories(categoriesRes.data);
-        
+
         // 在 templateInfoVos 中查找 id === questionId 的分类
         const matchedCategory = categoriesRes.data.find(c => c.id === questionIdToUse);
-        
+
         if (matchedCategory) {
           // 找到匹配的分类，选中它并显示其问题列表
           setSelectedCategoryId(matchedCategory.id);
@@ -126,7 +126,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       setCurrentTemplate(null);
       return;
     }
-    
+
     try {
       const res = await templateService.getTemplateDetail(deal.templateId);
       if (res.success && res.data) {
@@ -142,7 +142,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     const loadTabData = async () => {
       // 如果该 tab 的数据已加载过，跳过
       if (loadedTabs.has(activeTab)) return;
-      
+
       switch (activeTab) {
         case 'upload':
           await fetchDealDetail();
@@ -154,11 +154,11 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           await fetchQuestions();
           break;
       }
-      
+
       // 标记该 tab 已加载
       setLoadedTabs(prev => new Set(prev).add(activeTab));
     };
-    
+
     loadTabData();
   }, [activeTab, deal?.id, deal?.templateId, deal?.questionId]);
 
@@ -173,35 +173,18 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     }
   }, [currentTemplate?.questionId]);
 
-  const handleUploadClick = (id: string) => {
-    switch (id) {
-      case 'camera':
-        cameraInputRef.current?.click();
-        break;
-      case 'gallery':
-        galleryInputRef.current?.click();
-        break;
-      case 'file':
-        fileInputRef.current?.click();
-        break;
-      case 'voice':
-        setVoiceModalVisible(true);
-        break;
-    }
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
+  // 处理文件上传的核心逻辑
+  const handleUploadFile = async (file: File) => {
     if (!deal?.id) {
       Toast.fail('未找到尽调实例');
       return;
     }
 
-    const file = files[0];
     try {
       Toast.loading({ message: '上传中...', duration: 0 });
+      // 这里的 file 可能是原生 bridge 传回路径后生成的 Mock File，
+      // 实际上无法包含真实文件内容。如果需要真实上传，需原生支持。
+      // 在此仅演示流程打通。
       const res = await dealService.uploadDealMaterial(deal.id, file);
       Toast.clear();
 
@@ -217,7 +200,72 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       console.error('Upload failed:', error);
       Toast.fail('上传失败');
     }
-    
+  };
+
+  // 监听原生文件选择回调
+  useEffect(() => {
+    window.onFileSelected = (filePath: string) => {
+      console.log('H5收到文件:', filePath);
+
+      // 从路径提取文件名
+      // Android 路径可能是 /storage/emulated/0/.../file.jpg
+      const fileName = filePath.split('/').pop() || `file_${Date.now()}`;
+
+      // 创建模拟 File 对象 (Web 无法直接通过路径读取本地文件内容)
+      // 注意：这会导致上传的文件内容是空的/假的 "dummy content"
+      // 真正的 Hybrid 上传方案通常是：
+      // 1. Native 负责上传，成功后通知 H5 刷新列表
+      // 2. Native 读取文件转 Base64 传给 H5 (大文件不推荐)
+      // 3. H5 仅展示路径，不实际上传文件流
+      // 这里为了复用现有 uploadDealMaterial 接口，构建一个 Mock File
+      const mockFile = new File(["[Hybrid Mock Content]"], fileName, { type: "application/octet-stream" });
+
+      handleUploadFile(mockFile);
+    };
+
+    return () => {
+      window.onFileSelected = undefined;
+    };
+  }, [deal?.id]); // 依赖 deal.id 以确保 handleUploadFile 闭包中有最新 ID
+
+
+
+  const handleUploadClick = (id: string) => {
+    switch (id) {
+      case 'camera':
+        if (window.Android?.takePhoto) {
+          window.Android.takePhoto();
+        } else {
+          cameraInputRef.current?.click();
+        }
+        break;
+      case 'gallery':
+        if (window.Android?.choosePhoto) {
+          window.Android.choosePhoto();
+        } else {
+          galleryInputRef.current?.click();
+        }
+        break;
+      case 'file':
+        if (window.Android?.chooseFile) {
+          window.Android.chooseFile();
+        } else {
+          fileInputRef.current?.click();
+        }
+        break;
+      case 'voice':
+        setVoiceModalVisible(true);
+        break;
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    await handleUploadFile(file);
+
     // 清空 input 以便再次选择同一文件
     e.target.value = '';
   };
@@ -254,7 +302,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     const nameParts = resource.fileName.split('.');
     if (nameParts.length > 1) nameParts.pop(); // 移除后缀
     const baseName = nameParts.join('.');
-    
+
     setRenameTarget(resource);
     setNewFileName(baseName);
     setRenameModalVisible(true);
@@ -328,25 +376,25 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   return (
     <div className="flex flex-col h-full bg-white relative">
       {/* 隐藏的文件输入框 */}
-      <input 
-        type="file" 
-        ref={cameraInputRef} 
-        accept="image/*" 
-        capture="environment" 
-        className="hidden" 
+      <input
+        type="file"
+        ref={cameraInputRef}
+        accept="image/*"
+        capture="environment"
+        className="hidden"
         onChange={handleFileChange}
       />
-      <input 
-        type="file" 
-        ref={galleryInputRef} 
-        accept="image/*" 
-        className="hidden" 
+      <input
+        type="file"
+        ref={galleryInputRef}
+        accept="image/*"
+        className="hidden"
         onChange={handleFileChange}
       />
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        className="hidden" 
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
         onChange={handleFileChange}
       />
 
@@ -358,7 +406,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-bold text-slate-800">{deal?.interviewCust || ''}</h1>
           <button onClick={onEditInfo} className="p-1 hover:bg-gray-100 rounded-full">
-             <Pencil size={16} className="text-gray-400" />
+            <Pencil size={16} className="text-gray-400" />
           </button>
         </div>
         <div className="w-10" /> {/* Spacer for centering */}
@@ -367,34 +415,33 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       {/* Tabs */}
       <div className="flex justify-between px-6 border-b border-gray-100 bg-white z-10">
         {['资料上传', '模板选择', '问题集合'].map((tab, index) => {
-           // Mapping internal IDs to display names for logic simplicity
-           const tabId = index === 0 ? 'upload' : index === 1 ? 'template' : 'questions';
-           const isActive = activeTab === tabId;
-           
-           return (
+          // Mapping internal IDs to display names for logic simplicity
+          const tabId = index === 0 ? 'upload' : index === 1 ? 'template' : 'questions';
+          const isActive = activeTab === tabId;
+
+          return (
             <button
               key={tab}
               onClick={() => {
                 setActiveTab(tabId);
                 onTabChange?.(tabId);
               }}
-              className={`pb-3 pt-2 text-[15px] font-medium relative transition-colors ${
-                isActive ? 'text-slate-900 font-bold' : 'text-gray-400'
-              }`}
+              className={`pb-3 pt-2 text-[15px] font-medium relative transition-colors ${isActive ? 'text-slate-900 font-bold' : 'text-gray-400'
+                }`}
             >
               {tab}
               {isActive && (
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-[3px] bg-indigo-600 rounded-full" />
               )}
             </button>
-           );
+          );
         })}
       </div>
 
       {/* Main Content */}
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto bg-[#F7F8FA]">
-        
+
         {/* Tab 1: Upload */}
         {activeTab === 'upload' && (
           <div className="space-y-4">
@@ -403,7 +450,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               <div className="bg-white rounded-2xl p-4 shadow-sm">
                 <div className="grid grid-cols-4 gap-2">
                   {uploadOptions.map((opt) => (
-                    <button 
+                    <button
                       key={opt.id}
                       onClick={() => handleUploadClick(opt.id)}
                       className="flex flex-col items-center justify-center py-4 rounded-xl active:bg-gray-50 transition-colors"
@@ -420,23 +467,23 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
             {/* AI Analysis Card */}
             <div className="mx-4 rounded-2xl p-4 flex items-center justify-between relative overflow-hidden shadow-sm"
-                 style={{ background: 'linear-gradient(90deg, #Eef2ff 0%, #F5f3ff 100%)' }}>
-               <div className="flex items-center gap-4 relative z-10">
-                  <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm text-indigo-500">
-                    <Sparkles size={28} fill="currentColor" className="opacity-90" />
-                  </div>
-                  <div>
-                    <h3 className="text-[16px] font-bold text-indigo-900 mb-1">AI 智能分析助手</h3>
-                    <p className="text-xs text-indigo-400/80">AI智能补全问题并预警风险</p>
-                  </div>
-               </div>
-               
-               <button 
-                  onClick={onGenerateAI}
-                  className="px-4 py-1.5 bg-indigo-500/10 text-indigo-600 rounded-full text-xs font-bold hover:bg-indigo-500/20 active:scale-95 transition-all"
-               >
-                 去生成
-               </button>
+              style={{ background: 'linear-gradient(90deg, #Eef2ff 0%, #F5f3ff 100%)' }}>
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm text-indigo-500">
+                  <Sparkles size={28} fill="currentColor" className="opacity-90" />
+                </div>
+                <div>
+                  <h3 className="text-[16px] font-bold text-indigo-900 mb-1">AI 智能分析助手</h3>
+                  <p className="text-xs text-indigo-400/80">AI智能补全问题并预警风险</p>
+                </div>
+              </div>
+
+              <button
+                onClick={onGenerateAI}
+                className="px-4 py-1.5 bg-indigo-500/10 text-indigo-600 rounded-full text-xs font-bold hover:bg-indigo-500/20 active:scale-95 transition-all"
+              >
+                去生成
+              </button>
             </div>
 
             {/* Uploaded Files List */}
@@ -450,34 +497,34 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                   {resources.map((resource) => {
                     const iconSrc = getFileIconSrc(resource.fileName);
                     return (
-                      <div 
-                        key={resource.id} 
+                      <div
+                        key={resource.id}
                         className="flex items-center py-3 gap-3"
                       >
                         {/* File Icon */}
                         <div className="w-10 h-10 flex-shrink-0">
-                          <img 
-                            src={iconSrc} 
-                            alt="file icon" 
+                          <img
+                            src={iconSrc}
+                            alt="file icon"
                             className="w-full h-full object-contain"
                           />
                         </div>
-                        
+
                         {/* File Name */}
                         <span className="flex-1 text-sm text-slate-800 truncate">
                           {resource.fileName}
                         </span>
 
                         {/* Edit Button */}
-                        <button 
+                        <button
                           onClick={() => handleOpenRenameModal(resource)}
                           className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
                         >
                           <Pencil size={18} strokeWidth={2} />
                         </button>
-                        
+
                         {/* Delete Button */}
-                        <button 
+                        <button
                           onClick={() => handleDeleteResource(resource.id)}
                           className="p-2 text-indigo-400 hover:text-red-500 transition-colors"
                         >
@@ -495,56 +542,56 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         {/* Tab 2: Templates */}
         {activeTab === 'template' && (
           <div className="space-y-3 p-4">
-             {currentTemplate ? (
-               <div key={currentTemplate.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col gap-4">
-                  {/* Card Header */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#E8F8F0] flex items-center justify-center flex-shrink-0 text-[#07C160]">
-                       <FileSpreadsheet size={24} strokeWidth={1.5} />
-                    </div>
-                    <h3 className="text-[15px] font-bold text-slate-800 leading-snug pt-1">
-                      {currentTemplate.reportTemplateName}
-                    </h3>
+            {currentTemplate ? (
+              <div key={currentTemplate.id} className="bg-white rounded-2xl p-4 shadow-sm flex flex-col gap-4">
+                {/* Card Header */}
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#E8F8F0] flex items-center justify-center flex-shrink-0 text-[#07C160]">
+                    <FileSpreadsheet size={24} strokeWidth={1.5} />
                   </div>
-                  
-                  {/* Card Footer */}
-                  <div className="flex items-center justify-between pt-1">
-                     <div className="px-2 py-1 rounded-md text-[10px] font-medium bg-gray-100 text-gray-500">
-                       默认使用
-                     </div>
-                     
-                     <div className="flex gap-3">
-                        <Button 
-                          variant="secondary" 
-                          size="small" 
-                          className="!h-8 !px-4 !border-gray-200 !text-gray-600 !rounded-full !font-normal"
-                          onClick={() => {
-                            if (onPreviewTemplate && currentTemplate) {
-                              onPreviewTemplate(currentTemplate.reportTemplateName, currentTemplate.outTemplateUrl);
-                            }
-                          }}
-                        >
-                           <Eye size={14} className="mr-1.5" /> 预览
-                        </Button>
-                        <Button 
-                          variant="primary" 
-                          size="small" 
-                          className="!h-8 !px-4 !bg-[#4E3EF8] !rounded-full !shadow-indigo-200 !font-normal"
-                          onClick={onChangeTemplate}
-                        >
-                           <RefreshCw size={14} className="mr-1.5" /> 更换
-                        </Button>
-                     </div>
+                  <h3 className="text-[15px] font-bold text-slate-800 leading-snug pt-1">
+                    {currentTemplate.reportTemplateName}
+                  </h3>
+                </div>
+
+                {/* Card Footer */}
+                <div className="flex items-center justify-between pt-1">
+                  <div className="px-2 py-1 rounded-md text-[10px] font-medium bg-gray-100 text-gray-500">
+                    默认使用
                   </div>
-               </div>
-             ) : (
-               <div className="py-12 text-center text-gray-400 text-sm">
-                 暂无模板信息
-               </div>
-             )}
+
+                  <div className="flex gap-3">
+                    <Button
+                      variant="secondary"
+                      size="small"
+                      className="!h-8 !px-4 !border-gray-200 !text-gray-600 !rounded-full !font-normal"
+                      onClick={() => {
+                        if (onPreviewTemplate && currentTemplate) {
+                          onPreviewTemplate(currentTemplate.reportTemplateName, currentTemplate.outTemplateUrl);
+                        }
+                      }}
+                    >
+                      <Eye size={14} className="mr-1.5" /> 预览
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="small"
+                      className="!h-8 !px-4 !bg-[#4E3EF8] !rounded-full !shadow-indigo-200 !font-normal"
+                      onClick={onChangeTemplate}
+                    >
+                      <RefreshCw size={14} className="mr-1.5" /> 更换
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="py-12 text-center text-gray-400 text-sm">
+                暂无模板信息
+              </div>
+            )}
           </div>
         )}
-        
+
         {/* Tab 3: Questions */}
         {activeTab === 'questions' && (
           <div className="flex flex-col h-full p-4 pb-2 overflow-hidden relative">
@@ -556,23 +603,23 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                   value={selectedCategoryId}
                   onChange={(e) => {
                     const newCategoryId = e.target.value;
-                    
+
                     Dialog.confirm({
                       title: '切换确认',
                       message: '切换模板分类将重置之前新增或修改的问题，是否确认切换？',
                     })
-                    .then(() => {
-                      setSelectedCategoryId(newCategoryId);
-                      
-                      // 查找对应的分类并更新问题列表
-                      const category = templateCategories.find(c => c.id === newCategoryId);
-                      if (category) {
-                        setQuestions(category.questionList || []);
-                      }
-                    })
-                    .catch(() => {
-                      // 取消切换
-                    });
+                      .then(() => {
+                        setSelectedCategoryId(newCategoryId);
+
+                        // 查找对应的分类并更新问题列表
+                        const category = templateCategories.find(c => c.id === newCategoryId);
+                        if (category) {
+                          setQuestions(category.questionList || []);
+                        }
+                      })
+                      .catch(() => {
+                        // 取消切换
+                      });
                   }}
                   className="w-full h-12 px-4 pr-10 bg-white text-slate-800 text-sm rounded-xl border border-gray-200 appearance-none focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
                 >
@@ -615,12 +662,12 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 <div className="p-4 border-b border-gray-100 flex-shrink-0">
                   <h3 className="text-sm font-bold text-slate-800">问题列表 ({questions.length})</h3>
                 </div>
-                
+
                 {/* Scrollable Questions Content */}
                 <div className="flex-1 overflow-y-auto pb-20">
                   <div className="divide-y divide-gray-100">
                     {questions.map((question) => (
-                      <div 
+                      <div
                         key={question.id}
                         className="flex items-center py-3 px-4 gap-2"
                       >
@@ -628,16 +675,16 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                         <span className="text-sm font-medium text-indigo-600 flex-shrink-0 w-6">
                           {question.questionIndex}.
                         </span>
-                        
+
                         {/* Question Name */}
                         <span className="flex-1 text-sm text-slate-800">
                           {question.questionName}
                         </span>
-                        
+
                         {/* Action Buttons */}
                         <div className="flex items-center gap-1 flex-shrink-0">
                           {/* 编辑按钮 */}
-                          <button 
+                          <button
                             onClick={() => {
                               setEditingQuestion(question);
                               setEditedQuestionName(question.questionName);
@@ -648,7 +695,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                             <Pencil size={14} />
                           </button>
                           {/* 删除按钮 */}
-                          <button 
+                          <button
                             onClick={() => {
                               setDeletingQuestion(question);
                               setQuestionDeleteModalVisible(true);
@@ -659,19 +706,19 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                           </button>
                         </div>
                       </div>
-                      ))}
-                    </div>
+                    ))}
                   </div>
                 </div>
-              ) : (
+              </div>
+            ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-gray-400 mt-3">
                 <FileText size={48} className="mb-4 opacity-20" />
                 <p className="text-sm">暂无问题</p>
               </div>
             )}
-            
+
             {/* Add Question Button */}
-            <button 
+            <button
               onClick={() => {
                 setNewQuestionName('');
                 setQuestionAddModalVisible(true);
@@ -688,23 +735,23 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
       {/* Fixed Bottom Bar */}
       <div className="bg-white p-6 pb-8 border-t border-gray-100 flex gap-4 shadow-[0_-4px_10px_rgba(0,0,0,0.03)] sticky bottom-0 z-20">
-         <Button 
-            variant="secondary" 
-            block 
-            className="flex-1 !rounded-full !border-indigo-100 !text-indigo-600 !h-12 !text-[16px]"
-            onClick={onBack}
-         >
-           <Check size={18} className="mr-2" /> 确定
-         </Button>
-         
-         <Button 
-            variant="primary" 
-            block 
-            className="flex-1 !rounded-full !h-12 !text-[16px] shadow-indigo-500/25"
-            onClick={onStartInterview}
-         >
-           <Mic size={18} className="mr-2" /> 开启访谈
-         </Button>
+        <Button
+          variant="secondary"
+          block
+          className="flex-1 !rounded-full !border-indigo-100 !text-indigo-600 !h-12 !text-[16px]"
+          onClick={onBack}
+        >
+          <Check size={18} className="mr-2" /> 确定
+        </Button>
+
+        <Button
+          variant="primary"
+          block
+          className="flex-1 !rounded-full !h-12 !text-[16px] shadow-indigo-500/25"
+          onClick={onStartInterview}
+        >
+          <Mic size={18} className="mr-2" /> 开启访谈
+        </Button>
       </div>
 
       {/* Voice Input Modal */}
@@ -722,15 +769,15 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       {renameModalVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setRenameModalVisible(false)}
           />
-          
+
           {/* Modal Content */}
           <div className="relative bg-white rounded-2xl w-[85%] max-w-sm p-6 shadow-xl">
             <h3 className="text-center text-lg font-bold text-slate-800 mb-6">文件重命名</h3>
-            
+
             {/* Input */}
             <div className="relative mb-8">
               <input
@@ -741,7 +788,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 placeholder="请输入文件名"
               />
             </div>
-            
+
             {/* Buttons */}
             <div className="flex gap-3">
               <button
@@ -765,7 +812,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       {/* Question Edit Modal */}
       {questionEditModalVisible && editingQuestion && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div 
+          <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setQuestionEditModalVisible(false)}
           />
@@ -791,12 +838,12 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               <button
                 onClick={async () => {
                   if (editedQuestionName.trim() && editingQuestion) {
-                    const updatedList = questions.map(q => 
-                      q.id === editingQuestion.id 
-                        ? { ...q, questionName: editedQuestionName.trim() } 
+                    const updatedList = questions.map(q =>
+                      q.id === editingQuestion.id
+                        ? { ...q, questionName: editedQuestionName.trim() }
                         : q
                     );
-                    
+
                     if (deal?.id) {
                       Toast.loading({ message: '修改中...', duration: 0 });
                       try {
@@ -838,7 +885,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       {/* Question Delete Confirm Modal */}
       {questionDeleteModalVisible && deletingQuestion && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div 
+          <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setQuestionDeleteModalVisible(false)}
           />
@@ -863,7 +910,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 onClick={async () => {
                   if (deletingQuestion) {
                     const updatedList = questions.filter(q => q.id !== deletingQuestion.id);
-                    
+
                     if (deal?.id) {
                       Toast.loading({ message: '删除中...', duration: 0 });
                       try {
@@ -904,7 +951,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       {/* Question Add Modal */}
       {questionAddModalVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div 
+          <div
             className="absolute inset-0 bg-black/50"
             onClick={() => setQuestionAddModalVisible(false)}
           />
@@ -942,9 +989,9 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                       agencyId: '',
                       CHECKED: false,
                     };
-                    
+
                     const updatedList = [...questions, newQuestion];
-                    
+
                     if (deal?.id) {
                       Toast.loading({ message: '添加中...', duration: 0 });
                       try {

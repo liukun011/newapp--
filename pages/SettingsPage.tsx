@@ -8,10 +8,12 @@ import Button from '../components/Button';
 
 interface SettingsPageProps {
   onLogout: () => void;
+  onNavigateToTemplates?: () => void;
 }
 
-const SettingsPage: React.FC<SettingsPageProps> = ({ 
+const SettingsPage: React.FC<SettingsPageProps> = ({
   onLogout,
+  onNavigateToTemplates
 }) => {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -44,27 +46,38 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   };
 
   const menuItemsGroup1 = [
-    { icon: FileText, label: '模板管理', color: 'text-blue-500', bg: 'bg-blue-50', onClick: () => {} },
-    { icon: Layers, label: '问题清单', color: 'text-green-500', bg: 'bg-green-50', onClick: () => {} },
+    {
+      icon: FileText,
+      label: '模板管理',
+      color: 'text-blue-500',
+      bg: 'bg-blue-50',
+      onClick: () => {
+        if (onNavigateToTemplates) {
+          onNavigateToTemplates();
+        } else {
+          Toast.info('功能开发中');
+        }
+      }
+    },
+    { icon: Layers, label: '问题清单', color: 'text-green-500', bg: 'bg-green-50', onClick: () => { } },
   ];
 
   const menuItemsGroup2 = [
-    { icon: PenTool, label: '小狸共创官', color: 'text-orange-500', bg: 'bg-orange-50', onClick: () => {} },
-    { icon: HelpCircle, label: '帮助与反馈', color: 'text-purple-500', bg: 'bg-purple-50', onClick: () => {} },
-    { icon: Settings, label: '通用设置', color: 'text-purple-500', bg: 'bg-purple-50', onClick: () => {} },
+    { icon: PenTool, label: '小狸共创官', color: 'text-orange-500', bg: 'bg-orange-50', onClick: () => { } },
+    { icon: HelpCircle, label: '帮助与反馈', color: 'text-purple-500', bg: 'bg-purple-50', onClick: () => { } },
+    { icon: Settings, label: '通用设置', color: 'text-purple-500', bg: 'bg-purple-50', onClick: () => { } },
   ];
 
   const renderMenuItem = (item: any, index: number, total: number) => (
     <button
       key={item.label}
       onClick={item.onClick}
-      className={`w-full flex items-center justify-between px-4 py-4 hover:bg-slate-50 transition-colors ${
-        index !== total - 1 ? 'border-b border-gray-50' : ''
-      }`}
+      className={`w-full flex items-center justify-between px-4 py-4 hover:bg-slate-50 transition-colors ${index !== total - 1 ? 'border-b border-gray-50' : ''
+        }`}
     >
       <div className="flex items-center gap-3">
         <div className={`w-8 h-8 rounded-lg ${item.bg} flex items-center justify-center`}>
-           <item.icon size={16} className={item.color} />
+          <item.icon size={16} className={item.color} />
         </div>
         <span className="text-[15px] text-slate-700 font-medium">{item.label}</span>
       </div>
@@ -82,16 +95,16 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       {/* Profile */}
       <div className="flex flex-col items-center py-8 bg-white mb-3 shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
         <div className="relative mb-3">
-           <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100">
-             <img 
-               src="/talk-assistant/assets/mascot.png" 
-               alt="User Avatar" 
-               className="w-full h-full object-cover"
-             />
-           </div>
-           <button className="absolute bottom-0 right-0 bg-[#4E3EF8] rounded-full p-1.5 border-2 border-white shadow-sm active:scale-95 transition-transform">
-              <Edit2 size={10} className="text-white" />
-           </button>
+          <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100">
+            <img
+              src="/talk-assistant/assets/mascot.png"
+              alt="User Avatar"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <button className="absolute bottom-0 right-0 bg-[#4E3EF8] rounded-full p-1.5 border-2 border-white shadow-sm active:scale-95 transition-transform">
+            <Edit2 size={10} className="text-white" />
+          </button>
         </div>
         <h2 className="text-[18px] font-bold text-slate-800">{userName || '未登录'}</h2>
       </div>
@@ -99,21 +112,21 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       {/* Menu Groups */}
       <div className="px-4 space-y-4">
         <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] overflow-hidden">
-           {menuItemsGroup1.map((item, index) => renderMenuItem(item, index, menuItemsGroup1.length))}
+          {menuItemsGroup1.map((item, index) => renderMenuItem(item, index, menuItemsGroup1.length))}
         </div>
-        
+
         <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] overflow-hidden">
-           {menuItemsGroup2.map((item, index) => renderMenuItem(item, index, menuItemsGroup2.length))}
+          {menuItemsGroup2.map((item, index) => renderMenuItem(item, index, menuItemsGroup2.length))}
         </div>
       </div>
 
       {/* Logout Button */}
       <div className="px-4 mt-8">
-        <button 
+        <button
           onClick={() => setShowLogoutDialog(true)}
           className="w-full bg-white text-slate-500 font-medium py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-gray-50 hover:text-red-500"
         >
-           <LogOut size={18} /> 退出登录
+          <LogOut size={18} /> 退出登录
         </button>
       </div>
 
@@ -121,11 +134,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* Custom Logout Confirmation Dialog - Portaled to body to overlay Bottom Bar */}
       {showLogoutDialog && createPortal(
-        <div 
+        <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-[2px] animate-fadeIn"
           onClick={() => setShowLogoutDialog(false)}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl w-[85%] max-w-[320px] overflow-hidden shadow-2xl animate-scaleIn"
             onClick={(e) => e.stopPropagation()}
           >
@@ -159,7 +172,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>,
         document.body
       )}
-      
+
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }

@@ -150,3 +150,9 @@ export interface LoginResponse {
   refreshExpireIn: string | null;
   openId: string | null;
 }
+
+export interface TranscriptionItem {
+  id: string | number;
+  roleId: string | number;
+  content: string;
+}
