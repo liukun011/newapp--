@@ -86,7 +86,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           
           {/* Phone Number Display */}
           <div className="flex items-center justify-center mb-8 gap-3">
-            <span className="text-2xl font-bold text-slate-900 tracking-wider">132****2398</span>
+            <span className="text-2xl font-bold text-slate-900 tracking-wider">用户登录</span>
             <button 
               className="text-slate-400 hover:text-indigo-600 transition-colors flex justify-center items-center gap-1"
               onClick={() => setViewState('SMS')}
@@ -106,18 +106,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   Toast.info('请先阅读并同意用户协议和隐私政策');
                   return;
                 }
-                try {
-                  const res = await authService.login('13278852398', 'Jwx1998...');
-                  if (res.successful && res.data) {
-                    localStorage.setItem('zov-user-token', res.data.accessToken);
-                    localStorage.setItem('zov-userinfo', JSON.stringify({ userId: res.data.userId }));
-                    onLogin();
-                  } else {
-                    Toast.fail(res.message || '登录失败');
-                  }
-                } catch (error) {
-                  console.error('Login error:', error);
-                }
+                // try {
+                //   const res = await authService.login('13278852398', 'Jwx1998...');
+                //   if (res.successful && res.data) {
+                //     localStorage.setItem('zov-user-token', res.data.accessToken);
+                //     localStorage.setItem('zov-userinfo', JSON.stringify({ userId: res.data.userId }));
+                //     onLogin();
+                //   } else {
+                //     Toast.fail(res.message || '登录失败');
+                //   }
+                // } catch (error) {
+                //   console.error('Login error:', error);
+                // }
+                Toast.fail('功能暂未放开！');
               }} 
               className="shadow-xl shadow-indigo-500/20"
             >

@@ -365,6 +365,9 @@ const App: React.FC = () => {
                   onNavigateToSettings={() => {
                     navigateForward(View.SETTINGS);
                   }}
+                  onNavigateToMessages={() => {
+                    navigateForward(View.MESSAGE_CENTER);
+                  }}
                 />
               )}
               {currentView === View.DUE_DILIGENCE && (
@@ -598,6 +601,11 @@ const App: React.FC = () => {
                     setPreviousView(View.SETTINGS);
                     navigateForward(View.MY_TEMPLATES);
                   }}
+                />
+              )}
+              {currentView === View.MESSAGE_CENTER && (
+                <MessageCenterPage 
+                  onBack={() => navigateBackward(View.HOME)} 
                 />
               )}
             </motion.div>
