@@ -1,4 +1,4 @@
-# Talk Assistant - AI 智能访谈助手
+# 小狸AI - 智能访谈助手
 
 这是一个基于 React 和 Vite 构建的移动端 AI 访谈助手应用。
 
