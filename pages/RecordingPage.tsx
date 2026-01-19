@@ -110,9 +110,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       .then(async () => {
         // 结束时如果是录音状态，先调用停止
         if (isRecording) {
-          if (window.Android?.stopRequestVoice) {
-            window.Android.stopRequestVoice();
-          } else if (window.Android?.stopRecord) {
+          if (window.Android?.stopRecord) {
             window.Android.stopRecord();
           }
         }
@@ -175,13 +173,9 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
   const handleToggleWrapper = () => {
     if (isRecording) {
-      // 暂停/停止录音
-      // Stop Voice Request (New Plugin API)
-      if (window.Android?.stopRequestVoice) {
-        console.log("[H5] calling stopRequestVoice...");
-        window.Android.stopRequestVoice();
-      } else if (window.Android?.stopRecord) {
-        // Fallback
+      // 停止录音
+      console.log("[H5] calling stopRecord...");
+      if (window.Android?.stopRecord) {
         try {
           window.Android.stopRecord();
         } catch (e) { console.error(e); }
@@ -189,34 +183,34 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       onToggleRecording();
     } else {
       if (seconds === 0) {
-        setCountdown(5);
+        setCountdown(3); // Changed to 3s for better UX
       } else {
-        // Start Voice Request (New Plugin API)
-        if (window.Android?.startRequestVoice) {
-          console.log("[H5] calling startRequestVoice...");
-          window.Android.startRequestVoice();
-        } else if (window.Android?.startRecord) {
-          // Fallback to old API
-          const surveyId = interviewInstId || deal?.id || 'default_id';
-          window.Android.startRecord(surveyId);
-        }
-        onToggleRecording();
+        // 继续录音
+        startNativeRecord();
       }
     }
+  };
+
+  const startNativeRecord = () => {
+    const surveyId = interviewInstId || deal?.id || 'default_id';
+    console.log(`[H5] Calling startRecord with surveyId: ${surveyId}`);
+    if (window.Android?.startRecord) {
+      window.Android.startRecord(surveyId);
+    } else {
+      Toast.fail('Native interface not found');
+    }
+    onToggleRecording();
   };
 
   useEffect(() => {
     if (countdown > 0) {
       // 当倒计时到达 1 时，触发录音逻辑
       if (countdown === 1) {
-        if (window.Android?.startRequestVoice) {
-          console.log("[H5] countdown finished, calling startRequestVoice...");
-          window.Android.startRequestVoice();
-        } else if (window.Android?.startRecord) {
-          const surveyId = interviewInstId || deal?.id || 'default_id';
-          window.Android.startRecord(surveyId);
-        }
-        onToggleRecording();
+        // We need a small delay or the next tick to ensure UI update
+        // But logic-wise, we just start recording
+        setTimeout(() => {
+          startNativeRecord();
+        }, 800);
       }
 
       const timer = setTimeout(() => {
@@ -225,7 +219,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [countdown]); // 注意：这里移除了 onToggleRecording 依赖，避免闭包问题，但 onToggleRecording 应该是稳定的
+  }, [countdown]);
 
   return (
     <div className="flex flex-col h-screen relative bg-[#F7F8FA]">
