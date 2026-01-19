@@ -20,6 +20,7 @@ import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import TemplatePreviewPage from './pages/TemplatePreviewPage';
 import QuestionsListPage from './pages/QuestionsListPage';
 import SettingsPage from './pages/SettingsPage';
+import MessageCenterPage from './pages/MessageCenterPage';
 import HistoryRecordsPage from './pages/HistoryRecordsPage';
 import HistoryDetailPage from './pages/HistoryDetailPage';
 import { View, DealRecord, QuestionInfo } from './types';
