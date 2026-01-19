@@ -20,7 +20,7 @@ import TemplateSelectionPage from './pages/TemplateSelectionPage';
 import TemplatePreviewPage from './pages/TemplatePreviewPage';
 import QuestionsListPage from './pages/QuestionsListPage';
 import SettingsPage from './pages/SettingsPage';
-import MessageCenterPage from './pages/MessageCenterPage';
+
 import HistoryRecordsPage from './pages/HistoryRecordsPage';
 import HistoryDetailPage from './pages/HistoryDetailPage';
 import { View, DealRecord, QuestionInfo } from './types';
@@ -94,8 +94,13 @@ const App: React.FC = () => {
       console.log(`[App] Global onVoiceFileSaved: ${filePath}`);
     };
 
-    window.onRecordingError = (errorMessage: string) => {
-      console.error("[App] Global onRecordingError:", errorMessage);
+    window.onRecordingError = (code: string, message: string) => {
+      console.error(`[App] Global onRecordingError: Code=${code}, Msg=${message}`);
+      // If message is undefined (legacy call), treat code as message
+      const displayMsg = message ? `${message} (${code})` : code;
+
+      Toast.fail(displayMsg);
+
       if (useRecordingStore.getState().isRecording) {
         useRecordingStore.getState().setIsRecording(false);
       }
