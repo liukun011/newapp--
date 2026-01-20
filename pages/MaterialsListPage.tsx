@@ -11,13 +11,15 @@ interface MaterialsListPageProps {
   onBack: () => void;
   onGenerateReport: () => void;
   onPreviewFile?: (name: string, url: string) => void;
+  isArchived?: boolean;
 }
 
 const MaterialsListPage: React.FC<MaterialsListPageProps> = ({ 
   dealId,
   onBack, 
   onGenerateReport,
-  onPreviewFile
+  onPreviewFile,
+  isArchived = false
 }) => {
   const basePath = import.meta.env.BASE_URL || '/';
   const [resources, setResources] = useState<Resource[]>([]);
@@ -241,22 +243,25 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
       </div>
 
       {/* Upload Options Grid */}
-      <div className="px-6 pt-6">
-        <div className="grid grid-cols-4 gap-4">
-          {uploadOptions.map((option) => (
-            <button 
-              key={option.id}
-              onClick={() => handleUploadClick(option.id)}
-              className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
-            >
-              <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center">
-                <option.icon size={32} className="text-slate-600" strokeWidth={1.5} />
-              </div>
-              <span className="text-sm text-slate-700 font-medium">{option.label}</span>
-            </button>
-          ))}
+      {/* Upload Options Grid - Hide if archived */}
+      {!isArchived && (
+        <div className="px-6 pt-6">
+          <div className="grid grid-cols-4 gap-4">
+            {uploadOptions.map((option) => (
+              <button 
+                key={option.id}
+                onClick={() => handleUploadClick(option.id)}
+                className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-[#F7F8FA] flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-50/50">
+                  <option.icon size={26} strokeWidth={1.5} />
+                </div>
+                <span className="text-xs font-medium text-slate-600">{option.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Resource List or Empty State */}
       {resources.length > 0 ? (
@@ -297,21 +302,26 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                     {resource.fileName}
                   </button>
                   
-                  {/* Edit Button */}
-                  <button 
-                    onClick={() => handleOpenRenameModal(resource)}
-                    className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
-                  >
-                    <Pencil size={18} strokeWidth={2} />
-                  </button>
-                  
-                  {/* Delete Button */}
-                  <button 
-                    onClick={() => handleDeleteResource(resource.id)}
-                    className="p-2 text-indigo-400 hover:text-red-500 transition-colors"
-                  >
-                    <MinusCircle size={22} strokeWidth={2} />
-                  </button>
+                  {/* Actions - Hide if archived */}
+                  {!isArchived && (
+                    <div className="flex items-center gap-1">
+                      {/* Edit Button */}
+                      <button 
+                        onClick={() => handleOpenRenameModal(resource)}
+                        className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
+                      >
+                        <Pencil size={18} strokeWidth={2} />
+                      </button>
+                      
+                      {/* Delete Button */}
+                      <button 
+                        onClick={() => handleDeleteResource(resource.id)}
+                        className="p-2 text-indigo-400 hover:text-red-500 transition-colors"
+                      >
+                        <MinusCircle size={22} strokeWidth={2} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -373,20 +383,23 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
       )}
 
       {/* Fixed Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-white">
-        <Button 
-          variant="primary"
-          block 
-          className="!rounded-full !h-14 !text-base !font-semibold shadow-lg"
-          style={{ 
-            background: 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)',
-            boxShadow: '0 4px 20px rgba(91, 78, 248, 0.3)'
-          }}
-          onClick={onGenerateReport}
-        >
-          → 立即生成报告
-        </Button>
-      </div>
+      {/* Fixed Bottom Button - Hide if archived */}
+      {!isArchived && (
+        <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-white">
+          <Button 
+            variant="primary"
+            block 
+            className="!rounded-full !h-14 !text-base !font-semibold shadow-lg"
+            style={{ 
+              background: 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)',
+              boxShadow: '0 4px 20px rgba(91, 78, 248, 0.3)'
+            }}
+            onClick={onGenerateReport}
+          >
+            → 立即生成报告
+          </Button>
+        </div>
+      )}
 
       {/* Voice Input Modal */}
       <VoiceInputModal

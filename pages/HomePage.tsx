@@ -356,10 +356,18 @@ const HomePage: React.FC<HomePageProps> = ({
                         
                         <div>
                            <button
-                             className="bg-[#4E3EF8] text-white text-[13px] font-medium px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-md shadow-indigo-200 active:scale-95 transition-transform"
+                             className={`text-[13px] font-medium px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-md transition-transform ${
+                               item.status === '5'
+                                 ? 'bg-gray-100 text-gray-400 shadow-none'
+                                 : 'bg-[#4E3EF8] text-white shadow-indigo-200 active:scale-95'
+                             }`}
                              onClick={(e) => {
                                 e.stopPropagation();
                                 
+                                if (item.status === '5') {
+                                  return;
+                                }
+
                                 const activeDeal = deals.find(d => d.status === '3');
                                 if (activeDeal && activeDeal.id !== item.id) {
                                   setShowLimitTips(true);

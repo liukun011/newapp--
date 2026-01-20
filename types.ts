@@ -16,6 +16,7 @@ export enum View {
   HISTORY = 'HISTORY',                // HistoryRecordsPage - 历史访谈页
   HISTORY_DETAIL = 'HISTORY_DETAIL',  // HistoryDetailPage - 历史访谈详情页
   MESSAGE_CENTER = 'MESSAGE_CENTER',  // MessageCenterPage - 消息中心页
+  REPORT_PREVIEW = 'REPORT_PREVIEW',  // ReportPreviewPage - 报告预览页
 }
 
 // 尽调状态枚举
@@ -38,10 +39,10 @@ export const DealStatusDescription: Record<DealStatusEnum, string> = {
 
 // 报告生成状态枚举
 export enum DealReportStatusEnum {
-  REPORT_NOT_GENERATED = 1,  // 报告未生成
-  REPORT_GENERATING = 2,     // 报告生成中
-  REPORT_GENERATED = 3,      // 报告已生成
-  REPORT_FAILED = 4,         // 报告生成失败
+  REPORT_NOT_GENERATED = '1',  // 报告未生成
+  REPORT_GENERATING = '2',     // 报告生成中
+  REPORT_GENERATED = '3',      // 报告已生成
+  REPORT_FAILED = '4',         // 报告生成失败
 }
 
 // 报告状态描述映射

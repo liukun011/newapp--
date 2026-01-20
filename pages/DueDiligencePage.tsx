@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Pencil, Mic, ChevronRight, FilePlus, Camera, Image as ImageIcon, FileText } from 'lucide-react';
-import { Toast } from 'react-vant';
+import { ArrowLeft, Pencil, Mic, ChevronRight, FilePlus, Camera, Image as ImageIcon, FileText, Archive } from 'lucide-react';
+import { Toast, Dialog } from 'react-vant';
 import Mascot from '../components/Mascot';
 import { COLORS } from '../constants';
-import { DealRecord } from '../types';
+import { DealRecord, DealReportStatusEnum } from '../types';
 import { dealService } from '../services/dealService';
 
 interface DueDiligencePageProps {
@@ -14,6 +14,8 @@ interface DueDiligencePageProps {
   onNavigateToQuestions?: () => void;
   onEditInfo?: () => void;
   onChangeTemplate?: () => void;
+  onPreviewReport?: (name: string, reportUrl: string, previewUrl: string) => void;
+  onNavigateToHistory?: (dealId: string) => void;
   onDealDetailLoaded?: (detail: DealRecord) => void;
 }
 
@@ -25,6 +27,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   onNavigateToQuestions,
   onEditInfo,
   onChangeTemplate,
+  onPreviewReport,
+  onNavigateToHistory,
   onDealDetailLoaded
 }) => {
   const basePath = import.meta.env.BASE_URL || '/';
@@ -58,6 +62,36 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   // 使用详情数据，如果没有则使用传入的 deal
   const currentDeal = dealDetail || deal;
   const isFinishedInterview = currentDeal?.status === '4';
+
+  // 轮询检查报告生成状态
+  useEffect(() => {
+    // 只有当报告状态为"生成中"时才启动轮询
+    if (currentDeal?.reportStatus != DealReportStatusEnum.REPORT_GENERATING || !currentDeal?.id) {
+      return;
+    }
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await dealService.getDealInstDetail(currentDeal.id);
+        if (res.success && res.data) {
+          setDealDetail(res.data);
+          onDealDetailLoadedRef.current?.(res.data);
+          
+          // 如果状态不再是"生成中"，停止轮询
+          if (res.data.reportStatus != DealReportStatusEnum.REPORT_GENERATING) {
+            clearInterval(pollInterval);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to poll deal detail:', error);
+      }
+    }, 5000); // 每 5 秒轮询一次
+
+    // 清理函数
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [currentDeal?.reportStatus, currentDeal?.id]);
 
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
@@ -152,16 +186,20 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           <ArrowLeft size={24} />
         </button>
         <h1 className="text-lg font-bold text-slate-800">{currentDeal?.interviewCust || '尽调详情'}</h1>
-        <button 
-          onClick={onEditInfo}
-          className="p-2 -mr-2 text-slate-700 hover:bg-white/50 rounded-full"
-        >
-          <Pencil size={20} />
-        </button>
+        {currentDeal?.status === '5' ? (
+          <div className="w-9" />
+        ) : (
+          <button 
+            onClick={onEditInfo}
+            className="p-2 -mr-2 text-slate-700 hover:bg-white/50 rounded-full"
+          >
+            <Pencil size={20} />
+          </button>
+        )}
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-8 relative z-10 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 pb-24 relative z-10 space-y-4">
         
         {/* Status Bar / Mascot Message */}
         <div className="flex items-end mt-2 mb-4 relative">
@@ -171,9 +209,15 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           
           <div className="bg-white rounded-tr-2xl rounded-br-2xl rounded-bl-2xl p-3 shadow-sm relative z-10 flex-1 mb-2">
             <p className="text-sm text-slate-700 font-medium">
-              {isFinishedInterview 
-                ? '本次访谈已完成，可查看历史记录或生成报告' 
-                : '记录创建成功，赶紧开始访谈吧...'}
+              {(currentDeal?.status === '5')
+                ? '访谈归档，内容仅供查阅和下载'
+                : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING
+                  ? '小狸全速生成报告中，请稍候'
+                  : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED
+                    ? '报告已生成! 可以继续完善信息'
+                    : isFinishedInterview 
+                      ? '本次访谈已完成，可查看历史记录或生成报告' 
+                      : '记录创建成功，赶紧开始访谈吧...'}
             </p>
           </div>
         </div>
@@ -187,37 +231,277 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         </div> */}
 
         {/* Report Card */}
-        <div className="rounded-3xl p-5 shadow-lg relative overflow-hidden text-white" 
-             style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #7062ff 100%)' }}>
-          <div className="relative z-10 max-w-[65%]">
-            <h2 className="text-xl font-bold mb-1.5">尽调报告</h2>
-            <p className="text-white text-xs mb-4 font-light">访谈既报告，洞察更高效。小狸智能捕捉核心要点。</p>
-            
-            <div className="flex gap-3">
-              <button className="px-4 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform">
-                立即生成
-              </button>
-              <button 
-                className="px-4 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium hover:bg-white/10 active:scale-95 transition-transform"
-                onClick={onChangeTemplate}
-              >
-                更换模板
-              </button>
-            </div>
-          </div>
+        {currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED ? (
+          // 报告已生成 - 卡片和按钮合并布局
+          <div className="rounded-3xl shadow-lg overflow-hidden">
+            {/* 上半部分 - 报告信息 */}
+            <div 
+              className="rounded-t-3xl p-5 relative overflow-hidden text-white cursor-pointer active:opacity-90 transition-opacity" 
+              style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #7062ff 100%)' }}
+              onClick={async () => {
+                if (currentDeal?.report?.id && currentDeal?.report?.fileUrl) {
+                  try {
+                    console.log('[Report Preview] Calling API with:', {
+                      fileId: currentDeal.report.id,
+                      fileUrl: currentDeal.report.fileUrl
+                    });
+                    
+                    Toast.loading({ message: '正在打开报告...', duration: 0, forbidClick: true });
+                    const res = await dealService.viewReportUrl(currentDeal.report.id, currentDeal.report.fileUrl);
+                    
+                    console.log('[Report Preview] API response:', res);
+                    Toast.clear();
+                    
+                    if (res.success && res.data) {
+                      // 使用报告预览页面打开
+                      onPreviewReport?.(
+                        currentDeal.report.fileName || '尽调报告',
+                        currentDeal.report.fileUrl,
+                        res.data
+                      );
+                    } else {
+                      Toast.fail(res.message || '打开报告失败');
+                    }
+                  } catch (error) {
+                    Toast.clear();
+                    console.error('View report failed:', error);
+                    Toast.fail('打开报告失败');
+                  }
+                } else {
+                  Toast.fail('报告信息不完整');
+                }
+              }}
+            >
+              <div className="relative z-10 max-w-[65%]">
+                <h2 className="text-xl font-bold mb-1.5">
+                  尽调报告
+                </h2>
+                <p className="text-white text-xs mb-2 font-light">访谈既报告，洞察更高效。小狸智能捕捉核心要点。</p>
+              </div>
 
-          {/* Rocket Mascot Image */}
-          <div className="absolute right-1 top-1/2 -translate-y-1/2 mt-[20px] w-36 h-36">
-            <img 
-               src={`${basePath}assets/rocketxiaoli.png`}
-               alt="Rocket Mascot"
-               className="w-full h-full object-contain drop-shadow-2xl"
-            />
+              {/* Rocket Mascot Image */}
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 mt-0 w-36 h-36">
+                <img 
+                   src={`${basePath}assets/rocketxiaoli.png`}
+                   alt="Rocket Mascot"
+                   className="w-full h-full object-contain drop-shadow-2xl"
+                />
+              </div>
+              {/* Decorative circles */}
+              <div className="absolute top-[-20px] right-[-20px] w-20 h-20 bg-white/10 rounded-full blur-xl" />
+              <div className="absolute bottom-[-10px] left-[30%] w-16 h-16 bg-white/10 rounded-full blur-lg" />
+            </div>
+
+            {/* 下半部分 - 按钮区域 */}
+            <div className="bg-[#5047E9] px-4 py-2 relative z-10 flex justify-end gap-3 items-center" style={{ minHeight: '52px' }}>
+                {(currentDeal?.status === '5') ? (
+                  // 已归档状态：仅显示立即下载
+                  <button 
+                    onClick={() => {
+                      if (currentDeal?.report?.fileUrl && currentDeal?.report?.fileName) {
+                        try {
+                          const link = document.createElement('a');
+                          link.href = currentDeal.report.fileUrl;
+                          link.download = currentDeal.report.fileName || '尽调报告.docx';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          Toast.success('开始下载');
+                        } catch (error) {
+                          console.error('Download failed:', error);
+                          Toast.fail('下载失败');
+                        }
+                      } else {
+                        Toast.fail('报告文件不存在');
+                      }
+                    }}
+                    className="px-6 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform"
+                  >
+                    立即下载
+                  </button>
+                ) : (
+                  // 未归档状态：显示完整功能
+                  <>
+                    <button
+                      onClick={() => {
+                        Dialog.confirm({
+                          title: '确认生成',
+                          message: '重新生成报告将覆盖现有报告，是否继续?',
+                        }).then(async () => {
+                          if (!currentDeal?.id) {
+                            Toast.fail('尽调信息不存在');
+                            return;
+                          }
+
+                          // 检查访谈记录和补充资料是否都为空
+                          const hasInterviewRecords = currentDeal.interviewInstList && currentDeal.interviewInstList.length > 0;
+                          const hasSupplementaryMaterials = currentDeal.resources && currentDeal.resources.length > 0;
+
+                          if (!hasInterviewRecords && !hasSupplementaryMaterials) {
+                            Toast.fail('访谈记录和补充资料不能同时为空，请先添加内容');
+                            return;
+                          }
+
+                          try {
+                            Toast.loading({ message: '正在生成报告...', duration: 0, forbidClick: true });
+                            const res = await dealService.generateInterviewInstReportAsync(currentDeal.id);
+                            Toast.clear();
+                            
+                            if (res.success) {
+                              Toast.success('报告生成任务已提交');
+                              try {
+                                const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+                                if (detailRes.success && detailRes.data) {
+                                  setDealDetail(detailRes.data);
+                                  onDealDetailLoadedRef.current?.(detailRes.data);
+                                }
+                              } catch (error) {
+                                console.error('Failed to refresh deal detail:', error);
+                              }
+                            } else {
+                              Toast.fail(res.message || '生成报告失败');
+                            }
+                          } catch (error) {
+                            Toast.clear();
+                            console.error('Generate report failed:', error);
+                            Toast.fail('生成报告失败');
+                          }
+                        }).catch(() => {});
+                      }}
+                      className="px-6 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform"
+                    >
+                      立即生成
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (currentDeal?.report?.fileUrl && currentDeal?.report?.fileName) {
+                          try {
+                            const link = document.createElement('a');
+                            link.href = currentDeal.report.fileUrl;
+                            link.download = currentDeal.report.fileName || '尽调报告.docx';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            Toast.success('开始下载');
+                          } catch (error) {
+                            console.error('Download failed:', error);
+                            Toast.fail('下载失败');
+                          }
+                        } else {
+                          Toast.fail('报告文件不存在');
+                        }
+                      }}
+                      className="px-6 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform"
+                    >
+                      立即下载
+                    </button>
+                    <button 
+                      className="px-6 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform"
+                      onClick={onChangeTemplate}
+                    >
+                      更换模板
+                    </button>
+                  </>
+                )}
+              </div>
           </div>
-          {/* Decorative circles */}
-          <div className="absolute top-[-20px] right-[-20px] w-20 h-20 bg-white/10 rounded-full blur-xl" />
-          <div className="absolute bottom-[-10px] left-[30%] w-16 h-16 bg-white/10 rounded-full blur-lg" />
-        </div>
+        ) : (
+          // 其他状态 - 原来的卡片样式
+          <div className="rounded-3xl p-5 shadow-lg relative overflow-hidden text-white" 
+               style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #7062ff 100%)' }}>
+            <div className="relative z-10 max-w-[65%]">
+              <h2 className="text-xl font-bold mb-1.5">尽调报告</h2>
+              <p className="text-white text-xs mb-4 font-light">访谈既报告，洞察更高效。小狸智能捕捉核心要点。</p>
+              
+              {currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING ? (
+                // 报告生成中 - 显示 loading
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm font-medium">报告正在后台生成...</span>
+                </div>
+              ) : (
+                // 未生成状态 - 显示两个按钮
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => {
+                      Dialog.confirm({
+                        title: '确认生成报告?',
+                        message: '系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告',
+                        confirmButtonText: '确认',
+                        cancelButtonText: '取消',
+                        confirmButtonColor: '#4E3EF8',
+                      }).then(async () => {
+                        if (!currentDeal?.id) {
+                          Toast.fail('尽调信息不存在');
+                          return;
+                        }
+
+                        // 检查访谈记录和补充资料是否都为空
+                        const hasInterviewRecords = currentDeal.interviewInstList && currentDeal.interviewInstList.length > 0;
+                        const hasSupplementaryMaterials = currentDeal.resources && currentDeal.resources.length > 0;
+
+                        if (!hasInterviewRecords && !hasSupplementaryMaterials) {
+                          Toast.fail('访谈记录和补充资料不能同时为空，请先添加内容');
+                          return;
+                        }
+
+                        try {
+                          Toast.loading({ message: '正在生成报告...', duration: 0, forbidClick: true });
+                          const res = await dealService.generateInterviewInstReportAsync(currentDeal.id);
+                          Toast.clear();
+                          
+                          if (res.success) {
+                            Toast.success('报告生成任务已提交');
+                            
+                            // 刷新尽调详情以获取最新的 reportStatus
+                            try {
+                              const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+                              if (detailRes.success && detailRes.data) {
+                                setDealDetail(detailRes.data);
+                                onDealDetailLoadedRef.current?.(detailRes.data);
+                              }
+                            } catch (error) {
+                              console.error('Failed to refresh deal detail:', error);
+                            }
+                          } else {
+                            Toast.fail(res.message || '生成报告失败');
+                          }
+                        } catch (error) {
+                          Toast.clear();
+                          console.error('Generate report failed:', error);
+                          Toast.fail('生成报告失败');
+                        }
+                      }).catch(() => {
+                        // 用户取消
+                      });
+                    }}
+                    className="px-4 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform"
+                  >
+                    立即生成
+                  </button>
+                  <button 
+                    className="px-4 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium hover:bg-white/10 active:scale-95 transition-transform"
+                    onClick={onChangeTemplate}
+                  >
+                    更换模板
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Rocket Mascot Image */}
+            <div className="absolute right-1 top-1/2 -translate-y-1/2 mt-[20px] w-36 h-36">
+              <img 
+                 src={`${basePath}assets/rocketxiaoli.png`}
+                 alt="Rocket Mascot"
+                 className="w-full h-full object-contain drop-shadow-2xl"
+              />
+            </div>
+            {/* Decorative circles */}
+            <div className="absolute top-[-20px] right-[-20px] w-20 h-20 bg-white/10 rounded-full blur-xl" />
+            <div className="absolute bottom-[-10px] left-[30%] w-16 h-16 bg-white/10 rounded-full blur-lg" />
+          </div>
+        )}
 
         {/* Action Grid */}
         <div className="grid grid-cols-2 gap-4">
@@ -233,18 +517,32 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             
             <div className="flex items-center justify-between mt-4">
                <div className="flex gap-2">
-                 {uploadOptions.map(opt => (
+                 {(currentDeal?.status === '5') ? (
+                   // 已归档状态：显示立即查看按钮
                    <button 
-                    key={opt.id}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleUploadClick(opt.id);
+                      onNavigateToMaterials();
                     }}
-                    className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-slate-500 active:bg-gray-100 transition-colors"
+                    className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100"
                    >
-                     <opt.icon size={16} strokeWidth={2} />
+                     立即查看
                    </button>
-                 ))}
+                 ) : (
+                   // 未归档状态：显示上传图标
+                   uploadOptions.map(opt => (
+                     <button 
+                      key={opt.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleUploadClick(opt.id);
+                      }}
+                      className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-slate-500 active:bg-gray-100 transition-colors"
+                     >
+                       <opt.icon size={16} strokeWidth={2} />
+                     </button>
+                   ))
+                 )}
                </div>
                <FilePlus className="text-gray-300 w-8 h-8 opacity-50" strokeWidth={1.5} />
             </div>
@@ -259,10 +557,23 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
             <div className="flex items-end justify-between mt-4">
                <button 
-                onClick={onNavigateToRecording}
-                className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100"
+                onClick={() => {
+                  // 检查是否已归档
+                  if (currentDeal?.status === '5') {
+                    if (onNavigateToHistory && currentDeal?.id) {
+                      onNavigateToHistory(currentDeal.id);
+                    }
+                    return;
+                  }
+                  onNavigateToRecording();
+                }}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold border ${
+                  currentDeal?.status === '5'
+                    ? 'bg-indigo-50 text-indigo-600 border-indigo-100' // 恢复高亮样式
+                    : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                }`}
                >
-                 +访谈录音
+                 {(currentDeal?.status === '5') ? '历史访谈' : '+访谈录音'}
                </button>
                <Mic className="text-indigo-200 w-10 h-10" strokeWidth={1.5} />
             </div>
@@ -285,6 +596,53 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           );
         })()}
 
+      </div>
+
+      {/* Fixed Archive Button at Bottom */}
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30">
+        <button
+          disabled={currentDeal?.status === '5'}
+          onClick={async () => {
+            if (!currentDeal?.id) {
+              Toast.fail('尽调信息不存在');
+              return;
+            }
+
+            try {
+              Toast.loading({ message: '归档中...', duration: 0, forbidClick: true });
+              const res = await dealService.archiveDeal(currentDeal.id);
+              Toast.clear();
+              
+              if (res.success) {
+                Toast.success('归档成功');
+                // 延迟返回，让用户看到成功提示
+                setTimeout(() => {
+                  onBack();
+                }, 1000);
+              } else {
+                Toast.fail(res.message || '归档失败');
+              }
+            } catch (error) {
+              Toast.clear();
+              console.error('Archive failed:', error);
+              Toast.fail('归档失败');
+            }
+          }}
+          className={`w-full h-12 rounded-full font-bold text-lg transition-transform flex items-center justify-center gap-2 ${
+             currentDeal?.status === '5'
+               ? 'bg-gray-300 text-white cursor-not-allowed'
+               : 'bg-[#4337F1] text-white shadow-lg active:scale-95'
+          }`}
+        >
+          {currentDeal?.status === '5' ? (
+            '已归档'
+          ) : (
+            <>
+              <Archive size={20} strokeWidth={2.5} />
+              归档
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

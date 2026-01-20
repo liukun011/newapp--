@@ -10,9 +10,10 @@ interface HistoryRecordsPageProps {
   onStartInterview: () => void;
   dealId?: string;
   onRecordClick?: (record: any) => void;
+  isArchived?: boolean;
 }
 
-const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId, onRecordClick }) => {
+const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId, onRecordClick, isArchived = false }) => {
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const basePath = import.meta.env.BASE_URL || '/';
@@ -133,15 +134,18 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
                 </div>
 
                 {/* Edit Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditClick(record);
-                  }}
-                  className="p-2 text-gray-400 hover:text-slate-600 active:scale-90 transition-all"
-                >
-                  <Edit2 size={18} strokeWidth={1.5} />
-                </button>
+                {/* Edit Button - Hide if archived */}
+                {!isArchived && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(record);
+                    }}
+                    className="p-2 text-gray-400 hover:text-slate-600 active:scale-90 transition-all"
+                  >
+                    <Edit2 size={18} strokeWidth={1.5} />
+                  </button>
+                )}
               </div>
             ))}
           </div>

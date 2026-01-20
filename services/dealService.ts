@@ -210,4 +210,41 @@ export const dealService = {
       data: { fileId, fileName },
     });
   },
+
+  /**
+   * 归档尽调实例
+   * POST /deal/archive
+   * @param id 尽调实例 ID
+   */
+  archiveDeal: (id: string) => {
+    return request<ApiResponse<any>>('/deal/archive', {
+      method: 'POST',
+      data: { id },
+    });
+  },
+
+  /**
+   * 异步生成访谈实例报告
+   * POST /interview/generateInterviewInstReportAsync
+   * @param interviewDealInstId 尽调实例 ID
+   */
+  generateInterviewInstReportAsync: (interviewDealInstId: string) => {
+    return request<ApiResponse<any>>('/interview/generateInterviewInstReportAsync', {
+      method: 'POST',
+      data: { interviewDealInstId },
+    });
+  },
+
+  /**
+   * 预览报告文件
+   * GET /webInterface/url/view
+   * @param fileId 文件 ID
+   * @param fileUrl 文件 URL
+   */
+  viewReportUrl: (fileId: string, fileUrl: string) => {
+    return request<ApiResponse<any>>('/webInterface/url/view', {
+      method: 'GET',
+      params: { fileId, fileUrl },
+    });
+  },
 };

@@ -24,6 +24,7 @@ import MessageCenterPage from './pages/MessageCenterPage';
 
 import HistoryRecordsPage from './pages/HistoryRecordsPage';
 import HistoryDetailPage from './pages/HistoryDetailPage';
+import ReportPreviewPage from './pages/ReportPreviewPage';
 import { View, DealRecord, QuestionInfo } from './types';
 import { COLORS } from './constants';
 import RecordingFloatBubble from './components/RecordingFloatBubble';
@@ -133,11 +134,35 @@ const App: React.FC = () => {
       sessionStorage.removeItem('zov-preview-template');
     }
   }, [previewTemplate]);
+  
+  // 报告预览数据
+  const [previewReport, setPreviewReport] = useState<{ name: string; reportUrl: string; previewUrl: string } | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('zov-preview-report');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  // 持久化报告预览数据
+  useEffect(() => {
+    if (previewReport) {
+      sessionStorage.setItem('zov-preview-report', JSON.stringify(previewReport));
+    } else {
+      sessionStorage.removeItem('zov-preview-report');
+    }
+  }, [previewReport]);
+  
   // 记住资料上传页的当前标签页
   const [materialUploadTab, setMaterialUploadTab] = useState<string>('upload');
 
   // 导航方向：forward (前进) 或 backward (后退) 或 root (重置/根页面)
+  // 导航方向：forward (前进) 或 backward (后退) 或 root (重置/根页面)
   const [navDirection, setNavDirection] = useState<'forward' | 'backward' | 'root'>('forward');
+
+  // 访谈限制提示显示状态
+  const [showLimitTips, setShowLimitTips] = useState(false);
 
   // 页面滚动位置缓存
   const [scrollPositions, setScrollPositions] = useState<Record<View, number>>({} as Record<View, number>);
@@ -287,6 +312,17 @@ const App: React.FC = () => {
       ) : (
         /* Main App - only render after splash is hidden */
         <div ref={appContainerRef} className="w-full max-w-md mx-auto min-h-screen relative overflow-hidden bg-transparent">
+          {/* Custom Limit Tips Toast */}
+          {showLimitTips && (
+             <div className="fixed top-24 left-4 right-4 z-[100] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center pointer-events-none">
+               <div className="bg-black/40 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
+                 <span className="text-sm font-medium tracking-wide">
+                   您正有一个访谈正在进行中，暂时不支持开启新任务。
+                 </span>
+               </div>
+             </div>
+          )}
+
           <AnimatePresence initial={false} mode={navDirection === 'root' ? 'wait' : 'sync'}>
             <motion.div
               key={currentView}
@@ -397,17 +433,81 @@ const App: React.FC = () => {
                 <DueDiligencePage
                   deal={currentDeal}
                   onBack={() => navigateBackward(View.HOME)}
-                  onNavigateToRecording={() => {
-                    // 检查是否切换了尽调对象，如果是则重置录音状态
-                    const currentStore = useRecordingStore.getState();
-                    if (currentDeal?.id && currentStore.currentDealId && currentStore.currentDealId !== currentDeal.id) {
-                      console.log('[App] Switching deal, resetting recording state');
-                      currentStore.reset();
+                  onNavigateToRecording={async () => {
+                    if (!currentDeal?.id) {
+                      Toast.fail('尽调信息不存在');
+                      return;
                     }
-                    
-                    setRecordingBackView(View.DUE_DILIGENCE);
-                    setPreviousView(View.DUE_DILIGENCE);
-                    navigateForward(View.RECORDING);
+
+                    try {
+                      // 调用接口创建访谈实例
+                      Toast.loading({ message: '准备访谈中...', duration: 0, forbidClick: true });
+
+                      // 0. 检查是否有正在进行的访谈
+                      const activeDealsRes = await dealService.queryDealInstList({
+                        pageNo: 1,
+                        pageSize: 10, // 稍微大一点，防止漏掉
+                        status: ['3'] // 状态3: 访谈中
+                      });
+
+                      console.log('[App] Check active deals:', {
+                        success: activeDealsRes.success,
+                        total: activeDealsRes.data?.total,
+                        records: activeDealsRes.data?.records.map(r => ({ id: r.id, status: r.status, name: r.interviewCust })),
+                        currentDealId: currentDeal.id
+                      });
+
+                      if (activeDealsRes.success && activeDealsRes.data && activeDealsRes.data.records.length > 0) {
+                         // 找到第一个 ID 不等于当前 Deal ID 的正在进行中的访谈
+                         const activeDeal = activeDealsRes.data.records.find(r => String(r.id) !== String(currentDeal.id));
+                         
+                         if (activeDeal) {
+                            console.log('[App] Found another active deal:', activeDeal);
+                            Toast.clear();
+                            // 使用自定义提示条
+                            setShowLimitTips(true);
+                            setTimeout(() => setShowLimitTips(false), 3000);
+                            return;
+                         }
+                      }
+
+                      // 1. 创建访谈实例
+                      const createRes = await dealService.createInterviewInst({
+                        interviewDealInstId: currentDeal.id,
+                        interviewCustom: currentDeal.interviewCust
+                      });
+
+                      if (createRes.success && createRes.data) {
+                        // 假设返回的数据直接是 ID，或者包含 interviewInstId 字段的对象
+                        const instId = typeof createRes.data === 'string' ? createRes.data : createRes.data?.interviewInstId;
+                        const instTitle = typeof createRes.data === 'string' ? '' : createRes.data?.interviewInstTitle;
+
+                        // 如果切换了访谈对象（ID不一致），则重置录音状态（初始化页面）
+                        const currentStore = useRecordingStore.getState();
+                        if (currentStore.currentInterviewInstId && currentStore.currentInterviewInstId !== instId) {
+                          currentStore.reset();
+                        }
+
+                        // 更新 Zustand Store
+                        setData({
+                          dealId: currentDeal.id,
+                          interviewInstId: instId,
+                          title: instTitle || '',
+                        });
+
+                        Toast.clear();
+                        setRecordingBackView(View.DUE_DILIGENCE);
+                        setPreviousView(View.DUE_DILIGENCE);
+                        navigateForward(View.RECORDING);
+                      } else {
+                        Toast.clear();
+                        Toast.fail(createRes.message || '创建访谈实例失败');
+                      }
+                    } catch (error) {
+                      Toast.clear();
+                      console.error('Create interview instance failed:', error);
+                      Toast.fail('创建访谈实例失败');
+                    }
                   }}
                   onNavigateToMaterials={() => navigateForward(View.MATERIALS_LIST)}
                   onNavigateToQuestions={() => navigateForward(View.QUESTIONS_LIST)}
@@ -415,6 +515,15 @@ const App: React.FC = () => {
                   onChangeTemplate={() => {
                     setPreviousView(View.DUE_DILIGENCE);
                     navigateForward(View.TEMPLATE_SELECTION);
+                  }}
+                  onNavigateToHistory={(dealId) => {
+                    setPreviousView(View.DUE_DILIGENCE);
+                    navigateForward(View.HISTORY);
+                  }}
+                  onPreviewReport={(name, reportUrl, previewUrl) => {
+                    setPreviewReport({ name, reportUrl, previewUrl });
+                    setPreviousView(View.DUE_DILIGENCE);
+                    navigateForward(View.REPORT_PREVIEW);
                   }}
                   onDealDetailLoaded={(detail) => setCurrentDeal(detail)}
                 />
@@ -429,6 +538,7 @@ const App: React.FC = () => {
                     setPreviousView(View.MATERIALS_LIST);
                     navigateForward(View.TEMPLATE_PREVIEW);
                   }}
+                  isArchived={currentDeal?.status === '5'}
                 />
               )}
               {currentView === View.MATERIAL_UPLOAD && (
@@ -526,9 +636,9 @@ const App: React.FC = () => {
               {currentView === View.HISTORY && (
                 <HistoryRecordsPage
                   dealId={currentDeal?.id}
+                  isArchived={currentDeal?.status === '5'}
                   onBack={() => {
-                    setPreviousView(recordingBackView);
-                    navigateBackward(View.RECORDING);
+                    navigateBackward(previousView);
                   }}
                   onStartInterview={() => {
                     setPreviousView(recordingBackView);
@@ -615,11 +725,25 @@ const App: React.FC = () => {
                   onBack={() => navigateBackward(previousView)}
                 />
               )}
+              {currentView === View.REPORT_PREVIEW && previewReport && (
+                <ReportPreviewPage
+                  reportName={previewReport.name}
+                  reportUrl={previewReport.reportUrl}
+                  previewUrl={previewReport.previewUrl}
+                  onBack={() => {
+                    console.log('[ReportPreview] Navigating back, previousView:', previousView);
+                    console.log('[ReportPreview] Current deal:', currentDeal);
+                    setPreviewReport(null);
+                    navigateBackward(previousView);
+                  }}
+                />
+              )}
               {currentView === View.QUESTIONS_LIST && (
                 <QuestionsListPage
                   dealName={currentDeal?.interviewCust}
                   dealLogo={currentDeal?.logo}
                   questionInfoList={currentDeal?.questionInfoList || []}
+                  isArchived={currentDeal?.status === '5'}
                   onBack={() => navigateBackward(View.DUE_DILIGENCE)}
                   onUpdateQuestion={(updatedQuestion) => {
                     if (currentDeal) {
@@ -697,9 +821,9 @@ const App: React.FC = () => {
               seconds={recordingSeconds}
               appContainerRef={appContainerRef}
               onClick={() => {
-                // 如果当前在历史记录页，点击浮窗返回录音页时不更新 previousView，
-                // 这样录音页的返回按钮依然指向之前的来源（如首页），避免死循环
-                if (currentView !== View.HISTORY) {
+                // 如果当前在历史记录页或报告预览页，点击浮窗返回录音页时不更新 previousView，
+                // 这样录音页的返回按钮依然指向之前的来源，避免死循环
+                if (currentView !== View.HISTORY && currentView !== View.REPORT_PREVIEW) {
                   setPreviousView(currentView);
                 }
                 setNavDirection('forward');

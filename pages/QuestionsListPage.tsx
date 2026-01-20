@@ -12,6 +12,7 @@ interface QuestionsListPageProps {
   onUpdateQuestion?: (question: QuestionInfo) => void;
   onDeleteQuestion?: (questionId: string) => void;
   onAddQuestion?: (questionName: string) => void;
+  isArchived?: boolean;
 }
 
 // 编辑问题弹框组件
@@ -179,6 +180,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   onUpdateQuestion,
   onDeleteQuestion,
   onAddQuestion,
+  isArchived = false,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -290,7 +292,6 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
       {/* Content */}
       <div 
-        ref={scrollContainerRef}
         className="flex-1 overflow-hidden px-4 pb-24"
       >
         {/* Deal Info Card */}
@@ -314,7 +315,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
           </div>
 
           {/* Scrollable Questions List */}
-          <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+          <div ref={scrollContainerRef} className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
             <div className="divide-y divide-gray-100 px-4">
               {sortedQuestions.map((question) => (
                 <div 
@@ -325,20 +326,24 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                     {question.questionIndex}.{question.questionName}
                   </span>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    {/* 编辑按钮 */}
-                    <button 
-                      onClick={() => handleEditQuestion(question)}
-                      className="p-2 text-gray-300 hover:text-indigo-500 transition-colors"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    {/* 删除按钮 */}
-                    <button 
-                      onClick={() => handleOpenDeleteModal(question)}
-                      className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    {/* 编辑按钮 - 仅未归档时显示 */}
+                    {!isArchived && (
+                      <button 
+                        onClick={() => handleEditQuestion(question)}
+                        className="p-2 text-gray-300 hover:text-indigo-500 transition-colors"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                    )}
+                    {/* 删除按钮 - 仅未归档时显示 */}
+                    {!isArchived && (
+                      <button 
+                        onClick={() => handleOpenDeleteModal(question)}
+                        className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -356,8 +361,8 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
       {/* Floating Buttons */}
       <div className="fixed right-4 bottom-24 flex flex-col gap-3">
-        {/* Scroll to Top Button */}
-        {showScrollTop && (
+        {/* Scroll to Top Button - Standard logic for non-archived state */}
+        {(!isArchived && showScrollTop) && (
           <button 
             onClick={scrollToTop}
             className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-colors border border-gray-100"
@@ -366,13 +371,13 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
           </button>
         )}
         
-        {/* Add Question Button */}
+        {/* Main Action Button: Add Question (Normal) OR Scroll Top (Archived) */}
         <button 
-          onClick={handleAddQuestionClick}
+          onClick={isArchived ? scrollToTop : handleAddQuestionClick}
           className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95"
           style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
         >
-          <Plus size={24} />
+          {isArchived ? <ArrowUp size={24} /> : <Plus size={24} />}
         </button>
       </div>
 
