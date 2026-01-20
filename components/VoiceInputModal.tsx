@@ -1,26 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mic } from 'lucide-react';
+import { Toast } from 'react-vant';
+import { dealService } from '../services/dealService';
 
 interface VoiceInputModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (content: string) => void;
+  dealId?: string;
+  initialContent?: string;
 }
 
 const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   visible,
   onClose,
-  onSave
+  onSave,
+  dealId,
+  initialContent = ''
 }) => {
   const [content, setContent] = useState('');
   const [isRecording, setIsRecording] = useState(false);
 
+  // 当弹框打开时，设置初始内容
+  useEffect(() => {
+    if (visible) {
+      setContent(initialContent);
+    }
+  }, [visible, initialContent]);
+
   if (!visible) return null;
 
-  const handleSave = () => {
-    onSave(content);
-    setContent('');
-    onClose();
+  const handleSave = async () => {
+    if (!content.trim()) {
+      Toast.info('请输入补充信息');
+      return;
+    }
+
+    if (!dealId) {
+      Toast.fail('未找到尽调实例');
+      return;
+    }
+
+    try {
+      Toast.loading({ message: '保存中...', duration: 0, forbidClick: true });
+      const res = await dealService.appendResource({
+        interviewDealInstId: dealId,
+        appendText: content.trim(),
+      });
+      Toast.clear();
+
+      if (res.success) {
+        Toast.success('保存成功');
+        onSave(content);
+        setContent('');
+        onClose();
+      } else {
+        Toast.fail(res.message || '保存失败');
+      }
+    } catch (error) {
+      Toast.clear();
+      console.error('Save voice input failed:', error);
+      Toast.fail('保存失败');
+    }
   };
 
   const handleRecordClick = () => {
@@ -28,16 +69,9 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     setIsRecording(!isRecording);
   };
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   return (
     <div 
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
-      onClick={handleBackdropClick}
     >
       <div 
         className="w-full bg-white rounded-t-3xl animate-slide-up"
@@ -49,12 +83,22 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4">
           <h2 className="text-lg font-bold text-slate-800">补充信息</h2>
-          <button 
-            onClick={handleSave}
-            className="px-4 py-1.5 border border-indigo-500 text-indigo-600 rounded-full text-sm font-medium hover:bg-indigo-50 active:scale-95 transition-all"
-          >
-            保存
-          </button>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={onClose}
+              className="px-5 py-1.5 border border-gray-300 text-gray-600 rounded-full text-base font-medium active:scale-95 transition-transform"
+            >
+              取消
+            </button>
+            
+            <button 
+              onClick={handleSave}
+              className="px-5 py-1.5 border border-[#4E3EF8] text-[#4E3EF8] rounded-full text-base font-medium active:scale-95 transition-transform"
+            >
+              保存
+            </button>
+          </div>
         </div>
 
         {/* Text Input Area */}
@@ -82,7 +126,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
               <Mic size={24} className="text-white" />
             </button>
             <span className="mt-2 text-sm text-gray-500">
-              {isRecording ? '录音中...' : '点击录音'}
+              {isRecording ? '录音中...' : '点击录音转写'}
             </span>
           </div>
         </div>

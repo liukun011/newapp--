@@ -439,39 +439,19 @@ const App: React.FC = () => {
                       return;
                     }
 
+                    // 检查当前尽调是否正在访谈中
+                    if (currentDeal.status !== '3') {
+                      // 当前尽调不在访谈中，不允许进入
+                      setShowLimitTips(true);
+                      setTimeout(() => setShowLimitTips(false), 3000);
+                      return;
+                    }
+
                     try {
                       // 调用接口创建访谈实例
                       Toast.loading({ message: '准备访谈中...', duration: 0, forbidClick: true });
 
-                      // 0. 检查是否有正在进行的访谈
-                      const activeDealsRes = await dealService.queryDealInstList({
-                        pageNo: 1,
-                        pageSize: 10, // 稍微大一点，防止漏掉
-                        status: ['3'] // 状态3: 访谈中
-                      });
-
-                      console.log('[App] Check active deals:', {
-                        success: activeDealsRes.success,
-                        total: activeDealsRes.data?.total,
-                        records: activeDealsRes.data?.records.map(r => ({ id: r.id, status: r.status, name: r.interviewCust })),
-                        currentDealId: currentDeal.id
-                      });
-
-                      if (activeDealsRes.success && activeDealsRes.data && activeDealsRes.data.records.length > 0) {
-                         // 找到第一个 ID 不等于当前 Deal ID 的正在进行中的访谈
-                         const activeDeal = activeDealsRes.data.records.find(r => String(r.id) !== String(currentDeal.id));
-                         
-                         if (activeDeal) {
-                            console.log('[App] Found another active deal:', activeDeal);
-                            Toast.clear();
-                            // 使用自定义提示条
-                            setShowLimitTips(true);
-                            setTimeout(() => setShowLimitTips(false), 3000);
-                            return;
-                         }
-                      }
-
-                      // 1. 创建访谈实例
+                      // 创建访谈实例（当前尽调已经在访谈中，会返回现有实例）
                       const createRes = await dealService.createInterviewInst({
                         interviewDealInstId: currentDeal.id,
                         interviewCustom: currentDeal.interviewCust
@@ -516,7 +496,7 @@ const App: React.FC = () => {
                     setPreviousView(View.DUE_DILIGENCE);
                     navigateForward(View.TEMPLATE_SELECTION);
                   }}
-                  onNavigateToHistory={(dealId) => {
+                  onNavigateToHistory={() => {
                     setPreviousView(View.DUE_DILIGENCE);
                     navigateForward(View.HISTORY);
                   }}
@@ -539,6 +519,7 @@ const App: React.FC = () => {
                     navigateForward(View.TEMPLATE_PREVIEW);
                   }}
                   isArchived={currentDeal?.status === '5'}
+                  reportStatus={currentDeal?.reportStatus}
                 />
               )}
               {currentView === View.MATERIAL_UPLOAD && (

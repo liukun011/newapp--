@@ -84,14 +84,14 @@ export interface Resource {
   id: string;
   fileName: string;
   fileUrl: string;
-  type: string;
-  createDate: string;
-  lastModifiedTime: string;
-  relationId: string;
-  matchNum: number;
-  total: number;
-  finishTime: string | null;
-  fileCreateFinishTime: string | null;
+  type?: string;
+  createDate?: string;
+  lastModifiedTime?: string;
+  relationId?: string;
+  matchNum?: number;
+  total?: number;
+  finishTime?: string | null;
+  fileCreateFinishTime?: string | null;
 }
 
 // 问题信息

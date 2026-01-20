@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Camera, Image as ImageIcon, FileText, Mic, MinusCircle, Pencil } from 'lucide-react';
-import { Toast } from 'react-vant';
-import Button from '../components/Button';
+import { ArrowLeft, Camera, Image as ImageIcon, FileText, Mic, MinusCircle, Pencil, RefreshCw } from 'lucide-react';
+import { Toast, Dialog } from 'react-vant';
 import VoiceInputModal from '../components/VoiceInputModal';
 import { dealService } from '../services/dealService';
-import { Resource } from '../types';
+import { Resource, DealReportStatusEnum } from '../types';
 
 interface MaterialsListPageProps {
   dealId?: string;
@@ -12,6 +11,7 @@ interface MaterialsListPageProps {
   onGenerateReport: () => void;
   onPreviewFile?: (name: string, url: string) => void;
   isArchived?: boolean;
+  reportStatus?: any; // 报告状态
 }
 
 const MaterialsListPage: React.FC<MaterialsListPageProps> = ({ 
@@ -19,16 +19,24 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
   onBack, 
   onGenerateReport,
   onPreviewFile,
-  isArchived = false
+  isArchived = false,
+  reportStatus
 }) => {
   const basePath = import.meta.env.BASE_URL || '/';
   const [resources, setResources] = useState<Resource[]>([]);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
+  const [voiceModalInitialContent, setVoiceModalInitialContent] = useState('');
+  const [localReportStatus, setLocalReportStatus] = useState(reportStatus);
   
   // 重命名弹框状态
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [renameTarget, setRenameTarget] = useState<Resource | null>(null);
   const [newFileName, setNewFileName] = useState('');
+
+  // 监听 props reportStatus 的变化
+  useEffect(() => {
+    setLocalReportStatus(reportStatus);
+  }, [reportStatus]);
 
   // 获取尽调详情数据
   const fetchDealDetail = useCallback(async () => {
@@ -37,7 +45,25 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     try {
       const res = await dealService.getDealInstDetail(dealId);
       if (res.success && res.data) {
-        setResources(res.data.resources || []);
+        // 更新本地报告状态
+        if (res.data.reportStatus !== undefined) {
+          setLocalReportStatus(res.data.reportStatus);
+        }
+
+        const allResources: Resource[] = [...(res.data.resources || [])];
+        
+        // 如果supplementary字段存在（数组形式），将其添加到列表
+        if (res.data.supplementary && Array.isArray(res.data.supplementary)) {
+          // 检查resources中是否已经有type=4的补充资料
+          const hasSupplementary = allResources.some(r => r.type === '4');
+          
+          if (!hasSupplementary) {
+            // supplementary是数组，将所有补充资料添加到列表开头
+            allResources.unshift(...(res.data.supplementary as Resource[]));
+          }
+        }
+        
+        setResources(allResources);
       }
     } catch (error) {
       console.error('Failed to fetch deal detail:', error);
@@ -53,7 +79,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
   const galleryInputRef = React.useRef<HTMLInputElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleUploadClick = (id: 'camera' | 'gallery' | 'file' | 'voice') => {
+  const handleUploadClick = async (id: 'camera' | 'gallery' | 'file' | 'voice') => {
     switch (id) {
       case 'camera':
         cameraInputRef.current?.click();
@@ -65,6 +91,23 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
         fileInputRef.current?.click();
         break;
       case 'voice':
+        // 检查是否已有补充文本，如果有则加载内容
+        const supplementaryResource = resources.find(r => r.type === '4');
+        if (supplementaryResource?.fileUrl) {
+          try {
+            Toast.loading({ message: '加载中...', duration: 0 });
+            const response = await fetch(supplementaryResource.fileUrl);
+            const text = await response.text();
+            Toast.clear();
+            setVoiceModalInitialContent(text);
+          } catch (error) {
+            Toast.clear();
+            console.error('Failed to load supplementary text:', error);
+            setVoiceModalInitialContent('');
+          }
+        } else {
+          setVoiceModalInitialContent('');
+        }
         setVoiceModalVisible(true);
         break;
     }
@@ -130,6 +173,10 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
 
   // 打开重命名弹框
   const handleOpenRenameModal = (resource: Resource) => {
+    if (!resource.fileName) {
+      Toast.fail('文件名不存在');
+      return;
+    }
     // 提取文件名（不含后缀）
     const nameParts = resource.fileName.split('.');
     if (nameParts.length > 1) nameParts.pop(); // 移除后缀
@@ -149,6 +196,11 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
 
     if (!newFileName.trim()) {
       Toast.fail('文件名不能为空');
+      return;
+    }
+
+    if (!renameTarget.fileName) {
+      Toast.fail('原文件名不存在');
       return;
     }
 
@@ -180,8 +232,8 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
 
   // 根据文件类型获取图标图片路径
   // 支持6种类型：excel、word、pdf、txt、ppt、image
-  const getFileIconSrc = (fileName: string): string => {
-    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+  const getFileIconSrc = (fileName: string | undefined): string => {
+    const ext = fileName?.split('.').pop()?.toLowerCase() || '';
     if (['xlsx', 'xls', 'csv'].includes(ext)) {
       return `${basePath}assets/excel.png`;
     } else if (['doc', 'docx'].includes(ext)) {
@@ -197,6 +249,49 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     }
     // 默认使用 txt 图标
     return `${basePath}assets/txt.png`;
+  };
+
+  // 处理生成报告点击
+  const handleGenerateClick = () => {
+    const isRegenerate = localReportStatus === DealReportStatusEnum.REPORT_GENERATED;
+    
+    Dialog.confirm({
+      title: isRegenerate ? '确认重新生成报告？' : '确认立即生成报告？',
+      message: isRegenerate 
+        ? '是否确认根据当前尽调资料和访谈录音重新生成报告？原有报告内容将被覆盖'
+        : '系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告',
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      confirmButtonColor: '#4337F1',
+      className: 'report-confirm-dialog',
+    })
+    .then(async () => {
+      if (!dealId) {
+        Toast.fail('尽调ID不存在');
+        return;
+      }
+      
+      try {
+        Toast.loading({ message: '请求生成中...', duration: 0, forbidClick: true });
+        const res = await dealService.generateInterviewInstReportAsync(dealId);
+        Toast.clear();
+        
+        if (res.success) {
+          Toast.success('已开始生成报告');
+          // 跳转回尽调详情界面
+          onBack();
+        } else {
+          Toast.fail(res.message || '生成请求失败');
+        }
+      } catch (error) {
+        Toast.clear();
+        console.error('Generate report failed:', error);
+        Toast.fail('生成请求失败');
+      }
+    })
+    .catch(() => {
+      // 取消操作
+    });
   };
 
   const uploadOptions = [
@@ -286,7 +381,29 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                   
                   {/* File Name - Clickable for Preview */}
                   <button
-                    onClick={() => {
+                    onClick={async () => {
+                      // 如果是补充资料（type=4），从fileUrl获取文本内容后打开弹框
+                      if (resource.type === '4') {
+                        try {
+                          if (resource.fileUrl) {
+                            Toast.loading({ message: '加载中...', duration: 0 });
+                            const response = await fetch(resource.fileUrl);
+                            const text = await response.text();
+                            Toast.clear();
+                            setVoiceModalInitialContent(text);
+                            setVoiceModalVisible(true);
+                          } else {
+                            Toast.fail('补充资料链接不存在');
+                          }
+                        } catch (error) {
+                          Toast.clear();
+                          console.error('Failed to fetch supplementary text:', error);
+                          Toast.fail('加载补充资料失败');
+                        }
+                        return;
+                      }
+                      
+                      // 普通文件，预览
                       if (resource.fileUrl) {
                         if (onPreviewFile) {
                           onPreviewFile(resource.fileName, resource.fileUrl);
@@ -305,15 +422,17 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                   {/* Actions - Hide if archived */}
                   {!isArchived && (
                     <div className="flex items-center gap-1">
-                      {/* Edit Button */}
-                      <button 
-                        onClick={() => handleOpenRenameModal(resource)}
-                        className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
-                      >
-                        <Pencil size={18} strokeWidth={2} />
-                      </button>
+                      {/* Edit Button - Hide for supplementary (type=4) */}
+                      {resource.type !== '4' && (
+                        <button 
+                          onClick={() => handleOpenRenameModal(resource)}
+                          className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
+                        >
+                          <Pencil size={18} strokeWidth={2} />
+                        </button>
+                      )}
                       
-                      {/* Delete Button */}
+                      {/* Delete Button - Show for all including supplementary */}
                       <button 
                         onClick={() => handleDeleteResource(resource.id)}
                         className="p-2 text-indigo-400 hover:text-red-500 transition-colors"
@@ -382,33 +501,38 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
         </div>
       )}
 
-      {/* Fixed Bottom Button */}
       {/* Fixed Bottom Button - Hide if archived */}
       {!isArchived && (
-        <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-white">
-          <Button 
-            variant="primary"
-            block 
-            className="!rounded-full !h-14 !text-base !font-semibold shadow-lg"
-            style={{ 
-              background: 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)',
-              boxShadow: '0 4px 20px rgba(91, 78, 248, 0.3)'
-            }}
-            onClick={onGenerateReport}
+        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30">
+          <button
+            onClick={handleGenerateClick}
+            className="w-full h-12 rounded-full font-bold text-lg transition-transform flex items-center justify-center gap-2 bg-[#4337F1] text-white shadow-lg active:scale-95"
           >
-            → 立即生成报告
-          </Button>
+            {localReportStatus === DealReportStatusEnum.REPORT_GENERATED ? (
+              <>
+                <RefreshCw size={18} strokeWidth={2.5} />
+                重新生成报告
+              </>
+            ) : (
+              <>→ 立即生成报告</>
+            )}
+          </button>
         </div>
       )}
 
       {/* Voice Input Modal */}
       <VoiceInputModal
         visible={voiceModalVisible}
-        onClose={() => setVoiceModalVisible(false)}
+        dealId={dealId}
+        initialContent={voiceModalInitialContent}
+        onClose={() => {
+          setVoiceModalVisible(false);
+          setVoiceModalInitialContent(''); // 清空初始内容
+        }}
         onSave={(content) => {
-          // TODO: 保存补充信息
           console.log('Voice input content:', content);
-          Toast.success('保存成功');
+          // 刷新资料列表
+          fetchDealDetail();
         }}
       />
 

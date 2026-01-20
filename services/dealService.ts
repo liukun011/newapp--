@@ -235,6 +235,23 @@ export const dealService = {
     });
   },
 
+
+  /**
+   * 补充资料信息（语音录入）
+   * POST /interview/appendResource
+   * @param interviewDealInstId 尽调实例 ID
+   * @param appendText 补充的描述文本信息
+   */
+  appendResource: (params: {
+    interviewDealInstId: string;
+    appendText: string;
+  }) => {
+    return request<ApiResponse<any>>('/interview/appendResource', {
+      method: 'POST',
+      data: params,
+    });
+  },
+
   /**
    * 预览报告文件
    * GET /webInterface/url/view
