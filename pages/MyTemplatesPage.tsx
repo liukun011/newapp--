@@ -7,10 +7,11 @@ import ConfirmModal from '../components/ConfirmModal';
 interface MyTemplatesPageProps {
   onBack: () => void;
   onUpload: () => void;
+  initialTab?: 'success' | 'uploading' | 'failed'; // 初始显示的 tab
 }
 
-const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload }) => {
-  const [activeTab, setActiveTab] = useState<'success' | 'uploading' | 'failed'>('success');
+const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, initialTab = 'success' }) => {
+  const [activeTab, setActiveTab] = useState<'success' | 'uploading' | 'failed'>(initialTab);
   const [templates, setTemplates] = useState<TemplateRecord[]>([]);
   const [loading, setLoading] = useState(false);
   
@@ -24,10 +25,10 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload }) =
 
   // 将 tab 映射到对应的状态值
   const getStatusFromTab = (tab: 'success' | 'uploading' | 'failed'): number => {
-    if (tab === 'success') return 1;
-    if (tab === 'uploading') return 2;
+    if (tab === 'success') return 2; // 已审核
+    if (tab === 'uploading') return 1; // 审核中
     if (tab === 'failed') return 3;
-    return 1;
+    return 2;
   };
 
   // 获取模板列表 - 根据当前 tab 状态查询
@@ -136,9 +137,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload }) =
       {/* Tabs */}
       <div className="bg-white flex justify-around border-b border-gray-100">
         {[
-          { key: 'success' as const, label: '上传成功' },
-          { key: 'uploading' as const, label: '上传中' },
-          { key: 'failed' as const, label: '上传失败' },
+          { key: 'success' as const, label: '已审核' },
+          { key: 'uploading' as const, label: '审核中' },
+          { key: 'failed' as const, label: '未通过' },
         ].map(tab => {
           const isActive = activeTab === tab.key;
           return (
@@ -159,7 +160,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload }) =
       </div>
 
       {/* Template List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: 'calc(100vh - 7rem)' }}>
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -168,7 +169,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload }) =
         ) : templates.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <FileText size={48} className="mb-4 opacity-20" />
-            <p className="text-sm">暂无{activeTab === 'success' ? '上传成功的' : activeTab === 'uploading' ? '上传中的' : '上传失败的'}模板</p>
+            <p className="text-sm">暂无{activeTab === 'success' ? '已审核' : activeTab === 'uploading' ? '审核中' : '未通过'}的模板</p>
           </div>
         ) : (
           templates.map(template => (
@@ -194,14 +195,14 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload }) =
                       {template.approveReportName}
                     </h3>
                     {/* 状态标签 */}
-                    {template.approveReportStatus === '1' && (
+                    {template.approveReportStatus === '2' && (
                       <span className="inline-flex px-2.5 py-0.5 bg-emerald-50 text-emerald-600 text-xs font-medium rounded-md flex-shrink-0">
-                        已通过
+                        已审核
                       </span>
                     )}
-                    {template.approveReportStatus === '2' && (
-                      <span className="inline-flex px-2.5 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-md flex-shrink-0">
-                        审批中
+                    {template.approveReportStatus === '1' && (
+                      <span className="inline-flex px-2.5 py-0.5 bg-orange-50 text-orange-500 text-xs font-medium rounded-md flex-shrink-0">
+                        审核中
                       </span>
                     )}
                     {template.approveReportStatus === '3' && (
@@ -214,22 +215,42 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload }) =
               </div>
 
               {/* Template Footer - 时间和操作按钮（下方区域） */}
-              <div className="px-4 py-3 flex items-center justify-between">
-                <span className="text-[13px] text-gray-400">{formatTime(template.createDate)}</span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleDelete(template.id)}
-                    className="px-4 py-1.5 bg-gray-100 text-gray-600 text-[13px] font-medium rounded-lg hover:bg-gray-200 active:bg-gray-250 transition-colors"
-                  >
-                    删除
-                  </button>
-                  <button
-                    onClick={() => handleRename(template.id)}
-                    className="px-4 py-1.5 border-2 border-indigo-500 text-indigo-600 text-[13px] font-medium rounded-lg hover:bg-indigo-50 active:bg-indigo-100 transition-colors"
-                  >
-                    重命名
-                  </button>
-                </div>
+              <div className="px-4 py-3">
+                {template.approveReportStatus === '1' ? (
+                  // 审核中状态：显示进度条
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      {/* 进度条 */}
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-300"
+                          style={{ width: '60%' }}
+                        />
+                      </div>
+                      {/* 预计完成时间 */}
+                      <span className="text-[13px] text-gray-400 whitespace-nowrap">预计2小时后完成</span>
+                    </div>
+                  </div>
+                ) : (
+                  // 其他状态：显示时间和操作按钮
+                  <div className="flex items-center justify-between">
+                    <span className="text-[13px] text-gray-400">{formatTime(template.createDate)}</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleDelete(template.id)}
+                        className="px-4 py-1.5 bg-gray-100 text-gray-600 text-[13px] font-medium rounded-lg hover:bg-gray-200 active:bg-gray-250 transition-colors"
+                      >
+                        删除
+                      </button>
+                      <button
+                        onClick={() => handleRename(template.id)}
+                        className="px-4 py-1.5 border-2 border-indigo-500 text-indigo-600 text-[13px] font-medium rounded-lg hover:bg-indigo-50 active:bg-indigo-100 transition-colors"
+                      >
+                        重命名
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))

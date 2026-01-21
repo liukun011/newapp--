@@ -8,7 +8,6 @@ import { Resource, DealReportStatusEnum } from '../types';
 interface MaterialsListPageProps {
   dealId?: string;
   onBack: () => void;
-  onGenerateReport: () => void;
   onPreviewFile?: (name: string, url: string) => void;
   isArchived?: boolean;
   reportStatus?: any; // 报告状态
@@ -17,7 +16,6 @@ interface MaterialsListPageProps {
 const MaterialsListPage: React.FC<MaterialsListPageProps> = ({ 
   dealId,
   onBack, 
-  onGenerateReport,
   onPreviewFile,
   isArchived = false,
   reportStatus

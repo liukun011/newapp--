@@ -43,6 +43,7 @@ const App: React.FC = () => {
   });
   // Track the previous view to support returning from the Edit screen
   const [previousView, setPreviousView] = useState<View>(View.HOME);
+  const [templateOrigin, setTemplateOrigin] = useState<View>(View.HOME);
   // Track current selected deal
   const [currentDeal, setCurrentDeal] = useState<DealRecord | null>(() => {
     try {
@@ -156,6 +157,9 @@ const App: React.FC = () => {
   
   // 记住资料上传页的当前标签页
   const [materialUploadTab, setMaterialUploadTab] = useState<string>('upload');
+  
+  // 记住模板管理页的初始标签页
+  const [templateInitialTab, setTemplateInitialTab] = useState<'success' | 'uploading' | 'failed'>('success');
 
   // 导航方向：forward (前进) 或 backward (后退) 或 root (重置/根页面)
   // 导航方向：forward (前进) 或 backward (后退) 或 root (重置/根页面)
@@ -169,6 +173,8 @@ const App: React.FC = () => {
 
   // 记录录音页面的返回路径 (用于从历史记录返回录音页时恢复正确的返回路径)
   const [recordingBackView, setRecordingBackView] = useState<View>(View.HOME);
+  // 记录历史访谈页面的返回路径
+  const [historyBackView, setHistoryBackView] = useState<View>(View.RECORDING);
 
   // 状态持久化
   useEffect(() => {
@@ -439,19 +445,29 @@ const App: React.FC = () => {
                       return;
                     }
 
-                    // 检查当前尽调是否正在访谈中
-                    if (currentDeal.status !== '3') {
-                      // 当前尽调不在访谈中，不允许进入
-                      setShowLimitTips(true);
-                      setTimeout(() => setShowLimitTips(false), 3000);
-                      return;
-                    }
-
                     try {
+                      // 先查询全量尽调列表
+                      const listRes = await dealService.queryDealInstList({
+                        pageNo: 1,
+                        pageSize: 99999,
+                      });
+
+                      // 从全量列表中过滤出正在访谈中的尽调（status='3'）
+                      const allDeals = listRes.success && listRes.data?.records ? listRes.data.records : [];
+                      const activeDeals = allDeals.filter(deal => deal.status === '3');
+                      const hasOtherActiveInterview = activeDeals.some(deal => deal.id !== currentDeal.id);
+
+                      // 如果有其他尽调正在访谈中，且当前尽调不在访谈中，则不允许进入
+                      if (hasOtherActiveInterview && currentDeal.status !== '3') {
+                        setShowLimitTips(true);
+                        setTimeout(() => setShowLimitTips(false), 3000);
+                        return;
+                      }
+
                       // 调用接口创建访谈实例
                       Toast.loading({ message: '准备访谈中...', duration: 0, forbidClick: true });
 
-                      // 创建访谈实例（当前尽调已经在访谈中，会返回现有实例）
+                      // 创建访谈实例（如果已存在会返回现有实例）
                       const createRes = await dealService.createInterviewInst({
                         interviewDealInstId: currentDeal.id,
                         interviewCustom: currentDeal.interviewCust
@@ -497,6 +513,7 @@ const App: React.FC = () => {
                     navigateForward(View.TEMPLATE_SELECTION);
                   }}
                   onNavigateToHistory={() => {
+                    setHistoryBackView(View.DUE_DILIGENCE);
                     setPreviousView(View.DUE_DILIGENCE);
                     navigateForward(View.HISTORY);
                   }}
@@ -512,7 +529,6 @@ const App: React.FC = () => {
                 <MaterialsListPage
                   dealId={currentDeal?.id}
                   onBack={() => navigateBackward(previousView === View.RECORDING ? View.RECORDING : View.DUE_DILIGENCE)}
-                  onGenerateReport={() => setCurrentView(View.AI_GENERATION)}
                   onPreviewFile={(name, url) => {
                     setPreviewTemplate({ name, url });
                     setPreviousView(View.MATERIALS_LIST);
@@ -598,8 +614,10 @@ const App: React.FC = () => {
               {currentView === View.RECORDING && (
                 <RecordingPage
                   deal={currentDeal}
-                  onBack={() => navigateBackward(previousView)}
+                  onBack={() => navigateBackward(recordingBackView)}
                   onHistoryClick={() => {
+                    setHistoryBackView(View.RECORDING);
+                    setPreviousView(View.RECORDING);
                     navigateForward(View.HISTORY);
                   }}
                   isRecording={isRecording}
@@ -619,7 +637,7 @@ const App: React.FC = () => {
                   dealId={currentDeal?.id}
                   isArchived={currentDeal?.status === '5'}
                   onBack={() => {
-                    navigateBackward(previousView);
+                    navigateBackward(historyBackView);
                   }}
                   onStartInterview={() => {
                     setPreviousView(recordingBackView);
@@ -663,8 +681,9 @@ const App: React.FC = () => {
               )}
               {currentView === View.MY_TEMPLATES && (
                 <MyTemplatesPage
-                  onBack={() => navigateBackward(View.HOME)}
+                  onBack={() => navigateBackward(templateOrigin || View.HOME)}
                   onUpload={() => setCurrentView(View.UPLOAD_TEMPLATE)}
+                  initialTab={templateInitialTab}
                 />
               )}
               {currentView === View.UPLOAD_TEMPLATE && (
@@ -672,7 +691,11 @@ const App: React.FC = () => {
                   onBack={() => navigateBackward(View.MY_TEMPLATES)}
                   onCancel={() => setCurrentView(View.MY_TEMPLATES)}
                   onSubmit={() => {
-                    // 提交成功后返回模板列表
+                    // 提交成功后不立即返回，等待用户点击"查看列表"
+                  }}
+                  onViewList={() => {
+                    // 点击"查看列表"后跳转到模板管理页的"审核中" tab
+                    setTemplateInitialTab('uploading');
                     setCurrentView(View.MY_TEMPLATES);
                   }}
                 />
@@ -784,6 +807,7 @@ const App: React.FC = () => {
                   }}
                   onNavigateToTemplates={() => {
                     setPreviousView(View.SETTINGS);
+                    setTemplateOrigin(View.SETTINGS);
                     navigateForward(View.MY_TEMPLATES);
                   }}
                 />
@@ -802,9 +826,8 @@ const App: React.FC = () => {
               seconds={recordingSeconds}
               appContainerRef={appContainerRef}
               onClick={() => {
-                // 如果当前在历史记录页或报告预览页，点击浮窗返回录音页时不更新 previousView，
-                // 这样录音页的返回按钮依然指向之前的来源，避免死循环
-                if (currentView !== View.HISTORY && currentView !== View.REPORT_PREVIEW) {
+                // 更新 previousView 为当前页面，以便录音页返回时能回到正确的位置
+                if (currentView !== View.REPORT_PREVIEW) {
                   setPreviousView(currentView);
                 }
                 setNavDirection('forward');

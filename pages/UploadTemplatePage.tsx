@@ -7,16 +7,19 @@ interface UploadTemplatePageProps {
   onBack: () => void;
   onCancel: () => void;
   onSubmit?: () => void;
+  onViewList?: () => void; // 查看列表回调
 }
 
 const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ 
   onBack, 
   onCancel,
-  onSubmit 
+  onSubmit,
+  onViewList
 }) => {
   const [templateName, setTemplateName] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -39,7 +42,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
       });
 
       if (res.success) {
-        alert('提交成功！');
+        setShowSuccess(true);
         onSubmit?.();
       } else {
         alert(res.message || '提交失败，请重试');
@@ -51,6 +54,69 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
       setLoading(false);
     }
   };
+
+  // 如果显示成功页面
+  if (showSuccess) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#F7F8FA]">
+        {/* Header with back button */}
+        <div className="bg-white px-4 py-3 flex items-center border-b border-gray-100">
+          <button 
+            onClick={onBack}
+            className="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-full active:bg-slate-100 transition-colors"
+          >
+            <ArrowLeft size={24} />
+          </button>
+        </div>
+
+        {/* Success Content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-32">
+          {/* Mascot Image */}
+          <div className="mb-8 relative">
+            <img 
+              src="/talk-assistant/assets/success-mascot.png" 
+              alt="Success" 
+              className="w-48 h-48 object-contain relative z-10"
+              onError={(e) => {
+                // Fallback to a placeholder if image not found
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            {/* Blue gradient blur effect below image */}
+            <div 
+              className="absolute w-40 h-12"
+              style={{
+                bottom: '-12px',
+                left: '52%',
+                transform: 'translateX(-50%)',
+                background: 'linear-gradient(180deg, #D5E5FF 0%, #9DC3FF 97%)',
+                filter: 'blur(14px)',
+                borderRadius: '50%',
+              }}
+            />
+          </div>
+
+          {/* Title */}
+          <h2 className="text-xl font-bold text-slate-800 mb-3">
+            已进入审核队列
+          </h2>
+
+          {/* Description */}
+          <p className="text-sm text-gray-500 text-center leading-relaxed max-w-sm">
+            您的模板已成功上传，系统将在 1-2 小时内完成合规审核，请在"审核中"分类查看进度
+          </p>
+
+          {/* View List Button */}
+          <button
+            onClick={onViewList}
+            className="mt-12 w-64 h-14 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white text-base font-semibold rounded-full shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95 transition-all"
+          >
+            查看列表
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F8FA]">

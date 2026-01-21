@@ -59,13 +59,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         }
       }
     },
-    { icon: Layers, label: '问题清单', color: 'text-green-500', bg: 'bg-green-50', onClick: () => { } },
+    { icon: Layers, label: '问题清单', color: 'text-green-500', bg: 'bg-green-50', onClick: () => Toast.info('功能开发中，敬请期待！') },
   ];
 
   const menuItemsGroup2 = [
-    { icon: PenTool, label: '小狸共创官', color: 'text-orange-500', bg: 'bg-orange-50', onClick: () => { } },
-    { icon: HelpCircle, label: '帮助与反馈', color: 'text-purple-500', bg: 'bg-purple-50', onClick: () => { } },
-    { icon: Settings, label: '通用设置', color: 'text-purple-500', bg: 'bg-purple-50', onClick: () => { } },
+    { icon: PenTool, label: '小狸共创官', color: 'text-orange-500', bg: 'bg-orange-50', onClick: () => Toast.info('功能开发中，敬请期待！') },
+    { icon: HelpCircle, label: '帮助与反馈', color: 'text-purple-500', bg: 'bg-purple-50', onClick: () => Toast.info('功能开发中，敬请期待！') },
+    { icon: Settings, label: '通用设置', color: 'text-purple-500', bg: 'bg-purple-50', onClick: () => Toast.info('功能开发中，敬请期待！') },
   ];
 
   const renderMenuItem = (item: any, index: number, total: number) => (
