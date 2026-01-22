@@ -26,6 +26,8 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string>('');
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   // 同步问题清单数据
   useEffect(() => {
@@ -49,8 +51,8 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
              interviewInstId
           });
           if (res.success && res.data) {
-             // 兼容不同的返回字段
-             const url = res.data.fileUrl || res.data.url || (typeof res.data === 'string' ? res.data : '');
+             // 使用 recordFileUrl 字段
+             const url = res.data.recordFileUrl || res.data.fileUrl || res.data.url || (typeof res.data === 'string' ? res.data : '');
              if (url) {
                setAudioUrl(url);
                console.log('Audio URL fetched:', url);
@@ -85,12 +87,58 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
     if (audioRef.current && audioRef.current.duration) {
        const p = (audioRef.current.currentTime / audioRef.current.duration) * 100;
        setProgress(p);
+       setCurrentTime(audioRef.current.currentTime);
     }
   };
 
   const handleAudioEnded = () => {
     setIsPlaying(false);
     setProgress(0);
+  };
+
+  // 音频加载完成时更新时长
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+      console.log('录音时长加载中:', audioRef.current.duration);
+    }
+  };
+
+  // 快退 15 秒
+  const skipBackward = () => {
+    if (audioRef.current) {
+      const currentTime = audioRef.current.currentTime;
+      // 如果当前时间不足15秒，提示用户
+      if (currentTime < 15) {
+        Toast.info({ message: '剩余时长不足15秒', position: 'top' });
+        return;
+      }
+      audioRef.current.currentTime = currentTime - 15;
+    }
+  };
+
+  // 快进 15 秒
+  const skipForward = () => {
+    if (audioRef.current) {
+      const currentTime = audioRef.current.currentTime;
+      const duration = audioRef.current.duration || 0;
+      const remainingTime = duration - currentTime;
+      // 如果剩余时间不足15秒，提示用户
+      if (remainingTime < 15) {
+        Toast.info({ message: '剩余时长不足15秒', position: 'top' });
+        return;
+      }
+      audioRef.current.currentTime = currentTime + 15;
+    }
+  };
+
+  // 格式化时间
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return '00:00:00';
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   // 获取录音转写数据
@@ -133,31 +181,44 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
         src={audioUrl} 
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleAudioEnded}
+        onLoadedMetadata={handleLoadedMetadata}
       />
 
       {/* Audio Player Header */}
       <div className="bg-white pt-6 pb-4 text-center z-10 px-8">
-        {/* Progress Bar */}
-        <div className="relative h-1 bg-gray-200 rounded-full mb-4 group cursor-pointer">
-          <div 
-            className="absolute left-0 top-0 h-full bg-indigo-500 rounded-full" 
-            style={{ width: `${progress}%` }} 
-          />
-          <div 
-            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-indigo-500 rounded-full shadow-md active:scale-110 transition-transform"
-            style={{ left: `${progress}%`, marginLeft: '-8px' }}
+        {/* Progress Bar - 使用 range input 实现可拖动进度条 */}
+        <div className="relative mb-4">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={progress}
+            onChange={(e) => {
+              const newProgress = Number(e.target.value);
+              setProgress(newProgress);
+              if (audioRef.current && audioRef.current.duration) {
+                audioRef.current.currentTime = (newProgress / 100) * audioRef.current.duration;
+              }
+            }}
+            className="w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer accent-indigo-500"
+            style={{
+              background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${progress}%, #e5e7eb ${progress}%, #e5e7eb 100%)`
+            }}
           />
         </div>
         
         {/* Time Display */}
         <div className="flex justify-between text-xs text-gray-500 font-mono mb-6">
-          <span>00:00:00</span>
-          <span>00:00:00</span>
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(duration)}</span>
         </div>
 
         {/* Controls */}
         <div className="flex items-center justify-center gap-10">
-          <button className="text-indigo-500 p-2 active:opacity-70">
+          <button 
+            className="text-indigo-500 p-2 active:opacity-70"
+            onClick={skipBackward}
+          >
             <div className="relative">
               <RotateCcw size={24} strokeWidth={1.5} />
               <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[8px] font-bold pt-0.5">15</span>
@@ -171,7 +232,10 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
             {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
           </button>
 
-          <button className="text-indigo-500 p-2 active:opacity-70">
+          <button 
+            className="text-indigo-500 p-2 active:opacity-70"
+            onClick={skipForward}
+          >
              <div className="relative">
               <RotateCw size={24} strokeWidth={1.5} />
               <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[8px] font-bold pt-0.5">15</span>

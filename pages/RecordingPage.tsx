@@ -38,7 +38,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   const [questions, setQuestions] = useState<Question[]>(MOCK_QUESTIONS);
   const [expandedQuestion, setExpandedQuestion] = useState<number | string | null>(null);
   // const [transcriptionList, setTranscriptionList] = useState<any[]>([]); // REMOVED: Use Global Store
-  const { transcriptionList, setTranscriptionList, tempTranscription } = useRecordingStore();
+  const { transcriptionList, setTranscriptionList } = useRecordingStore();
 
   const resetStore = useRecordingStore(state => state.reset);
 
@@ -136,6 +136,87 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     }
   };
 
+  // 获取并上传录音文件
+  const uploadRecordingFile = async (): Promise<boolean> => {
+    if (!interviewInstId) {
+      console.log('[上传录音] 没有 interviewInstId');
+      return false;
+    }
+    // 从 Native 获取录音文件（所有环境统一使用）
+    return new Promise((resolve) => {
+      // 设置回调监听
+      const handleAudioList = async (response: any) => {
+        nativeBridge.off('getAudioList', handleAudioList); // 移除监听
+
+        if (response.success && response.data && response.data.list && response.data.list.length > 0) {
+          // 获取最新的录音文件（通常是列表的第一个）
+          const latestAudio = response.data.list[0];
+          console.log('[上传录音] 找到录音文件:', {
+            fileName: latestAudio.fileName,
+            fileURL: latestAudio.fileURL,
+            fileSize: latestAudio.fileSize,
+            timestamp: latestAudio.timestamp
+          });
+
+          try {
+            // 尝试从 appfile:// URL 获取文件内容
+            console.log('[上传录音] 正在从 Native 读取文件:', latestAudio.fileURL);
+            const fileResponse = await fetch(latestAudio.fileURL);
+            
+            if (!fileResponse.ok) {
+              console.error('[上传录音] 文件读取失败:', fileResponse.statusText);
+              resolve(false);
+              return;
+            }
+
+            const blob = await fileResponse.blob();
+            const file = new File([blob], latestAudio.fileName, { type: 'audio/wav' });
+            
+            console.log('[上传录音] 文件读取成功，准备上传:', {
+              name: file.name,
+              size: file.size,
+              type: file.type
+            });
+
+            const uploadRes = await dealService.uploadInterviewInstRecordFile(interviewInstId, file);
+            
+            if (uploadRes.success) {
+              console.log('[上传录音] 上传成功');
+              resolve(true);
+            } else {
+              console.error('[上传录音] 上传失败:', uploadRes.message);
+              resolve(false);
+            }
+          } catch (error) {
+            console.error('[上传录音] 文件处理或上传异常:', error);
+            resolve(false);
+          }
+        } else {
+          console.log('[上传录音] 没有找到录音文件');
+          resolve(false);
+        }
+      };
+
+      // 注册回调
+      nativeBridge.on('getAudioList', handleAudioList);
+
+      // 调用 Native 获取音频列表
+      console.log('[上传录音] 查询录音文件, surveyId:', interviewInstId);
+      nativeBridge.getAudioList({
+        surveyId: interviewInstId,
+        page: 1,
+        pageSize: 99999,
+      });
+
+      // 设置超时
+      setTimeout(() => {
+        nativeBridge.off('getAudioList', handleAudioList);
+        console.log('[上传录音] 查询超时');
+        resolve(false);
+      }, 10000); // 10秒超时
+    });
+  };
+
   const handleFinishInterview = () => {
     Dialog.confirm({
       title: '结束访谈',
@@ -166,25 +247,16 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
         Toast.loading({ message: '正在保存...', forbidClick: true, duration: 0 });
         try {
-          // 1. 上传录音文件 (暂用 Mock 文件替代实际录音数据)
-          // 实际开发中应从 MediaRecorder 获取 Blob 并转为 File
-          // 注意：现在集成了 Android 录音，文件在本地路径。
-          // Web 无法直接读取 Android 本地文件路径上传，通常需要：
-          // a) Android 端负责上传
-          // b) Android 端读取文件内容传给 H5 (Base64)
-          // c) H5 仅负责业务逻辑，文件流转由原生处理
-          // 这里保持原逻辑 Mock，仅做流程演示
-          const mockFile = new File(["dummy audio content"], `recording_${Date.now()}.wav`, { type: "audio/wav" });
-          const uploadRes = await dealService.uploadInterviewInstRecordFile(interviewInstId, mockFile);
-
-          if (!uploadRes.success) {
-            Toast.fail(uploadRes.message || '录音保存失败');
+          // 1. 上传录音文件（从 Native 获取）
+          const uploadSuccess = await uploadRecordingFile();
+          
+          if (!uploadSuccess) {
+            Toast.fail('录音文件上传失败');
             return;
           }
 
           // 2. 上传转写内容
           await uploadTranscriptionContent();
-
           // 3. 结束访谈
           const res = await dealService.overInterviewInst(interviewInstId);
           if (res.success) {
@@ -223,8 +295,9 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       nativeBridge.stopRecording();
       onToggleRecording();
       
-      // 暂停时上传转写内容
+      // 暂停时上传转写内容和录音文件
       uploadTranscriptionContent();
+      uploadRecordingFile();
     } else {
       if (seconds === 0) {
         setCountdown(3); // Changed to 3s for better UX
@@ -236,7 +309,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   };
 
   const startNativeRecord = () => {
-    const surveyId = interviewInstId || deal?.id || 'default_id';
+    const surveyId = interviewInstId || '';
     console.log(`[H5] Calling startRecord with surveyId: ${surveyId}`);
     // if (window.Android?.startRecord) {
     //   window.Android.startRecord(surveyId);
@@ -386,31 +459,34 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
             <div className="space-y-6">
               {transcriptionList.length > 0 ? (
                 transcriptionList.map((item, index) => {
-                  // Determine alignment based on roleId
-                  // Assuming Role 1 (or default) is "Me" (Right), Role 2 is "Other" (Left)
-                  // Use String() to safely handle both number and string types from backend/native
-                  const isMe = String(item.roleId) === '1';
+                  const isRecognizing = item.isFinal === false;
 
                   return (
-                    <div key={index} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div key={item.id || index} className="flex gap-3 flex-row">
                       {/* Avatar */}
                       <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isMe ? 'bg-indigo-100' : 'bg-orange-100'}`}>
-                          <User size={16} className={isMe ? 'text-indigo-600' : 'text-orange-600'} fill="currentColor" />
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-orange-100">
+                          <User size={16} className="text-orange-600" fill="currentColor" />
                         </div>
                       </div>
 
-                      <div className={`flex-1 flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                        {/* Name Label */}
-                        <div className={`text-xs text-gray-500 mb-1.5 ${isMe ? 'mr-1' : 'ml-1'}`}>
-                          {item.roleId ? (isMe ? '咨询师' : '客户') : `访谈对象${item.id}`}
+                      <div className="flex-1 flex flex-col items-start">
+                        {/* Name Label with recognizing indicator */}
+                        <div className={`text-xs mb-1.5 flex items-center gap-1 ml-1 ${isRecognizing ? 'text-gray-400' : 'text-gray-500'}`}>
+                          访谈对象{item.roleId || index + 1}
+                          {isRecognizing && (
+                            <>
+                              <span className="inline-block w-1 h-1 bg-gray-400 rounded-full animate-pulse"></span>
+                              <span className="text-[10px]">识别中...</span>
+                            </>
+                          )}
                         </div>
 
                         {/* Chat Bubble */}
-                        <div className={`p-3.5 rounded-xl text-[15px] leading-relaxed max-w-[90%] break-words shadow-sm
-                          ${isMe
-                            ? 'bg-[#4E3EF8] text-white rounded-tr-sm'
-                            : 'bg-white border border-gray-100 text-slate-700 rounded-tl-sm'
+                        <div className={`p-3.5 rounded-xl rounded-tl-sm text-[15px] leading-relaxed max-w-[90%] break-words shadow-sm
+                          ${isRecognizing
+                            ? 'bg-indigo-50 text-indigo-600 border border-indigo-100 opacity-80'
+                            : 'bg-white border border-gray-100 text-slate-700'
                           }`}
                         >
                           {item.content || '暂无内容'}
@@ -422,29 +498,6 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                   <p className="text-sm">暂无转写记录</p>
-                </div>
-              )}
-              
-              {/* 临时转写结果（识别中） */}
-              {tempTranscription && (
-                <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-indigo-100">
-                      <User size={16} className="text-indigo-600" fill="currentColor" />
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1 flex flex-col items-start">
-                    <div className="text-xs text-gray-400 mb-1.5 ml-1 flex items-center gap-1">
-                      咨询师
-                      <span className="inline-block w-1 h-1 bg-gray-400 rounded-full animate-pulse"></span>
-                      <span className="text-[10px]">识别中...</span>
-                    </div>
-                    
-                    <div className="p-3.5 rounded-xl text-[15px] leading-relaxed max-w-[90%] break-words shadow-sm bg-indigo-50 text-indigo-600 rounded-tr-sm border border-indigo-100 opacity-70">
-                      {tempTranscription}
-                    </div>
-                  </div>
                 </div>
               )}
               

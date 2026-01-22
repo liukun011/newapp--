@@ -63,30 +63,38 @@ const App: React.FC = () => {
     setIsRecording,
     setRecordingSeconds,
     setData,
-    addTranscriptionChunk
   } = useRecordingStore();
-
-  // DEBUG: Check why bubble is not showing
-  useEffect(() => {
-    console.log('[App] Debug State:', {
-      currentInterviewInstId,
-      isRecording,
-      recordingSeconds,
-      currentView,
-      showBubble: currentInterviewInstId && (recordingSeconds > 0 || isRecording) && currentView !== View.LOGIN && currentView !== View.RECORDING
-    });
-  }, [currentInterviewInstId, isRecording, recordingSeconds, currentView]);
 
   // Global Recording Event Listeners
   useEffect(() => {
     window.onVoiceStream = (text: string, roleId: string) => {
       console.log(`[App] Global onVoiceStream: text=${text}, roleId=${roleId}`);
       if (text) {
-        addTranscriptionChunk({
-          id: Date.now(), // or some UUID
-          roleId: roleId,
-          content: text
-        });
+        const store = useRecordingStore.getState();
+        const { transcriptionList, setTranscriptionList, addTranscriptionChunk } = store;
+        const lastItem = transcriptionList[transcriptionList.length - 1];
+        
+        // 检查最后一条记录的 roleId 是否与当前相同
+        if (lastItem && String(lastItem.roleId) === String(roleId)) {
+          // roleId 相同，拼接内容到最后一条记录
+          const updatedList = [...transcriptionList];
+          updatedList[updatedList.length - 1] = {
+            ...lastItem,
+            content: lastItem.content + text,
+            timestamp: Date.now(),
+          };
+          setTranscriptionList(updatedList);
+          console.log('[onVoiceStream] 拼接到现有记录:', roleId);
+        } else {
+          // roleId 变化或首次添加，创建新记录
+          addTranscriptionChunk({
+            id: Date.now(),
+            roleId: roleId,
+            content: text,
+            isFinal: true,
+          });
+          console.log('[onVoiceStream] 创建新记录:', roleId);
+        }
       }
     };
 
@@ -180,11 +188,16 @@ const App: React.FC = () => {
   // 记录历史访谈页面的返回路径
   const [historyBackView, setHistoryBackView] = useState<View>(View.RECORDING);
 
+  // 历史访谈详情数据
+  const [historyDetailData, setHistoryDetailData] = useState<{id: string, title: string} | null>(null);
+
   // 状态持久化
   useEffect(() => {
     if (currentView === View.LOGIN) {
       sessionStorage.removeItem('zov-current-view');
       sessionStorage.removeItem('zov-current-deal');
+      // 清除历史详情数据
+      setHistoryDetailData(null);
     } else {
       sessionStorage.setItem('zov-current-view', currentView);
     }
@@ -336,19 +349,39 @@ const App: React.FC = () => {
         
         if (parsed) {
           const { text, isFinal } = parsed;
-          const { addTranscriptionChunk, updateTempTranscription } = useRecordingStore.getState();
+          const store = useRecordingStore.getState();
+          const { transcriptionList, setTranscriptionList, addTranscriptionChunk, updateTempTranscription } = store;
+          const currentRoleId = '1'; // 当前说话人，可根据实际情况调整
           
           if (isFinal) {
-            // 最终结果：添加到列表
-            addTranscriptionChunk({
-              id: `trans_${Date.now()}_${Math.random()}`,
-              content: text,
-              roleId: '1',  // 默认为咨询师，可根据实际情况调整
-              timestamp: Date.now(),
-              isFinal: true,
-            });
+            // 最终结果
+            const lastItem = transcriptionList[transcriptionList.length - 1];
             
-            console.log('[转写] 最终结果:', text);
+            if (lastItem && String(lastItem.roleId) === String(currentRoleId)) {
+              // roleId 相同，拼接内容到最后一条记录
+              const updatedList = [...transcriptionList];
+              updatedList[updatedList.length - 1] = {
+                ...lastItem,
+                content: lastItem.content + text,
+                isFinal: true,
+                timestamp: Date.now(),
+              };
+              setTranscriptionList(updatedList);
+              console.log('[转写] 拼接最终结果:', text);
+            } else {
+              // roleId 不同或首次添加，创建新记录
+              addTranscriptionChunk({
+                id: `trans_${Date.now()}_${Math.random()}`,
+                content: text,
+                roleId: currentRoleId,
+                timestamp: Date.now(),
+                isFinal: true,
+              });
+              console.log('[转写] 新增最终结果:', text);
+            }
+            
+            // 清空临时转写
+            updateTempTranscription('');
 
             // 计数并检查是否需要上传
             sentenceCount++;
@@ -358,8 +391,29 @@ const App: React.FC = () => {
               sentenceCount = 0; // 重置计数
             }
           } else {
-            // 中间结果：更新临时显示
-            updateTempTranscription(text);
+            // 中间结果
+            const lastItem = transcriptionList[transcriptionList.length - 1];
+            
+            if (lastItem && String(lastItem.roleId) === String(currentRoleId)) {
+              // roleId 相同，拼接内容到最后一条记录
+              const updatedList = [...transcriptionList];
+              updatedList[updatedList.length - 1] = {
+                ...lastItem,
+                content: lastItem.content + text,
+                timestamp: Date.now(),
+              };
+              setTranscriptionList(updatedList);
+            } else {
+              // roleId 不同或首次添加，创建新记录
+              addTranscriptionChunk({
+                id: `trans_${Date.now()}_${Math.random()}`,
+                content: text,
+                roleId: currentRoleId,
+                timestamp: Date.now(),
+                isFinal: false,
+              });
+            }
+            
             console.log('[转写] 识别中:', text);
           }
         }
@@ -734,9 +788,8 @@ const App: React.FC = () => {
                     navigateBackward(View.RECORDING);
                   }}
                   onRecordClick={(record) => {
-                    setData({
-                      dealId: currentDeal?.id,
-                      interviewInstId: record.interviewInstId || record.id,
+                    setHistoryDetailData({
+                      id: record.interviewInstId || record.id,
                       title: record.interviewInstTitle
                     });
                     setPreviousView(View.HISTORY);
@@ -747,8 +800,8 @@ const App: React.FC = () => {
               {currentView === View.HISTORY_DETAIL && (
                 <HistoryDetailPage
                   deal={currentDeal}
-                  interviewInstId={currentInterviewInstId || ''}
-                  interviewInstTitle={currentInterviewInstTitle || ''}
+                  interviewInstId={historyDetailData?.id || ''}
+                  interviewInstTitle={historyDetailData?.title || ''}
                   onBack={() => navigateBackward(View.HISTORY)}
                 />
               )}

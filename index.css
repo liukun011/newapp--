@@ -19,3 +19,15 @@
   animation: fadeIn 0.2s ease-out forwards;
 }
 
+/* Toast 位置和大小调整 */
+.rv-toast {
+  /* 全局 Toast 都显示在顶部 */
+  top: 10% !important;
+  bottom: auto !important;
+  transform: translateX(-50%) !important;
+  
+  /* 更小更紧凑 */
+  min-width: auto !important;
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+}

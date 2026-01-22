@@ -179,7 +179,7 @@ class NativeBridgeService {
   /**
    * 获取音频列表
    */
-  getAudioList(params: { surveyId?: number; page: number; pageSize: number }) {
+  getAudioList(params: { surveyId?: number | string; page: number; pageSize: number }) {
     this.callNative('getAudioList', params);
   }
 
