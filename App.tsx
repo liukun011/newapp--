@@ -28,6 +28,7 @@ import ReportPreviewPage from './pages/ReportPreviewPage';
 import { View, DealRecord, QuestionInfo } from './types';
 import { COLORS } from './constants';
 import RecordingFloatBubble from './components/RecordingFloatBubble';
+import { nativeBridge, handleTranscriptionResult } from './services/nativeBridge';
 
 const App: React.FC = () => {
   const appContainerRef = useRef<HTMLDivElement>(null);
@@ -160,6 +161,9 @@ const App: React.FC = () => {
   
   // 记住模板管理页的初始标签页
   const [templateInitialTab, setTemplateInitialTab] = useState<'success' | 'uploading' | 'failed'>('success');
+  
+  // 记住首页的标签页（进行中/已归档）
+  const [homeTab, setHomeTab] = useState<'ongoing' | 'archived'>('ongoing');
 
   // 导航方向：forward (前进) 或 backward (后退) 或 root (重置/根页面)
   // 导航方向：forward (前进) 或 backward (后退) 或 root (重置/根页面)
@@ -273,7 +277,8 @@ const App: React.FC = () => {
       // 根据业务逻辑，View.HOME 是应用内首页，无法再回退
       if (currentView === View.HOME || currentView === View.LOGIN) {
         if (window.confirm('确定要退出应用吗？')) {
-          window.Android?.closeApp?.();
+          // window.Android?.closeApp?.();
+          nativeBridge.closeApp();
         }
       } else {
         // 如果不在首页，执行类似网页后退的逻辑
@@ -286,7 +291,87 @@ const App: React.FC = () => {
     return () => {
       window.onNativeBack = undefined;
     };
-  }, [currentView]); // 依赖 currentView 以确保闭包中拿到最新值
+  }, [currentView]);
+
+  // 监听实时转写结果
+  useEffect(() => {
+    let sentenceCount = 0; // 记录最终结果的句子数
+
+    const uploadTranscriptionBatch = async () => {
+      const { transcriptionList, currentInterviewInstId } = useRecordingStore.getState();
+      
+      if (!currentInterviewInstId || transcriptionList.length === 0) {
+        return;
+      }
+
+      // 只上传最终结果（isFinal: true）
+      const finalResults = transcriptionList.filter(item => item.isFinal);
+      
+      if (finalResults.length === 0) {
+        return;
+      }
+
+      try {
+        const contentList = finalResults.map(item => ({
+          id: String(item.id),
+          content: item.content,
+        }));
+
+        console.log('[上传转写] 上传内容:', contentList.length, '条');
+        
+        await dealService.uploadInterviewInstContent({
+          interviewInstId: currentInterviewInstId,
+          contentList,
+        });
+
+        console.log('[上传转写] 上传成功');
+      } catch (error) {
+        console.error('[上传转写] 上传失败:', error);
+      }
+    };
+
+    const handleTranscription = (response: any) => {
+      if (response.success && response.data) {
+        const parsed = handleTranscriptionResult(response.data);
+        
+        if (parsed) {
+          const { text, isFinal } = parsed;
+          const { addTranscriptionChunk, updateTempTranscription } = useRecordingStore.getState();
+          
+          if (isFinal) {
+            // 最终结果：添加到列表
+            addTranscriptionChunk({
+              id: `trans_${Date.now()}_${Math.random()}`,
+              content: text,
+              roleId: '1',  // 默认为咨询师，可根据实际情况调整
+              timestamp: Date.now(),
+              isFinal: true,
+            });
+            
+            console.log('[转写] 最终结果:', text);
+
+            // 计数并检查是否需要上传
+            sentenceCount++;
+            if (sentenceCount >= 6) {
+              console.log('[转写] 达到6句，触发上传');
+              uploadTranscriptionBatch();
+              sentenceCount = 0; // 重置计数
+            }
+          } else {
+            // 中间结果：更新临时显示
+            updateTempTranscription(text);
+            console.log('[转写] 识别中:', text);
+          }
+        }
+      }
+    };
+    
+    nativeBridge.on('transcriptionResult', handleTranscription);
+    
+    return () => {
+      nativeBridge.off('transcriptionResult', handleTranscription);
+    };
+  }, []); // 依赖 currentView 以确保闭包中拿到最新值
 
   const handleEditCorporateInfo = () => {
     setPreviousView(currentView);
@@ -368,6 +453,8 @@ const App: React.FC = () => {
               )}
               {currentView === View.HOME && (
                 <HomePage
+                  initialTab={homeTab}
+                  onTabChange={setHomeTab}
                   onNavigateToDetail={(deal) => {
                     setCurrentDeal(deal);
                     navigateForward(View.DUE_DILIGENCE);
@@ -505,7 +592,10 @@ const App: React.FC = () => {
                       Toast.fail('创建访谈实例失败');
                     }
                   }}
-                  onNavigateToMaterials={() => navigateForward(View.MATERIALS_LIST)}
+                  onNavigateToMaterials={() => {
+                    setPreviousView(View.DUE_DILIGENCE);
+                    navigateForward(View.MATERIALS_LIST);
+                  }}
                   onNavigateToQuestions={() => navigateForward(View.QUESTIONS_LIST)}
                   onEditInfo={handleEditCorporateInfo}
                   onChangeTemplate={() => {

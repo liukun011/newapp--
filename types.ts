@@ -156,4 +156,6 @@ export interface TranscriptionItem {
   id: string | number;
   roleId: string | number;
   content: string;
+  timestamp?: number;
+  isFinal?: boolean;
 }

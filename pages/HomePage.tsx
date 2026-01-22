@@ -21,13 +21,17 @@ interface HomePageProps {
   onNavigateToTemplates?: () => void;
   onNavigateToSettings?: () => void;
   onNavigateToMessages?: () => void;
+  initialTab?: "ongoing" | "archived";
+  onTabChange?: (tab: "ongoing" | "archived") => void;
 }
 
 const HomePage: React.FC<HomePageProps> = ({ 
   onNavigateToDetail, 
   onNavigateToRecording,
+  initialTab = "ongoing",
+  onTabChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<"ongoing" | "archived">("ongoing");
+  const [activeTab, setActiveTab] = useState<"ongoing" | "archived">(initialTab);
   const [searchTerm, setSearchTerm] = useState(""); // 输入框的值
   const [searchQuery, setSearchQuery] = useState(""); // 实际用于查询的值
   const [loading, setLoading] = useState(false);
@@ -275,7 +279,10 @@ const HomePage: React.FC<HomePageProps> = ({
                 ? "bg-white text-indigo-600 shadow-sm" 
                 : "text-gray-500 hover:text-gray-600"
             }`}
-            onClick={() => setActiveTab("ongoing")}
+            onClick={() => {
+              setActiveTab("ongoing");
+              onTabChange?.("ongoing");
+            }}
           >
             进行中
           </button>
@@ -285,7 +292,10 @@ const HomePage: React.FC<HomePageProps> = ({
                 ? "bg-white text-indigo-600 shadow-sm" 
                 : "text-gray-500 hover:text-gray-600"
             }`}
-            onClick={() => setActiveTab("archived")}
+            onClick={() => {
+              setActiveTab("archived");
+              onTabChange?.("archived");
+            }}
           >
             已归档
           </button>

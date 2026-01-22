@@ -7,6 +7,7 @@ import { MOCK_QUESTIONS } from '../constants';
 import { Question, DealRecord } from '../types';
 import { dealService } from '../services/dealService';
 import { useRecordingStore } from '../store/useRecordingStore';
+import { nativeBridge } from '../services/nativeBridge';
 
 
 
@@ -37,7 +38,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   const [questions, setQuestions] = useState<Question[]>(MOCK_QUESTIONS);
   const [expandedQuestion, setExpandedQuestion] = useState<number | string | null>(null);
   // const [transcriptionList, setTranscriptionList] = useState<any[]>([]); // REMOVED: Use Global Store
-  const { transcriptionList, setTranscriptionList } = useRecordingStore();
+  const { transcriptionList, setTranscriptionList, tempTranscription } = useRecordingStore();
 
   const resetStore = useRecordingStore(state => state.reset);
 
@@ -67,11 +68,14 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     }
   }, [deal]);
 
-  // 获取录音转写数据
+  // 获取录音转写数据（仅在查看历史时）
   useEffect(() => {
-    // 只有当列表为空时才去拉取历史记录 (e.g. 首次进入或由于某种原因 store 为空)
-    // 且必须有 interviewInstId
-    if (activeTab === 'transcription' && interviewInstId && transcriptionList.length === 0) {
+    // 只有在以下情况才调用接口获取历史转写记录：
+    // 1. 当前在转写 tab
+    // 2. 有 interviewInstId
+    // 3. 列表为空（首次进入）
+    // 4. 不在录音中（正在录音时内容来自 Native 实时推送）
+    if (activeTab === 'transcription' && interviewInstId && transcriptionList.length === 0 && !isRecording) {
       const fetchTranscription = async () => {
         try {
           const res = await dealService.queryInterviewInstContentListByPage({
@@ -90,13 +94,46 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       };
       fetchTranscription();
     }
-  }, [activeTab, interviewInstId, transcriptionList.length, setTranscriptionList]);
+  }, [activeTab, interviewInstId, transcriptionList.length, isRecording, setTranscriptionList]);
 
   const formatTime = (totalSeconds: number) => {
     const hrs = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
     const secs = totalSeconds % 60;
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // 上传转写内容到服务器
+  const uploadTranscriptionContent = async () => {
+    if (!interviewInstId) {
+      return;
+    }
+
+    // 只上传最终结果（isFinal: true）
+    const finalResults = transcriptionList.filter(item => item.isFinal);
+    
+    if (finalResults.length === 0) {
+      console.log('[上传转写] 没有需要上传的内容');
+      return;
+    }
+
+    try {
+      const contentList = finalResults.map(item => ({
+        id: String(item.id),
+        content: item.content,
+      }));
+
+      console.log('[上传转写] 上传内容:', contentList.length, '条');
+      
+      await dealService.uploadInterviewInstContent({
+        interviewInstId,
+        contentList,
+      });
+
+      console.log('[上传转写] 上传成功');
+    } catch (error) {
+      console.error('[上传转写] 上传失败:', error);
+    }
   };
 
   const handleFinishInterview = () => {
@@ -110,9 +147,10 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       .then(async () => {
         // 结束时如果是录音状态，先调用停止
         if (isRecording) {
-          if (window.Android?.stopRecord) {
-            window.Android.stopRecord();
-          }
+          // if (window.Android?.stopRecord) {
+          //   window.Android.stopRecord();
+          // }
+          nativeBridge.stopRecording();
         }
 
         if (!interviewInstId) {
@@ -144,7 +182,10 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
             return;
           }
 
-          // 2. 结束访谈
+          // 2. 上传转写内容
+          await uploadTranscriptionContent();
+
+          // 3. 结束访谈
           const res = await dealService.overInterviewInst(interviewInstId);
           if (res.success) {
             resetStore(); // 清除全局状态（浮窗消失）
@@ -173,14 +214,17 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
   const handleToggleWrapper = () => {
     if (isRecording) {
-      // 停止录音
+      // 停止录音（暂停）
       console.log("[H5] calling stopRecord...");
-      if (window.Android?.stopRecord) {
-        try {
-          window.Android.stopRecord();
-        } catch (e) { console.error(e); }
-      }
+      // if (window.Android?.stopRecord) {
+      //   try {\n      //     window.Android.stopRecord();
+      //   } catch (e) { console.error(e); }
+      // }
+      nativeBridge.stopRecording();
       onToggleRecording();
+      
+      // 暂停时上传转写内容
+      uploadTranscriptionContent();
     } else {
       if (seconds === 0) {
         setCountdown(3); // Changed to 3s for better UX
@@ -194,11 +238,12 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   const startNativeRecord = () => {
     const surveyId = interviewInstId || deal?.id || 'default_id';
     console.log(`[H5] Calling startRecord with surveyId: ${surveyId}`);
-    if (window.Android?.startRecord) {
-      window.Android.startRecord(surveyId);
-    } else {
-      Toast.fail('Native interface not found');
-    }
+    // if (window.Android?.startRecord) {
+    //   window.Android.startRecord(surveyId);
+    // } else {
+    //   Toast.fail('Native interface not found');
+    // }
+    nativeBridge.startRecordingWithParams({ surveyId });
     onToggleRecording();
   };
 
@@ -379,6 +424,30 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                   <p className="text-sm">暂无转写记录</p>
                 </div>
               )}
+              
+              {/* 临时转写结果（识别中） */}
+              {tempTranscription && (
+                <div className="flex gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-indigo-100">
+                      <User size={16} className="text-indigo-600" fill="currentColor" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 flex flex-col items-start">
+                    <div className="text-xs text-gray-400 mb-1.5 ml-1 flex items-center gap-1">
+                      咨询师
+                      <span className="inline-block w-1 h-1 bg-gray-400 rounded-full animate-pulse"></span>
+                      <span className="text-[10px]">识别中...</span>
+                    </div>
+                    
+                    <div className="p-3.5 rounded-xl text-[15px] leading-relaxed max-w-[90%] break-words shadow-sm bg-indigo-50 text-indigo-600 rounded-tr-sm border border-indigo-100 opacity-70">
+                      {tempTranscription}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {/* Dummy element for auto-scroll */}
               <div ref={messagesEndRef} />
             </div>
@@ -390,32 +459,34 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
       {/* Sticky Bottom Bar */}
       {countdown === 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 pb-8 z-30 flex gap-4 items-center justify-between shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-          <Button
-            variant="primary"
-            onClick={handleToggleWrapper}
-            className="flex-1 rounded-full shadow-lg shadow-indigo-200"
-          >
-            {isRecording ? (
-              <>
-                <Pause size={18} className="mr-2" /> 暂停录音
-              </>
-            ) : (
-              <>
-                <Mic size={18} className="mr-2" /> {seconds === 0 ? '开始录音' : '继续录音'}
-              </>
-            )}
-          </Button>
-
-          {seconds > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30">
+          <div className="flex gap-4 items-center justify-between">
             <Button
-              variant="secondary"
-              onClick={handleFinishInterview}
-              className="flex-1 rounded-full border-indigo-100 text-indigo-600"
+              variant="primary"
+              onClick={handleToggleWrapper}
+              className="flex-1 rounded-full shadow-lg shadow-indigo-200"
             >
-              <Square size={16} className="mr-2 fill-current" /> 结束访谈
+              {isRecording ? (
+                <>
+                  <Pause size={18} className="mr-2" /> 暂停录音
+                </>
+              ) : (
+                <>
+                  <Mic size={18} className="mr-2" /> {seconds === 0 ? '开始录音' : '继续录音'}
+                </>
+              )}
             </Button>
-          )}
+
+            {seconds > 0 && (
+              <Button
+                variant="secondary"
+                onClick={handleFinishInterview}
+                className="flex-1 rounded-full border-indigo-100 text-indigo-600"
+              >
+                <Square size={16} className="mr-2 fill-current" /> 结束访谈
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>

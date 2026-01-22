@@ -101,6 +101,22 @@ export const dealService = {
   },
 
   /**
+   * 上传访谈实例内容（转写内容）
+   */
+  uploadInterviewInstContent: (params: {
+    interviewInstId: string;
+    contentList: Array<{
+      id: string;
+      content: string;
+    }>;
+  }) => {
+    return request<ApiResponse<any>>('/interview/uploadInterviewInstContent', {
+      method: 'POST',
+      data: params,
+    });
+  },
+
+  /**
    * 更新访谈实例
    */
   updateInterviewInst: (params: {

@@ -8,6 +8,7 @@ interface RecordingState {
   currentInterviewInstId: string | null;
   currentInterviewInstTitle: string | null;
   transcriptionList: TranscriptionItem[];
+  tempTranscription: string;  // 临时的中间结果
 
   // Status
   isRecording: boolean;
@@ -19,6 +20,8 @@ interface RecordingState {
   setRecordingSeconds: (seconds: number | ((prev: number) => number)) => void;
   setTranscriptionList: (list: TranscriptionItem[]) => void;
   addTranscriptionChunk: (item: TranscriptionItem) => void;
+  updateTempTranscription: (text: string) => void;
+  clearTempTranscription: () => void;
   reset: () => void;
 }
 
@@ -29,6 +32,7 @@ export const useRecordingStore = create<RecordingState>()(
       currentInterviewInstId: null,
       currentInterviewInstTitle: null,
       transcriptionList: [],
+      tempTranscription: '',
       isRecording: false,
       recordingSeconds: 0,
 
@@ -47,14 +51,20 @@ export const useRecordingStore = create<RecordingState>()(
       setTranscriptionList: (list) => set({ transcriptionList: list }),
 
       addTranscriptionChunk: (item) => set((state) => ({
-        transcriptionList: [...state.transcriptionList, item]
+        transcriptionList: [...state.transcriptionList, item],
+        tempTranscription: '',  // 添加最终结果时清空临时结果
       })),
+
+      updateTempTranscription: (text) => set({ tempTranscription: text }),
+
+      clearTempTranscription: () => set({ tempTranscription: '' }),
 
       reset: () => set({
         currentDealId: null,
         currentInterviewInstId: null,
         currentInterviewInstTitle: null,
         transcriptionList: [],
+        tempTranscription: '',
         isRecording: false,
         recordingSeconds: 0
       }),

@@ -7,6 +7,7 @@ import { DealRecord, Resource, QuestionInfo } from '../types';
 import { dealService } from '../services/dealService';
 import { templateService, ReportTemplate } from '../services/templateService';
 import { questionService, TemplateInfo } from '../services/questionService';
+import { nativeBridge } from '../services/nativeBridge';
 
 interface MaterialUploadPageProps {
   deal: DealRecord | null;
@@ -233,25 +234,28 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const handleUploadClick = (id: string) => {
     switch (id) {
       case 'camera':
-        if (window.Android?.takePhoto) {
-          window.Android.takePhoto();
-        } else {
-          cameraInputRef.current?.click();
-        }
+        // if (window.Android?.takePhoto) {
+        //   window.Android.takePhoto();
+        // } else {
+        //   cameraInputRef.current?.click();
+        // }
+        nativeBridge.openCamera();
         break;
       case 'gallery':
-        if (window.Android?.choosePhoto) {
-          window.Android.choosePhoto();
-        } else {
-          galleryInputRef.current?.click();
-        }
+        // if (window.Android?.choosePhoto) {
+        //   window.Android.choosePhoto();
+        // } else {
+        //   galleryInputRef.current?.click();
+        // }
+        nativeBridge.openPhotoLibrary();
         break;
       case 'file':
-        if (window.Android?.chooseFile) {
-          window.Android.chooseFile();
-        } else {
-          fileInputRef.current?.click();
-        }
+        // if (window.Android?.chooseFile) {
+        //   window.Android.chooseFile();
+        // } else {
+        //   fileInputRef.current?.click();
+        // }
+        fileInputRef.current?.click();
         break;
       case 'voice':
         setVoiceModalVisible(true);
