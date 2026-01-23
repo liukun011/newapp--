@@ -88,7 +88,7 @@ const App: React.FC = () => {
         } else {
           // roleId 变化或首次添加，创建新记录
           addTranscriptionChunk({
-            id: Date.now(),
+            id: String(Date.now()),
             roleId: roleId,
             content: text,
             isFinal: true,
@@ -348,6 +348,17 @@ const App: React.FC = () => {
         const parsed = handleTranscriptionResult(response.data);
         
         if (parsed) {
+          // DEBUG: Custom overlay for parsed result in App.tsx
+          // let debugDiv = document.getElementById('debug-overlay-parsed');
+          // if (!debugDiv) {
+          //   debugDiv = document.createElement('div');
+          //   debugDiv.id = 'debug-overlay-parsed';
+          //   debugDiv.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:300px;background:rgba(0,0,20,0.9);color:#00ffff;z-index:100000;overflow:auto;padding:20px;font-family:monospace;font-size:14px;white-space:pre-wrap;word-break:break-all;border-top:2px solid cyan;';
+          //   debugDiv.onclick = () => document.body.removeChild(debugDiv!);
+          //   document.body.appendChild(debugDiv);
+          // }
+          // debugDiv.innerText = "--- PARSED (App.tsx) ---\n" + JSON.stringify(parsed, null, 2) + "\n\n(Click to Close)\n" + (debugDiv.innerText || "");
+
           const { text, isFinal } = parsed;
           const store = useRecordingStore.getState();
           const { transcriptionList, setTranscriptionList, addTranscriptionChunk, updateTempTranscription } = store;
@@ -367,7 +378,6 @@ const App: React.FC = () => {
                 timestamp: Date.now(),
               };
               setTranscriptionList(updatedList);
-              console.log('[转写] 拼接最终结果:', text);
             } else {
               // roleId 不同或首次添加，创建新记录
               addTranscriptionChunk({
@@ -377,7 +387,6 @@ const App: React.FC = () => {
                 timestamp: Date.now(),
                 isFinal: true,
               });
-              console.log('[转写] 新增最终结果:', text);
             }
             
             // 清空临时转写
@@ -386,36 +395,35 @@ const App: React.FC = () => {
             // 计数并检查是否需要上传
             sentenceCount++;
             if (sentenceCount >= 6) {
-              console.log('[转写] 达到6句，触发上传');
               uploadTranscriptionBatch();
               sentenceCount = 0; // 重置计数
             }
           } else {
-            // 中间结果
-            const lastItem = transcriptionList[transcriptionList.length - 1];
-            
-            if (lastItem && String(lastItem.roleId) === String(currentRoleId)) {
-              // roleId 相同，拼接内容到最后一条记录
-              const updatedList = [...transcriptionList];
-              updatedList[updatedList.length - 1] = {
-                ...lastItem,
-                content: lastItem.content + text,
-                timestamp: Date.now(),
-              };
-              setTranscriptionList(updatedList);
-            } else {
-              // roleId 不同或首次添加，创建新记录
-              addTranscriptionChunk({
-                id: `trans_${Date.now()}_${Math.random()}`,
-                content: text,
-                roleId: currentRoleId,
-                timestamp: Date.now(),
-                isFinal: false,
-              });
-            }
-            
-            console.log('[转写] 识别中:', text);
+             // 中间结果 (type 1)，用户要求忽略内容（使用空字符串），但保持逻辑占位
+             const lastItem = transcriptionList[transcriptionList.length - 1];
+             
+             if (lastItem && String(lastItem.roleId) === String(currentRoleId)) {
+               // 这里的 text 被忽略，只拼接空字符串（或者根本不更新 content，只更新 timestamp）
+               const updatedList = [...transcriptionList];
+               updatedList[updatedList.length - 1] = {
+                 ...lastItem,
+                 content: lastItem.content + "", // 拼接空字符串
+                 timestamp: Date.now(),
+               };
+               setTranscriptionList(updatedList);
+             } else {
+                // 如果是第一句就是中间结果，也需要创建一个占位（还是说直接忽略？）
+                // 用户说“能直接拼接空字符串上去吗”，如果是新的一句，空字符串就是 content: ""
+                addTranscriptionChunk({
+                 id: `trans_${Date.now()}_${Math.random()}`,
+                 content: "", // 内容为空
+                 roleId: currentRoleId,
+                 timestamp: Date.now(),
+                 isFinal: false,
+                });
+             }
           }
+
         }
       }
     };
@@ -425,7 +433,7 @@ const App: React.FC = () => {
     return () => {
       nativeBridge.off('transcriptionResult', handleTranscription);
     };
-  }, []); // 依赖 currentView 以确保闭包中拿到最新值
+  }, [currentView]); // 依赖 currentView 以确保闭包中拿到最新值
 
   const handleEditCorporateInfo = () => {
     setPreviousView(currentView);

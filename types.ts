@@ -153,8 +153,8 @@ export interface LoginResponse {
 }
 
 export interface TranscriptionItem {
-  id: string | number;
-  roleId: string | number;
+  id: string;
+  roleId: string;
   content: string;
   timestamp?: number;
   isFinal?: boolean;

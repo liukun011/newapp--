@@ -37,23 +37,26 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   const [activeTab, setActiveTab] = useState<'questions' | 'transcription'>('questions');
   const [questions, setQuestions] = useState<Question[]>(MOCK_QUESTIONS);
   const [expandedQuestion, setExpandedQuestion] = useState<number | string | null>(null);
-  // const [transcriptionList, setTranscriptionList] = useState<any[]>([]); // REMOVED: Use Global Store
   const { transcriptionList, setTranscriptionList } = useRecordingStore();
 
   const resetStore = useRecordingStore(state => state.reset);
 
-  // Auto-scroll ref
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  // Scroll container ref
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when list updates or tab becomes active
   useEffect(() => {
-    if (activeTab === 'transcription') {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (activeTab === 'transcription' && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      // Use setTimeout to ensure DOM has updated
+      setTimeout(() => {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
     }
-  }, [transcriptionList, activeTab]);
-
-  // NOTE: Global listeners are now in App.tsx. 
-  // We only keep necessary unique logic here if any, or just rely on store updates.
+  }, [transcriptionList.length, activeTab]);
 
   // 同步问题清单数据
   useEffect(() => {
@@ -67,15 +70,12 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       setQuestions(backendQuestions);
     }
   }, [deal]);
-
-  // 获取录音转写数据（仅在查看历史时）
   useEffect(() => {
     // 只有在以下情况才调用接口获取历史转写记录：
-    // 1. 当前在转写 tab
-    // 2. 有 interviewInstId
-    // 3. 列表为空（首次进入）
-    // 4. 不在录音中（正在录音时内容来自 Native 实时推送）
-    if (activeTab === 'transcription' && interviewInstId && transcriptionList.length === 0 && !isRecording) {
+    // 1. 有 interviewInstId
+    // 2. 列表为空（首次进入）
+    // 3. 不在录音中（正在录音时内容来自 Native 实时推送）
+    if (interviewInstId && transcriptionList.length === 0 && !isRecording) {
       const fetchTranscription = async () => {
         try {
           const res = await dealService.queryInterviewInstContentListByPage({
@@ -94,7 +94,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       };
       fetchTranscription();
     }
-  }, [activeTab, interviewInstId, transcriptionList.length, isRecording, setTranscriptionList]);
+  }, [interviewInstId, transcriptionList.length, isRecording, setTranscriptionList]);
 
   const formatTime = (totalSeconds: number) => {
     const hrs = Math.floor(totalSeconds / 3600);
@@ -119,9 +119,22 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
     try {
       const contentList = finalResults.map(item => ({
-        id: String(item.id),
+        id: item.roleId,
         content: item.content,
       }));
+
+      // DEBUG: Show Upload Content List
+      // if (typeof document !== 'undefined') {
+      //   let debugDiv = document.getElementById('debug-upload-content');
+      //   if (!debugDiv) {
+      //     debugDiv = document.createElement('div');
+      //     debugDiv.id = 'debug-upload-content';
+      //     debugDiv.style.cssText = 'position:fixed;top:10%;left:5%;width:90%;height:300px;background:rgba(0,0,50,0.95);color:#00ff00;z-index:110000;overflow:auto;padding:20px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;border:2px solid cyan;';
+      //     debugDiv.onclick = () => document.body.removeChild(debugDiv!);
+      //     document.body.appendChild(debugDiv);
+      //   }
+      //   debugDiv.innerText = "--- UPLOAD CONTENT LIST ---\n" + JSON.stringify(contentList, null, 2) + "\n\n(Click to Close)";
+      // }
 
       console.log('[上传转写] 上传内容:', contentList.length, '条');
       
@@ -145,8 +158,24 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     // 从 Native 获取录音文件（所有环境统一使用）
     return new Promise((resolve) => {
       // 设置回调监听
+      // 设置回调监听
       const handleAudioList = async (response: any) => {
         nativeBridge.off('getAudioList', handleAudioList); // 移除监听
+
+        console.log('[上传录音] handleAudioList response:', response);
+
+        // DEBUG: Show Audio List Response
+        // if (typeof document !== 'undefined') {
+        //   let debugDiv = document.getElementById('debug-audio-list');
+        //   if (!debugDiv) {
+        //     debugDiv = document.createElement('div');
+        //     debugDiv.id = 'debug-audio-list';
+        //     debugDiv.style.cssText = 'position:fixed;top:10%;right:5%;width:90%;height:200px;background:rgba(50,0,0,0.95);color:#ffaa00;z-index:110001;overflow:auto;padding:20px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;border:2px solid orange;';
+        //     debugDiv.onclick = () => document.body.removeChild(debugDiv!);
+        //     document.body.appendChild(debugDiv);
+        //   }
+        //   debugDiv.innerText = "--- AUDIO LIST RESP ---\n" + JSON.stringify(response, null, 2) + "\n\n(Click to Close)";
+        // }
 
         if (response.success && response.data && response.data.list && response.data.list.length > 0) {
           // 获取最新的录音文件（通常是列表的第一个）
@@ -340,7 +369,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   }, [countdown]);
 
   return (
-    <div className="flex flex-col h-screen relative bg-[#F7F8FA]">
+    <div className="fixed inset-0 flex flex-col bg-[#F7F8FA]">
 
       {/* NavBar */}
       <div className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-sm">
@@ -408,11 +437,14 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto pb-24 p-4 scroll-smooth relative">
+        <div 
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto px-4 scroll-smooth relative"
+        >
 
           {/* Question List Tab */}
           <div className={activeTab === 'questions' ? 'block' : 'hidden'}>
-            <div className="space-y-3">
+            <div className="space-y-3 pb-32">
               <div className="text-xs text-gray-400 mb-2 pl-1">已自动匹配 {questions.filter(q => q.isAnswered).length} / {questions.length} 项</div>
               {questions.map((q, index) => (
                 <div key={q.id} className="bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-50 transition-all">
@@ -456,7 +488,14 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
           {/* Transcription (Chat) Tab */}
           <div className={activeTab === 'transcription' ? 'block' : 'hidden'}>
-            <div className="space-y-6">
+            
+            {/* DEBUG: Show transcriptionList RAW DATA */}
+            <div className="mb-4 p-2 bg-black text-green-400 font-mono text-xs overflow-auto max-h-40 rounded border border-green-600 opacity-80" onClick={(e) => e.currentTarget.style.display = 'none'}>
+              <div>DEBUG: transcriptionList (Click to Hide)</div>
+              <pre>{JSON.stringify(transcriptionList, null, 2)}</pre>
+            </div>
+
+            <div className="space-y-6 pb-32">
               {transcriptionList.length > 0 ? (
                 transcriptionList.map((item, index) => {
                   const isRecognizing = item.isFinal === false;
@@ -501,11 +540,9 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                 </div>
               )}
               
-              {/* Dummy element for auto-scroll */}
-              <div ref={messagesEndRef} />
+              {/* Dummy element for auto-scroll removed */}
             </div>
           </div>
-
         </div>
 
       </div>

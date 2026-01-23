@@ -230,6 +230,7 @@ class NativeBridgeService {
 interface XunfeiTranscriptionResult {
   cn: {
     st: {
+      type?: string | number; // 有些版本 type 可能在 st 里
       rt: Array<{
         ws: Array<{
           cw: Array<{
@@ -238,7 +239,7 @@ interface XunfeiTranscriptionResult {
         }>;
       }>;
     };
-    type: 0 | 1;  // 0=最终结果, 1=中间结果
+    type?: number | string;  // 0=最终结果, 1=中间结果
   };
 }
 
@@ -251,8 +252,28 @@ export function handleTranscriptionResult(jsonString: string): {
 } | null {
   try {
     const result: XunfeiTranscriptionResult = JSON.parse(jsonString);
+    
+    // DEBUG: Show RAW RESULT using overlay
+    // if (typeof document !== 'undefined' && !document.getElementById('debug-overlay-raw')) {
+    //   const div = document.createElement('div');
+    //   div.id = 'debug-overlay-raw';
+    //   // Center of screen, very visible
+    //   div.style.cssText = 'position:fixed;top:20%;left:5%;width:90%;height:300px;background:rgba(0,0,0,0.9);color:#ffff00;z-index:100005;overflow:auto;padding:20px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;border:2px solid yellow;';
+    //   div.innerText = "--- RAW RESULT ---\n" + JSON.stringify(result, null, 2);
+    //   div.onclick = () => document.body.removeChild(div);
+    //   document.body.appendChild(div);
+    // }
 
     if (result.cn && result.cn.st && result.cn.st.rt) {
+      // 兼容字符串 "0" 和数字 0
+      // 优先取 result.cn.type，如果没有则取 result.cn.st.type (根据截图 type 可能在 st 层级)
+      let typeVal = result.cn.type;
+      if (typeVal === undefined && result.cn.st.type !== undefined) {
+        typeVal = result.cn.st.type;
+      }
+      
+      const isTypeFinal = String(typeVal) === "0";
+
       let text = '';
       const rt = result.cn.st.rt;
 
@@ -265,10 +286,7 @@ export function handleTranscriptionResult(jsonString: string): {
           }
         }
       }
-
-      const isFinal = result.cn.type === 0;
-
-      return text ? { text, isFinal } : null;
+      return { text, isFinal: isTypeFinal };
     }
   } catch (e) {
     console.error('解析转写结果失败:', e);
