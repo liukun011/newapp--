@@ -232,30 +232,30 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
 
   const handleUploadClick = (id: string) => {
+    // 检测是否为安卓环境
+    const isAndroid = /Android/i.test(navigator.userAgent) || (window as any)._dsbridge;
+
     switch (id) {
       case 'camera':
-        // if (window.Android?.takePhoto) {
-        //   window.Android.takePhoto();
-        // } else {
-        //   cameraInputRef.current?.click();
-        // }
-        nativeBridge.openCamera();
+        if (isAndroid) {
+          nativeBridge.openCamera();
+        } else {
+          cameraInputRef.current?.click();
+        }
         break;
       case 'gallery':
-        // if (window.Android?.choosePhoto) {
-        //   window.Android.choosePhoto();
-        // } else {
-        //   galleryInputRef.current?.click();
-        // }
-        nativeBridge.openPhotoLibrary();
+        if (isAndroid) {
+          nativeBridge.openPhotoLibrary();
+        } else {
+          galleryInputRef.current?.click();
+        }
         break;
       case 'file':
-        // if (window.Android?.chooseFile) {
-        //   window.Android.chooseFile();
-        // } else {
-        //   fileInputRef.current?.click();
-        // }
-        fileInputRef.current?.click();
+        if (isAndroid) {
+          nativeBridge.chooseFile();
+        } else {
+          fileInputRef.current?.click();
+        }
         break;
       case 'voice':
         setVoiceModalVisible(true);

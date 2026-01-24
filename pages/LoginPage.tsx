@@ -101,6 +101,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <Button 
               block 
               size="large" 
+              onClick={() => setViewState('SMS')}
+              className="shadow-xl shadow-indigo-500/20"
+            >
+              验证码登录
+            </Button>
+
+            <Button 
+              block 
+              size="large" 
+              variant="secondary"
               onClick={async () => {
                 if (!agreed) {
                   Toast.info('请先阅读并同意用户协议和隐私政策');
@@ -110,7 +120,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 //   const res = await authService.login('13278852398', 'Jwx1998...');
                 //   if (res.successful && res.data) {
                 //     localStorage.setItem('zov-user-token', res.data.accessToken);
-                //     localStorage.setItem('zov-userinfo', JSON.stringify({ userId: res.data.userId }));
+                //     localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
                 //     onLogin();
                 //   } else {
                 //     Toast.fail(res.message || '登录失败');
@@ -122,19 +132,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   message: '功能开发中，敬请期待！', 
                 });
               }} 
-              className="shadow-xl shadow-indigo-500/20"
-            >
-              本机号码一键登录
-            </Button>
-            
-            <Button 
-              block 
-              size="large" 
-              variant="secondary"
-              onClick={() => setViewState('SMS')}
               className="border-slate-200 text-slate-600 font-normal"
             >
-              验证码登录
+              本机号码一键登录
             </Button>
           </div>
         </div>
@@ -271,7 +271,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               const res = await authService.login(phone, password);
               if (res.successful && res.data) {
                 localStorage.setItem('zov-user-token', res.data.accessToken);
-                localStorage.setItem('zov-userinfo', JSON.stringify({ userId: res.data.userId }));
+                localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
                 onLogin();
               } else {
                  Toast.fail(res.message || '登录失败');
@@ -284,7 +284,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                const res = await authService.loginWithPhoneCode(phone, code);
                if (res.successful && res.data) {
                  localStorage.setItem('zov-user-token', res.data.accessToken);
-                 localStorage.setItem('zov-userinfo', JSON.stringify({ userId: res.data.userId }));
+                 localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
                  onLogin();
                } else {
                  Toast.fail(res.message || '登录失败');

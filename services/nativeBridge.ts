@@ -94,7 +94,12 @@ class NativeBridgeService {
       console.log('[NativeBridge] Call:', action, parameters);
     } // Android 环境 (DSBridge)
     else if (window._dsbridge || window._dswk || -1 != navigator.userAgent.indexOf("_dsbridge")) {
-      dsbridge.call(action, parameters);
+      // 兼容 Android 方法调用习惯：如果参数为空对象，有些 Bridge 实现可能不想要参数
+      if (parameters && Object.keys(parameters).length > 0) {
+        dsbridge.call(action, parameters);
+      } else {
+        dsbridge.call(action);
+      }
     }else {
       console.warn('[NativeBridge] Not in native environment');
     }
@@ -199,6 +204,13 @@ class NativeBridgeService {
    */
   openCamera() {
     this.callNative('openCamera');
+  }
+
+  /**
+   * 选择文件
+   */
+  chooseFile() {
+    this.callNative('chooseFile');
   }
 
   // ==================== 其他接口 ====================

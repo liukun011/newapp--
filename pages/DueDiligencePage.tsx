@@ -5,6 +5,7 @@ import Mascot from '../components/Mascot';
 import { COLORS } from '../constants';
 import { DealRecord, DealReportStatusEnum } from '../types';
 import { dealService } from '../services/dealService';
+import { nativeBridge } from '@/services/nativeBridge';
 
 interface DueDiligencePageProps {
   deal: DealRecord | null;
@@ -99,15 +100,30 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleUploadClick = (id: string) => {
+    // 检测是否为安卓环境
+    const isAndroid = /Android/i.test(navigator.userAgent) || (window as any)._dsbridge;
+
     switch (id) {
       case 'camera':
-        cameraInputRef.current?.click();
+        if (isAndroid) {
+          nativeBridge.openCamera();
+        } else {
+          cameraInputRef.current?.click();
+        }
         break;
       case 'gallery':
-        galleryInputRef.current?.click();
+        if (isAndroid) {
+          nativeBridge.openPhotoLibrary();
+        } else {
+          galleryInputRef.current?.click();
+        }
         break;
       case 'file':
-        fileInputRef.current?.click();
+        if (isAndroid) {
+          nativeBridge.chooseFile();
+        } else {
+          fileInputRef.current?.click();
+        }
         break;
     }
   };

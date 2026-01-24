@@ -49,4 +49,30 @@ export const authService = {
       method: 'POST',
     });
   },
+
+  // 获取用户信息
+  getUserInfo: async (): Promise<any> => {
+    return request<any>('https://user.binarysee.com/api/iam/users/userinfo', {
+      method: 'POST',
+    });
+  },
+
+  // 更新用户信息
+  updateUserInfo: async (data: any): Promise<any> => {
+    return request<any>('https://user.binarysee.com/api/iam/token/change_info', {
+      method: 'PUT',
+      data,
+    });
+  },
+
+  // 上传文件（如头像）
+  uploadFile: async (file: File): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    return request<any>('https://user.binarysee.com/api/iam/users/upload', {
+      method: 'POST',
+      data: formData,
+    });
+  },
 };

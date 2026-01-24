@@ -8,7 +8,14 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
-
+interface Window {
+  onNativeBack?: () => void;
+  onVoiceStream?: (text: string, roleId: string) => void;
+  onRecordingChunk?: (filePath: string) => void;
+  onVoiceFileSaved?: (filePath: string) => void;
+  onRecordingError?: (code: string, message: string) => void;
+  onFileSelected?: (filePath: string, fileBase64?: string) => void;
+}
 declare module '*.svg' {
 
   import * as React from 'react';

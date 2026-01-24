@@ -46,7 +46,7 @@ instance.interceptors.response.use(
 
     if (error.response?.status === 401) {
       localStorage.removeItem('zov-user-token');
-      localStorage.removeItem('zov-userinfo');
+      localStorage.removeItem('zov-user-info');
       // 延迟触发跳转事件，让用户能看清提示 (可选，如果不延迟，Toast 可能会因为页面切换闪烁，但 react-vant Toast 默认是单例 portal，应该没问题)
       setTimeout(() => {
         window.dispatchEvent(new Event('unauthorized'));

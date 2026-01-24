@@ -3,6 +3,7 @@ import { ArrowLeft, Camera, Image as ImageIcon, FileText, Mic, MinusCircle, Penc
 import { Toast, Dialog } from 'react-vant';
 import VoiceInputModal from '../components/VoiceInputModal';
 import { dealService } from '../services/dealService';
+import { nativeBridge } from '../services/nativeBridge';
 import { Resource, DealReportStatusEnum } from '../types';
 
 interface MaterialsListPageProps {
@@ -72,21 +73,117 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     fetchDealDetail();
   }, [fetchDealDetail]);
 
+  // 处理文件上传的核心逻辑
+  const handleUploadFile = async (file: File) => {
+    if (!dealId) {
+      Toast.fail('未找到尽调实例');
+      return;
+    }
+
+    try {
+      Toast.loading({ message: '上传中...', duration: 0 });
+      // 这里的 file 可能是原生 bridge 传回路径后生成的 Mock File
+      const res = await dealService.uploadDealMaterial(dealId, file);
+      Toast.clear();
+
+      if (res.success) {
+        Toast.success('上传成功');
+        // 刷新资料列表
+        fetchDealDetail();
+      } else {
+        Toast.fail(res.message || '上传失败');
+      }
+    } catch (error) {
+      Toast.clear();
+      console.error('Upload failed:', error);
+      Toast.fail('上传失败');
+    }
+  };
+
+  // 监听原生文件选择回调
+  useEffect(() => {
+    // Native 回调需传入两个参数：filePath 和 fileContent (Base64 string)
+    window.onFileSelected = (filePath: string, fileBase64?: string) => {
+      console.log('H5收到文件:', filePath, fileBase64 ? 'Has Content' : 'No Content');
+
+      // 从路径提取文件名
+      const fileName = filePath.split('/').pop() || `file_${Date.now()}`;
+
+      if (fileBase64) {
+        try {
+          // 将 Base64 转换为 File 对象
+          // 仅处理逗号后的部分（如果有前缀）
+          const base64Data = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64;
+          
+          // 简单的 Base64 解码
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          
+          // 推断类型（简单推断，或者由 Native 传递 MIME Type 更好）
+          let mimeType = 'application/octet-stream';
+          const ext = fileName.split('.').pop()?.toLowerCase();
+          if (ext === 'png') mimeType = 'image/png';
+          else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
+          else if (ext === 'pdf') mimeType = 'application/pdf';
+          else if (ext === 'doc' || ext === 'docx') mimeType = 'application/msword';
+          
+          const blob = new Blob([byteArray], { type: mimeType });
+          const file = new File([blob], fileName, { type: mimeType });
+          
+          handleUploadFile(file);
+        } catch (e) {
+          console.error("Base64 convert failed:", e);
+          Toast.fail('文件解析失败');
+        }
+      } else {
+        console.warn('Native did not return file content (Base64)');
+        Toast.fail('未获取到文件内容');
+      }
+    };
+
+    return () => {
+      window.onFileSelected = undefined;
+    };
+  }, [dealId, fetchDealDetail]);
+
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
   const galleryInputRef = React.useRef<HTMLInputElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleUploadClick = async (id: 'camera' | 'gallery' | 'file' | 'voice') => {
+    // 检测是否为安卓环境 (根据userAgent或bridge存在性)
+    const isAndroid = /Android/i.test(navigator.userAgent) || (window as any)._dsbridge;
+
     switch (id) {
       case 'camera':
-        cameraInputRef.current?.click();
+        if (isAndroid) {
+          nativeBridge.openCamera();
+        } else {
+          // iOS: 使用 capture="environment" 的 input 直接调起相机
+          // 这里需要确保 cameraInputRef 对应的 input 标签有 capture 属性
+          cameraInputRef.current?.click();
+        }
         break;
       case 'gallery':
-        galleryInputRef.current?.click();
+        if (isAndroid) {
+          nativeBridge.openPhotoLibrary();
+        } else {
+          // iOS: 使用 accept="image/*" 的 input 调起照片选择
+          galleryInputRef.current?.click();
+        }
         break;
       case 'file':
-        fileInputRef.current?.click();
+        if (isAndroid) {
+          nativeBridge.chooseFile();
+        } else {
+          // iOS: 调起文件选择
+          fileInputRef.current?.click();
+        }
         break;
       case 'voice':
         // 检查是否已有补充文本，如果有则加载内容

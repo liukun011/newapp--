@@ -44,6 +44,9 @@ const App: React.FC = () => {
   });
   // Track the previous view to support returning from the Edit screen
   const [previousView, setPreviousView] = useState<View>(View.HOME);
+  
+  // Navigation Stack for handling Native Back
+  const [viewStack, setViewStack] = useState<View[]>([View.HOME]);
   const [templateOrigin, setTemplateOrigin] = useState<View>(View.HOME);
   // Track current selected deal
   const [currentDeal, setCurrentDeal] = useState<DealRecord | null>(() => {
@@ -238,6 +241,9 @@ const App: React.FC = () => {
     const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
     setScrollPositions(prev => ({ ...prev, [currentView]: scrollTop }));
 
+    // Push new view to stack
+    setViewStack(prev => [...prev, view]);
+
     setNavDirection('forward');
     setCurrentView(view);
 
@@ -251,6 +257,16 @@ const App: React.FC = () => {
   const navigateBackward = (view: View) => {
     setNavDirection('backward');
     setCurrentView(view);
+
+    // Update stack: if new view is in stack, slice back to it; else push/replace
+    setViewStack(prev => {
+        const index = prev.lastIndexOf(view);
+        if (index !== -1) {
+            return prev.slice(0, index + 1);
+        }
+        // Fallback: just append
+        return [...prev, view];
+    });
 
     // 动画结束后恢复滚动位置
     setTimeout(() => {
@@ -284,27 +300,37 @@ const App: React.FC = () => {
   // 监听原生返回键
   useEffect(() => {
     window.onNativeBack = () => {
-      console.log('Native Back Pressed, Current View:', currentView);
+      console.log('Native Back Pressed, Current View:', currentView, 'Stack:', viewStack);
 
       // 如果当前在首页、登录页，或者是特定的根级页面，弹出退出确认
-      // 根据业务逻辑，View.HOME 是应用内首页，无法再回退
-      if (currentView === View.HOME || currentView === View.LOGIN) {
+      if (currentView === View.HOME || currentView === View.LOGIN || viewStack.length <= 1) {
         if (window.confirm('确定要退出应用吗？')) {
           // window.Android?.closeApp?.();
           nativeBridge.closeApp();
         }
       } else {
-        // 如果不在首页，执行类似网页后退的逻辑
-        // 简单处理：返回首页
-        setNavDirection('backward');
-        setCurrentView(View.HOME);
+        // 如果不在首页，执行栈后退 logic
+        const newStack = [...viewStack];
+        newStack.pop(); // Remove current
+        const previousView = newStack[newStack.length - 1];
+
+        if (previousView) {
+            setNavDirection('backward');
+            setCurrentView(previousView);
+            setViewStack(newStack);
+        } else {
+             // Fallback
+             setNavDirection('backward');
+             setCurrentView(View.HOME);
+             setViewStack([View.HOME]);
+        }
       }
     };
 
     return () => {
       window.onNativeBack = undefined;
     };
-  }, [currentView]);
+  }, [currentView, viewStack]);
 
   // 监听实时转写结果
   useEffect(() => {
@@ -464,7 +490,7 @@ const App: React.FC = () => {
         </motion.div>
       ) : (
         /* Main App - only render after splash is hidden */
-        <div ref={appContainerRef} className="w-full max-w-md mx-auto min-h-screen relative overflow-hidden bg-transparent">
+        <div ref={appContainerRef} className="w-full max-w-md mx-auto min-h-screen relative overflow-y-auto overflow-x-hidden bg-transparent">
           {/* Custom Limit Tips Toast */}
           {showLimitTips && (
              <div className="fixed top-24 left-4 right-4 z-[100] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center pointer-events-none">
@@ -949,7 +975,7 @@ const App: React.FC = () => {
                 <SettingsPage
                   onLogout={() => {
                     localStorage.removeItem('zov-user-token');
-                    localStorage.removeItem('zov-userinfo');
+                    localStorage.removeItem('zov-user-info');
                     sessionStorage.removeItem('zov-current-view');
                     sessionStorage.removeItem('zov-current-deal');
                     setNavDirection('root');
