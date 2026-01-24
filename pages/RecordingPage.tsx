@@ -123,18 +123,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         content: item.content,
       }));
 
-      // DEBUG: Show Upload Content List
-      // if (typeof document !== 'undefined') {
-      //   let debugDiv = document.getElementById('debug-upload-content');
-      //   if (!debugDiv) {
-      //     debugDiv = document.createElement('div');
-      //     debugDiv.id = 'debug-upload-content';
-      //     debugDiv.style.cssText = 'position:fixed;top:10%;left:5%;width:90%;height:300px;background:rgba(0,0,50,0.95);color:#00ff00;z-index:110000;overflow:auto;padding:20px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;border:2px solid cyan;';
-      //     debugDiv.onclick = () => document.body.removeChild(debugDiv!);
-      //     document.body.appendChild(debugDiv);
-      //   }
-      //   debugDiv.innerText = "--- UPLOAD CONTENT LIST ---\n" + JSON.stringify(contentList, null, 2) + "\n\n(Click to Close)";
-      // }
+      // DEBUG: Upload Content List
+      console.log('[上传转写] Content List:', JSON.stringify(contentList, null, 2));
 
       console.log('[上传转写] 上传内容:', contentList.length, '条');
       
@@ -162,64 +152,72 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       const handleAudioList = async (response: any) => {
         nativeBridge.off('getAudioList', handleAudioList); // 移除监听
 
-        console.log('[上传录音] handleAudioList response:', response);
-
-        // DEBUG: Show Audio List Response
-        // if (typeof document !== 'undefined') {
-        //   let debugDiv = document.getElementById('debug-audio-list');
-        //   if (!debugDiv) {
-        //     debugDiv = document.createElement('div');
-        //     debugDiv.id = 'debug-audio-list';
-        //     debugDiv.style.cssText = 'position:fixed;top:10%;right:5%;width:90%;height:200px;background:rgba(50,0,0,0.95);color:#ffaa00;z-index:110001;overflow:auto;padding:20px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;border:2px solid orange;';
-        //     debugDiv.onclick = () => document.body.removeChild(debugDiv!);
-        //     document.body.appendChild(debugDiv);
-        //   }
-        //   debugDiv.innerText = "--- AUDIO LIST RESP ---\n" + JSON.stringify(response, null, 2) + "\n\n(Click to Close)";
-        // }
+        // DEBUG: Audio List Response logged to console
+        console.log("--- AUDIO LIST RESP ---", JSON.stringify(response, null, 2));
 
         if (response.success && response.data && response.data.list && response.data.list.length > 0) {
           // 获取最新的录音文件（通常是列表的第一个）
           const latestAudio = response.data.list[0];
-          console.log('[上传录音] 找到录音文件:', {
-            fileName: latestAudio.fileName,
-            fileURL: latestAudio.fileURL,
-            fileSize: latestAudio.fileSize,
-            timestamp: latestAudio.timestamp
-          });
+            try {
+              const rawFileUrl = latestAudio.fileURL || "";
+              const fileUrl = rawFileUrl.trim();
+              
+              console.log('[上传录音] 调用 Native 上传接口, filePath:', fileUrl);
 
-          try {
-            // 尝试从 appfile:// URL 获取文件内容
-            console.log('[上传录音] 正在从 Native 读取文件:', latestAudio.fileURL);
-            const fileResponse = await fetch(latestAudio.fileURL);
-            
-            if (!fileResponse.ok) {
-              console.error('[上传录音] 文件读取失败:', fileResponse.statusText);
-              resolve(false);
-              return;
-            }
+              // DEBUG: Native Upload Progress
+              console.log(`Native Uploading: ${fileUrl}...`);
 
-            const blob = await fileResponse.blob();
-            const file = new File([blob], latestAudio.fileName, { type: 'audio/wav' });
-            
-            console.log('[上传录音] 文件读取成功，准备上传:', {
-              name: file.name,
-              size: file.size,
-              type: file.type
-            });
+              // 获取 Token
+              const token = localStorage.getItem('zov-user-token') || '';
 
-            const uploadRes = await dealService.uploadInterviewInstRecordFile(interviewInstId, file);
-            
-            if (uploadRes.success) {
-              console.log('[上传录音] 上传成功');
+              const uploadHost = 'http://68.79.42.215/report/interview/uploadInterviewInstRecordFile';
+
+              const params = {
+                  host: uploadHost,
+                  authorization: token,
+                  filePath: fileUrl,
+                  interviewInstId: Number(interviewInstId)
+              }
+              console.log('[上传录音] Upload Params:', JSON.stringify(params, null, 2));
+
+              const uploadPromise = new Promise<boolean>((resolveUpload, rejectUpload) => {
+                  const handleUploadResult = (res: any) => {
+                      console.log('[上传录音] Upload Result:', JSON.stringify(res, null, 2));
+                      // 更新 Toast 进度让用户感知
+                      if (res.data && res.data.percent !== undefined) {
+                         Toast.loading({ message: `正在保存 ${res.data.percent}%`, forbidClick: true, duration: 0 });
+                      }
+
+                      if (res.data && res.data.result) {
+                          // 上传完成（无论成功失败）
+                          if (res.data.result.success) {
+                              nativeBridge.off('onUploadResult', handleUploadResult);
+                              resolveUpload(true);
+                          } else {
+                              nativeBridge.off('onUploadResult', handleUploadResult);
+                              rejectUpload(new Error(res.data.result.message));
+                          }
+                      }
+                  };
+
+                  nativeBridge.on('onUploadResult', handleUploadResult);
+
+                  nativeBridge.uploadInterviewFile(params);
+
+                  // 设置超时
+                  setTimeout(() => {
+                     nativeBridge.off('onUploadResult', handleUploadResult);
+                     rejectUpload(new Error('Upload Timeout (60s)'));
+                  }, 60000);
+              });
+
+              await uploadPromise;
+              console.log('[上传录音] 上传流程结束');
               resolve(true);
-            } else {
-              console.error('[上传录音] 上传失败:', uploadRes.message);
+
+            } catch (error: any) {
               resolve(false);
             }
-          } catch (error) {
-            console.error('[上传录音] 文件处理或上传异常:', error);
-            resolve(false);
-          }
         } else {
           console.log('[上传录音] 没有找到录音文件');
           resolve(false);
@@ -233,8 +231,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       console.log('[上传录音] 查询录音文件, surveyId:', interviewInstId);
       nativeBridge.getAudioList({
         surveyId: interviewInstId,
-        page: 1,
-        pageSize: 99999,
+        page: 0,
+        pageSize: 999,
       });
 
       // 设置超时
@@ -276,16 +274,17 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
         Toast.loading({ message: '正在保存...', forbidClick: true, duration: 0 });
         try {
-          // 1. 上传录音文件（从 Native 获取）
-          const uploadSuccess = await uploadRecordingFile();
-          
-          if (!uploadSuccess) {
-            Toast.fail('录音文件上传失败');
-            return;
-          }
+          // 1. 并行上传录音文件和转写内容
+          try {
+            const [uploadSuccess] = await Promise.all([
+              uploadRecordingFile(),
+              uploadTranscriptionContent()
+            ]);
 
-          // 2. 上传转写内容
-          await uploadTranscriptionContent();
+
+          } catch (e) {
+            console.error('上传过程异常:', e);
+          }
           // 3. 结束访谈
           const res = await dealService.overInterviewInst(interviewInstId);
           if (res.success) {
@@ -489,11 +488,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
           {/* Transcription (Chat) Tab */}
           <div className={activeTab === 'transcription' ? 'block' : 'hidden'}>
             
-            {/* DEBUG: Show transcriptionList RAW DATA */}
-            <div className="mb-4 p-2 bg-black text-green-400 font-mono text-xs overflow-auto max-h-40 rounded border border-green-600 opacity-80" onClick={(e) => e.currentTarget.style.display = 'none'}>
-              <div>DEBUG: transcriptionList (Click to Hide)</div>
-              <pre>{JSON.stringify(transcriptionList, null, 2)}</pre>
-            </div>
+            {/* DEBUG: Show transcriptionList RAW DATA - Logged to console instead if needed */}
 
             <div className="space-y-6 pb-32">
               {transcriptionList.length > 0 ? (

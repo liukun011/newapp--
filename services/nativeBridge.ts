@@ -1,3 +1,13 @@
+// @ts-ignore
+import dsbridge from './dsbridge';
+
+declare global {
+  interface Window {
+    _dsbridge: any;
+    _dswk: any;
+  }
+}
+
 /**
  * Native Bridge 服务
  * 封装 JS 与 Native (iOS/Android) 的通信接口
@@ -76,45 +86,18 @@ class NativeBridgeService {
     if (
       typeof window !== 'undefined' &&
       (window as any).webkit?.messageHandlers?.NativeBridge
-    ) {
+    ) {// iOS 环境 (WKWebView) - 保持原逻辑不变
       (window as any).webkit.messageHandlers.NativeBridge.postMessage({
         action,
         parameters,
       });
       console.log('[NativeBridge] Call:', action, parameters);
-    } else {
+    } // Android 环境 (DSBridge)
+    else if (window._dsbridge || window._dswk || -1 != navigator.userAgent.indexOf("_dsbridge")) {
+      dsbridge.call(action, parameters);
+    }else {
       console.warn('[NativeBridge] Not in native environment');
-      // 在非 Native 环境下可以模拟回调用于开发测试
-      if (process.env.NODE_ENV === 'development') {
-        this.mockCallback(action, parameters);
-      }
     }
-  }
-
-  /**
-   * 模拟回调（用于开发测试）
-   */
-  private mockCallback(action: string, parameters: any) {
-    setTimeout(() => {
-      const mockResponse: NativeCallbackResponse = {
-        action,
-        success: true,
-        message: 'Mock response',
-        data: null,
-      };
-
-      // 根据不同 action 返回不同的模拟数据
-      if (action === 'getAudioList') {
-        mockResponse.data = {
-          page: parameters.page || 0,
-          pageSize: parameters.pageSize || 20,
-          total: 0,
-          list: [],
-        };
-      }
-
-      this.handleNativeCallback(mockResponse);
-    }, 100);
   }
 
   /**
@@ -188,6 +171,18 @@ class NativeBridgeService {
    */
   deleteAudioFile(params: { fileName: string; surveyId?: number }) {
     this.callNative('deleteAudioFile', params);
+  }
+
+  /**
+   * 上传访谈文件
+   */
+  uploadInterviewFile(params: {
+    host: string;
+    authorization: string;
+    filePath: string;
+    interviewInstId: number | string;
+  }) {
+    this.callNative('uploadInterviewFile', params);
   }
 
   // ==================== 媒体相关接口 ====================

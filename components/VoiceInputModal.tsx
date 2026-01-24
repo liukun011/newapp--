@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mic } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { dealService } from '../services/dealService';
+import { nativeBridge, handleTranscriptionResult } from '../services/nativeBridge';
 
 interface VoiceInputModalProps {
   visible: boolean;
@@ -28,7 +29,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     }
   }, [visible, initialContent]);
 
-  if (!visible) return null;
+
 
   const handleSave = async () => {
     if (!content.trim()) {
@@ -64,10 +65,90 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     }
   };
 
+  // 监听转写结果
+  useEffect(() => {
+    if (!visible) return;
+
+    const handleTranscription = (response: any) => {
+       // 参考 nativeBridge.ts 中的 handleTranscriptionResult 逻辑
+       if (response.data) {
+         try {
+           const resultStr = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+           const parsed = handleTranscriptionResult(resultStr);
+           
+           // Only append text if it is the final result
+           if (parsed && parsed.text && parsed.isFinal) {
+             console.log('[VoiceInput] Transcribed (Final):', parsed.text);
+             setContent(prev => prev + parsed.text);
+           }
+         } catch (e) {
+           console.error('[VoiceInput] Parse transcription error:', e);
+         }
+       }
+    };
+
+    const handleInterrupt = () => {
+       setIsRecording(false);
+       Toast.info('录音已中断');
+    };
+
+    try {
+      if (nativeBridge) {
+        nativeBridge.on('transcriptionResult', handleTranscription);
+        nativeBridge.on('recordingInterrupted', handleInterrupt);
+      } else {
+        console.error('nativeBridge is undefined');
+      }
+    } catch (e) {
+      console.error('Error registering native listeners:', e);
+    }
+
+    return () => {
+      try {
+        if (nativeBridge) {
+          nativeBridge.off('transcriptionResult', handleTranscription);
+          nativeBridge.off('recordingInterrupted', handleInterrupt);
+        }
+      } catch (e) {
+        console.error('Error removing native listeners:', e);
+      }
+    };
+  }, [visible]);
+
+  // 关闭时确保停止录音
+  useEffect(() => {
+    if (!visible && isRecording) {
+      try {
+        if (nativeBridge) {
+          nativeBridge.stopRecording();
+        }
+      } catch (e) {
+        console.error('Error stopping recording:', e);
+      }
+      setIsRecording(false);
+    }
+  }, [visible, isRecording]);
+
   const handleRecordClick = () => {
-    // TODO: 实现语音录入功能
-    setIsRecording(!isRecording);
+    try {
+      if (isRecording) {
+        // 停止录音
+        if (nativeBridge) nativeBridge.stopRecording();
+        setIsRecording(false);
+      } else {
+        // 开始录音
+        if (nativeBridge) nativeBridge.startRecording();
+        setIsRecording(true);
+        Toast.info('开始录音，请说话...');
+      }
+    } catch (e) {
+      console.error('Record action failed:', e);
+      Toast.fail('录音操作失败');
+      setIsRecording(false);
+    }
   };
+
+  if (!visible) return null;
 
   return (
     <div 
@@ -77,7 +158,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
         className="w-full bg-white rounded-t-3xl animate-slide-up"
         style={{ 
           maxHeight: '80vh',
-          animation: 'slideUp 0.3s ease-out'
+          // animation handled by class
         }}
       >
         {/* Header */}
@@ -86,7 +167,15 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
           
           <div className="flex items-center gap-3">
             <button 
-              onClick={onClose}
+              onClick={() => {
+                if(isRecording) {
+                  try {
+                    if (nativeBridge) nativeBridge.stopRecording();
+                  } catch(e) { console.error(e); }
+                  setIsRecording(false);
+                }
+                onClose();
+              }}
               className="px-5 py-1.5 border border-gray-300 text-gray-600 rounded-full text-base font-medium active:scale-95 transition-transform"
             >
               取消
@@ -134,17 +223,6 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
         {/* Bottom Safe Area */}
         <div className="h-24" />
       </div>
-
-      <style>{`
-        @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   );
 };
