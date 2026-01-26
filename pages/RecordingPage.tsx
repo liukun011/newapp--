@@ -170,32 +170,87 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
               // 获取 Token
               const token = localStorage.getItem('zov-user-token') || '';
 
-              const uploadHost = 'http://68.79.42.215/report/interview/uploadInterviewInstRecordFile';
+              const uploadHost = 'http://68.79.42.215/report/upload/file';
 
               const params = {
                   host: uploadHost,
                   authorization: token,
                   filePath: fileUrl,
-                  interviewInstId: Number(interviewInstId)
+                  // interviewInstId: Number(interviewInstId)
               }
               console.log('[上传录音] Upload Params:', JSON.stringify(params, null, 2));
 
               const uploadPromise = new Promise<boolean>((resolveUpload, rejectUpload) => {
                   const handleUploadResult = (res: any) => {
                       console.log('[上传录音] Upload Result:', JSON.stringify(res, null, 2));
-                      // 更新 Toast 进度让用户感知
-                      if (res.data && res.data.percent !== undefined) {
+
+                      // 1. 先检查 Bridge 层面是否调用成功
+                      if (res.success === false) {
+                          nativeBridge.off('onUploadResult', handleUploadResult);
+                          rejectUpload(new Error(res.message || 'Native Bridge Call Failed'));
+                          return;
+                      }
+
+                      if (!res.data) return; // 忽略空数据回调
+
+                      // 2. 更新 Toast 进度让用户感知
+                      if (res.data.percent !== undefined) {
                          Toast.loading({ message: `正在保存 ${res.data.percent}%`, forbidClick: true, duration: 0 });
                       }
 
-                      if (res.data && res.data.result) {
+                      // 3. 检查最终结果
+                      // 注意：有些 Native 实现可能把结果直接放在 data 里，而不是 data.result，这里做下兼容防御
+                      const resultData = res.data.result || (res.data.success !== undefined ? res.data : null);
+
+                      if (resultData) {
+                          console.log('[上传录音] Parsed Result Data:', JSON.stringify(resultData));
+                          
                           // 上传完成（无论成功失败）
-                          if (res.data.result.success) {
+                          // 兼容 errno=0 (富文本编辑器常用格式) 或 success=true
+                          const isSuccess = resultData.success === true || resultData.errno === 0;
+                          
+                          if (isSuccess) {
                               nativeBridge.off('onUploadResult', handleUploadResult);
-                              resolveUpload(true);
+                              
+                              // Native 上传成功后，获取 URL 并调用后端接口绑定
+                              // 尝试多种路径获取 URL
+                              const fileUrl = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
+                              console.log('[上传录音] Native上传成功，URL:', fileUrl);
+                              
+                              if (fileUrl) {
+                                console.log('[上传录音] 调用saveInterviewInstRecordFile请求参数:', {
+                                  path: fileUrl,
+                                  interviewInstId: interviewInstId
+                                });
+                                // 调用 saveInterviewInstRecordFile 保存记录
+                                dealService.saveInterviewInstRecordFile({
+                                  path: fileUrl,
+                                  interviewInstId: interviewInstId
+                                }).then(saveRes => {
+                                  if (saveRes.success) {
+                                    console.log('[上传录音] 绑定记录成功');
+                                    resolveUpload(true);
+                                  } else {
+                                    console.error('[上传录音] 绑定记录失败:', saveRes.message);
+                                    // 绑定失败是否算整体失败？通常算，但文件已上传。
+                                    // 这里我们 reject 以提示用户
+                                    rejectUpload(new Error(saveRes.message || '绑定录音失败'));
+                                  }
+                                }).catch(err => {
+                                  console.error('[上传录音] 绑定接口异常:', err);
+                                  rejectUpload(new Error('绑定录音接口异常'));
+                                });
+                              } else {
+                                console.warn('[上传录音] 未获取到文件 URL, resultData:', JSON.stringify(resultData));
+                                resolveUpload(true); // 虽无URL但Native报成功，暂时resolve
+                              }
                           } else {
-                              nativeBridge.off('onUploadResult', handleUploadResult);
-                              rejectUpload(new Error(res.data.result.message));
+                              console.warn('[上传录音] Native返回成功但业务失败:', resultData.message);
+                              // 只有明确失败才 reject
+                              if (resultData.success === false || (resultData.errno !== undefined && resultData.errno !== 0)) {
+                                  nativeBridge.off('onUploadResult', handleUploadResult);
+                                  rejectUpload(new Error(resultData.message || 'Upload Failed'));
+                              }
                           }
                       }
                   };
@@ -234,13 +289,6 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         page: 0,
         pageSize: 999,
       });
-
-      // 设置超时
-      setTimeout(() => {
-        nativeBridge.off('getAudioList', handleAudioList);
-        console.log('[上传录音] 查询超时');
-        resolve(false);
-      }, 10000); // 10秒超时
     });
   };
 
@@ -276,7 +324,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         try {
           // 1. 并行上传录音文件和转写内容
           try {
-            const [uploadSuccess] = await Promise.all([
+            await Promise.all([
               uploadRecordingFile(),
               uploadTranscriptionContent()
             ]);

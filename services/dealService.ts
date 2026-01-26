@@ -74,7 +74,7 @@ export const dealService = {
   },
 
   /**
-   * 上传访谈实例录音文件
+   * 上传访谈实例录音文件 (文件流方式)
    */
   uploadInterviewInstRecordFile: (interviewInstId: string, file: File) => {
     const formData = new FormData();
@@ -87,6 +87,19 @@ export const dealService = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+    });
+  },
+
+  /**
+   * 保存访谈实例录音文件 (URL 路径方式)
+   */
+  saveInterviewInstRecordFile: (params: {
+    path: string;
+    interviewInstId: string;
+  }) => {
+    return request<ApiResponse<any>>('/interview/uploadInterviewInstRecordFile', {
+      method: 'POST',
+      data: params,
     });
   },
 

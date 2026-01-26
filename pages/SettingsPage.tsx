@@ -191,7 +191,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
               setNewNickName(userName === '未登录' ? '' : userName);
               setRenameModalVisible(true);
             }}
-            className="p-1 hover:bg-gray-100 rounded-full text-gray-400"
+            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-400 active:bg-gray-200 transition-colors"
           >
             <Edit2 size={16} />
           </button>
@@ -261,10 +261,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>,
         document.body
       )}
-
+      
       {/* Rename Modal */}
-      {/* Rename Modal - Portaled to cover everything including bottom bar */}
-      {renameModalVisible && createPortal(
+      {renameModalVisible && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center">
           {/* Backdrop */}
           <div 
@@ -337,8 +336,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
 
       <style>{`

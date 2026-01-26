@@ -185,7 +185,7 @@ class NativeBridgeService {
     host: string;
     authorization: string;
     filePath: string;
-    interviewInstId: number | string;
+    // interviewInstId: number | string;
   }) {
     this.callNative('uploadInterviewFile', params);
   }
@@ -197,6 +197,17 @@ class NativeBridgeService {
    */
   openPhotoLibrary() {
     this.callNative('openPhotoLibrary');
+  }
+
+  /**
+   * 监听图片选择回调
+   */
+  onImageSelected(callback: (data: ImageSelectedData) => void) {
+    this.on('imageSelected', (response) => {
+      if (response.success && response.data) {
+        callback(response.data);
+      }
+    });
   }
 
   /**
