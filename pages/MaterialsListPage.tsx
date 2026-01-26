@@ -49,20 +49,12 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
           setLocalReportStatus(res.data.reportStatus);
         }
 
-        const allResources: Resource[] = [...(res.data.resources || [])];
+        const resources = res.data.resources || [];
+        const supplementary = Array.isArray(res.data.supplementary) 
+          ? (res.data.supplementary as Resource[]).map(r => ({ ...r, type: '4' }))
+          : [];
         
-        // 如果supplementary字段存在（数组形式），将其添加到列表
-        if (res.data.supplementary && Array.isArray(res.data.supplementary)) {
-          // 检查resources中是否已经有type=4的补充资料
-          const hasSupplementary = allResources.some(r => r.type === '4');
-          
-          if (!hasSupplementary) {
-            // supplementary是数组，将所有补充资料添加到列表开头
-            allResources.unshift(...(res.data.supplementary as Resource[]));
-          }
-        }
-        
-        setResources(allResources);
+        setResources([...supplementary, ...resources]);
       }
     } catch (error) {
       console.error('Failed to fetch deal detail:', error);
@@ -719,10 +711,10 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
           setVoiceModalVisible(false);
           setVoiceModalInitialContent(''); // 清空初始内容
         }}
-        onSave={(content) => {
-          console.log('Voice input content:', content);
+        onSave={async (content) => {
+          console.log('Voice input content saved:', content);
           // 刷新资料列表
-          fetchDealDetail();
+          await fetchDealDetail();
         }}
       />
 

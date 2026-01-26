@@ -35,6 +35,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const basePath = import.meta.env.BASE_URL || '/';
   const [activeTab, setActiveTab] = useState(initialTab);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
+  const [voiceModalInitialContent, setVoiceModalInitialContent] = useState('');
   const [currentTemplate, setCurrentTemplate] = useState<ReportTemplate | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
   const [questions, setQuestions] = useState<QuestionInfo[]>([]);
@@ -74,9 +75,19 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     if (!deal?.id) return;
 
     try {
+      console.log('Fetching deal detail for:', deal.id);
       const res = await dealService.getDealInstDetail(deal.id);
       if (res.success && res.data) {
-        setResources(res.data.resources || []);
+         console.log('Deal detail loaded:', res.data);
+         // 合并 resources 和 supplementary
+         const resourcesList = res.data.resources || [];
+         const supplementaryList = Array.isArray(res.data.supplementary) 
+           ? (res.data.supplementary as Resource[]).map(item => ({ ...item, type: '4' }))
+           : [];
+         
+         const merged = [...supplementaryList, ...resourcesList];
+         console.log('Merged resources:', merged);
+         setResources(merged);
       }
     } catch (error) {
       console.error('Failed to fetch deal detail:', error);
@@ -137,6 +148,14 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       console.error('Failed to fetch template detail:', error);
     }
   };
+
+  // 当 dealId 变化时，重置加载状态
+  useEffect(() => {
+    setLoadedTabs(new Set());
+    setResources([]);
+    setQuestions([]);
+    // 如果 deal 存在且当前是 upload tab，这将触发下方的 loadTabData 重新加载
+  }, [deal?.id]);
 
   // 当 activeTab 变化时，懒加载对应 tab 的数据
   useEffect(() => {
@@ -203,35 +222,149 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     }
   };
 
-  // 监听原生文件选择回调
+  // 上传状态锁，防止重复触发
+  const isUploadingRef = React.useRef(false);
+
+  // 监听原生文件选择回调 (及 Android ImageSelected) - 完整原生上传逻辑
   useEffect(() => {
-    window.onFileSelected = (filePath: string) => {
-      console.log('H5收到文件:', filePath);
+    // Android Image Upload Flow
+    const handleNativeImageUpload = async (localUrl: string) => {
+      if (!deal?.id) return;
+      if (isUploadingRef.current) return; // 防止重复触发
+      
+      isUploadingRef.current = true;
+      try {
+        Toast.loading({ message: '上传中...', duration: 0, forbidClick: true });
+        
+        // 1. 调用 Native 上传文件到 MinIO/OBS
+        const token = localStorage.getItem('zov-user-token') || '';
+        const uploadHost = 'http://68.79.42.215/report/upload/file'; // 硬编码
+
+        const params = {
+          host: uploadHost,
+          authorization: token,
+          filePath: localUrl,
+        };
+
+        console.log('[Native上传] Params:', JSON.stringify(params, null, 2));
+        console.log('[Native上传] 开始上传:', localUrl);
+        
+        const serverUrl = await new Promise<string>((resolve, reject) => {
+           const resultHandler = (res: any) => {
+             // 兼容 errno=0 或 success=true
+             const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
+             const isSuccess = res.success && (resultData?.success === true || resultData?.errno === 0);
+
+             if (isSuccess) {
+               const url = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
+               if (url) {
+                 nativeBridge.off('onUploadResult', resultHandler);
+                 resolve(url);
+               }
+             } else if (res.success && res.data?.percent !== undefined) {
+               // 进度
+               Toast.loading({ message: `上传中 ${res.data.percent}%...`, duration: 0 });
+             } else {
+               // 失败
+               if (res.success === false || (resultData && resultData.success === false)) {
+                 nativeBridge.off('onUploadResult', resultHandler);
+                 reject(new Error(resultData?.message || res.message || '上传失败'));
+               }
+             }
+           };
+
+           nativeBridge.on('onUploadResult', resultHandler);
+           nativeBridge.uploadInterviewFile(params);
+           
+           // 超时
+           setTimeout(() => {
+             nativeBridge.off('onUploadResult', resultHandler);
+             reject(new Error('上传超时'));
+           }, 60000);
+        });
+
+        console.log('[Native上传] 成功，URL:', serverUrl);
+
+        // 2. 调用后端绑定接口
+        const bindRes = await dealService.uploadDealResource(deal.id, [serverUrl]);
+        
+        Toast.clear();
+        if (bindRes.success) {
+          Toast.success('上传成功');
+          // 刷新资源列表
+          await fetchDealDetail();
+        } else {
+          Toast.fail(bindRes.message || '保存失败');
+        }
+
+      } catch (error: any) {
+        Toast.clear();
+        console.error('Native upload flow failed:', error);
+        Toast.fail(error.message || '上传失败');
+      } finally {
+        isUploadingRef.current = false;
+      }
+    };
+
+    // 注册 imageSelected 监听 (直接使用 on 监听以便 cleanup)
+    const handleImageSelected = (res: any) => {
+        if (res.success && res.data && res.data.imageURL) {
+            handleNativeImageUpload(res.data.imageURL);
+        }
+    };
+    nativeBridge.on('imageSelected', handleImageSelected);
+
+    // Native 回调需传入两个参数：filePath 和 fileContent (Base64 string)
+    // Legacy / iOS handling
+    window.onFileSelected = (filePath: string, fileBase64?: string) => {
+      console.log('H5收到文件:', filePath, fileBase64 ? 'Has Content' : 'No Content');
 
       // 从路径提取文件名
-      // Android 路径可能是 /storage/emulated/0/.../file.jpg
       const fileName = filePath.split('/').pop() || `file_${Date.now()}`;
 
-      // 创建模拟 File 对象 (Web 无法直接通过路径读取本地文件内容)
-      // 注意：这会导致上传的文件内容是空的/假的 "dummy content"
-      // 真正的 Hybrid 上传方案通常是：
-      // 1. Native 负责上传，成功后通知 H5 刷新列表
-      // 2. Native 读取文件转 Base64 传给 H5 (大文件不推荐)
-      // 3. H5 仅展示路径，不实际上传文件流
-      // 这里为了复用现有 uploadDealMaterial 接口，构建一个 Mock File
-      const mockFile = new File(["[Hybrid Mock Content]"], fileName, { type: "application/octet-stream" });
-
-      handleUploadFile(mockFile);
+      if (fileBase64) {
+        try {
+          // 将 Base64 转换为 File 对象
+          // 仅处理逗号后的部分（如果有前缀）
+          const base64Data = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64;
+          
+          // 简单的 Base64 解码
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          
+          // 推断类型
+          let mimeType = 'application/octet-stream';
+          const ext = fileName.split('.').pop()?.toLowerCase();
+          if (ext === 'png') mimeType = 'image/png';
+          else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
+          else if (ext === 'pdf') mimeType = 'application/pdf';
+          else if (ext === 'doc' || ext === 'docx') mimeType = 'application/msword';
+          
+          const blob = new Blob([byteArray], { type: mimeType });
+          const file = new File([blob], fileName, { type: mimeType });
+          
+          // 直接上传文件对象
+          handleUploadFile(file);
+        } catch (e) {
+          console.error("Base64 convert failed:", e);
+          Toast.fail('文件解析失败');
+        }
+      }
     };
 
     return () => {
       window.onFileSelected = undefined;
+      nativeBridge.off('imageSelected', handleImageSelected);
     };
   }, [deal?.id]); // 依赖 deal.id 以确保 handleUploadFile 闭包中有最新 ID
 
 
 
-  const handleUploadClick = (id: string) => {
+  const handleUploadClick = async (id: string) => {
     // 检测是否为安卓环境
     const isAndroid = /Android/i.test(navigator.userAgent) || (window as any)._dsbridge;
 
@@ -258,6 +391,23 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         }
         break;
       case 'voice':
+        // 检查是否已有补充文本，如果有则加载内容
+        const supplementaryResource = resources.find(r => r.type === '4');
+        if (supplementaryResource?.fileUrl) {
+          try {
+            Toast.loading({ message: '加载中...', duration: 0 });
+            const response = await fetch(supplementaryResource.fileUrl);
+            const text = await response.text();
+            Toast.clear();
+            setVoiceModalInitialContent(text);
+          } catch (error) {
+            Toast.clear();
+            console.error('Failed to load supplementary text:', error);
+            setVoiceModalInitialContent('');
+          }
+        } else {
+          setVoiceModalInitialContent('');
+        }
         setVoiceModalVisible(true);
         break;
     }
@@ -517,7 +667,29 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
                         {/* File Name - Clickable for Preview */}
                         <button
-                          onClick={() => {
+                          onClick={async () => {
+                            // 优先处理补充资料（语音录入/文本）
+                            if (resource.type === '4') {
+                              try {
+                                if (resource.fileUrl) {
+                                  Toast.loading({ message: '加载中...', duration: 0 });
+                                  const response = await fetch(resource.fileUrl);
+                                  const text = await response.text();
+                                  Toast.clear();
+                                  setVoiceModalInitialContent(text);
+                                  setVoiceModalVisible(true);
+                                } else {
+                                  Toast.fail('补充资料链接不存在');
+                                }
+                              } catch (error) {
+                                Toast.clear();
+                                console.error('Failed to fetch supplementary text:', error);
+                                Toast.fail('加载补充资料失败');
+                              }
+                              return;
+                            }
+
+                            // 普通文件预览
                             if (resource.fileUrl) {
                               // 使用预览页面打开文件
                               if (onPreviewTemplate) {
@@ -778,11 +950,17 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       {/* Voice Input Modal */}
       <VoiceInputModal
         visible={voiceModalVisible}
-        onClose={() => setVoiceModalVisible(false)}
-        onSave={(content) => {
-          // TODO: 处理语音录入的内容
-          console.log('Material upload voice input content:', content);
+        dealId={deal?.id}
+        initialContent={voiceModalInitialContent}
+        onClose={() => {
+          setVoiceModalVisible(false);
+          setVoiceModalInitialContent('');
+        }}
+        onSave={async (content) => {
+          console.log('Material upload voice input content saved:', content);
           Toast.success('录入成功');
+          // 刷新资源列表
+          await fetchDealDetail();
         }}
       />
 

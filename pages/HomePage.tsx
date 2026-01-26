@@ -13,6 +13,7 @@ import Mascot from "../components/Mascot";
 import { COLORS } from "../constants";
 import { DealRecord } from "../types";
 import { dealService } from "../services/dealService";
+import { useRecordingStore } from "../store/useRecordingStore";
 
 interface HomePageProps {
   onNavigateToDetail: (deal: DealRecord) => void;
@@ -28,6 +29,7 @@ interface HomePageProps {
 const HomePage: React.FC<HomePageProps> = ({ 
   onNavigateToDetail, 
   onNavigateToRecording,
+  onCreateNewDeal,
   initialTab = "ongoing",
   onTabChange,
 }) => {
@@ -37,10 +39,16 @@ const HomePage: React.FC<HomePageProps> = ({
   const [loading, setLoading] = useState(false);
   const [deals, setDeals] = useState<DealRecord[]>([]);
   const [showLimitTips, setShowLimitTips] = useState(false);
+  const { currentDealId } = useRecordingStore();
   
   // 删除确认弹框
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingDealId, setDeletingDealId] = useState<string | null>(null);
+
+  // 新建尽调弹框
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [creating, setCreating] = useState(false);
 
   // SwipeCell 强制刷新 key
   const [swipeCellKey, setSwipeCellKey] = useState(0);
@@ -173,6 +181,37 @@ const HomePage: React.FC<HomePageProps> = ({
   const cancelDelete = () => {
     setShowDeleteConfirm(false);
     setDeletingDealId(null);
+  };
+
+  // 处理新建尽调
+  const handleCreateDeal = async () => {
+    if (!newCustomerName.trim()) {
+      Toast.info('请输入客户名称');
+      return;
+    }
+
+    try {
+      setCreating(true);
+      const res = await dealService.createOrUpdateDealInst({
+        interviewCust: newCustomerName.trim(),
+      });
+
+      if (res.success && res.data) {
+        Toast.success('创建成功');
+        setShowCreateModal(false);
+        setNewCustomerName("");
+        
+        // 跳转到资料上传页，并传递刚创建的 Deal
+        onCreateNewDeal?.(res.data);
+      } else {
+        Toast.fail(res.message || '创建失败');
+      }
+    } catch (error) {
+      console.error('Create failed:', error);
+      Toast.fail('创建失败');
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -378,8 +417,8 @@ const HomePage: React.FC<HomePageProps> = ({
                                   return;
                                 }
 
-                                const activeDeal = deals.find(d => d.status === '3');
-                                if (activeDeal && activeDeal.id !== item.id) {
+                                // 校验是否有正在进行的访谈（悬浮窗存在 即 currentDealId 不为空）
+                                if (currentDealId && currentDealId !== item.id) {
                                   setShowLimitTips(true);
                                   setTimeout(() => setShowLimitTips(false), 3000);
                                   return;
@@ -418,6 +457,18 @@ const HomePage: React.FC<HomePageProps> = ({
 
 
 
+        {/* Floating Action Button (Create New) */}
+        <button
+          onClick={() => {
+            setNewCustomerName("");
+            setShowCreateModal(true);
+          }}
+          className="absolute right-6 bottom-6 w-14 h-14 bg-indigo-600 rounded-full shadow-lg shadow-indigo-500/40 flex items-center justify-center text-white active:scale-95 transition-transform z-30"
+          aria-label="新建尽调"
+        >
+          <Plus size={28} strokeWidth={2.5} />
+        </button>
+
       {/* 删除确认弹框 - Portal to Body */}
       {showDeleteConfirm && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -455,6 +506,57 @@ const HomePage: React.FC<HomePageProps> = ({
                 className="flex-1 h-12 rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30"
               >
                 确认
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* 新建尽调弹框 - Portal to Body */}
+      {showCreateModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* 半透明背景 */}
+          <div 
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowCreateModal(false)}
+          />
+          
+          {/* 弹框内容 */}
+          <div className="relative bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-fadeIn">
+            {/* 标题 */}
+            <h3 className="text-center text-lg font-bold text-slate-800 mb-6">
+              新建尽调
+            </h3>
+            
+            {/* 输入框 */}
+            <div className="mb-6">
+              <label className="block text-sm text-slate-500 mb-2 pl-1">被访企业名称</label>
+              <input
+                type="text"
+                value={newCustomerName}
+                onChange={(e) => setNewCustomerName(e.target.value)}
+                placeholder="请输入企业名称"
+                className="w-full h-12 px-4 bg-gray-50 rounded-xl text-slate-800 border-none focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                autoFocus
+              />
+            </div>
+            
+            {/* 按钮组 */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 h-11 rounded-full border border-gray-200 text-slate-600 font-medium hover:bg-gray-50 active:scale-95 transition-all"
+              >
+                取消
+              </button>
+              
+              <button
+                onClick={handleCreateDeal}
+                disabled={creating}
+                className="flex-1 h-11 rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-70 disabled:active:scale-100"
+              >
+                {creating ? "创建中..." : "开启尽调"}
               </button>
             </div>
           </div>

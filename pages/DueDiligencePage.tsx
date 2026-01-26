@@ -3,9 +3,11 @@ import { ArrowLeft, Pencil, Mic, ChevronRight, FilePlus, Camera, Image as ImageI
 import { Toast, Dialog } from 'react-vant';
 import Mascot from '../components/Mascot';
 import { COLORS } from '../constants';
-import { DealRecord, DealReportStatusEnum } from '../types';
+import { DealRecord, DealReportStatusEnum, Resource } from '../types';
 import { dealService } from '../services/dealService';
 import { nativeBridge } from '@/services/nativeBridge';
+import { useRecordingStore } from '../store/useRecordingStore';
+import VoiceInputModal from '../components/VoiceInputModal';
 
 interface DueDiligencePageProps {
   deal: DealRecord | null;
@@ -39,6 +41,14 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   // 使用 ref 保存回调，避免依赖变化导致重复请求
   const onDealDetailLoadedRef = React.useRef(onDealDetailLoaded);
   onDealDetailLoadedRef.current = onDealDetailLoaded;
+
+  const { currentDealId } = useRecordingStore();
+  const [showLimitTips, setShowLimitTips] = useState(false);
+  const [voiceModalVisible, setVoiceModalVisible] = useState(false);
+  const [voiceModalInitialContent, setVoiceModalInitialContent] = useState('');
+  
+  // 上传状态锁，防止重复触发
+  const isUploadingRef = React.useRef(false);
 
   // 进入页面时请求详情（只在 deal.id 变化时请求）
   useEffect(() => {
@@ -99,7 +109,200 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const galleryInputRef = React.useRef<HTMLInputElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleUploadClick = (id: string) => {
+
+  // 监听原生文件选择回调 (及 Android ImageSelected) - 从 MaterialsListPage 迁移过来的完整逻辑
+  useEffect(() => {
+    // Android Image Upload Flow
+    const handleNativeImageUpload = async (localUrl: string) => {
+      if (!deal?.id) return;
+      if (isUploadingRef.current) return; // 防止重复触发
+      
+      isUploadingRef.current = true;
+      try {
+        Toast.loading({ message: '上传中...', duration: 0, forbidClick: true });
+        
+        // 1. 调用 Native 上传文件到 MinIO/OBS
+        const token = localStorage.getItem('zov-user-token') || '';
+        const uploadHost = 'http://68.79.42.215/report/upload/file'; // 硬编码
+
+        const params = {
+          host: uploadHost,
+          authorization: token,
+          filePath: localUrl,
+        };
+
+        console.log('[Native上传] Params:', JSON.stringify(params, null, 2));
+        console.log('[Native上传] 开始上传:', localUrl);
+        
+        const serverUrl = await new Promise<string>((resolve, reject) => {
+           const resultHandler = (res: any) => {
+             // 兼容 errno=0 或 success=true
+             const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
+             const isSuccess = res.success && (resultData?.success === true || resultData?.errno === 0);
+
+             if (isSuccess) {
+               const url = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
+               if (url) {
+                 nativeBridge.off('onUploadResult', resultHandler);
+                 resolve(url);
+               }
+             } else if (res.success && res.data?.percent !== undefined) {
+               // 进度
+               Toast.loading({ message: `上传中 ${res.data.percent}%...`, duration: 0 });
+             } else {
+               // 失败
+               if (res.success === false || (resultData && resultData.success === false)) {
+                 nativeBridge.off('onUploadResult', resultHandler);
+                 reject(new Error(resultData?.message || res.message || '上传失败'));
+               }
+             }
+           };
+
+           nativeBridge.on('onUploadResult', resultHandler);
+           nativeBridge.uploadInterviewFile(params);
+           
+           // 超时
+           setTimeout(() => {
+             nativeBridge.off('onUploadResult', resultHandler);
+             reject(new Error('上传超时'));
+           }, 60000);
+        });
+
+        console.log('[Native上传] 成功，URL:', serverUrl);
+
+        // 2. 调用后端绑定接口
+        const bindRes = await dealService.uploadDealResource(deal.id, [serverUrl]);
+        
+        Toast.clear();
+        if (bindRes.success) {
+          Toast.success('上传成功');
+          // 刷新详情
+          const detailRes = await dealService.getDealInstDetail(deal.id);
+          if (detailRes.success && detailRes.data) {
+             setDealDetail(detailRes.data);
+             onDealDetailLoadedRef.current?.(detailRes.data);
+          }
+        } else {
+          Toast.fail(bindRes.message || '保存失败');
+        }
+
+      } catch (error: any) {
+        Toast.clear();
+        console.error('Native upload flow failed:', error);
+        Toast.fail(error.message || '上传失败');
+      } finally {
+        isUploadingRef.current = false;
+      }
+    };
+
+    // 注册 imageSelected 监听 (直接使用 on 监听以便 cleanup)
+    const handleImageSelected = (res: any) => {
+        if (res.success && res.data && res.data.imageURL) {
+            handleNativeImageUpload(res.data.imageURL);
+        }
+    };
+    nativeBridge.on('imageSelected', handleImageSelected);
+
+    // Native 回调需传入两个参数：filePath 和 fileContent (Base64 string)
+    // Legacy / iOS handling
+    window.onFileSelected = (filePath: string, fileBase64?: string) => {
+      console.log('H5收到文件:', filePath, fileBase64 ? 'Has Content' : 'No Content');
+
+      // 从路径提取文件名
+      const fileName = filePath.split('/').pop() || `file_${Date.now()}`;
+
+      if (fileBase64) {
+        try {
+          // 将 Base64 转换为 File 对象
+          // 仅处理逗号后的部分（如果有前缀）
+          const base64Data = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64;
+          
+          // 简单的 Base64 解码
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          
+          // 推断类型
+          let mimeType = 'application/octet-stream';
+          const ext = fileName.split('.').pop()?.toLowerCase();
+          if (ext === 'png') mimeType = 'image/png';
+          else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
+          else if (ext === 'pdf') mimeType = 'application/pdf';
+          else if (ext === 'doc' || ext === 'docx') mimeType = 'application/msword';
+          
+          const blob = new Blob([byteArray], { type: mimeType });
+          const file = new File([blob], fileName, { type: mimeType });
+          
+          // 复用 handleFileChange 逻辑，但这里可以直接调 Service
+          if (deal?.id) {
+             handleUploadFileDirectly(deal.id, file);
+          }
+        } catch (e) {
+          console.error("Base64 convert failed:", e);
+          Toast.fail('文件解析失败');
+        }
+      }
+    };
+
+    return () => {
+      window.onFileSelected = undefined;
+      nativeBridge.off('imageSelected', handleImageSelected);
+    };
+  }, [deal?.id]);
+  
+  // 辅助函数：直接上传 File 对象
+  const handleUploadFileDirectly = async (dealId: string, file: File) => {
+      try {
+        Toast.loading({ message: '上传中...', duration: 0 });
+        const res = await dealService.uploadDealMaterial(dealId, file);
+        Toast.clear();
+        if (res.success) {
+          Toast.success('上传成功');
+           // 刷新详情
+           const detailRes = await dealService.getDealInstDetail(dealId);
+           if (detailRes.success && detailRes.data) {
+             setDealDetail(detailRes.data);
+             onDealDetailLoadedRef.current?.(detailRes.data);
+          }
+        } else {
+          Toast.fail(res.message || '上传失败');
+        }
+      } catch (error) {
+        Toast.clear();
+        console.error('Upload failed:', error);
+        Toast.fail('上传失败');
+      }
+  };
+
+
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    if (!deal?.id) {
+      Toast.fail('未找到尽调实例');
+      return;
+    }
+
+    const file = files[0];
+    handleUploadFileDirectly(deal.id, file);
+    
+    // 清空 input 以便再次选择同一文件
+    e.target.value = '';
+  };
+
+  const uploadOptions = [
+    { id: 'camera', label: '相机', icon: Camera },
+    { id: 'gallery', label: '相册', icon: ImageIcon },
+    { id: 'file', label: '文件', icon: FileText },
+    { id: 'voice', label: '语音录入', icon: Mic },
+  ];
+
+  const handleUploadClick = async (id: string) => {
     // 检测是否为安卓环境
     const isAndroid = /Android/i.test(navigator.userAgent) || (window as any)._dsbridge;
 
@@ -125,44 +328,35 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           fileInputRef.current?.click();
         }
         break;
+      case 'voice':
+        // 检查是否已有补充文本 (type='4')
+        const resources = dealDetail?.resources || [];
+        // 也需要合并 supplementary 字段
+        let allResources = [...resources];
+        if (dealDetail?.supplementary && Array.isArray(dealDetail.supplementary)) {
+             allResources.unshift(...(dealDetail.supplementary as Resource[]));
+        }
+
+        const supplementaryResource = allResources.find(r => r.type === '4');
+        if (supplementaryResource?.fileUrl) {
+          try {
+            Toast.loading({ message: '加载中...', duration: 0 });
+            const response = await fetch(supplementaryResource.fileUrl);
+            const text = await response.text();
+            Toast.clear();
+            setVoiceModalInitialContent(text);
+          } catch (error) {
+            Toast.clear();
+            console.error('Failed to load supplementary text:', error);
+            setVoiceModalInitialContent('');
+          }
+        } else {
+          setVoiceModalInitialContent('');
+        }
+        setVoiceModalVisible(true);
+        break;
     }
   };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    if (!currentDeal?.id) {
-      Toast.fail('未找到尽调实例');
-      return;
-    }
-
-    const file = files[0];
-    try {
-      Toast.loading({ message: '上传中...', duration: 0 });
-      const res = await dealService.uploadDealMaterial(currentDeal.id, file);
-      Toast.clear();
-
-      if (res.success) {
-        Toast.success('上传成功');
-      } else {
-        Toast.fail(res.message || '上传失败');
-      }
-    } catch (error) {
-      Toast.clear();
-      console.error('Upload failed:', error);
-      Toast.fail('上传失败');
-    }
-    
-    // 清空 input 以便再次选择同一文件
-    e.target.value = '';
-  };
-
-  const uploadOptions = [
-    { id: 'camera', label: '相机', icon: Camera },
-    { id: 'gallery', label: '相册', icon: ImageIcon },
-    { id: 'file', label: '文件', icon: FileText },
-  ];
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F8FA] relative">
       {/* 隐藏的文件输入框 */}
@@ -198,6 +392,16 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
       {/* NavBar */}
       <div className="relative z-10 flex items-center justify-between px-4 py-3">
+        {/* Custom Limit Tips Toast */}
+        {showLimitTips && (
+           <div className="fixed top-24 left-4 right-4 z-50 animate-[slideDown_0.3s_ease-out_forwards] flex justify-center">
+             <div className="bg-black/30 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
+               <span className="text-sm font-medium tracking-wide">
+                 您正有一个访谈正在进行中，暂时不支持开启新任务。
+               </span>
+             </div>
+           </div>
+        )}
         <button onClick={onBack} className="p-2 -ml-2 text-slate-700 hover:bg-white/50 rounded-full">
           <ArrowLeft size={24} />
         </button>
@@ -581,6 +785,14 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     }
                     return;
                   }
+
+                  // 校验是否有正在进行的访谈（悬浮窗存在 即 currentDealId 不为空）
+                  if (currentDealId && currentDealId !== currentDeal?.id) {
+                    setShowLimitTips(true);
+                    setTimeout(() => setShowLimitTips(false), 3000);
+                    return;
+                  }
+
                   onNavigateToRecording();
                 }}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold border ${
@@ -660,6 +872,29 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           )}
         </button>
       </div>
+
+      
+      {/* Voice Input Modal */}
+      <VoiceInputModal
+        visible={voiceModalVisible}
+        dealId={currentDeal?.id}
+        initialContent={voiceModalInitialContent}
+        onClose={() => {
+          setVoiceModalVisible(false);
+          setVoiceModalInitialContent(''); // 清空初始内容
+        }}
+        onSave={async (content) => {
+          console.log('Voice input content saved:', content);
+          // 刷新详情
+          if (currentDeal?.id) {
+             const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+             if (detailRes.success && detailRes.data) {
+                setDealDetail(detailRes.data);
+                onDealDetailLoadedRef.current?.(detailRes.data);
+             }
+          }
+        }}
+      />
     </div>
   );
 };

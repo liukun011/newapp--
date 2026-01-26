@@ -57,6 +57,14 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       }, 100);
     }
   }, [transcriptionList.length, activeTab]);
+  
+  // Update Store with current Deal ID when entering page
+  const setData = useRecordingStore(state => state.setData);
+  useEffect(() => {
+    if (deal?.id) {
+        setData({ dealId: deal.id });
+    }
+  }, [deal?.id, setData]);
 
   // 同步问题清单数据
   useEffect(() => {
@@ -476,7 +484,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         )}
 
         {/* Tabs */}
-        <div className="bg-white mt-1 border-t border-gray-100 z-10 sticky top-[60px]">
+        <div className="bg-white mt-1 border-t border-gray-100 z-10 transition-all">
           <div className="flex">
             <button
               className={`flex-1 py-3 text-sm font-medium relative transition-colors ${activeTab === 'questions' ? 'text-indigo-600' : 'text-gray-500'}`}
@@ -502,7 +510,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         {/* Scrollable Content Area */}
         <div 
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto px-4 scroll-smooth relative"
+          className="flex-1 h-0 w-full overflow-y-auto px-4 scroll-smooth relative"
+          style={{ WebkitOverflowScrolling: 'touch' }}
         >
 
           {/* Question List Tab */}
