@@ -168,21 +168,22 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* Profile */}
       <div className="flex flex-col items-center py-8 bg-white mb-3 shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
-        <div className="relative mb-3 cursor-pointer" onClick={handleAvatarClick}>
+        {/* <div className="relative mb-3 cursor-pointer" onClick={handleAvatarClick}> */}
+        <div className="relative mb-3">
           <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100">
             <img
-              src={avatar || "/talk-assistant/assets/mascot.png"}
+              src={"/talk-assistant/assets/default_avatar.png"}
               alt="User Avatar"
               className="w-full h-full object-cover"
               onError={(e) => {
                 // Fallback if image fails to load
-                e.currentTarget.src = "/talk-assistant/assets/mascot.png";
+                e.currentTarget.src = "/talk-assistant/assets/default_avatar.png";
               }}
             />
           </div>
-          <button className="absolute bottom-0 right-0 bg-[#4E3EF8] rounded-full p-1.5 border-2 border-white shadow-sm active:scale-95 transition-transform">
+          {/* <button className="absolute bottom-0 right-0 bg-[#4E3EF8] rounded-full p-1.5 border-2 border-white shadow-sm active:scale-95 transition-transform">
             <Edit2 size={10} className="text-white" />
-          </button>
+          </button> */}
         </div>
         <div className="flex items-center gap-2">
           <h2 className="text-[18px] font-bold text-slate-800">{userName || '未登录'}</h2>
