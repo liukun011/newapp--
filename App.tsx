@@ -574,7 +574,7 @@ const App: React.FC = () => {
 
                         // 更新 Zustand Store
                         setData({
-                          dealId: deal.id,
+                          // dealId: deal.id, // Move to active start
                           interviewInstId: instId,
                           title: instTitle || ''
                         });
@@ -661,7 +661,7 @@ const App: React.FC = () => {
 
                         // 更新 Zustand Store
                         setData({
-                          dealId: currentDeal.id,
+                          // dealId: currentDeal.id,
                           interviewInstId: instId,
                           title: instTitle || '',
                         });
@@ -742,7 +742,7 @@ const App: React.FC = () => {
                         
                         // 更新 Store
                         setData({
-                          dealId: currentDeal.id,
+                          // dealId: currentDeal.id,
                           interviewInstId: instId,
                           title: instTitle || ''
                         });

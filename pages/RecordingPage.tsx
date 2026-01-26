@@ -60,11 +60,9 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   
   // Update Store with current Deal ID when entering page
   const setData = useRecordingStore(state => state.setData);
-  useEffect(() => {
-    if (deal?.id) {
-        setData({ dealId: deal.id });
-    }
-  }, [deal?.id, setData]);
+
+  // useEffect removed to prevent auto-setting ID on view
+
 
   // 同步问题清单数据
   useEffect(() => {
@@ -411,6 +409,11 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   const startNativeRecord = () => {
     const surveyId = interviewInstId || '';
     console.log(`[H5] Calling startRecord with surveyId: ${surveyId}`);
+    
+    // Update global store only when recording starts
+    if (deal?.id) {
+      setData({ dealId: deal.id });
+    }
     // if (window.Android?.startRecord) {
     //   window.Android.startRecord(surveyId);
     // } else {

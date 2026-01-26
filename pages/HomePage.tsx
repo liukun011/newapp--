@@ -396,7 +396,8 @@ const HomePage: React.FC<HomePageProps> = ({
                           <h3 className="text-[16px] font-bold text-slate-800 truncate mb-1">
                             {item.interviewCust}
                           </h3>
-                          {item.status === '3' && (
+                          {/* 优先使用全局缓存判断是否访谈中 */}
+                          {(currentDealId === item.id) && (
                             <span className="px-2.5 py-1 bg-[#E0F7FA] text-[#00B5B5] text-[11px] font-medium rounded-lg">
                               访谈中
                             </span>
