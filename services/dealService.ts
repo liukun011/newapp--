@@ -215,6 +215,22 @@ export const dealService = {
   },
 
   /**
+   * 上传尽调资料
+   * POST /deal/upload-resource
+   * @param dealId 尽调实例 ID
+   * @param file 文件
+   */
+  uploadDealResource: (dealId: string, pathList: string[]) => {
+    return request<ApiResponse<any>>('/deal/upload-resource', {
+      method: 'POST',
+      data: {
+        id: dealId,
+        pathList: pathList
+      },
+    });
+  },
+
+  /**
    * 删除尽调资料
    * POST /deal/delete-file
    * @param dealId 尽调实例 ID

@@ -100,10 +100,101 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     }
   };
 
-  // 监听原生文件选择回调
+  // 上传状态锁，防止重复触发
+  const isUploadingRef = React.useRef(false);
+
+  // 监听原生文件选择回调 (及 Android ImageSelected)
   useEffect(() => {
+    // Android Image Upload Flow
+    const handleNativeImageUpload = async (localUrl: string) => {
+      if (!dealId) return;
+      if (isUploadingRef.current) return; // 防止重复触发
+      
+      isUploadingRef.current = true;
+      try {
+        Toast.loading({ message: '上传中...', duration: 0, forbidClick: true });
+        
+        // 1. 调用 Native 上传文件到 MinIO/OBS
+        const token = localStorage.getItem('zov-user-token') || '';
+        const uploadHost = 'http://68.79.42.215/report/upload/file'; // 硬编码，根据用户请求
+
+        const params = {
+          host: uploadHost,
+          authorization: token,
+          filePath: localUrl,
+        };
+
+        console.log('[Native上传] Params:', JSON.stringify(params, null, 2));
+        console.log('[Native上传] 开始上传:', localUrl);
+        
+        const serverUrl = await new Promise<string>((resolve, reject) => {
+           const resultHandler = (res: any) => {
+             // 兼容 errno=0 或 success=true
+             const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
+             const isSuccess = res.success && (resultData?.success === true || resultData?.errno === 0);
+
+             if (isSuccess) {
+               const url = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
+               if (url) {
+                 nativeBridge.off('onUploadResult', resultHandler);
+                 resolve(url);
+               }
+             } else if (res.success && res.data?.percent !== undefined) {
+               // 进度
+               Toast.loading({ message: `上传中 ${res.data.percent}%...`, duration: 0 });
+             } else {
+               // 失败
+               if (res.success === false || (resultData && resultData.success === false)) {
+                 nativeBridge.off('onUploadResult', resultHandler);
+                 reject(new Error(resultData?.message || res.message || '上传失败'));
+               }
+             }
+           };
+
+           nativeBridge.on('onUploadResult', resultHandler);
+           nativeBridge.uploadInterviewFile(params);
+           
+           // 超时
+           setTimeout(() => {
+             nativeBridge.off('onUploadResult', resultHandler);
+             reject(new Error('上传超时'));
+           }, 60000);
+        });
+
+        console.log('[Native上传] 成功，URL:', serverUrl);
+
+        // 2. 调用后端绑定接口
+        const bindRes = await dealService.uploadDealResource(dealId, [serverUrl]);
+        
+        Toast.clear();
+        if (bindRes.success) {
+          Toast.success('上传成功');
+          fetchDealDetail();
+        } else {
+          Toast.fail(bindRes.message || '保存失败');
+        }
+
+      } catch (error: any) {
+        Toast.clear();
+        console.error('Native upload flow failed:', error);
+        Toast.fail(error.message || '上传失败');
+      } finally {
+        isUploadingRef.current = false;
+      }
+    };
+
+    // 注册 imageSelected 监听 (直接使用 on 监听以便 cleanup)
+    const handleImageSelected = (res: any) => {
+        if (res.success && res.data && res.data.imageURL) {
+            handleNativeImageUpload(res.data.imageURL);
+        }
+    };
+    nativeBridge.on('imageSelected', handleImageSelected);
+
     // Native 回调需传入两个参数：filePath 和 fileContent (Base64 string)
+    // Legacy / iOS handling
     window.onFileSelected = (filePath: string, fileBase64?: string) => {
+       // ... existing logic ...
       console.log('H5收到文件:', filePath, fileBase64 ? 'Has Content' : 'No Content');
 
       // 从路径提取文件名
@@ -140,13 +231,17 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
           Toast.fail('文件解析失败');
         }
       } else {
-        console.warn('Native did not return file content (Base64)');
-        Toast.fail('未获取到文件内容');
+        // console.warn('Native did not return file content (Base64)');
+        // Toast.fail('未获取到文件内容');
+        // 如果没有 Base64，可能是 Android 发送了路径但不发内容，走 ImageSelected 逻辑？
+        // 但通常 onFileSelected 和 imageSelected 是分开的。
+        // 这里保持原样。
       }
     };
 
     return () => {
       window.onFileSelected = undefined;
+      nativeBridge.off('imageSelected', handleImageSelected);
     };
   }, [dealId, fetchDealDetail]);
 
