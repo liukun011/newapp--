@@ -332,63 +332,158 @@ const App: React.FC = () => {
     };
   }, [currentView, viewStack]);
 
+  // 提取上传转写逻辑
+  const uploadTranscriptionBatch = async () => {
+    const { transcriptionList, currentInterviewInstId } = useRecordingStore.getState();
+    
+    if (!currentInterviewInstId || transcriptionList.length === 0) {
+      return;
+    }
+
+    // 只上传最终结果（isFinal: true）
+    const finalResults = transcriptionList.filter(item => item.isFinal);
+    
+    if (finalResults.length === 0) {
+      return;
+    }
+
+    try {
+      const contentList = finalResults.map(item => ({
+        id: String(item.id),
+        content: item.content,
+      }));
+
+      console.log('[上传转写] 上传内容:', contentList.length, '条');
+      
+      await dealService.uploadInterviewInstContent({
+        interviewInstId: currentInterviewInstId,
+        contentList,
+      });
+
+      console.log('[上传转写] 上传成功');
+    } catch (error) {
+      console.error('[上传转写] 上传失败:', error);
+    }
+  };
+
+  // 提取上传录音文件逻辑
+  const uploadAudioFile = async (interviewInstId: string) => {
+    return new Promise((resolve) => {
+      const handleAudioList = async (response: any) => {
+        nativeBridge.off('getAudioList', handleAudioList);
+
+        if (response.success && response.data && response.data.list && response.data.list.length > 0) {
+          const latestAudio = response.data.list[0];
+          const fileUrl = (latestAudio.fileURL || "").trim();
+          
+          if (!fileUrl) {
+            resolve(false);
+            return;
+          }
+
+          const token = localStorage.getItem('zov-user-token') || '';
+          const uploadHost = 'http://68.79.42.215/report/upload/file';
+
+          const handleUploadResult = (res: any) => {
+            // 简单判断结果
+            const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
+            if (resultData && (resultData.success === true || resultData.errno === 0)) {
+               const uploadedUrl = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
+               if (uploadedUrl) {
+                   dealService.saveInterviewInstRecordFile({
+                       path: uploadedUrl,
+                       interviewInstId
+                   }).then(() => {
+                       console.log('[自动保存] 录音文件已绑定');
+                       resolve(true);
+                   }).catch(() => resolve(false));
+               } else {
+                   resolve(false);
+               }
+               nativeBridge.off('onUploadResult', handleUploadResult);
+            } else if (res.success === false || (resultData && resultData.success === false)) {
+               nativeBridge.off('onUploadResult', handleUploadResult);
+               resolve(false);
+            }
+          };
+
+          nativeBridge.on('onUploadResult', handleUploadResult);
+          nativeBridge.uploadInterviewFile({
+              host: uploadHost,
+              authorization: token,
+              filePath: fileUrl
+          });
+          
+          // Timeout 30s
+          setTimeout(() => {
+              nativeBridge.off('onUploadResult', handleUploadResult);
+              resolve(false);
+          }, 30000);
+
+        } else {
+          resolve(false);
+        }
+      };
+
+      nativeBridge.on('getAudioList', handleAudioList);
+      nativeBridge.getAudioList({ surveyId: interviewInstId, page: 0, pageSize: 999 });
+    });
+  };
+
+  // 监听录音中断
+  useEffect(() => {
+    const handleInterruption = async (response: any) => {
+      console.log('App.tsx: 收到中断回调', JSON.stringify(response));
+      
+      if (response.action === 'recordingInterrupted') {
+           const store = useRecordingStore.getState();
+           console.log('当前录音状态:', store.isRecording);
+
+           if (store.isRecording) {
+               console.log('正在执行中断保存流程...');
+               store.setIsRecording(false);
+               Toast.loading({ message: '录音被迫中断，正在保存...', forbidClick: true, duration: 0 });
+               
+               try {
+                   await Promise.all([
+                       uploadTranscriptionBatch(),
+                       store.currentInterviewInstId ? uploadAudioFile(store.currentInterviewInstId) : Promise.resolve()
+                   ]);
+                   Toast.success('录音已保存');
+               } catch (e) {
+                   console.error(e);
+                   Toast.fail('保存失败');
+               } finally {
+                   Toast.clear();
+                   store.reset();
+               }
+           } else {
+               console.log('无论是录音状态与否，都收到了中断信号');
+               // 可选：如果不在录音中，也提示一下，方便调试确认链路通畅
+               // Toast.info('收到中断信号(未在录音中)');
+           }
+      }
+    };
+
+    nativeBridge.on('recordingInterrupted', handleInterruption);
+    return () => nativeBridge.off('recordingInterrupted', handleInterruption);
+  }, []);
+
   // 监听实时转写结果
   useEffect(() => {
     let sentenceCount = 0; // 记录最终结果的句子数
-
-    const uploadTranscriptionBatch = async () => {
-      const { transcriptionList, currentInterviewInstId } = useRecordingStore.getState();
-      
-      if (!currentInterviewInstId || transcriptionList.length === 0) {
-        return;
-      }
-
-      // 只上传最终结果（isFinal: true）
-      const finalResults = transcriptionList.filter(item => item.isFinal);
-      
-      if (finalResults.length === 0) {
-        return;
-      }
-
-      try {
-        const contentList = finalResults.map(item => ({
-          id: String(item.id),
-          content: item.content,
-        }));
-
-        console.log('[上传转写] 上传内容:', contentList.length, '条');
-        
-        await dealService.uploadInterviewInstContent({
-          interviewInstId: currentInterviewInstId,
-          contentList,
-        });
-
-        console.log('[上传转写] 上传成功');
-      } catch (error) {
-        console.error('[上传转写] 上传失败:', error);
-      }
-    };
+    
+    // 这里的 uploadTranscriptionBatch 引用外部定义的函数
 
     const handleTranscription = (response: any) => {
       if (response.success && response.data) {
         const parsed = handleTranscriptionResult(response.data);
         
         if (parsed) {
-          // DEBUG: Custom overlay for parsed result in App.tsx
-          // let debugDiv = document.getElementById('debug-overlay-parsed');
-          // if (!debugDiv) {
-          //   debugDiv = document.createElement('div');
-          //   debugDiv.id = 'debug-overlay-parsed';
-          //   debugDiv.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:300px;background:rgba(0,0,20,0.9);color:#00ffff;z-index:100000;overflow:auto;padding:20px;font-family:monospace;font-size:14px;white-space:pre-wrap;word-break:break-all;border-top:2px solid cyan;';
-          //   debugDiv.onclick = () => document.body.removeChild(debugDiv!);
-          //   document.body.appendChild(debugDiv);
-          // }
-          // debugDiv.innerText = "--- PARSED (App.tsx) ---\n" + JSON.stringify(parsed, null, 2) + "\n\n(Click to Close)\n" + (debugDiv.innerText || "");
-
           const { text, isFinal } = parsed;
           const store = useRecordingStore.getState();
           const { transcriptionList, setTranscriptionList, addTranscriptionChunk, updateTempTranscription } = store;
-          const currentRoleId = '1'; // 当前说话人，可根据实际情况调整
+          const currentRoleId = '1';
           
           if (isFinal) {
             // 最终结果
@@ -425,35 +520,31 @@ const App: React.FC = () => {
               sentenceCount = 0; // 重置计数
             }
           } else {
-             // 中间结果 (type 1)，用户要求忽略内容（使用空字符串），但保持逻辑占位
+             // 中间结果
              const lastItem = transcriptionList[transcriptionList.length - 1];
              
              if (lastItem && String(lastItem.roleId) === String(currentRoleId)) {
-               // 这里的 text 被忽略，只拼接空字符串（或者根本不更新 content，只更新 timestamp）
                const updatedList = [...transcriptionList];
                updatedList[updatedList.length - 1] = {
                  ...lastItem,
-                 content: lastItem.content + "", // 拼接空字符串
+                 content: lastItem.content + "", 
                  timestamp: Date.now(),
                };
                setTranscriptionList(updatedList);
              } else {
-                // 如果是第一句就是中间结果，也需要创建一个占位（还是说直接忽略？）
-                // 用户说“能直接拼接空字符串上去吗”，如果是新的一句，空字符串就是 content: ""
                 addTranscriptionChunk({
                  id: `trans_${Date.now()}_${Math.random()}`,
-                 content: "", // 内容为空
+                 content: "", 
                  roleId: currentRoleId,
                  timestamp: Date.now(),
                  isFinal: false,
                 });
              }
           }
-
         }
       }
     };
-    
+
     nativeBridge.on('transcriptionResult', handleTranscription);
     
     return () => {

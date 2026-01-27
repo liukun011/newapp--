@@ -45,7 +45,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         console.error('Failed to update user info', e);
       }
     };
-
+ 
     fetchUserInfo();
   }, []);
 
