@@ -920,7 +920,13 @@ const App: React.FC = () => {
                   }}
                   isRecording={isRecording}
                   seconds={recordingSeconds}
-                  onToggleRecording={() => setIsRecording(!isRecording)}
+                  onToggleRecording={(forceState?: boolean) => {
+                    if (typeof forceState === 'boolean') {
+                      setIsRecording(forceState);
+                    } else {
+                      setIsRecording(!isRecording);
+                    }
+                  }}
                   interviewInstId={currentInterviewInstId || undefined}
                   interviewInstTitle={currentInterviewInstTitle || undefined}
                   onDealUpdate={(updatedDeal) => {

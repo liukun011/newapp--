@@ -17,7 +17,7 @@ interface RecordingPageProps {
   onHistoryClick?: () => void;
   isRecording: boolean;
   seconds: number;
-  onToggleRecording: () => void;
+  onToggleRecording: (forceState?: boolean) => void;
   interviewInstId?: string;
   interviewInstTitle?: string;
   onFinish?: () => void;
@@ -451,6 +451,12 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     isRecordingRef.current = isRecording;
   }, [isRecording]);
 
+  // 追踪最新的 onToggleRecording 函数，防止闭包陷阱
+  const onToggleRecordingRef = React.useRef(onToggleRecording);
+  useEffect(() => {
+    onToggleRecordingRef.current = onToggleRecording;
+  }, [onToggleRecording]);
+
   const startNativeRecord = async () => {
     let currentInstId = interviewInstId;
 
@@ -523,14 +529,15 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
               // 只有当前状态认为是“录音中”才去切换状态，防止用户已手动暂停导致的误操作
               if (isRecordingRef.current) {
                   Toast.fail('录音开启失败，请点击重试');
-                  onToggleRecording();
+                  // 使用 ref 调用最新的 onToggleRecording 并强制设为 false
+                  onToggleRecordingRef.current(false);
               }
           }
        };
        
        nativeBridge.on('getRecordingStatus', statusHandler);
        nativeBridge.getRecordingStatus();
-    }, 1000);
+    }, 2000);
   };
 
   useEffect(() => {
@@ -743,7 +750,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                 </>
               ) : (
                 <>
-                  <Mic size={18} className="mr-2" /> {seconds === 0 ? '开始录音' : '继续录音'}
+                  <Mic size={18} className="mr-2" /> {(seconds === 0) ? '开始录音' : '继续录音'}
                 </>
               )}
             </Button>
