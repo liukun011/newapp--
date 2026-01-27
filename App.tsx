@@ -368,8 +368,33 @@ const App: React.FC = () => {
 
   // 提取上传录音文件逻辑
   const uploadAudioFile = async (interviewInstId: string) => {
+    console.log('[自动保存] 开始尝试上传录音文件...');
     return new Promise((resolve) => {
+      let isResolved = false;
+      
+      // 1. 全局超时保护 (10秒)，防止死锁
+      const safeTimeout = setTimeout(() => {
+        if (!isResolved) {
+          isResolved = true;
+          console.warn('[自动保存] 上传流程超时，强制结束');
+          // 移除监听，防止后续回调干扰
+          nativeBridge.off('getAudioList');
+          nativeBridge.off('onUploadResult');
+          resolve(false);
+        }
+      }, 10000);
+
+      // 安全的 resolve 包装
+      const safeResolve = (val: boolean) => {
+          if (!isResolved) {
+              isResolved = true;
+              clearTimeout(safeTimeout);
+              resolve(val);
+          }
+      };
+
       const handleAudioList = async (response: any) => {
+        console.log('[自动保存] getAudioList回调:', JSON.stringify(response));
         nativeBridge.off('getAudioList', handleAudioList);
 
         if (response.success && response.data && response.data.list && response.data.list.length > 0) {
@@ -377,14 +402,17 @@ const App: React.FC = () => {
           const fileUrl = (latestAudio.fileURL || "").trim();
           
           if (!fileUrl) {
-            resolve(false);
+            console.warn('[自动保存] 录音文件URL为空');
+            safeResolve(false);
             return;
           }
 
+          console.log('[自动保存] 准备上传文件:', fileUrl);
           const token = localStorage.getItem('zov-user-token') || '';
           const uploadHost = 'http://68.79.42.215/report/upload/file';
 
           const handleUploadResult = (res: any) => {
+            console.log('[自动保存] 上传结果回调:', JSON.stringify(res));
             // 简单判断结果
             const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
             if (resultData && (resultData.success === true || resultData.errno === 0)) {
@@ -394,16 +422,21 @@ const App: React.FC = () => {
                        path: uploadedUrl,
                        interviewInstId
                    }).then(() => {
-                       console.log('[自动保存] 录音文件已绑定');
-                       resolve(true);
-                   }).catch(() => resolve(false));
+                       console.log('[自动保存] 录音文件已绑定成功');
+                       safeResolve(true);
+                   }).catch((err) => {
+                       console.error('[自动保存] 绑定文件失败', err);
+                       safeResolve(false);
+                   });
                } else {
-                   resolve(false);
+                   console.warn('[自动保存] 未获取到上传后的URL');
+                   safeResolve(false);
                }
                nativeBridge.off('onUploadResult', handleUploadResult);
             } else if (res.success === false || (resultData && resultData.success === false)) {
+               console.warn('[自动保存] 上传失败');
                nativeBridge.off('onUploadResult', handleUploadResult);
-               resolve(false);
+               safeResolve(false);
             }
           };
 
@@ -414,18 +447,14 @@ const App: React.FC = () => {
               filePath: fileUrl
           });
           
-          // Timeout 30s
-          setTimeout(() => {
-              nativeBridge.off('onUploadResult', handleUploadResult);
-              resolve(false);
-          }, 30000);
-
         } else {
-          resolve(false);
+          console.warn('[自动保存] 未找到录音文件列表');
+          safeResolve(false);
         }
       };
 
       nativeBridge.on('getAudioList', handleAudioList);
+      console.log('[自动保存] 调用 getAudioList...');
       nativeBridge.getAudioList({ surveyId: interviewInstId, page: 0, pageSize: 999 });
     });
   };

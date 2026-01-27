@@ -406,19 +406,54 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     }
   };
 
-  const startNativeRecord = () => {
-    const surveyId = interviewInstId || '';
+  const startNativeRecord = async () => {
+    let currentInstId = interviewInstId;
+
+    // 如果 currentInstId 为空（例如中断后 Reset 了），需要重新创建
+    if (!currentInstId && deal?.id) {
+        try {
+            Toast.loading({ message: '准备录音环境...', forbidClick: true, duration: 0 });
+            const createRes = await dealService.createInterviewInst({
+                interviewDealInstId: deal.id,
+                interviewCustom: deal.interviewCust || '未命名客户'
+            });
+            Toast.clear();
+
+            if (createRes.success && createRes.data) {
+                // 兼容处理：data可能是直接的ID，也或者是包含id的对象
+                const rawData = createRes.data;
+                const newId = (typeof rawData === 'object' && rawData.interviewInstId) ? rawData.interviewInstId : rawData;
+                currentInstId = String(newId);
+                
+                const instTitle = deal.interviewCust ? `${deal.interviewCust}的访谈` : '新访谈';
+                console.log(`[H5] Re-created interview instance: ${currentInstId}`);
+                
+                // 更新 Store
+                setData({
+                    interviewInstId: currentInstId,
+                    title: instTitle,
+                    dealId: deal.id 
+                });
+            } else {
+                Toast.fail('创建访谈失败，无法开始录音');
+                return;
+            }
+        } catch (e) {
+            console.error(e);
+            Toast.clear();
+            Toast.fail('网络错误，无法开始录音');
+            return;
+        }
+    }
+
+    const surveyId = currentInstId || '';
     console.log(`[H5] Calling startRecord with surveyId: ${surveyId}`);
     
     // Update global store only when recording starts
     if (deal?.id) {
       setData({ dealId: deal.id });
     }
-    // if (window.Android?.startRecord) {
-    //   window.Android.startRecord(surveyId);
-    // } else {
-    //   Toast.fail('Native interface not found');
-    // }
+
     nativeBridge.startRecordingWithParams({ surveyId });
     onToggleRecording();
   };
