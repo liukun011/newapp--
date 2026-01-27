@@ -593,7 +593,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
       {/* Main Content */}
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto bg-[#F7F8FA]">
+      <div className="flex-1 overflow-y-auto bg-[#F7F8FA] pb-24">
 
         {/* Tab 1: Upload */}
         {activeTab === 'upload' && (
@@ -926,11 +926,12 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       </div>
 
       {/* Fixed Bottom Bar */}
-      <div className="bg-white p-6 pb-8 border-t border-gray-100 flex gap-4 shadow-[0_-4px_10px_rgba(0,0,0,0.03)] sticky bottom-0 z-20">
+      {/* Fixed Bottom Bar - Matching DueDiligencePage style */}
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30 flex gap-4">
         <Button
           variant="secondary"
           block
-          className="flex-1 !rounded-full !border-indigo-100 !text-indigo-600 !h-12 !text-[16px]"
+          className="flex-1 !rounded-full !bg-white !border-indigo-100 !text-indigo-600 !h-12 !text-[16px] shadow-lg shadow-indigo-100/50"
           onClick={onBack}
         >
           <Check size={18} className="mr-2" /> 确定
@@ -939,7 +940,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         <Button
           variant="primary"
           block
-          className="flex-1 !rounded-full !h-12 !text-[16px] shadow-indigo-500/25"
+          className="flex-1 !rounded-full !h-12 !text-[16px] shadow-lg shadow-indigo-500/30"
           onClick={onStartInterview}
         >
           <Mic size={18} className="mr-2" /> 开启访谈

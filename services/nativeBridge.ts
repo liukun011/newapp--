@@ -100,8 +100,15 @@ class NativeBridgeService {
       } else {
         dsbridge.call(action);
       }
-    }else {
+    } else {
       console.warn('[NativeBridge] Not in native environment');
+      // 模拟失败回调，防止 Promise 对应的 await 永远挂起
+      // 这样业务层会接收到 success: false，从而继续执行后续逻辑（如跳转页面）
+      this.handleNativeCallback({
+        action,
+        success: false,
+        message: 'Not in native environment'
+      });
     }
   }
 
