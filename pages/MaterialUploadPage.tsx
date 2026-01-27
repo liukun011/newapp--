@@ -314,6 +314,19 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     };
     nativeBridge.on('imageSelected', handleImageSelected);
 
+    // 监听文件选择回调
+    const handleFileSelected = (res: any) => {
+        // 根据提供的结构：res.data.fileURL
+        if (res.success && res.data && res.data.fileURL) {
+             const path = res.data.fileURL;
+             console.log('[MaterialUploadPage] 收到文件选择回调:', path);
+             handleNativeImageUpload(path);
+        } else {
+             console.warn('[MaterialUploadPage] 文件选择回调数据格式不匹配:', JSON.stringify(res));
+        }
+    };
+    nativeBridge.on('fileSelected', handleFileSelected);
+
     // Native 回调需传入两个参数：filePath 和 fileContent (Base64 string)
     // Legacy / iOS handling
     window.onFileSelected = (filePath: string, fileBase64?: string) => {
@@ -359,36 +372,22 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     return () => {
       window.onFileSelected = undefined;
       nativeBridge.off('imageSelected', handleImageSelected);
+      nativeBridge.off('fileSelected', handleFileSelected);
     };
   }, [deal?.id]); // 依赖 deal.id 以确保 handleUploadFile 闭包中有最新 ID
 
 
 
   const handleUploadClick = async (id: string) => {
-    // 检测是否为安卓环境
-    const isAndroid = /Android/i.test(navigator.userAgent) || (window as any)._dsbridge;
-
     switch (id) {
       case 'camera':
-        if (isAndroid) {
-          nativeBridge.openCamera();
-        } else {
-          cameraInputRef.current?.click();
-        }
+        nativeBridge.openCamera();
         break;
       case 'gallery':
-        if (isAndroid) {
-          nativeBridge.openPhotoLibrary();
-        } else {
-          galleryInputRef.current?.click();
-        }
+        nativeBridge.openPhotoLibrary();
         break;
       case 'file':
-        if (isAndroid) {
-          nativeBridge.chooseFile();
-        } else {
-          fileInputRef.current?.click();
-        }
+        nativeBridge.chooseFile();
         break;
       case 'voice':
         // 检查是否已有补充文本，如果有则加载内容

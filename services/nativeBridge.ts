@@ -211,6 +211,17 @@ class NativeBridgeService {
   }
 
   /**
+   * 监听文件选择回调
+   */
+  onFileSelected(callback: (data: any) => void) {
+      this.on('fileSelected', (response) => {
+          if (response.success && response.data) {
+              callback(response.data);
+          }
+      });
+  }
+
+  /**
    * 打开相机
    */
   openCamera() {

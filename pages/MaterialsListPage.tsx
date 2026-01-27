@@ -183,6 +183,20 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     };
     nativeBridge.on('imageSelected', handleImageSelected);
 
+    // 监听文件选择回调
+    const handleFileSelected = (res: any) => {
+        // 根据提供的结构：res.data.fileURL
+        if (res.success && res.data && res.data.fileURL) {
+             const path = res.data.fileURL;
+             console.log('[MaterialsListPage] 收到文件选择回调:', path);
+             handleNativeImageUpload(path);
+        } else {
+             // 兼容旧逻辑或错误情况
+             console.warn('[MaterialsListPage] 文件选择回调数据格式不匹配:', JSON.stringify(res));
+        }
+    };
+    nativeBridge.on('fileSelected', handleFileSelected);
+
     // Native 回调需传入两个参数：filePath 和 fileContent (Base64 string)
     // Legacy / iOS handling
     window.onFileSelected = (filePath: string, fileBase64?: string) => {
@@ -234,6 +248,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     return () => {
       window.onFileSelected = undefined;
       nativeBridge.off('imageSelected', handleImageSelected);
+      nativeBridge.off('fileSelected', handleFileSelected);
     };
   }, [dealId, fetchDealDetail]);
 
@@ -243,34 +258,15 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleUploadClick = async (id: 'camera' | 'gallery' | 'file' | 'voice') => {
-    // 检测是否为安卓环境 (根据userAgent或bridge存在性)
-    const isAndroid = /Android/i.test(navigator.userAgent) || (window as any)._dsbridge;
-
     switch (id) {
       case 'camera':
-        if (isAndroid) {
-          nativeBridge.openCamera();
-        } else {
-          // iOS: 使用 capture="environment" 的 input 直接调起相机
-          // 这里需要确保 cameraInputRef 对应的 input 标签有 capture 属性
-          cameraInputRef.current?.click();
-        }
+        nativeBridge.openCamera();
         break;
       case 'gallery':
-        if (isAndroid) {
-          nativeBridge.openPhotoLibrary();
-        } else {
-          // iOS: 使用 accept="image/*" 的 input 调起照片选择
-          galleryInputRef.current?.click();
-        }
+        nativeBridge.openPhotoLibrary();
         break;
       case 'file':
-        if (isAndroid) {
-          nativeBridge.chooseFile();
-        } else {
-          // iOS: 调起文件选择
-          fileInputRef.current?.click();
-        }
+        nativeBridge.chooseFile();
         break;
       case 'voice':
         // 检查是否已有补充文本，如果有则加载内容
