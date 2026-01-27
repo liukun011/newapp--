@@ -94,6 +94,43 @@ const HomePage: React.FC<HomePageProps> = ({
     return () => clearInterval(interval);
   }, [bannerItems.length]);
 
+  // Header 显隐控制
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollTop = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // 处理滚动，控制 Header 显隐
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    
+    // 底部边界检测：如果接近底部，强制隐藏 Header
+    // 增加容错(scrollHeight - clientHeight - 20)
+    const isAtBottom = scrollHeight > clientHeight && (scrollTop + clientHeight >= scrollHeight - 20);
+    if (isAtBottom) {
+      if (isHeaderVisible) {
+        setIsHeaderVisible(false);
+      }
+      lastScrollTop.current = scrollTop;
+      return;
+    }
+
+    // 如果回到了顶部（或者非常接近顶部），显示 Header
+    if (scrollTop <= 10) {
+      if (!isHeaderVisible) {
+        setIsHeaderVisible(true);
+      }
+      lastScrollTop.current = scrollTop;
+      return;
+    }
+
+    // 只要离开顶部一定距离，就隐藏 Header
+    if (scrollTop > 60 && isHeaderVisible) {
+      setIsHeaderVisible(false);
+    }
+    
+    lastScrollTop.current = scrollTop;
+  };
+
   const fetchDeals = async (showGlobalLoading = true) => {
     if (showGlobalLoading) setLoading(true);
     try {
@@ -225,7 +262,7 @@ const HomePage: React.FC<HomePageProps> = ({
       />
 
       {/* Header Area */}
-      <div className="bg-gradient-to-b from-[#E0EAFF] to-[#F7F8FA] px-4 pt-12 pb-4 flex-shrink-0 relative">
+      <div className="bg-gradient-to-b from-[#E0EAFF] to-[#F7F8FA] px-4 pt-12 flex-shrink-0 relative transition-all duration-300 ease-in-out">
         
         {/* Custom Limit Tips Toast */}
         {showLimitTips && (
@@ -239,7 +276,7 @@ const HomePage: React.FC<HomePageProps> = ({
         )}
 
         {/* Header: Search & Bell */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-4">
           {/* Search Box */}
           <div className="flex-1 relative">
             <input
@@ -269,38 +306,44 @@ const HomePage: React.FC<HomePageProps> = ({
           </button>
         </div>
 
-        {/* AI Analysis Banner - Carousel */}
-        <div className="bg-gradient-to-r from-[#EAF2FF] to-[#DCE9FF] rounded-2xl p-5 mb-2 relative overflow-hidden shadow-sm">
-          <div className="relative z-10 max-w-[60%]">
-             <h2 className="text-[19px] font-black text-[#1A4B8B] mb-2 leading-tight transition-all duration-500">
-               {bannerItems[currentBannerIndex].title}
-             </h2>
-             <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90 transition-all duration-500">
-               {bannerItems[currentBannerIndex].description}
-             </p>
-             <div className="mt-3 flex gap-1.5">
-               {bannerItems.map((_, index) => (
-                 <button
-                   key={index}
-                   onClick={() => setCurrentBannerIndex(index)}
-                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                     index === currentBannerIndex 
-                       ? 'w-4 bg-white' 
-                       : 'w-1.5 bg-white/60 hover:bg-white/80'
-                   }`}
-                   aria-label={`切换到第${index + 1}个横幅`}
-                 />
-               ))}
-             </div>
-          </div>
-          
-          {/* Right Image */}
-          <div className="absolute top-0 right-0 bottom-0 w-[45%]">
-             <img 
-               src="/talk-assistant/assets/home.png" 
-               alt="AI Analysis" 
-               className="w-full h-full object-contain object-right-bottom scale-110 translate-y-2 translate-x-2"
-             />
+        {/* AI Analysis Banner - Carousel - Collapsible Container */}
+        <div 
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+             isHeaderVisible ? 'max-h-[180px] opacity-100 mb-2' : 'max-h-0 opacity-0 mb-0'
+          }`}
+        >
+          <div className="bg-gradient-to-r from-[#EAF2FF] to-[#DCE9FF] rounded-2xl p-5 relative shadow-sm h-full">
+            <div className="relative z-10 max-w-[60%]">
+              <h2 className="text-[19px] font-black text-[#1A4B8B] mb-2 leading-tight transition-all duration-500">
+                {bannerItems[currentBannerIndex].title}
+              </h2>
+              <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90 transition-all duration-500">
+                {bannerItems[currentBannerIndex].description}
+              </p>
+              <div className="mt-3 flex gap-1.5">
+                {bannerItems.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentBannerIndex(index)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      index === currentBannerIndex 
+                        ? 'w-4 bg-white' 
+                        : 'w-1.5 bg-white/60 hover:bg-white/80'
+                    }`}
+                    aria-label={`切换到第${index + 1}个横幅`}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            {/* Right Image */}
+            <div className="absolute top-0 right-0 bottom-0 w-[45%]">
+              <img 
+                src="/talk-assistant/assets/home.png" 
+                alt="AI Analysis" 
+                className="w-full h-full object-contain object-right-bottom scale-110 translate-y-2 translate-x-2"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -341,7 +384,11 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto pb-24 min-h-0 -mx-4 px-4 scroll-smooth">
+        <div 
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto pb-32 min-h-0 -mx-4 px-4 scroll-smooth"
+        >
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -459,16 +506,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
 
         {/* Floating Action Button (Create New) */}
-        <button
-          onClick={() => {
-            setNewCustomerName("");
-            setShowCreateModal(true);
-          }}
-          className="absolute right-6 bottom-6 w-14 h-14 bg-indigo-600 rounded-full shadow-lg shadow-indigo-500/40 flex items-center justify-center text-white active:scale-95 transition-transform z-30"
-          aria-label="新建尽调"
-        >
-          <Plus size={28} strokeWidth={2.5} />
-        </button>
+
 
       {/* 删除确认弹框 - Portal to Body */}
       {showDeleteConfirm && createPortal(
