@@ -349,7 +349,7 @@ const App: React.FC = () => {
 
     try {
       const contentList = finalResults.map(item => ({
-        id: String(item.id),
+        id: item.roleId,
         content: item.content,
       }));
 
@@ -923,6 +923,12 @@ const App: React.FC = () => {
                   onToggleRecording={() => setIsRecording(!isRecording)}
                   interviewInstId={currentInterviewInstId || undefined}
                   interviewInstTitle={currentInterviewInstTitle || undefined}
+                  onDealUpdate={(updatedDeal) => {
+                    console.log('[App] Received deal update from RecordingPage', updatedDeal);
+                    if (currentDeal && updatedDeal.id === currentDeal.id) {
+                      setCurrentDeal({ ...currentDeal, ...updatedDeal });
+                    }
+                  }}
                   onFinish={() => {
                     // 确保回到尽调详情页, 并重置返回路径为首页
                     setPreviousView(View.HOME);

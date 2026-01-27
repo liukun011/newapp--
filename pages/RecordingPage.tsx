@@ -3,9 +3,9 @@ import { ArrowLeft, History, Pause, Mic, Square, ChevronDown, ChevronUp, CheckCi
 import { Dialog, Toast } from 'react-vant';
 import SoundWave from '../components/SoundWave';
 import Button from '../components/Button';
-import { MOCK_QUESTIONS } from '../constants';
 import { Question, DealRecord } from '../types';
 import { dealService } from '../services/dealService';
+
 import { useRecordingStore } from '../store/useRecordingStore';
 import { nativeBridge } from '../services/nativeBridge';
 
@@ -21,6 +21,7 @@ interface RecordingPageProps {
   interviewInstId?: string;
   interviewInstTitle?: string;
   onFinish?: () => void;
+  onDealUpdate?: (deal: DealRecord) => void;
 }
 
 const RecordingPage: React.FC<RecordingPageProps> = ({
@@ -32,10 +33,11 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   onToggleRecording,
   interviewInstId,
   interviewInstTitle,
-  onFinish
+  onFinish,
+  onDealUpdate
 }) => {
   const [activeTab, setActiveTab] = useState<'questions' | 'transcription'>('questions');
-  const [questions, setQuestions] = useState<Question[]>(MOCK_QUESTIONS);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [expandedQuestion, setExpandedQuestion] = useState<number | string | null>(null);
   const { transcriptionList, setTranscriptionList } = useRecordingStore();
 
@@ -43,6 +45,20 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
   // Scroll container ref
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // 刷新 Deal 详情
+  const refreshDealInfo = async () => {
+     if (!deal?.id) return;
+     try {
+         const res = await dealService.getDealInstDetail(deal.id);
+         if (res.success && res.data && onDealUpdate) {
+            //  console.log('[RecordingPage] 刷新 Deal 详情成功');
+             onDealUpdate(res.data);
+         }
+     } catch (error) {
+         console.error('[RecordingPage] 刷新 Deal 详情失败', error);
+     }
+  };
 
   // Scroll to bottom when list updates or tab becomes active
   useEffect(() => {
@@ -55,8 +71,16 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
           behavior: 'smooth'
         });
       }, 100);
+    } else if (activeTab === 'questions') {
+      // console.log('[deal] 切换到问题列表，刷新数据');
+      refreshDealInfo();
     }
   }, [transcriptionList.length, activeTab]);
+
+  // 初始化时也刷新一次
+  useEffect(() => {
+    refreshDealInfo();
+  }, [deal?.id]);
   
   // Update Store with current Deal ID when entering page
   const setData = useRecordingStore(state => state.setData);
@@ -76,6 +100,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       setQuestions(backendQuestions);
     }
   }, [deal]);
+
+
   useEffect(() => {
     // 只有在以下情况才调用接口获取历史转写记录：
     // 1. 有 interviewInstId
@@ -144,6 +170,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       console.error('[上传转写] 上传失败:', error);
     }
   };
+
+
 
   // 上传锁
   const isUploadingRef = React.useRef(false);
@@ -278,6 +306,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
                     nativeBridge.uploadInterviewFile(params);
 
+
                     // 设置超时
                     setTimeout(() => {
                        nativeBridge.off('onUploadResult', handleUploadResult);
@@ -376,25 +405,35 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         }
       })
       .catch(() => {
-        // 取消，什么都不做
+        // 取消结束
       });
   };
 
+
+
   const [countdown, setCountdown] = useState<number>(0);
 
-  const handleToggleWrapper = () => {
+  const handleToggleWrapper = async () => {
     if (isRecording) {
       // 停止录音（暂停）
       console.log("[H5] calling stopRecord...");
-      // if (window.Android?.stopRecord) {
-      //   try {\n      //     window.Android.stopRecord();
-      //   } catch (e) { console.error(e); }
-      // }
-      nativeBridge.stopRecording();
+      nativeBridge.stopRecording(); 
+      
       onToggleRecording();
       
-      // 暂停时上传转写内容和录音文件
-      uploadTranscriptionContent();
+      // 暂停时先尝试上传转写内容
+      await uploadTranscriptionContent();
+      
+      // 上传后再刷新 Deal 详情，确保获取最新状态
+      refreshDealInfo();
+
+      // 延迟刷新：后端生成答案可能需要时间，非阻塞式轮询更新
+      setTimeout(() => refreshDealInfo(), 2500);
+      setTimeout(() => refreshDealInfo(), 5000);
+      setTimeout(() => refreshDealInfo(), 10000);
+      setTimeout(() => refreshDealInfo(), 15000);
+
+      // 同时上传录音文件
       uploadRecordingFile();
     } else {
       if (seconds === 0) {
@@ -405,6 +444,12 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       }
     }
   };
+
+  // 追踪 isRecording 最新状态，用于异步回调中判断
+  const isRecordingRef = React.useRef(isRecording);
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
 
   const startNativeRecord = async () => {
     let currentInstId = interviewInstId;
@@ -449,13 +494,43 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     const surveyId = currentInstId || '';
     console.log(`[H5] Calling startRecord with surveyId: ${surveyId}`);
     
-    // Update global store only when recording starts
+    // Update global store
     if (deal?.id) {
       setData({ dealId: deal.id });
     }
 
-    nativeBridge.startRecordingWithParams({ surveyId });
+    nativeBridge.startRecordingWithParams({ surveyId, roleType: 2 });
     onToggleRecording();
+    // 手动更新 ref 以应对可能的 React 异步更新延迟，确保定时器中能读到预期状态
+    isRecordingRef.current = true;
+
+    // 延时检测录音是否真正开启成功
+    setTimeout(() => {
+       const statusHandler = (response: any) => {
+          nativeBridge.off('getRecordingStatus', statusHandler);
+          console.log('[RecordingPage] Check Recording Status:', response);
+
+          // 判定失败的条件: success为false，或者 data 明确表示未录音 (0, false, '0', 'false')
+          // 注意: 具体根据 Native 返回值调整。这里假设 data 为 true/1/'1'/object 表示成功
+          const isRecordingActive = response.success && 
+                                    response.data !== false && 
+                                    response.data !== 0 && 
+                                    response.data !== '0' && 
+                                    response.data !== 'false';
+          
+          if (!isRecordingActive) {
+              console.warn('[RecordingPage] Native recording failed to start.');
+              // 只有当前状态认为是“录音中”才去切换状态，防止用户已手动暂停导致的误操作
+              if (isRecordingRef.current) {
+                  Toast.fail('录音开启失败，请点击重试');
+                  onToggleRecording();
+              }
+          }
+       };
+       
+       nativeBridge.on('getRecordingStatus', statusHandler);
+       nativeBridge.getRecordingStatus();
+    }, 1000);
   };
 
   useEffect(() => {

@@ -41,42 +41,6 @@ export const LOGIN_SLIDES = [
   }
 ];
 
-// Mock Questions for Due Diligence
-export const MOCK_QUESTIONS: Question[] = [
-  { 
-    id: 1, 
-    text: "实际控制人及主要股东名单", 
-    isAnswered: true,
-    details: "需确认持股比例超过5%的所有自然人及法人股东，并核对最新的工商变更记录。" 
-  },
-  { 
-    id: 2, 
-    text: "近三年主营业务收入及增长率", 
-    isAnswered: false,
-    details: "重点关注2021-2023年的审计报告数据，区分核心业务与非核心业务收入。"
-  },
-  { 
-    id: 3, 
-    text: "实际控制人及主要股东名单 (重复核实)", 
-    isAnswered: false 
-  },
-  { 
-    id: 4, 
-    text: "近三年主营业务收入及增长率 (财务)", 
-    isAnswered: false 
-  },
-  { 
-    id: 5, 
-    text: "核心管理层是否存在竞业禁止协议冲突", 
-    isAnswered: false 
-  },
-  { 
-    id: 6, 
-    text: "研发投入资本化处理是否符合会计准则", 
-    isAnswered: false 
-  },
-];
-
 // Mock Transcription Chat
 export const MOCK_CHAT: ChatMessage[] = [
   {

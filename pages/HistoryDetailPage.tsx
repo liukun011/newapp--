@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Play, Pause, RotateCcw, RotateCw, ChevronDown, ChevronUp, CheckCircle, User } from 'lucide-react';
 import { Toast } from 'react-vant';
 import Button from '../components/Button';
-import { MOCK_QUESTIONS } from '../constants';
 import { Question, DealRecord } from '../types';
 import { dealService } from '../services/dealService';
 
@@ -20,7 +19,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
   onBack
 }) => {
   const [activeTab, setActiveTab] = useState<'questions' | 'transcription'>('questions');
-  const [questions, setQuestions] = useState<Question[]>(MOCK_QUESTIONS);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [expandedQuestion, setExpandedQuestion] = useState<number | string | null>(null);
   const [transcriptionList, setTranscriptionList] = useState<any[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
