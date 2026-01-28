@@ -36,7 +36,15 @@ instance.interceptors.request.use(
 // 响应拦截器：处理状态码
 instance.interceptors.response.use(
   (response) => {
-    return response.data;
+    console.log('response', response);
+    const res = response.data;
+    // 全局处理业务逻辑错误
+    if (res && typeof res === 'object' && res.success === false) {
+       const msg = res.message || '请求失败';
+       Toast.fail(msg);
+       return Promise.reject(new Error(msg));
+    }
+    return res;
   },
   (error) => {
     const message = error.response?.data?.message || error.message || '网络错误';
@@ -50,7 +58,7 @@ instance.interceptors.response.use(
       // 延迟触发跳转事件，让用户能看清提示 (可选，如果不延迟，Toast 可能会因为页面切换闪烁，但 react-vant Toast 默认是单例 portal，应该没问题)
       setTimeout(() => {
         window.dispatchEvent(new Event('unauthorized'));
-      }, 1000); 
+      }, 1000);
     }
     
     return Promise.reject(new Error(message));

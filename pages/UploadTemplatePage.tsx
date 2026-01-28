@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import { Toast } from 'react-vant';
 import Button from '../components/Button';
 import { templateService } from '../services/templateService';
+import { nativeBridge } from '../services/nativeBridge';
 
 interface UploadTemplatePageProps {
   onBack: () => void;
@@ -17,43 +20,136 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
   onViewList
 }) => {
   const [templateName, setTemplateName] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<{name: string, url: string} | null>(null);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  
+  // 上传状态锁
+  const isUploadingRef = useRef(false);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
+  // 处理Native文件上传
+  const uploadNativeFile = async (localPath: string) => {
+      if (isUploadingRef.current) return;
+      isUploadingRef.current = true;
+      
+      try {
+          Toast.loading({ message: '文件处理中...', duration: 0, forbidClick: true });
+          
+          const token = localStorage.getItem('zov-user-token') || '';
+          const uploadHost = 'http://68.79.42.215/report/upload/file'; // 硬编码
+
+          const params = {
+              host: uploadHost,
+              authorization: token,
+              filePath: localPath,
+          };
+          
+          console.log('[模板上传] 开始上传文件:', localPath);
+
+          const serverUrl = await new Promise<string>((resolve, reject) => {
+               const resultHandler = (res: any) => {
+                   const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
+                   const isSuccess = res.success && (resultData?.success === true || resultData?.errno === 0);
+
+                   if (isSuccess) {
+                       const url = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
+                       if (url) {
+                           nativeBridge.off('onUploadResult', resultHandler);
+                           resolve(url);
+                       }
+                   } else if (res.success && res.data?.percent !== undefined) {
+                       Toast.loading({ message: `上传中 ${res.data.percent}%`, duration: 0 });
+                   } else {
+                       if (res.success === false || (resultData && resultData.success === false)) {
+                           nativeBridge.off('onUploadResult', resultHandler);
+                           reject(new Error(resultData?.message || res.message || '上传失败'));
+                       }
+                   }
+               };
+               
+               nativeBridge.on('onUploadResult', resultHandler);
+               nativeBridge.uploadInterviewFile(params);
+               
+               setTimeout(() => {
+                   nativeBridge.off('onUploadResult', resultHandler);
+                   reject(new Error('上传超时'));
+               }, 60000);
+          });
+
+          console.log('[模板上传] 上传成功:', serverUrl);
+          
+          // 获取文件名（从路径截取）
+          const fileName = localPath.split('/').pop() || '上传文件';
+          
+          setSelectedFile({
+              name: fileName,
+              url: serverUrl
+          });
+          
+          Toast.clear();
+          Toast.success('文件已就绪');
+
+      } catch (error: any) {
+          console.error('Native upload failed:', error);
+          Toast.clear();
+          Toast.fail(error.message || '文件上传失败');
+      } finally {
+          isUploadingRef.current = false;
+      }
+  };
+
+  useEffect(() => {
+      const handleFileSelected = (res: any) => {
+          if (res.success && res.data && res.data.fileURL) {
+               console.log('[模板上传] 收到文件:', res.data.fileURL);
+               uploadNativeFile(res.data.fileURL);
+          }
+      };
+
+      nativeBridge.on('fileSelected', handleFileSelected);
+      return () => {
+          nativeBridge.off('fileSelected', handleFileSelected);
+      };
+  }, []);
+
+  const handleChooseFile = () => {
+      if (isUploadingRef.current) return;
+      nativeBridge.chooseFile();
   };
 
   const handleSubmit = async () => {
     if (!templateName.trim()) {
-      alert('请输入模板名称');
+      Toast.info('请输入模板名称');
+      return;
+    }
+
+    if (!selectedFile) {
+      Toast.info('请上传模板文件');
       return;
     }
 
     setLoading(true);
     try {
-      const res = await templateService.addApproveReport({
-        reportName: templateName.trim(),
-        file: selectedFile || undefined,
+      const res = await templateService.addApproveReportNew({
+        approveReportName: templateName.trim(),
+        approveTemplateUrl: selectedFile.url,
       });
 
       if (res.success) {
         setShowSuccess(true);
         onSubmit?.();
       } else {
-        alert(res.message || '提交失败，请重试');
+        Toast.fail(res.message || '提交失败，请重试');
       }
     } catch (error) {
       console.error('Failed to submit template:', error);
-      alert('提交失败，请重试');
+      Toast.fail('提交失败，请重试');
     } finally {
       setLoading(false);
     }
   };
+
+  const handleSubmitThrottled = useThrottleFn(handleSubmit, 1000);
 
   // 如果显示成功页面
   if (showSuccess) {
@@ -136,7 +232,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
         {/* Template Name */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
-            模板名称
+            模板名称 <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -150,19 +246,11 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
         {/* Upload Template */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
-            上传模板
+            上传模板 <span className="text-red-500">*</span>
           </label>
-          <div className="bg-white rounded-xl border border-dashed border-gray-300 p-8 flex flex-col items-center justify-center min-h-[200px] hover:border-indigo-400 transition-colors">
-            <input
-              type="file"
-              id="file-upload"
-              onChange={handleFileSelect}
-              className="hidden"
-              accept=".doc,.docx,.pdf,.xls,.xlsx"
-            />
-            <label
-              htmlFor="file-upload"
-              className="cursor-pointer flex flex-col items-center"
+            <div 
+              className="bg-white rounded-xl border border-dashed border-gray-300 p-8 flex flex-col items-center justify-center min-h-[200px] hover:border-indigo-400 transition-colors cursor-pointer active:bg-gray-50"
+              onClick={handleChooseFile}
             >
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                 <ImageIcon size={28} className="text-gray-400" />
@@ -175,8 +263,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
               ) : (
                 <p className="text-sm text-gray-400">请上传模板附件</p>
               )}
-            </label>
-          </div>
+            </div>
         </div>
       </div>
 
@@ -194,7 +281,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
           <Button
             variant="primary"
             block
-            onClick={handleSubmit}
+            onClick={handleSubmitThrottled}
             disabled={loading}
             className="flex-1 !rounded-full !h-12 !text-base shadow-lg"
             style={{

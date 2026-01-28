@@ -74,17 +74,7 @@ export const templateService = {
       formData.append('reportName', params.reportName);
       formData.append('file', params.file);
       
-      // 正确的方式查看 FormData 内容
-      console.log('📋 FormData 内容:');
-      for (const [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          console.log(`  ${key}:`, `File(${value.name}, ${value.size} bytes)`);
-        } else {
-          console.log(`  ${key}:`, value);
-        }
-      }
-      
-      // 不要手动设置 Content-Type，让 axios 自动设置（会包含 boundary）
+      // 不要手动设置 Content-Type，让 axios 自动设置
       return request<ApiResponse<any>>('/reportApprove/addApproveReport', {
         method: 'POST',
         data: formData,
@@ -92,10 +82,23 @@ export const templateService = {
     }
     
     // 没有文件就直接发送 JSON
-    console.log('📋 发送 JSON 数据:', { reportName: params.reportName });
     return request<ApiResponse<any>>('/reportApprove/addApproveReport', {
       method: 'POST',
       data: { reportName: params.reportName },
+    });
+  },
+
+  /**
+   * 添加审批报告模板（新接口 - 支持 URL）
+   * POST /reportApprove/addApproveReportNew
+   */
+  addApproveReportNew: (params: {
+    approveReportName: string;
+    approveTemplateUrl: string;
+  }) => {
+    return request<ApiResponse<any>>('/reportApprove/addApproveReportNew', {
+      method: 'POST',
+      data: params,
     });
   },
 

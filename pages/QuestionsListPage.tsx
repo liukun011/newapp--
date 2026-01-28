@@ -12,6 +12,7 @@ interface QuestionsListPageProps {
   onUpdateQuestion?: (question: QuestionInfo) => void;
   onDeleteQuestion?: (questionId: string) => void;
   onAddQuestion?: (questionName: string) => void;
+  onSave?: (questions: QuestionInfo[]) => Promise<void>;
   isArchived?: boolean;
 }
 
@@ -180,6 +181,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   onUpdateQuestion,
   onDeleteQuestion,
   onAddQuestion,
+  onSave,
   isArchived = false,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -196,6 +198,23 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletingQuestion, setDeletingQuestion] = useState<QuestionInfo | null>(null);
 
+  // 本地问题列表状态
+  const [localQuestions, setLocalQuestions] = useState<QuestionInfo[]>(questionInfoList);
+  
+  // 标记是否有修改
+  const isDirtyRef = useRef(false);
+
+  // 同步外部 props 到本地状态 (仅当 questionInfoList 长度或 ID 变化时，避免覆盖本地未保存的编辑)
+  // 如果业务逻辑允许"外部更新覆盖本地"，则直接同步。
+  // 这里为了简单，假设进入页面后主要由本地管理，外部更新时同步
+  useEffect(() => {
+    // 只有在本地没有未保存修改时，才接受外部更新
+    // 防止外部轮询等导致的重绘覆盖了用户刚新增/删除但未保存的数据
+    if (!isDirtyRef.current && questionInfoList) {
+      setLocalQuestions(questionInfoList);
+    }
+  }, [questionInfoList]);
+
   // 监听滚动显示回到顶部按钮
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -209,6 +228,31 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
     return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 统一保存逻辑
+  const handleSave = async () => {
+      if (!onSave || !isDirtyRef.current) {
+          onBack();
+          return;
+      }
+      
+      Toast.loading({ message: '保存中...', duration: 0, forbidClick: true });
+      try {
+          await onSave(localQuestions);
+          Toast.clear();
+          onBack();
+      } catch (e) {
+          Toast.clear();
+          // 允许失败时留在此页重试，或者强制退出视需求而定
+          // 这里不仅提示，且不退出
+          console.error('Save failed on back', e);
+      }
+  };
+
+  // 劫持返回按钮
+  const handleBack = () => {
+      handleSave();
+  };
+
   // 回到顶部
   const scrollToTop = () => {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -219,13 +263,25 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
     setAddModalVisible(true);
   };
 
-  // 确认添加
+  // 确认添加 (纯本地)
   const handleConfirmAdd = (questionName: string) => {
-    if (onAddQuestion) {
-      onAddQuestion(questionName);
+      const newQuestion: QuestionInfo = {
+        // id: `temp_${Date.now()}`,
+        questionName: questionName.trim(),
+        questionIndex: localQuestions.length + 1,
+        recStatus: '1',
+        questionAnswer: null,
+        questionAnswerTime: null,
+        questionStatus: '0',
+        templateId: '',
+        agencyId: '',
+        CHECKED: false,
+      };
+      
+      setLocalQuestions(prev => [...prev, newQuestion]);
+      isDirtyRef.current = true;
       Toast.success('添加成功');
-    }
-    setAddModalVisible(false);
+      setAddModalVisible(false);
   };
 
   // 点击编辑按钮，打开弹框
@@ -240,13 +296,15 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
     setEditingQuestion(null);
   };
 
-  // 确认编辑
+  // 确认编辑 (纯本地)
   const handleConfirmEdit = (questionName: string) => {
-    if (editingQuestion && onUpdateQuestion) {
-      onUpdateQuestion({
-        ...editingQuestion,
-        questionName,
-      });
+    if (editingQuestion) {
+      setLocalQuestions(prev => prev.map(q => 
+          q.id === editingQuestion.id 
+            ? { ...q, questionName: questionName.trim() } 
+            : q
+      ));
+      isDirtyRef.current = true;
       Toast.success('修改成功');
     }
     handleCloseEditModal();
@@ -264,25 +322,33 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
     setDeletingQuestion(null);
   };
 
-  // 确认删除问题
+  // 确认删除问题 (纯本地)
   const handleConfirmDelete = () => {
-    if (deletingQuestion && onDeleteQuestion) {
-      onDeleteQuestion(deletingQuestion.id!);
+    if (deletingQuestion) {
+      setLocalQuestions(prev => {
+          const filtered = prev.filter(q => q.id !== deletingQuestion.id);
+          // 重新生成序号
+          return filtered.map((q, index) => ({
+              ...q,
+              questionIndex: index + 1
+          }));
+      });
+      isDirtyRef.current = true;
       Toast.success('删除成功');
     }
     handleCloseDeleteModal();
   };
 
   // 按 questionIndex 排序
-  const sortedQuestions = [...questionInfoList].sort((a, b) => a.questionIndex - b.questionIndex);
-  const totalQuestions = questionInfoList.length;
+  const sortedQuestions = [...localQuestions].sort((a, b) => a.questionIndex - b.questionIndex);
+  const totalQuestions = localQuestions.length;
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* NavBar */}
       <div className="flex items-center justify-center px-4 py-3 relative border-b border-gray-100">
         <button 
-          onClick={onBack} 
+          onClick={handleBack} 
           className="absolute left-4 p-2 text-slate-700 hover:bg-slate-50 rounded-full active:bg-slate-100 transition-colors"
         >
           <ArrowLeft size={24} />
@@ -317,13 +383,13 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
           {/* Scrollable Questions List */}
           <div ref={scrollContainerRef} className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
             <div className="divide-y divide-gray-100 px-4">
-              {sortedQuestions.map((question) => (
+              {sortedQuestions.map((question, index) => (
                 <div 
                   key={question.id}
                   className="flex items-center justify-between py-4"
                 >
                   <span className={`text-sm flex-1 pr-2 ${question.CHECKED ? 'text-indigo-600 underline' : 'text-slate-700'}`}>
-                    {question.questionIndex}.{question.questionName}
+                    {index + 1}.{question.questionName}
                   </span>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     {/* 编辑按钮 - 仅未归档时显示 */}

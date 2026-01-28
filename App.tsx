@@ -57,6 +57,12 @@ const App: React.FC = () => {
       return null;
     }
   });
+  // Ref to track currentDeal for async handlers to avoid stale closures
+  const currentDealRef = useRef<DealRecord | null>(currentDeal);
+  useEffect(() => {
+    currentDealRef.current = currentDeal;
+  }, [currentDeal]);
+
   // 录音状态管理 (使用 Zustand Store)
   const {
     currentInterviewInstId,
@@ -1076,48 +1082,28 @@ const App: React.FC = () => {
                   questionInfoList={currentDeal?.questionInfoList || []}
                   isArchived={currentDeal?.status === '5'}
                   onBack={() => navigateBackward(View.DUE_DILIGENCE)}
-                  onUpdateQuestion={(updatedQuestion) => {
-                    if (currentDeal) {
-                      const updatedList = currentDeal.questionInfoList?.map(q =>
-                        q.id === updatedQuestion.id ? updatedQuestion : q
-                      ) || [];
-                      setCurrentDeal({
-                        ...currentDeal,
-                        questionInfoList: updatedList,
-                      });
-                    }
-                  }}
-                  onDeleteQuestion={(questionId) => {
-                    if (currentDeal) {
-                      const updatedList = currentDeal.questionInfoList?.filter(q =>
-                        q.id !== questionId
-                      ) || [];
-                      setCurrentDeal({
-                        ...currentDeal,
-                        questionInfoList: updatedList,
-                      });
-                    }
-                  }}
-                  onAddQuestion={(questionName) => {
-                    if (currentDeal) {
-                      const newQuestion: QuestionInfo = {
-                        id: `temp_${Date.now()}`,
-                        questionName: questionName,
-                        questionIndex: (currentDeal.questionInfoList?.length || 0) + 1,
-                        recStatus: '1',
-                        questionAnswer: null,
-                        questionAnswerTime: null,
-                        questionStatus: '0',
-                        templateId: '',
-                        agencyId: '',
-                        CHECKED: false,
-                      };
-                      const updatedList = [...(currentDeal.questionInfoList || []), newQuestion];
-                      setCurrentDeal({
-                        ...currentDeal,
-                        questionInfoList: updatedList,
-                      });
-                    }
+                  onUpdateQuestion={undefined}
+                  onDeleteQuestion={undefined}
+                  onAddQuestion={undefined}
+                  onSave={async (finalQuestions) => {
+                     const deal = currentDealRef.current;
+                     if (deal) {
+                        try {
+                            await dealService.createOrUpdateDealInst({
+                                id: deal.id,
+                                questionId: deal.questionId,
+                                questionInfoList: finalQuestions
+                            });
+                            
+                            setCurrentDeal({
+                              ...deal,
+                              questionInfoList: finalQuestions
+                            });
+                        } catch (e) {
+                            console.error('Save all questions failed:', e);
+                            throw e; // Check if QuestionsListPage handles this
+                        }
+                     }
                   }}
                 />
               )}
