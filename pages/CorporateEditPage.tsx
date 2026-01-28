@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { Toast } from 'react-vant';
 import Button from '../components/Button';
@@ -175,12 +176,19 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
     }
   };
 
+  // Throttled Handlers
+  const handleSaveThrottled = useThrottleFn(handleConfirm, 1000);
+  const handleBackThrottled = useThrottleFn(onBack, 1000);
+  const handlePhotoUploadThrottled = useThrottleFn(() => {
+    nativeBridge?.openPhotoLibrary?.();
+  }, 1000);
+
   return (
     <div className="fixed inset-0 h-full w-full overflow-hidden flex flex-col bg-[#F7F8FA]">
 
       {/* NavBar */}
       <div className="flex items-center justify-between px-4 py-3 bg-white sticky top-0 z-10">
-        <button onClick={onBack} className="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-full transition-colors">
+        <button onClick={handleBackThrottled} className="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-full transition-colors">
           <ArrowLeft size={24} />
         </button>
         <h1 className="text-lg font-bold text-slate-800">企业资料</h1>
@@ -193,7 +201,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
         <div className="mt-8 mb-10 flex flex-col items-center justify-center shrink-0">
             <div 
                 className="w-28 h-28 rounded-full bg-indigo-50 flex flex-col items-center justify-center text-indigo-500 mb-2 shadow-sm border border-indigo-100 active:scale-95 transition-transform overflow-hidden cursor-pointer relative group"
-                onClick={() => nativeBridge.openPhotoLibrary()}
+                onClick={handlePhotoUploadThrottled}
             >
                 {logoUrl ? (
                     <>
@@ -238,7 +246,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
             variant="secondary" 
             block 
             className="flex-1 !rounded-full !bg-white !border-indigo-100 !text-indigo-600 !h-12 !text-[16px] shadow-lg shadow-indigo-100/50"
-            onClick={onBack}
+            onClick={handleBackThrottled}
          >
          取消
          </Button>
@@ -247,7 +255,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
             variant="primary" 
             block 
             className="flex-1 !rounded-full !h-12 !text-[16px] shadow-lg shadow-indigo-500/30"
-            onClick={handleConfirm}
+            onClick={handleSaveThrottled}
             loading={loading}
             disabled={loading}
          >

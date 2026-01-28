@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, Play, Pause, RotateCcw, RotateCw, ChevronDown, ChevronUp, CheckCircle, User } from 'lucide-react';
 import { Toast } from 'react-vant';
 import Button from '../components/Button';
@@ -161,12 +162,18 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
     }
   }, [activeTab, interviewInstId]);
 
+  // Throttled Handlers
+  const handleBackThrottled = useThrottleFn(onBack, 1000);
+  const togglePlayThrottled = useThrottleFn(togglePlay, 500); // 播放暂停可以稍微短一点
+  const skipBackwardThrottled = useThrottleFn(skipBackward, 500);
+  const skipForwardThrottled = useThrottleFn(skipForward, 500);
+
   return (
     <div className="flex flex-col h-screen relative bg-[#F7F8FA]">
       
       {/* NavBar */}
       <div className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-sm">
-        <button onClick={onBack} className="p-2 -ml-2 text-slate-700">
+        <button onClick={handleBackThrottled} className="p-2 -ml-2 text-slate-700">
           <ArrowLeft size={22} />
         </button>
         <h1 className="text-lg font-bold text-slate-800">
@@ -216,7 +223,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
         <div className="flex items-center justify-center gap-10">
           <button 
             className="text-indigo-500 p-2 active:opacity-70"
-            onClick={skipBackward}
+            onClick={skipBackwardThrottled}
           >
             <div className="relative">
               <RotateCcw size={24} strokeWidth={1.5} />
@@ -226,14 +233,14 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
 
           <button 
             className="w-14 h-14 rounded-full border-2 border-indigo-500 flex items-center justify-center text-indigo-500 shadow-md active:scale-95 transition-transform"
-            onClick={togglePlay}
+            onClick={togglePlayThrottled}
           >
             {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
           </button>
 
           <button 
             className="text-indigo-500 p-2 active:opacity-70"
-            onClick={skipForward}
+            onClick={skipForwardThrottled}
           >
              <div className="relative">
               <RotateCw size={24} strokeWidth={1.5} />

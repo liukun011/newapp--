@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, History, Pause, Mic, Square, ChevronDown, ChevronUp, CheckCircle, User } from 'lucide-react';
 import { Dialog, Toast } from 'react-vant';
 import SoundWave from '../components/SoundWave';
@@ -445,6 +446,9 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     }
   };
 
+  const handleToggleWrapperThrottled = useThrottleFn(handleToggleWrapper, 1000);
+  const handleFinishInterviewThrottled = useThrottleFn(handleFinishInterview, 1000);
+
   // 追踪 isRecording 最新状态，用于异步回调中判断
   const isRecordingRef = React.useRef(isRecording);
   useEffect(() => {
@@ -741,7 +745,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
           <div className="flex gap-4 items-center justify-between">
             <Button
               variant="primary"
-              onClick={handleToggleWrapper}
+              onClick={handleToggleWrapperThrottled}
               className="flex-1 rounded-full shadow-lg shadow-indigo-200"
             >
               {isRecording ? (
@@ -758,7 +762,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
             {seconds > 0 && (
               <Button
                 variant="secondary"
-                onClick={handleFinishInterview}
+                onClick={handleFinishInterviewThrottled}
                 className="flex-1 rounded-full border-indigo-100 text-indigo-600"
               >
                 <Square size={16} className="mr-2 fill-current" /> 结束访谈

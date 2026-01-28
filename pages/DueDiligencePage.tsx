@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, Pencil, Mic, ChevronRight, FilePlus, Camera, Image as ImageIcon, FileText, Archive } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import Mascot from '../components/Mascot';
@@ -313,6 +314,164 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         break;
     }
   };
+
+  // Throttled Handlers
+  const handleUploadClickThrottled = useThrottleFn(handleUploadClick, 1000);
+  
+  const handleBackThrottled = useThrottleFn(onBack, 1000);
+  const handleEditInfoThrottled = useThrottleFn(() => onEditInfo?.(), 1000);
+  const handleNavigateMaterialsThrottled = useThrottleFn(onNavigateToMaterials, 1000);
+  const handleNavigateQuestionsThrottled = useThrottleFn(() => onNavigateToQuestions?.(), 1000);
+
+  const handleReportPreviewThrottled = useThrottleFn(async () => {
+    if (currentDeal?.report?.id && currentDeal?.report?.fileUrl) {
+      try {
+        console.log('[Report Preview] Calling API with:', {
+          fileId: currentDeal.report.id,
+          fileUrl: currentDeal.report.fileUrl
+        });
+        
+        Toast.loading({ message: '正在打开报告...', duration: 0, forbidClick: true });
+        const res = await dealService.viewReportUrl(currentDeal.report.id, currentDeal.report.fileUrl);
+        
+        console.log('[Report Preview] API response:', res);
+        Toast.clear();
+        
+        if (res.success && res.data) {
+          // 使用报告预览页面打开
+          onPreviewReport?.(
+            currentDeal.report.fileName || '尽调报告',
+            currentDeal.report.fileUrl,
+            res.data
+          );
+        } else {
+          Toast.fail(res.message || '打开报告失败');
+        }
+      } catch (error) {
+        Toast.clear();
+        console.error('View report failed:', error);
+        Toast.fail('打开报告失败');
+      }
+    } else {
+      Toast.fail('报告信息不完整');
+    }
+  }, 1000);
+
+  const handleDownloadReportThrottled = useThrottleFn(() => {
+    if (currentDeal?.report?.fileUrl && currentDeal?.report?.fileName) {
+      try {
+        const link = document.createElement('a');
+        link.href = currentDeal.report.fileUrl;
+        link.download = currentDeal.report.fileName || '尽调报告.docx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        Toast.success('开始下载');
+      } catch (error) {
+        console.error('Download failed:', error);
+        Toast.fail('下载失败');
+      }
+    } else {
+      Toast.fail('报告文件不存在');
+    }
+  }, 1000);
+
+  const handleGenerateReportThrottled = useThrottleFn(() => {
+    Dialog.confirm({
+      title: '确认生成',
+      message: '重新生成报告将覆盖现有报告，是否继续?',
+    }).then(async () => {
+      if (!currentDeal?.id) {
+        Toast.fail('尽调信息不存在');
+        return;
+      }
+
+      // 检查访谈记录和补充资料是否都为空
+      const hasInterviewRecords = currentDeal.interviewInstList && currentDeal.interviewInstList.length > 0;
+      const hasSupplementaryMaterials = currentDeal.resources && currentDeal.resources.length > 0;
+
+      if (!hasInterviewRecords && !hasSupplementaryMaterials) {
+        Toast.fail('访谈记录和补充资料不能同时为空，请先添加内容');
+        return;
+      }
+
+      try {
+        Toast.loading({ message: '正在生成报告...', duration: 0, forbidClick: true });
+        const res = await dealService.generateInterviewInstReportAsync(currentDeal.id);
+        Toast.clear();
+        
+        if (res.success) {
+          Toast.success('报告生成任务已提交');
+          try {
+            const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+            if (detailRes.success && detailRes.data) {
+              setDealDetail(detailRes.data);
+              onDealDetailLoadedRef.current?.(detailRes.data);
+            }
+          } catch (error) {
+            console.error('Failed to refresh deal detail:', error);
+          }
+        } else {
+          Toast.fail(res.message || '生成报告失败');
+        }
+      } catch (error) {
+        Toast.clear();
+        console.error('Generate report failed:', error);
+        Toast.fail('生成报告失败');
+      }
+    }).catch(() => {});
+  }, 1000);
+
+  const handleChangeTemplateThrottled = useThrottleFn(() => onChangeTemplate?.(), 1000);
+  
+  const handleRecordingClickThrottled = useThrottleFn(() => {
+     // 检查是否已归档
+     if (currentDeal?.status === '5') {
+       if (onNavigateToHistory && currentDeal?.id) {
+         onNavigateToHistory(currentDeal.id);
+       }
+       return;
+     }
+     console.log('currentDealId', currentDealId);
+     console.log('currentDeal', currentDeal);
+     // 校验是否有正在进行的访谈（悬浮窗存在 即 currentDealId 不为空）
+     if (currentDealId && currentDealId !== currentDeal?.id) {
+       setShowLimitTips(true);
+       setTimeout(() => setShowLimitTips(false), 3000);
+       return;
+     }
+
+     onNavigateToRecording();
+  }, 1000);
+
+  const handleArchiveThrottled = useThrottleFn(async () => {
+    if (!currentDeal?.id) {
+      Toast.fail('尽调信息不存在');
+      return;
+    }
+
+    try {
+      Toast.loading({ message: '归档中...', duration: 0, forbidClick: true });
+      const res = await dealService.archiveDeal(currentDeal.id);
+      Toast.clear();
+      
+      if (res.success) {
+         Toast.success('归档成功');
+         // 刷新详情
+         const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+         if (detailRes.success && detailRes.data) {
+           setDealDetail(detailRes.data);
+           onDealDetailLoadedRef.current?.(detailRes.data);
+         }
+      } else {
+        Toast.fail(res.message || '归档失败');
+      }
+    } catch (error) {
+      Toast.clear();
+      console.error('Archive failed:', error);
+      Toast.fail('归档失败');
+    }
+  }, 1000);
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F8FA] relative">
       {/* 隐藏的文件输入框 */}
@@ -358,7 +517,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
              </div>
            </div>
         )}
-        <button onClick={onBack} className="p-2 -ml-2 text-slate-700 hover:bg-white/50 rounded-full">
+        <button onClick={handleBackThrottled} className="p-2 -ml-2 text-slate-700 hover:bg-white/50 rounded-full">
           <ArrowLeft size={24} />
         </button>
         <h1 className="text-lg font-bold text-slate-800">{currentDeal?.interviewCust || '尽调详情'}</h1>
@@ -366,7 +525,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           <div className="w-9" />
         ) : (
           <button 
-            onClick={onEditInfo}
+            onClick={handleEditInfoThrottled}
             className="p-2 -mr-2 text-slate-700 hover:bg-white/50 rounded-full"
           >
             <Pencil size={20} />
@@ -414,39 +573,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             <div 
               className="rounded-t-3xl p-5 relative overflow-hidden text-white cursor-pointer active:opacity-90 transition-opacity" 
               style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #7062ff 100%)' }}
-              onClick={async () => {
-                if (currentDeal?.report?.id && currentDeal?.report?.fileUrl) {
-                  try {
-                    console.log('[Report Preview] Calling API with:', {
-                      fileId: currentDeal.report.id,
-                      fileUrl: currentDeal.report.fileUrl
-                    });
-                    
-                    Toast.loading({ message: '正在打开报告...', duration: 0, forbidClick: true });
-                    const res = await dealService.viewReportUrl(currentDeal.report.id, currentDeal.report.fileUrl);
-                    
-                    console.log('[Report Preview] API response:', res);
-                    Toast.clear();
-                    
-                    if (res.success && res.data) {
-                      // 使用报告预览页面打开
-                      onPreviewReport?.(
-                        currentDeal.report.fileName || '尽调报告',
-                        currentDeal.report.fileUrl,
-                        res.data
-                      );
-                    } else {
-                      Toast.fail(res.message || '打开报告失败');
-                    }
-                  } catch (error) {
-                    Toast.clear();
-                    console.error('View report failed:', error);
-                    Toast.fail('打开报告失败');
-                  }
-                } else {
-                  Toast.fail('报告信息不完整');
-                }
-              }}
+              onClick={handleReportPreviewThrottled}
             >
               <div className="relative z-10 max-w-[65%]">
                 <h2 className="text-xl font-bold mb-1.5">
@@ -473,24 +600,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 {(currentDeal?.status === '5') ? (
                   // 已归档状态：仅显示立即下载
                   <button 
-                    onClick={() => {
-                      if (currentDeal?.report?.fileUrl && currentDeal?.report?.fileName) {
-                        try {
-                          const link = document.createElement('a');
-                          link.href = currentDeal.report.fileUrl;
-                          link.download = currentDeal.report.fileName || '尽调报告.docx';
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          Toast.success('开始下载');
-                        } catch (error) {
-                          console.error('Download failed:', error);
-                          Toast.fail('下载失败');
-                        }
-                      } else {
-                        Toast.fail('报告文件不存在');
-                      }
-                    }}
+                    onClick={handleDownloadReportThrottled}
                     className="px-6 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform whitespace-nowrap"
                   >
                     立即下载
@@ -499,81 +609,20 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   // 未归档状态：显示完整功能
                   <>
                     <button
-                      onClick={() => {
-                        Dialog.confirm({
-                          title: '确认生成',
-                          message: '重新生成报告将覆盖现有报告，是否继续?',
-                        }).then(async () => {
-                          if (!currentDeal?.id) {
-                            Toast.fail('尽调信息不存在');
-                            return;
-                          }
-
-                          // 检查访谈记录和补充资料是否都为空
-                          const hasInterviewRecords = currentDeal.interviewInstList && currentDeal.interviewInstList.length > 0;
-                          const hasSupplementaryMaterials = currentDeal.resources && currentDeal.resources.length > 0;
-
-                          if (!hasInterviewRecords && !hasSupplementaryMaterials) {
-                            Toast.fail('访谈记录和补充资料不能同时为空，请先添加内容');
-                            return;
-                          }
-
-                          try {
-                            Toast.loading({ message: '正在生成报告...', duration: 0, forbidClick: true });
-                            const res = await dealService.generateInterviewInstReportAsync(currentDeal.id);
-                            Toast.clear();
-                            
-                            if (res.success) {
-                              Toast.success('报告生成任务已提交');
-                              try {
-                                const detailRes = await dealService.getDealInstDetail(currentDeal.id);
-                                if (detailRes.success && detailRes.data) {
-                                  setDealDetail(detailRes.data);
-                                  onDealDetailLoadedRef.current?.(detailRes.data);
-                                }
-                              } catch (error) {
-                                console.error('Failed to refresh deal detail:', error);
-                              }
-                            } else {
-                              Toast.fail(res.message || '生成报告失败');
-                            }
-                          } catch (error) {
-                            Toast.clear();
-                            console.error('Generate report failed:', error);
-                            Toast.fail('生成报告失败');
-                          }
-                        }).catch(() => {});
-                      }}
+                      onClick={handleGenerateReportThrottled}
                       className="px-3 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform whitespace-nowrap"
                     >
                       立即生成
                     </button>
                     <button 
-                      onClick={() => {
-                        if (currentDeal?.report?.fileUrl && currentDeal?.report?.fileName) {
-                          try {
-                            const link = document.createElement('a');
-                            link.href = currentDeal.report.fileUrl;
-                            link.download = currentDeal.report.fileName || '尽调报告.docx';
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            Toast.success('开始下载');
-                          } catch (error) {
-                            console.error('Download failed:', error);
-                            Toast.fail('下载失败');
-                          }
-                        } else {
-                          Toast.fail('报告文件不存在');
-                        }
-                      }}
+                      onClick={handleDownloadReportThrottled}
                       className="px-3 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform whitespace-nowrap"
                     >
                       立即下载
                     </button>
                     <button 
                       className="px-3 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform whitespace-nowrap"
-                      onClick={onChangeTemplate}
+                      onClick={handleChangeTemplateThrottled}
                     >
                       更换模板
                     </button>
@@ -657,7 +706,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   </button>
                   <button 
                     className="px-4 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium hover:bg-white/10 active:scale-95 transition-transform whitespace-nowrap"
-                    onClick={onChangeTemplate}
+                    onClick={handleChangeTemplateThrottled}
                   >
                     更换模板
                   </button>
@@ -684,7 +733,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           {/* Materials */}
           <div 
             className="bg-white rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[140px] cursor-pointer active:scale-[0.98] transition-all"
-            onClick={onNavigateToMaterials}
+            onClick={handleNavigateMaterialsThrottled}
           >
             <div>
                <h3 className="font-bold text-slate-800 text-[16px]">尽调资料</h3>
@@ -698,7 +747,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                    <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      onNavigateToMaterials();
+                      handleNavigateMaterialsThrottled();
                     }}
                     className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100"
                    >
@@ -711,7 +760,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       key={opt.id}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleUploadClick(opt.id);
+                        handleUploadClickThrottled(opt.id);
                       }}
                       className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-slate-500 active:bg-gray-100 transition-colors"
                      >
@@ -733,25 +782,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
             <div className="flex items-end justify-between mt-4">
                <button 
-                onClick={() => {
-                  // 检查是否已归档
-                  if (currentDeal?.status === '5') {
-                    if (onNavigateToHistory && currentDeal?.id) {
-                      onNavigateToHistory(currentDeal.id);
-                    }
-                    return;
-                  }
-                  console.log('currentDealId', currentDealId);
-                  console.log('currentDeal', currentDeal);
-                  // 校验是否有正在进行的访谈（悬浮窗存在 即 currentDealId 不为空）
-                  if (currentDealId && currentDealId !== currentDeal?.id) {
-                    setShowLimitTips(true);
-                    setTimeout(() => setShowLimitTips(false), 3000);
-                    return;
-                  }
-
-                  onNavigateToRecording();
-                }}
+                onClick={handleRecordingClickThrottled}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold border ${
                   currentDeal?.status === '5'
                     ? 'bg-indigo-50 text-indigo-600 border-indigo-100' // 恢复高亮样式
@@ -773,7 +804,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           return (
             <div 
               className="bg-white rounded-2xl p-5 shadow-sm flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer"
-              onClick={onNavigateToQuestions}
+              onClick={handleNavigateQuestionsThrottled}
             >
               <span className="font-bold text-slate-800">问题集合 {checkedCount}/{totalCount}</span>
               <ChevronRight className="text-gray-300" size={20} />
@@ -787,32 +818,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30">
         <button
           disabled={currentDeal?.status === '5'}
-          onClick={async () => {
-            if (!currentDeal?.id) {
-              Toast.fail('尽调信息不存在');
-              return;
-            }
-
-            try {
-              Toast.loading({ message: '归档中...', duration: 0, forbidClick: true });
-              const res = await dealService.archiveDeal(currentDeal.id);
-              Toast.clear();
+          onClick={handleArchiveThrottled}
               
-              if (res.success) {
-                Toast.success('归档成功');
-                // 延迟返回，让用户看到成功提示
-                setTimeout(() => {
-                  onBack();
-                }, 1000);
-              } else {
-                Toast.fail(res.message || '归档失败');
-              }
-            } catch (error) {
-              Toast.clear();
-              console.error('Archive failed:', error);
-              Toast.fail('归档失败');
-            }
-          }}
+
           className={`w-full h-12 rounded-full font-bold text-lg transition-transform flex items-center justify-center gap-2 ${
              currentDeal?.status === '5'
                ? 'bg-gray-300 text-white cursor-not-allowed'

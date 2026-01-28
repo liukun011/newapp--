@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, Edit2 } from 'lucide-react';
 import Input from '../components/Input';
 import Button from '../components/Button';
@@ -111,7 +112,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               block 
               size="large" 
               variant="secondary"
-              onClick={async () => {
+              onClick={useThrottleFn(async () => {
                 if (!agreed) {
                   Toast.info('请先阅读并同意用户协议和隐私政策');
                   return;
@@ -131,7 +132,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 Toast.info({ 
                   message: '功能开发中，敬请期待！', 
                 });
-              }} 
+              })} 
               className="border-slate-200 text-slate-600 font-normal"
             >
               本机号码一键登录
@@ -261,7 +262,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <Button 
         block 
         size="large" 
-        onClick={async () => {
+        onClick={useThrottleFn(async () => {
           if (!agreed) {
             Toast.info('请先阅读并同意用户协议和隐私政策');
             return;
@@ -293,7 +294,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                console.error('Login error:', error);
              }
           }
-        }}
+        })}
         disabled={!phone || (isPasswordMode ? !password : !code)}
         className="shadow-xl shadow-indigo-500/20"
       >

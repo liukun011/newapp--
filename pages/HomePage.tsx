@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useThrottleFn } from "../hooks/useThrottleFn";
 import { createPortal } from "react-dom";
 import {
   Search,
@@ -251,6 +252,39 @@ const HomePage: React.FC<HomePageProps> = ({
     }
   };
 
+  // Throttled Handlers
+  const handleNavigateThrottled = useThrottleFn((item: DealRecord) => {
+    onNavigateToDetail(item);
+  }, 1000);
+
+  const handleRecordClickThrottled = useThrottleFn((e: React.MouseEvent, item: DealRecord) => {
+    e.stopPropagation();
+    
+    if (item.status === '5') {
+      return;
+    }
+
+    // 校验是否有正在进行的访谈（悬浮窗存在 即 currentDealId 不为空）
+    if (currentDealId && currentDealId !== item.id) {
+      setShowLimitTips(true);
+      setTimeout(() => setShowLimitTips(false), 3000);
+      return;
+    }
+
+    if (onNavigateToRecording) {
+      onNavigateToRecording(item);
+    } else {
+      onNavigateToDetail(item);
+    }
+  }, 1000);
+
+  const handleDeleteThrottled = useThrottleFn((id: string) => {
+    handleDelete(id);
+  }, 1000);
+
+  const handleConfirmDeleteThrottled = useThrottleFn(confirmDelete, 1000);
+  const handleCreateDealThrottled = useThrottleFn(handleCreateDeal, 1000);
+
   return (
     <div className="flex flex-col h-screen relative bg-[#F7F8FA]">
       {/* Top Gradient Background */}
@@ -414,14 +448,14 @@ const HomePage: React.FC<HomePageProps> = ({
                     rightAction={
                       <button
                         className="h-full px-6 bg-red-500 text-white flex items-center justify-center rounded-r-2xl"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => handleDeleteThrottled(item.id)}
                       >
                         <Trash2 size={20} />
                       </button>
                     }
                   >
                     <div
-                      onClick={() => onNavigateToDetail(item)}
+                      onClick={() => handleNavigateThrottled(item)}
                       className="bg-white rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex gap-4 active:scale-[0.99] transition-transform"
                     >
                       {/* Icon/Logo */}
@@ -458,26 +492,7 @@ const HomePage: React.FC<HomePageProps> = ({
                                  ? 'bg-gray-100 text-gray-400 shadow-none'
                                  : 'bg-[#4E3EF8] text-white shadow-indigo-200 active:scale-95'
                              }`}
-                             onClick={(e) => {
-                                e.stopPropagation();
-                                
-                                if (item.status === '5') {
-                                  return;
-                                }
-
-                                // 校验是否有正在进行的访谈（悬浮窗存在 即 currentDealId 不为空）
-                                if (currentDealId && currentDealId !== item.id) {
-                                  setShowLimitTips(true);
-                                  setTimeout(() => setShowLimitTips(false), 3000);
-                                  return;
-                                }
-
-                                if (onNavigateToRecording) {
-                                  onNavigateToRecording(item);
-                                } else {
-                                  onNavigateToDetail(item);
-                                }
-                             }}
+                             onClick={(e) => handleRecordClickThrottled(e, item)}
                            >
                              <Plus size={14} strokeWidth={2.5} /> 访谈录音
                            </button>
@@ -541,7 +556,7 @@ const HomePage: React.FC<HomePageProps> = ({
               
               {/* 确认按钮 */}
               <button
-                onClick={confirmDelete}
+                onClick={handleConfirmDeleteThrottled}
                 className="flex-1 h-12 rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30"
               >
                 确认
@@ -591,7 +606,7 @@ const HomePage: React.FC<HomePageProps> = ({
               </button>
               
               <button
-                onClick={handleCreateDeal}
+                onClick={handleCreateDealThrottled}
                 disabled={creating}
                 className="flex-1 h-11 rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-70 disabled:active:scale-100"
               >
