@@ -117,9 +117,9 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
             pageSize: 100 // 暂时获取前100条
           });
           if (res.success && res.data && res.data.records) {
-            // Map backend data to TranscriptionItem if necessary, or ensure compatible types
-            // Assuming backend structure matches or is compatible
-            setTranscriptionList(res.data.records);
+            // 过滤掉 type=4 (补充资料语音录入) 的内容，不展示在转写列表中
+            const filteredRecords = res.data.records.filter((item: any) => item.type !== '4');
+            setTranscriptionList(filteredRecords);
           }
         } catch (error) {
           console.error('获取转写记录失败', error);
@@ -239,9 +239,9 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                         if (!res.data) return; // 忽略空数据回调
 
                         // 2. 更新 Toast 进度让用户感知
-                        if (res.data.percent !== undefined) {
-                           Toast.loading({ message: `正在保存 ${res.data.percent}%`, forbidClick: true, duration: 0 });
-                        }
+                        // if (res.data.percent !== undefined) {
+                        //    Toast.loading({ message: `正在保存 ${res.data.percent}%`, forbidClick: true, duration: 0 });
+                        // }
 
                         // 3. 检查最终结果
                         // 注意：有些 Native 实现可能把结果直接放在 data 里，而不是 data.result，这里做下兼容防御

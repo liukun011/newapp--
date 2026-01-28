@@ -108,7 +108,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                }
              } else if (res.success && res.data?.percent !== undefined) {
                // 进度
-               Toast.loading({ message: `上传中 ${res.data.percent}%...`, duration: 0 });
+               // Toast.loading({ message: `上传中 ${res.data.percent}%...`, duration: 0 });
              } else {
                // 失败
                if (res.success === false || (resultData && resultData.success === false)) {

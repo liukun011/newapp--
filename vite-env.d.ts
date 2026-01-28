@@ -15,3 +15,15 @@ declare module '*.svg' {
   const src: string;
   export default src;
 }
+declare global {
+  interface Window {
+    onVoiceStream?: (text: string, roleId: string) => void;
+    onVoiceFileSaved?: (filePath: string) => void;
+    onRecordingChunk?: (filePath: string) => void;
+    onRecordingError?: (code: string, message: string) => void;
+    onNativeBack?: () => void;
+    Android?: {
+      stopRecord: () => void;
+    };
+  }
+}

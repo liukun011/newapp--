@@ -50,12 +50,19 @@ export const useRecordingStore = create<RecordingState>()(
 
       setTranscriptionList: (list) => set({ transcriptionList: list }),
 
-      addTranscriptionChunk: (item) => set((state) => ({
-        transcriptionList: [...state.transcriptionList, item],
-        tempTranscription: '',  // 添加最终结果时清空临时结果
-      })),
+      addTranscriptionChunk: (item) => set((state) => {
+        // 仅在录音开启时才接收转写数据，防止其他页面的局部录音(如VoiceInputModal)干扰
+        if (!state.isRecording) return {};
+        return {
+          transcriptionList: [...state.transcriptionList, item],
+          tempTranscription: '',  // 添加最终结果时清空临时结果
+        };
+      }),
 
-      updateTempTranscription: (text) => set({ tempTranscription: text }),
+      updateTempTranscription: (text) => set((state) => {
+         if (!state.isRecording) return {};
+         return { tempTranscription: text };
+      }),
 
       clearTempTranscription: () => set({ tempTranscription: '' }),
 

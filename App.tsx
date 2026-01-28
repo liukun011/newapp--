@@ -76,10 +76,13 @@ const App: React.FC = () => {
 
   // Global Recording Event Listeners
   useEffect(() => {
-    window.onVoiceStream = (text: string, roleId: string) => {
+    (window as any).onVoiceStream = (text: string, roleId: string) => {
       console.log(`[App] Global onVoiceStream: text=${text}, roleId=${roleId}`);
       if (text) {
         const store = useRecordingStore.getState();
+        // 如果全局未处于录音状态（例如在资料上传页使用了局部录音），则忽略全局监听收到的转写
+        if (!store.isRecording) return;
+        
         const { transcriptionList, setTranscriptionList, addTranscriptionChunk } = store;
         const lastItem = transcriptionList[transcriptionList.length - 1];
         
@@ -107,15 +110,15 @@ const App: React.FC = () => {
       }
     };
 
-    window.onRecordingChunk = (filePath: string) => {
+    (window as any).onRecordingChunk = (filePath: string) => {
       console.log("[App] Global onRecordingChunk:", filePath);
     };
 
-    window.onVoiceFileSaved = (filePath: string) => {
+    (window as any).onVoiceFileSaved = (filePath: string) => {
       console.log(`[App] Global onVoiceFileSaved: ${filePath}`);
     };
 
-    window.onRecordingError = (code: string, message: string) => {
+    (window as any).onRecordingError = (code: string, message: string) => {
       console.error(`[App] Global onRecordingError: Code=${code}, Msg=${message}`);
       // If message is undefined (legacy call), treat code as message
       const displayMsg = message ? `${message} (${code})` : code;
@@ -306,7 +309,7 @@ const App: React.FC = () => {
 
   // 监听原生返回键
   useEffect(() => {
-    window.onNativeBack = () => {
+    (window as any).onNativeBack = () => {
       console.log('Native Back Pressed, Current View:', currentView, 'Stack:', viewStack);
 
       // 如果当前在首页、登录页，才是真正的退出时机
@@ -345,7 +348,7 @@ const App: React.FC = () => {
     };
 
     return () => {
-      window.onNativeBack = undefined;
+      (window as any).onNativeBack = undefined;
     };
   }, [currentView, viewStack]);
 
@@ -526,8 +529,13 @@ const App: React.FC = () => {
         const parsed = handleTranscriptionResult(response.data);
         
         if (parsed) {
-          const { text, isFinal } = parsed;
           const store = useRecordingStore.getState();
+          // 如果全局未处于录音状态（例如在资料上传页使用了局部录音），则忽略全局监听收到的转写
+          if (!store.isRecording) {
+             return;
+          }
+
+          const { text, isFinal } = parsed;
           const { transcriptionList, setTranscriptionList, addTranscriptionChunk, updateTempTranscription } = store;
           const currentRoleId = '1';
           

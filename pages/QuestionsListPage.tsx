@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, FileText, Pencil, ArrowUp, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, Pencil, ArrowUp, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Toast } from 'react-vant';
 import { QuestionInfo } from '../types';
 
@@ -198,6 +199,9 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletingQuestion, setDeletingQuestion] = useState<QuestionInfo | null>(null);
 
+  // 展开的问题 ID
+  const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
+
   // 本地问题列表状态
   const [localQuestions, setLocalQuestions] = useState<QuestionInfo[]>(questionInfoList);
   
@@ -382,37 +386,89 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
           {/* Scrollable Questions List */}
           <div ref={scrollContainerRef} className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
-            <div className="divide-y divide-gray-100 px-4">
-              {sortedQuestions.map((question, index) => (
-                <div 
-                  key={question.id}
-                  className="flex items-center justify-between py-4"
-                >
-                  <span className={`text-sm flex-1 pr-2 ${question.CHECKED ? 'text-indigo-600 underline' : 'text-slate-700'}`}>
-                    {index + 1}.{question.questionName}
-                  </span>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    {/* 编辑按钮 - 仅未归档时显示 */}
-                    {!isArchived && (
-                      <button 
-                        onClick={() => handleEditQuestion(question)}
-                        className="p-2 text-gray-300 hover:text-indigo-500 transition-colors"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                    )}
-                    {/* 删除按钮 - 仅未归档时显示 */}
-                    {!isArchived && (
-                      <button 
-                        onClick={() => handleOpenDeleteModal(question)}
-                        className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
+            <div className="divide-y divide-gray-100 px-4 pb-40">
+              {sortedQuestions.map((question, index) => {
+                const isChecked = question.CHECKED; // 是否命中
+                const isExpanded = expandedQuestionId === question.id;
+
+                return (
+                  <div key={question.id} className="border-b border-gray-100 last:border-0">
+                    <div 
+                      className={`flex items-start justify-between py-4 ${isChecked ? 'cursor-pointer' : ''}`}
+                      onClick={() => {
+                        if (isChecked) {
+                           setExpandedQuestionId(isExpanded ? null : question.id!);
+                        }
+                      }}
+                    >
+                      <div className="flex-1 pr-2 flex items-start gap-2">
+                        <span className={`text-sm leading-6 ${isChecked ? 'text-indigo-600 font-medium' : 'text-slate-700'}`}>
+                          {index + 1}. {question.questionName}
+                        </span>
+                        {isChecked && (
+                           <span className="mt-1 text-indigo-400">
+                             {isExpanded ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+                           </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+                        {/* 编辑按钮 - 仅未归档且未命中时显示 */}
+                        {!isArchived && !isChecked && (
+                          <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditQuestion(question);
+                            }}
+                            className="p-2 text-gray-300 hover:text-indigo-500 transition-colors"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        )}
+                        {/* 删除按钮 - 仅未归档且未命中时显示 */}
+                        {!isArchived && !isChecked && (
+                          <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenDeleteModal(question);
+                            }}
+                            className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 展开的答案区域 */}
+                    <AnimatePresence>
+                      {isExpanded && isChecked && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="bg-indigo-50/50 rounded-xl p-4 mb-4 text-sm text-slate-600 leading-relaxed">
+                             <div className="font-medium text-indigo-900 mb-1 flex items-center gap-2">
+                               <div className="w-1 h-3 bg-indigo-500 rounded-full"/>
+                               参考回答：
+                             </div>
+                             {question.questionAnswer || '暂无回答内容'}
+                             
+                             {question.questionAnswerTime && (
+                                <div className="mt-2 text-xs text-gray-400 text-right">
+                                  {question.questionAnswerTime}
+                                </div>
+                             )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -425,27 +481,24 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
         </div>
       </div>
 
-      {/* Floating Buttons */}
-      <div className="fixed right-4 bottom-24 flex flex-col gap-3">
-        {/* Scroll to Top Button - Standard logic for non-archived state */}
-        {(!isArchived && showScrollTop) && (
-          <button 
-            onClick={scrollToTop}
-            className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-colors border border-gray-100"
-          >
-            <ArrowUp size={20} />
-          </button>
-        )}
-        
-        {/* Main Action Button: Add Question (Normal) OR Scroll Top (Archived) */}
+      {/* Scroll to Top Button */}
+      {(!isArchived && showScrollTop) && (
         <button 
-          onClick={isArchived ? scrollToTop : handleAddQuestionClick}
-          className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95"
-          style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+          onClick={scrollToTop}
+          className="fixed right-4 bottom-40 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-colors border border-gray-100 z-30"
         >
-          {isArchived ? <ArrowUp size={24} /> : <Plus size={24} />}
+          <ArrowUp size={20} />
         </button>
-      </div>
+      )}
+      
+      {/* Main Action Button: Add Question (Normal) OR Scroll Top (Archived) */}
+      <button 
+        onClick={isArchived ? scrollToTop : handleAddQuestionClick}
+        className="fixed right-4 bottom-24 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 z-40"
+        style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+      >
+        {isArchived ? <ArrowUp size={24} /> : <Plus size={24} />}
+      </button>
 
       {/* 新增问题弹框 */}
       <AddQuestionModal

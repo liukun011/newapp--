@@ -152,7 +152,10 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
             pageSize: 100
           });
           if (res.success && res.data) {
-            setTranscriptionList(res.data.records || []);
+            const records = res.data.records || [];
+            // 过滤掉 type=4 (补充资料语音录入) 的内容
+            const filteredRecords = records.filter((item: any) => item.type !== '4');
+            setTranscriptionList(filteredRecords);
           }
         } catch (error) {
           console.error('获取转写记录失败', error);
@@ -275,7 +278,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto pb-24 p-4 scroll-smooth">
+      <div className="flex-1 overflow-y-auto pb-40 p-4 scroll-smooth">
         {activeTab === 'questions' ? (
           <div className="space-y-3">
              <div className="text-xs text-gray-400 mb-2 pl-1">已自动匹配 {questions.filter(q => q.isAnswered).length} / {questions.length} 项</div>
@@ -348,10 +351,10 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
       </div>
 
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-4 pb-8 z-30 flex gap-4 items-center justify-between shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-0 left-0 right-0 px-6 py-4 pb-8 z-30 flex gap-4 items-center justify-between pointer-events-none">
         <Button 
           disabled
-          className="flex-1 rounded-full border border-gray-200 bg-white text-gray-300 pointer-events-none"
+          className="flex-1 rounded-full border border-gray-200 bg-gray-100 text-gray-400 font-medium shadow-none pointer-events-auto"
           variant="secondary"
         >
            已结束

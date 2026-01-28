@@ -267,7 +267,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                }
              } else if (res.success && res.data?.percent !== undefined) {
                // 进度
-               Toast.loading({ message: `上传中 ${res.data.percent}%...`, duration: 0 });
+               // Toast.loading({ message: `上传中 ${res.data.percent}%...`, duration: 0 });
              } else {
                // 失败
                if (res.success === false || (resultData && resultData.success === false)) {
@@ -970,7 +970,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 </div>
 
                 {/* Scrollable Questions Content */}
-                <div className="flex-1 overflow-y-auto pb-20">
+                <div className="flex-1 overflow-y-auto pb-40">
                   <div className="divide-y divide-gray-100">
                     {questions.map((question) => (
                       <div
@@ -1029,7 +1029,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 setNewQuestionName('');
                 setQuestionAddModalVisible(true);
               }}
-              className="absolute right-6 bottom-6 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95"
+              className="fixed right-6 bottom-24 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 z-40"
               style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
             >
               <Plus size={24} />
