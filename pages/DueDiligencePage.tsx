@@ -203,53 +203,24 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     };
     nativeBridge.on('imageSelected', handleImageSelected);
 
-    // Native 回调需传入两个参数：filePath 和 fileContent (Base64 string)
-    // Legacy / iOS handling
-    window.onFileSelected = (filePath: string, fileBase64?: string) => {
-      console.log('H5收到文件:', filePath, fileBase64 ? 'Has Content' : 'No Content');
-
-      // 从路径提取文件名
-      const fileName = filePath.split('/').pop() || `file_${Date.now()}`;
-
-      if (fileBase64) {
-        try {
-          // 将 Base64 转换为 File 对象
-          // 仅处理逗号后的部分（如果有前缀）
-          const base64Data = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64;
-          
-          // 简单的 Base64 解码
-          const byteCharacters = atob(base64Data);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          
-          // 推断类型
-          let mimeType = 'application/octet-stream';
-          const ext = fileName.split('.').pop()?.toLowerCase();
-          if (ext === 'png') mimeType = 'image/png';
-          else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
-          else if (ext === 'pdf') mimeType = 'application/pdf';
-          else if (ext === 'doc' || ext === 'docx') mimeType = 'application/msword';
-          
-          const blob = new Blob([byteArray], { type: mimeType });
-          const file = new File([blob], fileName, { type: mimeType });
-          
-          // 复用 handleFileChange 逻辑，但这里可以直接调 Service
-          if (deal?.id) {
-             handleUploadFileDirectly(deal.id, file);
-          }
-        } catch (e) {
-          console.error("Base64 convert failed:", e);
-          Toast.fail('文件解析失败');
+    // 监听文件选择回调
+    const handleFileSelected = (res: any) => {
+        // 根据提供的结构：res.data.fileURL
+        if (res.success && res.data && res.data.fileURL) {
+             const path = res.data.fileURL;
+             console.log('[DueDiligencePage] 收到文件选择回调:', path);
+             handleNativeImageUpload(path);
+        } else {
+             console.warn('[DueDiligencePage] 文件选择回调数据格式不匹配:', JSON.stringify(res));
         }
-      }
     };
+    nativeBridge.on('fileSelected', handleFileSelected);
+
+
 
     return () => {
-      window.onFileSelected = undefined;
       nativeBridge.off('imageSelected', handleImageSelected);
+      nativeBridge.off('fileSelected', handleFileSelected);
     };
   }, [deal?.id]);
   
@@ -303,30 +274,15 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   ];
 
   const handleUploadClick = async (id: string) => {
-    // 检测是否为安卓环境
-    const isAndroid = /Android/i.test(navigator.userAgent) || (window as any)._dsbridge;
-
     switch (id) {
       case 'camera':
-        if (isAndroid) {
-          nativeBridge.openCamera();
-        } else {
-          cameraInputRef.current?.click();
-        }
+        nativeBridge.openCamera();
         break;
       case 'gallery':
-        if (isAndroid) {
-          nativeBridge.openPhotoLibrary();
-        } else {
-          galleryInputRef.current?.click();
-        }
+        nativeBridge.openPhotoLibrary();
         break;
       case 'file':
-        if (isAndroid) {
-          nativeBridge.chooseFile();
-        } else {
-          fileInputRef.current?.click();
-        }
+        nativeBridge.chooseFile();
         break;
       case 'voice':
         // 检查是否已有补充文本 (type='4')
@@ -513,7 +469,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             </div>
 
             {/* 下半部分 - 按钮区域 */}
-            <div className="bg-[#5047E9] px-4 py-2 relative z-10 flex justify-end gap-3 items-center" style={{ minHeight: '52px' }}>
+            <div className="bg-[#5047E9] px-2 py-2 relative z-10 flex justify-end gap-2 items-center" style={{ minHeight: '52px' }}>
                 {(currentDeal?.status === '5') ? (
                   // 已归档状态：仅显示立即下载
                   <button 
@@ -535,7 +491,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                         Toast.fail('报告文件不存在');
                       }
                     }}
-                    className="px-6 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform"
+                    className="px-6 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform whitespace-nowrap"
                   >
                     立即下载
                   </button>
@@ -588,7 +544,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                           }
                         }).catch(() => {});
                       }}
-                      className="px-6 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform"
+                      className="px-3 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform whitespace-nowrap"
                     >
                       立即生成
                     </button>
@@ -611,12 +567,12 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                           Toast.fail('报告文件不存在');
                         }
                       }}
-                      className="px-6 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform"
+                      className="px-3 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform whitespace-nowrap"
                     >
                       立即下载
                     </button>
                     <button 
-                      className="px-6 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform"
+                      className="px-3 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium active:scale-95 transition-transform whitespace-nowrap"
                       onClick={onChangeTemplate}
                     >
                       更换模板
@@ -695,12 +651,12 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                         // 用户取消
                       });
                     }}
-                    className="px-4 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform"
+                    className="px-4 py-2 bg-white text-indigo-600 rounded-full text-sm font-bold shadow-md active:scale-95 transition-transform whitespace-nowrap"
                   >
                     立即生成
                   </button>
                   <button 
-                    className="px-4 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium hover:bg-white/10 active:scale-95 transition-transform"
+                    className="px-4 py-2 bg-transparent border border-white/40 text-white rounded-full text-sm font-medium hover:bg-white/10 active:scale-95 transition-transform whitespace-nowrap"
                     onClick={onChangeTemplate}
                   >
                     更换模板
@@ -785,7 +741,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     }
                     return;
                   }
-
+                  console.log('currentDealId', currentDealId);
+                  console.log('currentDeal', currentDeal);
                   // 校验是否有正在进行的访谈（悬浮窗存在 即 currentDealId 不为空）
                   if (currentDealId && currentDealId !== currentDeal?.id) {
                     setShowLimitTips(true);
@@ -799,7 +756,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   currentDeal?.status === '5'
                     ? 'bg-indigo-50 text-indigo-600 border-indigo-100' // 恢复高亮样式
                     : 'bg-indigo-50 text-indigo-600 border-indigo-100'
-                }`}
+                } whitespace-nowrap`}
                >
                  {(currentDeal?.status === '5') ? '历史访谈' : '+访谈录音'}
                </button>

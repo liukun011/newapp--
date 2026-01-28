@@ -12,6 +12,7 @@ import { nativeBridge } from '../services/nativeBridge';
 interface MaterialUploadPageProps {
   deal: DealRecord | null;
   onBack: () => void;
+  onConfirm?: () => void;
   onStartInterview: () => void;
   onGenerateAI: () => void;
   onEditInfo?: () => void;
@@ -24,6 +25,7 @@ interface MaterialUploadPageProps {
 const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   deal,
   onBack,
+  onConfirm,
   onStartInterview,
 
   onEditInfo,
@@ -327,50 +329,10 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     };
     nativeBridge.on('fileSelected', handleFileSelected);
 
-    // Native 回调需传入两个参数：filePath 和 fileContent (Base64 string)
-    // Legacy / iOS handling
-    window.onFileSelected = (filePath: string, fileBase64?: string) => {
-      console.log('H5收到文件:', filePath, fileBase64 ? 'Has Content' : 'No Content');
 
-      // 从路径提取文件名
-      const fileName = filePath.split('/').pop() || `file_${Date.now()}`;
-
-      if (fileBase64) {
-        try {
-          // 将 Base64 转换为 File 对象
-          // 仅处理逗号后的部分（如果有前缀）
-          const base64Data = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64;
-          
-          // 简单的 Base64 解码
-          const byteCharacters = atob(base64Data);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          
-          // 推断类型
-          let mimeType = 'application/octet-stream';
-          const ext = fileName.split('.').pop()?.toLowerCase();
-          if (ext === 'png') mimeType = 'image/png';
-          else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
-          else if (ext === 'pdf') mimeType = 'application/pdf';
-          else if (ext === 'doc' || ext === 'docx') mimeType = 'application/msword';
-          
-          const blob = new Blob([byteArray], { type: mimeType });
-          const file = new File([blob], fileName, { type: mimeType });
-          
-          // 直接上传文件对象
-          handleUploadFile(file);
-        } catch (e) {
-          console.error("Base64 convert failed:", e);
-          Toast.fail('文件解析失败');
-        }
-      }
-    };
 
     return () => {
-      window.onFileSelected = undefined;
+
       nativeBridge.off('imageSelected', handleImageSelected);
       nativeBridge.off('fileSelected', handleFileSelected);
     };
@@ -932,7 +894,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           variant="secondary"
           block
           className="flex-1 !rounded-full !bg-white !border-indigo-100 !text-indigo-600 !h-12 !text-[16px] shadow-lg shadow-indigo-100/50"
-          onClick={onBack}
+          onClick={onConfirm || onBack}
         >
           <Check size={18} className="mr-2" /> 确定
         </Button>

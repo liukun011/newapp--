@@ -237,6 +237,7 @@ const App: React.FC = () => {
 
   // 前进导航（跳转到新页面）
   const navigateForward = (view: View) => {
+    console.log(`[App] navigateForward to: ${view}. Previous Stack:`, viewStack);
     // 保存当前页面的滚动位置
     const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
     setScrollPositions(prev => ({ ...prev, [currentView]: scrollTop }));
@@ -302,27 +303,37 @@ const App: React.FC = () => {
     window.onNativeBack = () => {
       console.log('Native Back Pressed, Current View:', currentView, 'Stack:', viewStack);
 
-      // 如果当前在首页、登录页，或者是特定的根级页面，弹出退出确认
-      if (currentView === View.HOME || currentView === View.LOGIN || viewStack.length <= 1) {
+      // 如果当前在首页、登录页，才是真正的退出时机
+      if (currentView === View.HOME || currentView === View.LOGIN) {
+        // 如果栈里还有东西（异常情况），先清空栈回首页
+        if (viewStack.length > 1 && currentView === View.HOME) {
+             // 已经在首页了，但栈还不空，重置栈
+             setViewStack([View.HOME]);
+             return; 
+        }
+
         if (window.confirm('确定要退出应用吗？')) {
-          // window.Android?.closeApp?.();
           nativeBridge.closeApp();
         }
       } else {
-        // 如果不在首页，执行栈后退 logic
-        const newStack = [...viewStack];
-        newStack.pop(); // Remove current
-        const previousView = newStack[newStack.length - 1];
-
-        if (previousView) {
+        // 如果不在首页
+        
+        // 情况A: 栈里有历史记录，正常回退
+        if (viewStack.length > 1) {
+            const newStack = [...viewStack];
+            newStack.pop(); // 移除当前
+            const previousView = newStack[newStack.length - 1];
+            
             setNavDirection('backward');
-            setCurrentView(previousView);
+            setCurrentView(previousView || View.HOME);
             setViewStack(newStack);
-        } else {
-             // Fallback
-             setNavDirection('backward');
-             setCurrentView(View.HOME);
-             setViewStack([View.HOME]);
+        } 
+        // 情况B: 栈里没记录了（比如刷新后 stack重置了，但 currentView 是二级页面），强制回首页
+        else {
+            console.warn('Stack empty but not on Home, forcing back to Home');
+            setNavDirection('backward');
+            setCurrentView(View.HOME);
+            setViewStack([View.HOME]);
         }
       }
     };
@@ -668,10 +679,12 @@ const App: React.FC = () => {
                     navigateForward(View.DUE_DILIGENCE);
                   }}
                   onCreateNewDeal={(deal) => {
-                    setCurrentDeal(deal);
+                    console.log('[App] onCreateNewDeal triggered. Current Stack:', viewStack);
+                    setCurrentDeal(deal); 
+                    // 必须使用 navigateForward 将新页面压入栈中，保证能从资料页返回首页
                     navigateForward(View.MATERIAL_UPLOAD);
                   }}
-                  onNavigateToRecording={async (deal) => {
+                  onNavigateToRecording={async (deal) => {                     
                     try {
                       // 调用接口创建访谈实例
                       Toast.loading({ message: '准备访谈中...', duration: 0, forbidClick: true });
@@ -741,19 +754,23 @@ const App: React.FC = () => {
                     }
 
                     try {
-                      // 先查询全量尽调列表
-                      const listRes = await dealService.queryDealInstList({
-                        pageNo: 1,
-                        pageSize: 99999,
-                      });
+                      // 改为使用本地 Store 校验，与 DueDiligencePage 保持一致
+                      const store = useRecordingStore.getState();
+                      // 注意：store 中保存的是 dealId (之前代码里用的属性名是 dealId 还是 currentDealId 需要确认，根据之前的 context 是 currentDealId 或 dealId)
+                      // 查看 store 定义，setData({ dealId: ... })。 
+                      // 假设 store properties 是 { dealId, ... } 或者 { currentDealId ... }
+                      // 让我们看一下 useRecordingStore 的定义。
+                      // 根据 Step 1345 line 62: currentInterviewInstId, currentInterviewInstTitle... 
+                      // Wait, did I see dealId?
+                      // Step 1345 line 697: // dealId: deal.id, // Move to active start
+                      // 看来 store 里可能没有直接存 dealId？
+                      // 但是 HomePage 和 DueDiligencePage 都用了 currentDealId。
+                      // 说明 useRecordingStore 返回了 currentDealId。
+                      // 让我们假定 store.getState().currentDealId 存在。
+                      
+                      const activeDealId = store.currentDealId; 
 
-                      // 从全量列表中过滤出正在访谈中的尽调（status='3'）
-                      const allDeals = listRes.success && listRes.data?.records ? listRes.data.records : [];
-                      const activeDeals = allDeals.filter(deal => deal.status === '3');
-                      const hasOtherActiveInterview = activeDeals.some(deal => deal.id !== currentDeal.id);
-
-                      // 如果有其他尽调正在访谈中，且当前尽调不在访谈中，则不允许进入
-                      if (hasOtherActiveInterview && currentDeal.status !== '3') {
+                      if (activeDealId && activeDealId !== currentDeal.id) {
                         setShowLimitTips(true);
                         setTimeout(() => setShowLimitTips(false), 3000);
                         return;
@@ -840,6 +857,7 @@ const App: React.FC = () => {
                 <MaterialUploadPage
                   deal={currentDeal}
                   onBack={() => navigateBackward(View.HOME)}
+                  onConfirm={() => navigateForward(View.DUE_DILIGENCE)}
                   onStartInterview={async () => {
                     if (!currentDeal) return;
                     try {

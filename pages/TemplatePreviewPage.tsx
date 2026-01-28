@@ -30,7 +30,7 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
         {templateUrl ? (
           <iframe 
             className="absolute inset-0 w-full h-full border-none"
-            src={`${SitesUrl.preview}?url=${encodeURIComponent(btoa(templateUrl))}`} 
+            src={`${SitesUrl.preview}?url=${encodeURIComponent(window.btoa(unescape(encodeURIComponent(templateUrl))))}`} 
             title="模板预览"
           />
         ) : (

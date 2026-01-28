@@ -5,6 +5,8 @@ import Button from '../components/Button';
 import { DealRecord } from '../types';
 import { dealService } from '../services/dealService';
 
+import { nativeBridge } from '../services/nativeBridge';
+
 interface CorporateEditPageProps {
   deal: DealRecord | null;
   onBack: () => void;
@@ -15,7 +17,9 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
   const [companyName, setCompanyName] = useState(deal?.interviewCust || '');
   const [logoUrl, setLogoUrl] = useState(deal?.logo || '');
   const [loading, setLoading] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  // 上传状态锁
+  const isUploadingRef = React.useRef(false);
 
   // 监听 deal 变化，更新 logo 和 companyName
   useEffect(() => {
@@ -24,6 +28,84 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
       setLogoUrl(deal.logo || '');
     }
   }, [deal]);
+
+  // 通用 Native 上传方法
+  const uploadNativeFile = async (localPath: string) => {
+      if (isUploadingRef.current) return;
+      isUploadingRef.current = true;
+      
+      try {
+          Toast.loading({ message: '图片处理中...', duration: 0, forbidClick: true });
+          
+          const token = localStorage.getItem('zov-user-token') || '';
+          const uploadHost = 'http://68.79.42.215/report/upload/file'; // 硬编码，需保持一致
+
+          const params = {
+              host: uploadHost,
+              authorization: token,
+              filePath: localPath,
+          };
+          
+          console.log('[企业资料] 开始上传图片:', localPath);
+
+          const serverUrl = await new Promise<string>((resolve, reject) => {
+               const resultHandler = (res: any) => {
+                   const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
+                   const isSuccess = res.success && (resultData?.success === true || resultData?.errno === 0);
+
+                   if (isSuccess) {
+                       const url = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
+                       if (url) {
+                           nativeBridge.off('onUploadResult', resultHandler);
+                           resolve(url);
+                       }
+                   } else if (res.success && res.data?.percent !== undefined) {
+                       // 忽略进度
+                   } else {
+                       if (res.success === false || (resultData && resultData.success === false)) {
+                           nativeBridge.off('onUploadResult', resultHandler);
+                           reject(new Error(resultData?.message || res.message || '上传失败'));
+                       }
+                   }
+               };
+               
+               nativeBridge.on('onUploadResult', resultHandler);
+               nativeBridge.uploadInterviewFile(params);
+               
+               setTimeout(() => {
+                   nativeBridge.off('onUploadResult', resultHandler);
+                   reject(new Error('上传超时'));
+               }, 30000);
+          });
+
+          console.log('[企业资料] 图片上传成功:', serverUrl);
+          setLogoUrl(serverUrl);
+          Toast.clear();
+          Toast.success('图片已更新');
+
+      } catch (error: any) {
+          console.error('Native upload failed:', error);
+          Toast.clear();
+          Toast.fail(error.message || '图片上传失败');
+      } finally {
+          isUploadingRef.current = false;
+      }
+  };
+
+  // 监听 Native 图片选择回调
+  useEffect(() => {
+      const handleImageSelected = (res: any) => {
+          if (res.success && res.data && res.data.imageURL) {
+              uploadNativeFile(res.data.imageURL);
+          }
+      };
+      
+      nativeBridge.on('imageSelected', handleImageSelected);
+      
+      return () => {
+          nativeBridge.off('imageSelected', handleImageSelected);
+      };
+  }, []);
 
   // 将网络图片转换为 Base64
   const imageToBase64 = async (imagePath: string): Promise<string> => {
@@ -50,44 +132,6 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
     }
   };
 
-  // 将文件转换为 Base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
-  // 处理文件选择
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // 验证文件类型
-    if (!file.type.startsWith('image/')) {
-        Toast.info('请选择图片文件');
-        return;
-    }
-
-    try {
-        Toast.loading({ message: '处理中...', duration: 0 });
-        const base64 = await fileToBase64(file);
-        setLogoUrl(base64);
-        Toast.clear();
-        Toast.success('图片已选择');
-    } catch (error) {
-        Toast.clear();
-        console.error('Image processing failed:', error);
-        Toast.fail('图片处理失败');
-    } finally {
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    }
-  };
-
   // 处理确认按钮点击
   const handleConfirm = async () => {
     if (!companyName.trim()) {
@@ -107,6 +151,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
       let finalLogo = logoUrl.trim();
       if (finalLogo && (finalLogo.startsWith('http://') || finalLogo.startsWith('https://'))) {
          try {
+             // 尝试转 Base64，如果是跨域图片可能会失败，失败则依然传 URL
              const base64 = await imageToBase64(finalLogo);
              if (base64.startsWith('data:')) {
                  finalLogo = base64;
@@ -131,14 +176,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F8FA] relative">
-      <input 
-        type="file"
-        ref={fileInputRef}
-        className="hidden"
-        accept="image/*"
-        onChange={handleFileChange}
-      />
+    <div className="fixed inset-0 h-full w-full overflow-hidden flex flex-col bg-[#F7F8FA]">
 
       {/* NavBar */}
       <div className="flex items-center justify-between px-4 py-3 bg-white sticky top-0 z-10">
@@ -149,13 +187,13 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
         <div className="w-8"></div> {/* Spacer for alignment */}
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-6 flex flex-col items-center w-full">
+      {/* Main Content - Scrollable Area */}
+      <div className="flex-1 w-full overflow-y-auto p-6 flex flex-col items-center pb-32">
         {/* Photo Uploader Placeholder / Logo Preview */}
-        <div className="mt-8 mb-10 flex flex-col items-center justify-center">
+        <div className="mt-8 mb-10 flex flex-col items-center justify-center shrink-0">
             <div 
                 className="w-28 h-28 rounded-full bg-indigo-50 flex flex-col items-center justify-center text-indigo-500 mb-2 shadow-sm border border-indigo-100 active:scale-95 transition-transform overflow-hidden cursor-pointer relative group"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => nativeBridge.openPhotoLibrary()}
             >
                 {logoUrl ? (
                     <>
@@ -188,26 +226,32 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
         </div>
       </div>
 
-      {/* Bottom Buttons */}
-      <div className="p-6 pb-8 bg-white border-t border-gray-100 flex gap-4 mt-auto sticky bottom-0 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+      <div 
+        className="absolute bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30 flex gap-4"
+        style={{
+          paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)' 
+        }}
+      >
          <Button 
             variant="secondary" 
             block 
-            className="flex-1 !rounded-full !border-gray-200 !text-slate-600 !h-12 !text-[16px]"
+            className="flex-1 !rounded-full !bg-white !border-indigo-100 !text-indigo-600 !h-12 !text-[16px] shadow-lg shadow-indigo-100/50"
             onClick={onBack}
          >
-           取消
+         取消
          </Button>
          
          <Button 
             variant="primary" 
             block 
-            className="flex-1 !rounded-full !h-12 !text-[16px] shadow-indigo-500/25"
+            className="flex-1 !rounded-full !h-12 !text-[16px] shadow-lg shadow-indigo-500/30"
             onClick={handleConfirm}
             loading={loading}
             disabled={loading}
          >
-           确认
+         确认
          </Button>
       </div>
     </div>

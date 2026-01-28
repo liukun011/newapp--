@@ -65,32 +65,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     fetchDealDetail();
   }, [fetchDealDetail]);
 
-  // 处理文件上传的核心逻辑
-  const handleUploadFile = async (file: File) => {
-    if (!dealId) {
-      Toast.fail('未找到尽调实例');
-      return;
-    }
 
-    try {
-      Toast.loading({ message: '上传中...', duration: 0 });
-      // 这里的 file 可能是原生 bridge 传回路径后生成的 Mock File
-      const res = await dealService.uploadDealMaterial(dealId, file);
-      Toast.clear();
-
-      if (res.success) {
-        Toast.success('上传成功');
-        // 刷新资料列表
-        fetchDealDetail();
-      } else {
-        Toast.fail(res.message || '上传失败');
-      }
-    } catch (error) {
-      Toast.clear();
-      console.error('Upload failed:', error);
-      Toast.fail('上传失败');
-    }
-  };
 
   // 上传状态锁，防止重复触发
   const isUploadingRef = React.useRef(false);
@@ -197,56 +172,10 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     };
     nativeBridge.on('fileSelected', handleFileSelected);
 
-    // Native 回调需传入两个参数：filePath 和 fileContent (Base64 string)
-    // Legacy / iOS handling
-    window.onFileSelected = (filePath: string, fileBase64?: string) => {
-       // ... existing logic ...
-      console.log('H5收到文件:', filePath, fileBase64 ? 'Has Content' : 'No Content');
 
-      // 从路径提取文件名
-      const fileName = filePath.split('/').pop() || `file_${Date.now()}`;
-
-      if (fileBase64) {
-        try {
-          // 将 Base64 转换为 File 对象
-          // 仅处理逗号后的部分（如果有前缀）
-          const base64Data = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64;
-          
-          // 简单的 Base64 解码
-          const byteCharacters = atob(base64Data);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          
-          // 推断类型（简单推断，或者由 Native 传递 MIME Type 更好）
-          let mimeType = 'application/octet-stream';
-          const ext = fileName.split('.').pop()?.toLowerCase();
-          if (ext === 'png') mimeType = 'image/png';
-          else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
-          else if (ext === 'pdf') mimeType = 'application/pdf';
-          else if (ext === 'doc' || ext === 'docx') mimeType = 'application/msword';
-          
-          const blob = new Blob([byteArray], { type: mimeType });
-          const file = new File([blob], fileName, { type: mimeType });
-          
-          handleUploadFile(file);
-        } catch (e) {
-          console.error("Base64 convert failed:", e);
-          Toast.fail('文件解析失败');
-        }
-      } else {
-        // console.warn('Native did not return file content (Base64)');
-        // Toast.fail('未获取到文件内容');
-        // 如果没有 Base64，可能是 Android 发送了路径但不发内容，走 ImageSelected 逻辑？
-        // 但通常 onFileSelected 和 imageSelected 是分开的。
-        // 这里保持原样。
-      }
-    };
 
     return () => {
-      window.onFileSelected = undefined;
+
       nativeBridge.off('imageSelected', handleImageSelected);
       nativeBridge.off('fileSelected', handleFileSelected);
     };
