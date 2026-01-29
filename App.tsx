@@ -961,7 +961,10 @@ const App: React.FC = () => {
                   onFinish={() => {
                     // 确保回到尽调详情页, 并重置返回路径为首页
                     setPreviousView(View.HOME);
-                    navigateBackward(View.DUE_DILIGENCE);
+                    // 重置栈，使得在详情页点击返回直接回首页，防止退回到录音或资料页
+                    setViewStack([View.HOME, View.DUE_DILIGENCE]);
+                    setNavDirection('backward'); // 视为一段流程的结束
+                    setCurrentView(View.DUE_DILIGENCE);
                   }}
                 />
               )}
@@ -1014,21 +1017,21 @@ const App: React.FC = () => {
               {currentView === View.MY_TEMPLATES && (
                 <MyTemplatesPage
                   onBack={() => navigateBackward(templateOrigin || View.HOME)}
-                  onUpload={() => setCurrentView(View.UPLOAD_TEMPLATE)}
+                  onUpload={() => navigateForward(View.UPLOAD_TEMPLATE)}
                   initialTab={templateInitialTab}
                 />
               )}
               {currentView === View.UPLOAD_TEMPLATE && (
                 <UploadTemplatePage
                   onBack={() => navigateBackward(View.MY_TEMPLATES)}
-                  onCancel={() => setCurrentView(View.MY_TEMPLATES)}
+                  onCancel={() => navigateBackward(View.MY_TEMPLATES)}
                   onSubmit={() => {
                     // 提交成功后不立即返回，等待用户点击"查看列表"
                   }}
                   onViewList={() => {
                     // 点击"查看列表"后跳转到模板管理页的"审核中" tab
                     setTemplateInitialTab('uploading');
-                    setCurrentView(View.MY_TEMPLATES);
+                    navigateBackward(View.MY_TEMPLATES);
                   }}
                 />
               )}
@@ -1037,7 +1040,7 @@ const App: React.FC = () => {
                   onBack={() => navigateBackward(previousView)}
                   onPreview={(name, url, id) => {
                     setPreviewTemplate({ name, url, id });
-                    setCurrentView(View.TEMPLATE_PREVIEW);
+                    navigateForward(View.TEMPLATE_PREVIEW);
                   }}
                   currentTemplateId={currentDeal?.templateId}
                   dealId={currentDeal?.id}
@@ -1208,8 +1211,7 @@ const App: React.FC = () => {
                 if (currentView !== View.REPORT_PREVIEW) {
                   setPreviousView(currentView);
                 }
-                setNavDirection('forward');
-                setCurrentView(View.RECORDING);
+                navigateForward(View.RECORDING);
               }}
             />
           )}

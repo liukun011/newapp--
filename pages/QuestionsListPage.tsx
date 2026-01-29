@@ -54,7 +54,7 @@ const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[50] flex items-center justify-center">
+    <div className="fixed inset-0 z-[50] flex flex-col items-center justify-center p-4 overflow-y-auto">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50"
@@ -62,7 +62,7 @@ const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl w-[85%] max-w-[340px] shadow-xl animate-fadeIn">
+      <div className="relative bg-white rounded-2xl w-full max-w-[340px] shadow-xl animate-fadeIn my-auto">
         {/* Header */}
         <div className="pt-5 pb-3 text-center">
           <h3 className="text-lg font-semibold text-slate-800">新增问题</h3>
@@ -124,7 +124,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[50] flex items-center justify-center">
+    <div className="fixed inset-0 z-[50] flex flex-col items-center justify-center p-4 overflow-y-auto">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50"
@@ -132,7 +132,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl w-[85%] max-w-[340px] shadow-xl animate-fadeIn">
+      <div className="relative bg-white rounded-2xl w-full max-w-[340px] shadow-xl animate-fadeIn my-auto">
         {/* Header */}
         <div className="pt-5 pb-3 text-center">
           <h3 className="text-lg font-semibold text-slate-800">编辑问题</h3>
