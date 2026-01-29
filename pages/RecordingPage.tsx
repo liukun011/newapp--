@@ -41,6 +41,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   const [questions, setQuestions] = useState<Question[]>([]);
   const [expandedQuestion, setExpandedQuestion] = useState<number | string | null>(null);
   const { transcriptionList, setTranscriptionList } = useRecordingStore();
+  console.log('[RecordingPage] transcriptionList', transcriptionList);
 
   const resetStore = useRecordingStore(state => state.reset);
 
@@ -683,7 +684,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
             <div className="space-y-6 pb-32">
               {transcriptionList.length > 0 ? (
                 transcriptionList.map((item, index) => {
-                  const isRecognizing = item.isFinal === false;
+                  if (!item.content?.trim()) return null;
+                  const isRecognizing = item.isFinal === false && index === transcriptionList.length - 1;
 
                   return (
                     <div key={item.id || index} className="flex gap-3 flex-row">
