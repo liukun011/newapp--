@@ -19,12 +19,12 @@ instance.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
     }
-    
+
     // 如果是 FormData，删除 Content-Type，让浏览器自动设置（包含 boundary）
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
     }
-    
+
     return config;
   },
   (error) => {
@@ -39,15 +39,16 @@ instance.interceptors.response.use(
     const res = response.data;
     // 全局处理业务逻辑错误
     if (res && typeof res === 'object' && res.success === false) {
-       const msg = res.message || '请求失败';
-       Toast.fail(msg);
-       return Promise.reject(new Error(msg));
+      const msg = res.message || '请求失败';
+      Toast.fail(msg);
+
+      return Promise.reject(new Error(msg));
     }
     return res;
   },
   (error) => {
     const message = error.response?.data?.message || error.message || '网络错误';
-    
+
     // 抛出错误提示
     Toast.fail(message);
 
@@ -59,7 +60,7 @@ instance.interceptors.response.use(
         window.dispatchEvent(new Event('unauthorized'));
       }, 1000);
     }
-    
+
     return Promise.reject(new Error(message));
   }
 );

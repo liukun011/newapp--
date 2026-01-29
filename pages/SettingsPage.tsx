@@ -45,7 +45,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         console.error('Failed to update user info', e);
       }
     };
- 
+
     fetchUserInfo();
   }, []);
 
@@ -62,9 +62,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     }
   };
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
+
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,12 +70,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
     try {
       Toast.loading({ message: '上传中...', duration: 0, forbidClick: true });
-      
+
       // 1. 上传图片
       const uploadRes = await authService.uploadFile(file);
       if (uploadRes.successful && uploadRes.data) {
         const avatarUrl = uploadRes.data.fileUrl;
-        
+
         // 2. 更新用户信息
         const updateRes = await authService.updateUserInfo({
           ...JSON.parse(localStorage.getItem('zov-user-info') || '{}'),
@@ -86,7 +84,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
         if (updateRes.successful) {
           Toast.success('头像更新成功');
-          
+
           // 重新获取用户信息以确保同步
           const userInfoRes = await authService.getUserInfo();
           if (userInfoRes.successful && userInfoRes.data) {
@@ -101,9 +99,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         Toast.fail(uploadRes.message || '图片上传失败');
       }
     } catch (error) {
-        console.error('Avatar update failed:', error);
-        Toast.fail('头像更新失败');
-      } finally {
+      console.error('Avatar update failed:', error);
+      Toast.fail('头像更新失败');
+    } finally {
       Toast.clear();
       // 清空 input 允许重复选择同个文件
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -153,11 +151,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   return (
     <div className="min-h-screen bg-[#F7F8FA] flex flex-col pb-28">
       {/* Hidden File Input */}
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        accept="image/*" 
-        className="hidden" 
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/*"
+        className="hidden"
         onChange={handleFileChange}
       />
 
@@ -187,7 +185,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <h2 className="text-[18px] font-bold text-slate-800">{userName || '未登录'}</h2>
-          <button 
+          <button
             onClick={() => {
               setNewNickName(userName === '未登录' ? '' : userName);
               setRenameModalVisible(true);
@@ -262,20 +260,20 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>,
         document.body
       )}
-      
+
       {/* Rename Modal */}
       {renameModalVisible && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-[20vh]">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/40 backdrop-blur-[1px] animate-fadeIn"
             onClick={() => setRenameModalVisible(false)}
           />
-          
+
           {/* Modal Content */}
           <div className="relative bg-white rounded-2xl w-[85%] max-w-sm p-6 shadow-xl animate-scaleIn z-10">
             <h3 className="text-center text-lg font-bold text-slate-800 mb-6">修改昵称</h3>
-            
+
             <div className="relative mb-8">
               <input
                 type="text"
@@ -286,7 +284,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                 autoFocus
               />
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={() => setRenameModalVisible(false)}
@@ -300,7 +298,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                     Toast.fail('昵称不能为空');
                     return;
                   }
-                  
+
                   try {
                     Toast.loading({ message: '修改中...', duration: 0 });
                     const updateRes = await authService.updateUserInfo({
@@ -309,11 +307,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                     });
 
                     Toast.clear();
-                    
+
                     if (updateRes.successful) {
                       Toast.success('昵称修改成功');
                       setRenameModalVisible(false);
-                      
+
                       // 重新获取用户信息以确保同步
                       const userInfoRes = await authService.getUserInfo();
                       if (userInfoRes.successful && userInfoRes.data) {
