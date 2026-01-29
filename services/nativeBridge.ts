@@ -165,7 +165,7 @@ class NativeBridgeService {
   /**
    * 设置参数并启动录音
    */
-  startRecordingWithParams(params: { roleType?: number; surveyId?: number | string; [key: string]: any }) {
+  startRecordingWithParams(params: { roleType?: number; surveyId?: number | string;[key: string]: any }) {
     this.callNative('startRecordingSetParams', params);
   }
 
@@ -221,11 +221,11 @@ class NativeBridgeService {
    * 监听文件选择回调
    */
   onFileSelected(callback: (data: any) => void) {
-      this.on('fileSelected', (response) => {
-          if (response.success && response.data) {
-              callback(response.data);
-          }
-      });
+    this.on('fileSelected', (response) => {
+      if (response.success && response.data) {
+        callback(response.data);
+      }
+    });
   }
 
   /**
@@ -278,6 +278,7 @@ interface XunfeiTranscriptionResult {
         ws: Array<{
           cw: Array<{
             w: string;  // 识别的文字
+            rl?: string; // 角色 ID
           }>;
         }>;
       }>;
@@ -292,10 +293,11 @@ interface XunfeiTranscriptionResult {
 export function handleTranscriptionResult(jsonString: string): {
   text: string;
   isFinal: boolean;
+  roleId?: string;
 } | null {
   try {
     const result: XunfeiTranscriptionResult = JSON.parse(jsonString);
-    
+
     // DEBUG: Show RAW RESULT using overlay
     // if (typeof document !== 'undefined' && !document.getElementById('debug-overlay-raw')) {
     //   const div = document.createElement('div');
@@ -314,22 +316,31 @@ export function handleTranscriptionResult(jsonString: string): {
       if (typeVal === undefined && result.cn.st.type !== undefined) {
         typeVal = result.cn.st.type;
       }
-      
+
       const isTypeFinal = String(typeVal) === "0";
 
       let text = '';
+      let lastRole: string | undefined;
+
       const rt = result.cn.st.rt;
 
       for (const item of rt) {
         if (item.ws) {
           for (const w of item.ws) {
-            if (w.cw && w.cw[0] && w.cw[0].w) {
-              text += w.cw[0].w;
+            if (w.cw && w.cw[0]) {
+              if (w.cw[0].w) {
+                text += w.cw[0].w;
+              }
+              // Parse roleId
+              const rl = w.cw[0].rl;
+              if (rl && rl !== '0') {
+                lastRole = rl;
+              }
             }
           }
         }
       }
-      return { text, isFinal: isTypeFinal };
+      return { text, isFinal: isTypeFinal, roleId: lastRole };
     }
   } catch (e) {
     console.error('解析转写结果失败:', e);

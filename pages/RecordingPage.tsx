@@ -49,16 +49,16 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
   // 刷新 Deal 详情
   const refreshDealInfo = async () => {
-     if (!deal?.id) return;
-     try {
-         const res = await dealService.getDealInstDetail(deal.id);
-         if (res.success && res.data && onDealUpdate) {
-            //  console.log('[RecordingPage] 刷新 Deal 详情成功');
-             onDealUpdate(res.data);
-         }
-     } catch (error) {
-         console.error('[RecordingPage] 刷新 Deal 详情失败', error);
-     }
+    if (!deal?.id) return;
+    try {
+      const res = await dealService.getDealInstDetail(deal.id);
+      if (res.success && res.data && onDealUpdate) {
+        //  console.log('[RecordingPage] 刷新 Deal 详情成功');
+        onDealUpdate(res.data);
+      }
+    } catch (error) {
+      console.error('[RecordingPage] 刷新 Deal 详情失败', error);
+    }
   };
 
   // Scroll to bottom when list updates or tab becomes active
@@ -76,13 +76,13 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       // console.log('[deal] 切换到问题列表，刷新数据');
       refreshDealInfo();
     }
-  }, [transcriptionList.length, activeTab]);
+  }, [transcriptionList, activeTab]);
 
   // 初始化时也刷新一次
   useEffect(() => {
     refreshDealInfo();
   }, [deal?.id]);
-  
+
   // Update Store with current Deal ID when entering page
   const setData = useRecordingStore(state => state.setData);
 
@@ -144,7 +144,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
     // 只上传最终结果（isFinal: true）
     const finalResults = transcriptionList.filter(item => item.isFinal);
-    
+
     if (finalResults.length === 0) {
       console.log('[上传转写] 没有需要上传的内容');
       return;
@@ -160,7 +160,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       console.log('[上传转写] Content List:', JSON.stringify(contentList, null, 2));
 
       console.log('[上传转写] 上传内容:', contentList.length, '条');
-      
+
       await dealService.uploadInterviewInstContent({
         interviewInstId,
         contentList,
@@ -203,125 +203,125 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
           if (response.success && response.data && response.data.list && response.data.list.length > 0) {
             // 获取最新的录音文件（通常是列表的第一个）
             const latestAudio = response.data.list[0];
-              try {
-                const rawFileUrl = latestAudio.fileURL || "";
-                const fileUrl = rawFileUrl.trim();
-                
-                console.log('[上传录音] 调用 Native 上传接口, filePath:', fileUrl);
+            try {
+              const rawFileUrl = latestAudio.fileURL || "";
+              const fileUrl = rawFileUrl.trim();
 
-                // DEBUG: Native Upload Progress
-                console.log(`Native Uploading: ${fileUrl}...`);
+              console.log('[上传录音] 调用 Native 上传接口, filePath:', fileUrl);
 
-                // 获取 Token
-                const token = localStorage.getItem('zov-user-token') || '';
+              // DEBUG: Native Upload Progress
+              console.log(`Native Uploading: ${fileUrl}...`);
 
-                const uploadHost = 'http://68.79.42.215/report/upload/file';
+              // 获取 Token
+              const token = localStorage.getItem('zov-user-token') || '';
 
-                const params = {
-                    host: uploadHost,
-                    authorization: token,
-                    filePath: fileUrl,
-                    // interviewInstId: Number(interviewInstId)
-                }
-                console.log('[上传录音] Upload Params:', JSON.stringify(params, null, 2));
+              const uploadHost = 'http://68.79.42.215/report/upload/file';
 
-                const uploadPromise = new Promise<boolean>((resolveUpload, rejectUpload) => {
-                    const handleUploadResult = (res: any) => {
-                        console.log('[上传录音] Upload Result:', JSON.stringify(res, null, 2));
-
-                        // 1. 先检查 Bridge 层面是否调用成功
-                        if (res.success === false) {
-                            nativeBridge.off('onUploadResult', handleUploadResult);
-                            rejectUpload(new Error(res.message || 'Native Bridge Call Failed'));
-                            return;
-                        }
-
-                        if (!res.data) return; // 忽略空数据回调
-
-                        // 2. 更新 Toast 进度让用户感知
-                        // if (res.data.percent !== undefined) {
-                        //    Toast.loading({ message: `正在保存 ${res.data.percent}%`, forbidClick: true, duration: 0 });
-                        // }
-
-                        // 3. 检查最终结果
-                        // 注意：有些 Native 实现可能把结果直接放在 data 里，而不是 data.result，这里做下兼容防御
-                        const resultData = res.data.result || (res.data.success !== undefined ? res.data : null);
-
-                        if (resultData) {
-                            console.log('[上传录音] Parsed Result Data:', JSON.stringify(resultData));
-                            
-                            // 上传完成（无论成功失败）
-                            // 兼容 errno=0 (富文本编辑器常用格式) 或 success=true
-                            const isSuccess = resultData.success === true || resultData.errno === 0;
-                            
-                            if (isSuccess) {
-                                nativeBridge.off('onUploadResult', handleUploadResult);
-                                
-                                // Native 上传成功后，获取 URL 并调用后端接口绑定
-                                // 尝试多种路径获取 URL
-                                const fileUrl = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
-                                console.log('[上传录音] Native上传成功，URL:', fileUrl);
-                                
-                                if (fileUrl) {
-                                  console.log('[上传录音] 调用saveInterviewInstRecordFile请求参数:', {
-                                    path: fileUrl,
-                                    interviewInstId: interviewInstId
-                                  });
-                                  // 调用 saveInterviewInstRecordFile 保存记录
-                                  dealService.saveInterviewInstRecordFile({
-                                    path: fileUrl,
-                                    interviewInstId: interviewInstId
-                                  }).then(saveRes => {
-                                    if (saveRes.success) {
-                                      console.log('[上传录音] 绑定记录成功');
-                                      Toast.clear();
-                                      resolveUpload(true);
-                                    } else {
-                                      console.error('[上传录音] 绑定记录失败:', saveRes.message);
-                                      // 绑定失败是否算整体失败？通常算，但文件已上传。
-                                      // 这里我们 reject 以提示用户
-                                      Toast.clear();
-                                      rejectUpload(new Error(saveRes.message || '绑定录音失败'));
-                                    }
-                                  }).catch(err => {
-                                    console.error('[上传录音] 绑定接口异常:', err);
-                                    Toast.clear();
-                                    rejectUpload(new Error('绑定录音接口异常'));
-                                  });
-                                } else {
-                                  console.warn('[上传录音] 未获取到文件 URL, resultData:', JSON.stringify(resultData));
-                                  resolveUpload(true); // 虽无URL但Native报成功，暂时resolve
-                                }
-                            } else {
-                                console.warn('[上传录音] Native返回成功但业务失败:', resultData.message);
-                                // 只有明确失败才 reject
-                                if (resultData.success === false || (resultData.errno !== undefined && resultData.errno !== 0)) {
-                                    nativeBridge.off('onUploadResult', handleUploadResult);
-                                    rejectUpload(new Error(resultData.message || 'Upload Failed'));
-                                }
-                            }
-                        }
-                    };
-
-                    nativeBridge.on('onUploadResult', handleUploadResult);
-
-                    nativeBridge.uploadInterviewFile(params);
-
-
-                    // 设置超时
-                    setTimeout(() => {
-                       nativeBridge.off('onUploadResult', handleUploadResult);
-                       rejectUpload(new Error('Upload Timeout (60s)'));
-                    }, 60000);
-                });
-
-                await uploadPromise;
-                console.log('[上传录音] 上传流程结束');
-                resolve(true);
-
-              } catch (error: any) {
-                resolve(false);
+              const params = {
+                host: uploadHost,
+                authorization: token,
+                filePath: fileUrl,
+                // interviewInstId: Number(interviewInstId)
               }
+              console.log('[上传录音] Upload Params:', JSON.stringify(params, null, 2));
+
+              const uploadPromise = new Promise<boolean>((resolveUpload, rejectUpload) => {
+                const handleUploadResult = (res: any) => {
+                  console.log('[上传录音] Upload Result:', JSON.stringify(res, null, 2));
+
+                  // 1. 先检查 Bridge 层面是否调用成功
+                  if (res.success === false) {
+                    nativeBridge.off('onUploadResult', handleUploadResult);
+                    rejectUpload(new Error(res.message || 'Native Bridge Call Failed'));
+                    return;
+                  }
+
+                  if (!res.data) return; // 忽略空数据回调
+
+                  // 2. 更新 Toast 进度让用户感知
+                  // if (res.data.percent !== undefined) {
+                  //    Toast.loading({ message: `正在保存 ${res.data.percent}%`, forbidClick: true, duration: 0 });
+                  // }
+
+                  // 3. 检查最终结果
+                  // 注意：有些 Native 实现可能把结果直接放在 data 里，而不是 data.result，这里做下兼容防御
+                  const resultData = res.data.result || (res.data.success !== undefined ? res.data : null);
+
+                  if (resultData) {
+                    console.log('[上传录音] Parsed Result Data:', JSON.stringify(resultData));
+
+                    // 上传完成（无论成功失败）
+                    // 兼容 errno=0 (富文本编辑器常用格式) 或 success=true
+                    const isSuccess = resultData.success === true || resultData.errno === 0;
+
+                    if (isSuccess) {
+                      nativeBridge.off('onUploadResult', handleUploadResult);
+
+                      // Native 上传成功后，获取 URL 并调用后端接口绑定
+                      // 尝试多种路径获取 URL
+                      const fileUrl = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
+                      console.log('[上传录音] Native上传成功，URL:', fileUrl);
+
+                      if (fileUrl) {
+                        console.log('[上传录音] 调用saveInterviewInstRecordFile请求参数:', {
+                          path: fileUrl,
+                          interviewInstId: interviewInstId
+                        });
+                        // 调用 saveInterviewInstRecordFile 保存记录
+                        dealService.saveInterviewInstRecordFile({
+                          path: fileUrl,
+                          interviewInstId: interviewInstId
+                        }).then(saveRes => {
+                          if (saveRes.success) {
+                            console.log('[上传录音] 绑定记录成功');
+                            Toast.clear();
+                            resolveUpload(true);
+                          } else {
+                            console.error('[上传录音] 绑定记录失败:', saveRes.message);
+                            // 绑定失败是否算整体失败？通常算，但文件已上传。
+                            // 这里我们 reject 以提示用户
+                            Toast.clear();
+                            rejectUpload(new Error(saveRes.message || '绑定录音失败'));
+                          }
+                        }).catch(err => {
+                          console.error('[上传录音] 绑定接口异常:', err);
+                          Toast.clear();
+                          rejectUpload(new Error('绑定录音接口异常'));
+                        });
+                      } else {
+                        console.warn('[上传录音] 未获取到文件 URL, resultData:', JSON.stringify(resultData));
+                        resolveUpload(true); // 虽无URL但Native报成功，暂时resolve
+                      }
+                    } else {
+                      console.warn('[上传录音] Native返回成功但业务失败:', resultData.message);
+                      // 只有明确失败才 reject
+                      if (resultData.success === false || (resultData.errno !== undefined && resultData.errno !== 0)) {
+                        nativeBridge.off('onUploadResult', handleUploadResult);
+                        rejectUpload(new Error(resultData.message || 'Upload Failed'));
+                      }
+                    }
+                  }
+                };
+
+                nativeBridge.on('onUploadResult', handleUploadResult);
+
+                nativeBridge.uploadInterviewFile(params);
+
+
+                // 设置超时
+                setTimeout(() => {
+                  nativeBridge.off('onUploadResult', handleUploadResult);
+                  rejectUpload(new Error('Upload Timeout (60s)'));
+                }, 60000);
+              });
+
+              await uploadPromise;
+              console.log('[上传录音] 上传流程结束');
+              resolve(true);
+
+            } catch (error: any) {
+              resolve(false);
+            }
           } else {
             console.log('[上传录音] 没有找到录音文件');
             resolve(false);
@@ -411,13 +411,13 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     if (isRecording) {
       // 停止录音（暂停）
       console.log("[H5] calling stopRecord...");
-      nativeBridge.stopRecording(); 
-      
+      nativeBridge.stopRecording();
+
       onToggleRecording();
-      
+
       // 暂停时先尝试上传转写内容
       await uploadTranscriptionContent();
-      
+
       // 上传后再刷新 Deal 详情，确保获取最新状态
       refreshDealInfo();
 
@@ -459,44 +459,44 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
     // 如果 currentInstId 为空（例如中断后 Reset 了），需要重新创建
     if (!currentInstId && deal?.id) {
-        try {
-            Toast.loading({ message: '准备录音环境...', forbidClick: true, duration: 0 });
-            const createRes = await dealService.createInterviewInst({
-                interviewDealInstId: deal.id,
-                interviewCustom: deal.interviewCust || '未命名客户'
-            });
-            Toast.clear();
+      try {
+        Toast.loading({ message: '准备录音环境...', forbidClick: true, duration: 0 });
+        const createRes = await dealService.createInterviewInst({
+          interviewDealInstId: deal.id,
+          interviewCustom: deal.interviewCust || '未命名客户'
+        });
+        Toast.clear();
 
-            if (createRes.success && createRes.data) {
-                // 兼容处理：data可能是直接的ID，也或者是包含id的对象
-                const rawData = createRes.data;
-                const newId = (typeof rawData === 'object' && rawData.interviewInstId) ? rawData.interviewInstId : rawData;
-                currentInstId = String(newId);
-                
-                const instTitle = deal.interviewCust ? `${deal.interviewCust}的访谈` : '新访谈';
-                console.log(`[H5] Re-created interview instance: ${currentInstId}`);
-                
-                // 更新 Store
-                setData({
-                    interviewInstId: currentInstId,
-                    title: instTitle,
-                    dealId: deal.id 
-                });
-            } else {
-                Toast.fail('创建访谈失败，无法开始录音');
-                return;
-            }
-        } catch (e) {
-            console.error(e);
-            Toast.clear();
-            Toast.fail('网络错误，无法开始录音');
-            return;
+        if (createRes.success && createRes.data) {
+          // 兼容处理：data可能是直接的ID，也或者是包含id的对象
+          const rawData = createRes.data;
+          const newId = (typeof rawData === 'object' && rawData.interviewInstId) ? rawData.interviewInstId : rawData;
+          currentInstId = String(newId);
+
+          const instTitle = deal.interviewCust ? `${deal.interviewCust}的访谈` : '新访谈';
+          console.log(`[H5] Re-created interview instance: ${currentInstId}`);
+
+          // 更新 Store
+          setData({
+            interviewInstId: currentInstId,
+            title: instTitle,
+            dealId: deal.id
+          });
+        } else {
+          Toast.fail('创建访谈失败，无法开始录音');
+          return;
         }
+      } catch (e) {
+        console.error(e);
+        Toast.clear();
+        Toast.fail('网络错误，无法开始录音');
+        return;
+      }
     }
 
     const surveyId = currentInstId || '';
     console.log(`[H5] Calling startRecord with surveyId: ${surveyId}`);
-    
+
     // Update global store
     if (deal?.id) {
       setData({ dealId: deal.id });
@@ -509,31 +509,31 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
     // 延时检测录音是否真正开启成功
     setTimeout(() => {
-       const statusHandler = (response: any) => {
-          nativeBridge.off('getRecordingStatus', statusHandler);
-          console.log('[RecordingPage] Check Recording Status:', response);
+      const statusHandler = (response: any) => {
+        nativeBridge.off('getRecordingStatus', statusHandler);
+        console.log('[RecordingPage] Check Recording Status:', response);
 
-          // 判定失败的条件: success为false，或者 data 明确表示未录音 (0, false, '0', 'false')
-          // 注意: 具体根据 Native 返回值调整。这里假设 data 为 true/1/'1'/object 表示成功
-          const isRecordingActive = response.success && 
-                                    response.data !== false && 
-                                    response.data !== 0 && 
-                                    response.data !== '0' && 
-                                    response.data !== 'false';
-          
-          if (!isRecordingActive) {
-              console.warn('[RecordingPage] Native recording failed to start.');
-              // 只有当前状态认为是“录音中”才去切换状态，防止用户已手动暂停导致的误操作
-              if (isRecordingRef.current) {
-                  Toast.fail('录音开启失败，请点击重试');
-                  // 使用 ref 调用最新的 onToggleRecording 并强制设为 false
-                  onToggleRecordingRef.current(false);
-              }
+        // 判定失败的条件: success为false，或者 data 明确表示未录音 (0, false, '0', 'false')
+        // 注意: 具体根据 Native 返回值调整。这里假设 data 为 true/1/'1'/object 表示成功
+        const isRecordingActive = response.success &&
+          response.data !== false &&
+          response.data !== 0 &&
+          response.data !== '0' &&
+          response.data !== 'false';
+
+        if (!isRecordingActive) {
+          console.warn('[RecordingPage] Native recording failed to start.');
+          // 只有当前状态认为是“录音中”才去切换状态，防止用户已手动暂停导致的误操作
+          if (isRecordingRef.current) {
+            Toast.fail('录音开启失败，请点击重试');
+            // 使用 ref 调用最新的 onToggleRecording 并强制设为 false
+            onToggleRecordingRef.current(false);
           }
-       };
-       
-       nativeBridge.on('getRecordingStatus', statusHandler);
-       nativeBridge.getRecordingStatus();
+        }
+      };
+
+      nativeBridge.on('getRecordingStatus', statusHandler);
+      nativeBridge.getRecordingStatus();
     }, 5000);
   };
 
@@ -625,7 +625,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         </div>
 
         {/* Scrollable Content Area */}
-        <div 
+        <div
           ref={scrollContainerRef}
           className="flex-1 h-0 w-full overflow-y-auto px-4 scroll-smooth relative"
           style={{ WebkitOverflowScrolling: 'touch' }}
@@ -677,7 +677,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
           {/* Transcription (Chat) Tab */}
           <div className={activeTab === 'transcription' ? 'block' : 'hidden'}>
-            
+
             {/* DEBUG: Show transcriptionList RAW DATA - Logged to console instead if needed */}
 
             <div className="space-y-6 pb-32">
@@ -724,7 +724,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                   <p className="text-sm">暂无转写记录</p>
                 </div>
               )}
-              
+
               {/* Dummy element for auto-scroll removed */}
             </div>
           </div>

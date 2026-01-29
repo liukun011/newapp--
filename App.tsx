@@ -44,7 +44,7 @@ const App: React.FC = () => {
   });
   // Track the previous view to support returning from the Edit screen
   const [previousView, setPreviousView] = useState<View>(View.HOME);
-  
+
   // Navigation Stack for handling Native Back
   const [viewStack, setViewStack] = useState<View[]>([View.HOME]);
   const [templateOrigin, setTemplateOrigin] = useState<View>(View.HOME);
@@ -59,16 +59,16 @@ const App: React.FC = () => {
   });
 
   const currentDealRef = useRef<DealRecord | null>(currentDeal);
-  
+
   const setCurrentDeal = (deal: DealRecord | null) => {
-      currentDealRef.current = deal;
-      _setCurrentDeal(deal);
-      // 同时更新 sessionStorage，保持原有逻辑一致性（虽然 useEffect 已经做了）
-      if (deal) {
-        sessionStorage.setItem('zov-current-deal', JSON.stringify(deal));
-      } else {
-        sessionStorage.removeItem('zov-current-deal');
-      }
+    currentDealRef.current = deal;
+    _setCurrentDeal(deal);
+    // 同时更新 sessionStorage，保持原有逻辑一致性（虽然 useEffect 已经做了）
+    if (deal) {
+      sessionStorage.setItem('zov-current-deal', JSON.stringify(deal));
+    } else {
+      sessionStorage.removeItem('zov-current-deal');
+    }
   };
   // Ref to track currentDeal for async handlers to avoid stale closures
 
@@ -92,10 +92,10 @@ const App: React.FC = () => {
         const store = useRecordingStore.getState();
         // 如果全局未处于录音状态（例如在资料上传页使用了局部录音），则忽略全局监听收到的转写
         if (!store.isRecording) return;
-        
+
         const { transcriptionList, setTranscriptionList, addTranscriptionChunk } = store;
         const lastItem = transcriptionList[transcriptionList.length - 1];
-        
+
         // 检查最后一条记录的 roleId 是否与当前相同
         if (lastItem && String(lastItem.roleId) === String(roleId)) {
           // roleId 相同，拼接内容到最后一条记录
@@ -166,7 +166,7 @@ const App: React.FC = () => {
       sessionStorage.removeItem('zov-preview-template');
     }
   }, [previewTemplate]);
-  
+
   // 报告预览数据
   const [previewReport, setPreviewReport] = useState<{ name: string; reportUrl: string; previewUrl: string; showDownloadButton?: boolean } | null>(() => {
     try {
@@ -185,13 +185,13 @@ const App: React.FC = () => {
       sessionStorage.removeItem('zov-preview-report');
     }
   }, [previewReport]);
-  
+
   // 记住资料上传页的当前标签页
   const [materialUploadTab, setMaterialUploadTab] = useState<string>('upload');
-  
+
   // 记住模板管理页的初始标签页
   const [templateInitialTab, setTemplateInitialTab] = useState<'success' | 'uploading' | 'failed'>('success');
-  
+
   // 记住首页的标签页（进行中/已归档）
   const [homeTab, setHomeTab] = useState<'ongoing' | 'archived'>('ongoing');
 
@@ -211,7 +211,7 @@ const App: React.FC = () => {
   const [historyBackView, setHistoryBackView] = useState<View>(View.RECORDING);
 
   // 历史访谈详情数据
-  const [historyDetailData, setHistoryDetailData] = useState<{id: string, title: string} | null>(null);
+  const [historyDetailData, setHistoryDetailData] = useState<{ id: string, title: string } | null>(null);
 
   // 状态持久化
   useEffect(() => {
@@ -280,12 +280,12 @@ const App: React.FC = () => {
 
     // Update stack: if new view is in stack, slice back to it; else push/replace
     setViewStack(prev => {
-        const index = prev.lastIndexOf(view);
-        if (index !== -1) {
-            return prev.slice(0, index + 1);
-        }
-        // Fallback: just append
-        return [...prev, view];
+      const index = prev.lastIndexOf(view);
+      if (index !== -1) {
+        return prev.slice(0, index + 1);
+      }
+      // Fallback: just append
+      return [...prev, view];
     });
 
     // 动画结束后恢复滚动位置
@@ -326,9 +326,9 @@ const App: React.FC = () => {
       if (currentView === View.HOME || currentView === View.LOGIN) {
         // 如果栈里还有东西（异常情况），先清空栈回首页
         if (viewStack.length > 1 && currentView === View.HOME) {
-             // 已经在首页了，但栈还不空，重置栈
-             setViewStack([View.HOME]);
-             return; 
+          // 已经在首页了，但栈还不空，重置栈
+          setViewStack([View.HOME]);
+          return;
         }
 
         if (window.confirm('确定要退出应用吗？')) {
@@ -336,32 +336,32 @@ const App: React.FC = () => {
         }
       } else {
         // 如果不在首页
-        
+
         // 情况A: 栈里有历史记录，正常回退
         if (viewStack.length > 1) {
-            const newStack = [...viewStack];
-            newStack.pop(); // 移除当前
-            const previousView = newStack[newStack.length - 1];
-            
-            setNavDirection('backward');
-            setCurrentView(previousView || View.HOME);
-            setViewStack(newStack);
+          const newStack = [...viewStack];
+          newStack.pop(); // 移除当前
+          const previousView = newStack[newStack.length - 1];
 
-            // 如果回退到详情页，尝试刷新详情数据
-            if (previousView === View.DUE_DILIGENCE && currentDealRef.current?.id) {
-                 dealService.getDealInstDetail(currentDealRef.current.id).then(res => {
-                     if (res.success && res.data) {
-                         setCurrentDeal(res.data);
-                     }
-                 }).catch(err => console.error('Auto-refresh deal detail failed:', err));
-            }
-        } 
+          setNavDirection('backward');
+          setCurrentView(previousView || View.HOME);
+          setViewStack(newStack);
+
+          // 如果回退到详情页，尝试刷新详情数据
+          if (previousView === View.DUE_DILIGENCE && currentDealRef.current?.id) {
+            dealService.getDealInstDetail(currentDealRef.current.id).then(res => {
+              if (res.success && res.data) {
+                setCurrentDeal(res.data);
+              }
+            }).catch(err => console.error('Auto-refresh deal detail failed:', err));
+          }
+        }
         // 情况B: 栈里没记录了（比如刷新后 stack重置了，但 currentView 是二级页面），强制回首页
         else {
-            console.warn('Stack empty but not on Home, forcing back to Home');
-            setNavDirection('backward');
-            setCurrentView(View.HOME);
-            setViewStack([View.HOME]);
+          console.warn('Stack empty but not on Home, forcing back to Home');
+          setNavDirection('backward');
+          setCurrentView(View.HOME);
+          setViewStack([View.HOME]);
         }
       }
     };
@@ -374,14 +374,14 @@ const App: React.FC = () => {
   // 提取上传转写逻辑
   const uploadTranscriptionBatch = async () => {
     const { transcriptionList, currentInterviewInstId } = useRecordingStore.getState();
-    
+
     if (!currentInterviewInstId || transcriptionList.length === 0) {
       return;
     }
 
     // 只上传最终结果（isFinal: true）
     const finalResults = transcriptionList.filter(item => item.isFinal);
-    
+
     if (finalResults.length === 0) {
       return;
     }
@@ -393,7 +393,7 @@ const App: React.FC = () => {
       }));
 
       console.log('[上传转写] 上传内容:', contentList.length, '条');
-      
+
       await dealService.uploadInterviewInstContent({
         interviewInstId: currentInterviewInstId,
         contentList,
@@ -410,7 +410,7 @@ const App: React.FC = () => {
     console.log('[自动保存] 开始尝试上传录音文件...');
     return new Promise((resolve) => {
       let isResolved = false;
-      
+
       // 1. 全局超时保护 (10秒)，防止死锁
       const safeTimeout = setTimeout(() => {
         if (!isResolved) {
@@ -425,11 +425,11 @@ const App: React.FC = () => {
 
       // 安全的 resolve 包装
       const safeResolve = (val: boolean) => {
-          if (!isResolved) {
-              isResolved = true;
-              clearTimeout(safeTimeout);
-              resolve(val);
-          }
+        if (!isResolved) {
+          isResolved = true;
+          clearTimeout(safeTimeout);
+          resolve(val);
+        }
       };
 
       const handleAudioList = async (response: any) => {
@@ -439,7 +439,7 @@ const App: React.FC = () => {
         if (response.success && response.data && response.data.list && response.data.list.length > 0) {
           const latestAudio = response.data.list[0];
           const fileUrl = (latestAudio.fileURL || "").trim();
-          
+
           if (!fileUrl) {
             console.warn('[自动保存] 录音文件URL为空');
             safeResolve(false);
@@ -455,37 +455,37 @@ const App: React.FC = () => {
             // 简单判断结果
             const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
             if (resultData && (resultData.success === true || resultData.errno === 0)) {
-               const uploadedUrl = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
-               if (uploadedUrl) {
-                   dealService.saveInterviewInstRecordFile({
-                       path: uploadedUrl,
-                       interviewInstId
-                   }).then(() => {
-                       console.log('[自动保存] 录音文件已绑定成功');
-                       safeResolve(true);
-                   }).catch((err) => {
-                       console.error('[自动保存] 绑定文件失败', err);
-                       safeResolve(false);
-                   });
-               } else {
-                   console.warn('[自动保存] 未获取到上传后的URL');
-                   safeResolve(false);
-               }
-               nativeBridge.off('onUploadResult', handleUploadResult);
+              const uploadedUrl = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
+              if (uploadedUrl) {
+                dealService.saveInterviewInstRecordFile({
+                  path: uploadedUrl,
+                  interviewInstId
+                }).then(() => {
+                  console.log('[自动保存] 录音文件已绑定成功');
+                  safeResolve(true);
+                }).catch((err) => {
+                  console.error('[自动保存] 绑定文件失败', err);
+                  safeResolve(false);
+                });
+              } else {
+                console.warn('[自动保存] 未获取到上传后的URL');
+                safeResolve(false);
+              }
+              nativeBridge.off('onUploadResult', handleUploadResult);
             } else if (res.success === false || (resultData && resultData.success === false)) {
-               console.warn('[自动保存] 上传失败');
-               nativeBridge.off('onUploadResult', handleUploadResult);
-               safeResolve(false);
+              console.warn('[自动保存] 上传失败');
+              nativeBridge.off('onUploadResult', handleUploadResult);
+              safeResolve(false);
             }
           };
 
           nativeBridge.on('onUploadResult', handleUploadResult);
           nativeBridge.uploadInterviewFile({
-              host: uploadHost,
-              authorization: token,
-              filePath: fileUrl
+            host: uploadHost,
+            authorization: token,
+            filePath: fileUrl
           });
-          
+
         } else {
           console.warn('[自动保存] 未找到录音文件列表');
           safeResolve(false);
@@ -502,37 +502,37 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleInterruption = async (response: any) => {
       console.log('App.tsx: 收到中断回调', JSON.stringify(response));
-      
-      if (response.action === 'recordingInterrupted') {
-           const store = useRecordingStore.getState();
-           console.log('当前录音状态:', store.isRecording);
 
-           if (store.isRecording) {
-               console.log('正在执行中断保存流程...');
-               store.setIsRecording(false);
-               
-               try {
-                   // 静默保存
-                   await Promise.all([
-                       uploadTranscriptionBatch(),
-                       store.currentInterviewInstId ? uploadAudioFile(store.currentInterviewInstId) : Promise.resolve()
-                   ]);
-               } catch (e) {
-                   console.error(e);
-               } finally {
-                   store.reset();
-                   // 保存完成后弹窗提示
-                   Dialog.alert({
-                       title: '提示',
-                       message: '访谈录音因麦克风异常中断了！',
-                       confirmButtonText: '确认',
-                   });
-               }
-           } else {
-               console.log('无论是录音状态与否，都收到了中断信号');
-               // 可选：如果不在录音中，也提示一下，方便调试确认链路通畅
-               // Toast.info('收到中断信号(未在录音中)');
-           }
+      if (response.action === 'recordingInterrupted') {
+        const store = useRecordingStore.getState();
+        console.log('当前录音状态:', store.isRecording);
+
+        if (store.isRecording) {
+          console.log('正在执行中断保存流程...');
+          store.setIsRecording(false);
+
+          try {
+            // 静默保存
+            await Promise.all([
+              uploadTranscriptionBatch(),
+              store.currentInterviewInstId ? uploadAudioFile(store.currentInterviewInstId) : Promise.resolve()
+            ]);
+          } catch (e) {
+            console.error(e);
+          } finally {
+            store.reset();
+            // 保存完成后弹窗提示
+            Dialog.alert({
+              title: '提示',
+              message: '访谈录音因麦克风异常中断了！',
+              confirmButtonText: '确认',
+            });
+          }
+        } else {
+          console.log('无论是录音状态与否，都收到了中断信号');
+          // 可选：如果不在录音中，也提示一下，方便调试确认链路通畅
+          // Toast.info('收到中断信号(未在录音中)');
+        }
       }
     };
 
@@ -543,28 +543,37 @@ const App: React.FC = () => {
   // 监听实时转写结果
   useEffect(() => {
     let sentenceCount = 0; // 记录最终结果的句子数
-    
+
     // 这里的 uploadTranscriptionBatch 引用外部定义的函数
 
     const handleTranscription = (response: any) => {
       if (response.success && response.data) {
         const parsed = handleTranscriptionResult(response.data);
-        
+
         if (parsed) {
           const store = useRecordingStore.getState();
           // 如果全局未处于录音状态（例如在资料上传页使用了局部录音），则忽略全局监听收到的转写
           if (!store.isRecording) {
-             return;
+            return;
           }
 
-          const { text, isFinal } = parsed;
+
+
+          const { text, isFinal, roleId } = parsed;
           const { transcriptionList, setTranscriptionList, addTranscriptionChunk, updateTempTranscription } = store;
-          const currentRoleId = '1';
-          
+
           if (isFinal) {
             // 最终结果
             const lastItem = transcriptionList[transcriptionList.length - 1];
-            
+
+            // 确定当前 RoleId:
+            // 1. 如果 Native 解析出了明确的角色(非0)，则使用该角色
+            // 2. 如果 Native 没给角色(或为0)，则延续上一个气泡的角色 (模拟 Native 的 currentRole 逻辑)
+            // 3. 如果都没有，默认为 '1'
+            const currentRoleId = roleId || (lastItem ? lastItem.roleId : '1');
+
+            console.log('[App] Transcription Final - Parsing Role:', roleId, 'Effective Role:', currentRoleId);
+
             if (lastItem && String(lastItem.roleId) === String(currentRoleId)) {
               // roleId 相同，拼接内容到最后一条记录
               const updatedList = [...transcriptionList];
@@ -585,7 +594,7 @@ const App: React.FC = () => {
                 isFinal: true,
               });
             }
-            
+
             // 清空临时转写
             updateTempTranscription('');
 
@@ -595,34 +604,14 @@ const App: React.FC = () => {
               uploadTranscriptionBatch();
               sentenceCount = 0; // 重置计数
             }
-          } else {
-             // 中间结果
-             const lastItem = transcriptionList[transcriptionList.length - 1];
-             
-             if (lastItem && String(lastItem.roleId) === String(currentRoleId)) {
-               const updatedList = [...transcriptionList];
-               updatedList[updatedList.length - 1] = {
-                 ...lastItem,
-                 content: lastItem.content + "", 
-                 timestamp: Date.now(),
-               };
-               setTranscriptionList(updatedList);
-             } else {
-                addTranscriptionChunk({
-                 id: `trans_${Date.now()}_${Math.random()}`,
-                 content: "", 
-                 roleId: currentRoleId,
-                 timestamp: Date.now(),
-                 isFinal: false,
-                });
-             }
           }
+          // Ignore intermediate results (isFinal: false) as requested
         }
       }
     };
 
     nativeBridge.on('transcriptionResult', handleTranscription);
-    
+
     return () => {
       nativeBridge.off('transcriptionResult', handleTranscription);
     };
@@ -660,13 +649,13 @@ const App: React.FC = () => {
         <div ref={appContainerRef} className="w-full max-w-md mx-auto min-h-screen relative overflow-y-auto overflow-x-hidden bg-transparent">
           {/* Custom Limit Tips Toast */}
           {showLimitTips && (
-             <div className="fixed top-24 left-4 right-4 z-[100] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center pointer-events-none">
-               <div className="bg-black/40 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
-                 <span className="text-sm font-medium tracking-wide">
-                   您正有一个访谈正在进行中，暂时不支持开启新任务。
-                 </span>
-               </div>
-             </div>
+            <div className="fixed top-24 left-4 right-4 z-[100] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center pointer-events-none">
+              <div className="bg-black/40 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
+                <span className="text-sm font-medium tracking-wide">
+                  您正有一个访谈正在进行中，暂时不支持开启新任务。
+                </span>
+              </div>
+            </div>
           )}
 
           <AnimatePresence initial={false} mode={navDirection === 'root' ? 'wait' : 'sync'}>
@@ -716,11 +705,11 @@ const App: React.FC = () => {
                   }}
                   onCreateNewDeal={(deal) => {
                     console.log('[App] onCreateNewDeal triggered. Current Stack:', viewStack);
-                    setCurrentDeal(deal); 
+                    setCurrentDeal(deal);
                     // 必须使用 navigateForward 将新页面压入栈中，保证能从资料页返回首页
                     navigateForward(View.MATERIAL_UPLOAD);
                   }}
-                  onNavigateToRecording={async (deal) => {                     
+                  onNavigateToRecording={async (deal) => {
                     try {
                       // 调用接口创建访谈实例
                       Toast.loading({ message: '准备访谈中...', duration: 0, forbidClick: true });
@@ -803,8 +792,8 @@ const App: React.FC = () => {
                       // 但是 HomePage 和 DueDiligencePage 都用了 currentDealId。
                       // 说明 useRecordingStore 返回了 currentDealId。
                       // 让我们假定 store.getState().currentDealId 存在。
-                      
-                      const activeDealId = store.currentDealId; 
+
+                      const activeDealId = store.currentDealId;
 
                       if (activeDealId && activeDealId !== currentDeal.id) {
                         setShowLimitTips(true);
@@ -913,7 +902,7 @@ const App: React.FC = () => {
                         if (currentStore.currentInterviewInstId && currentStore.currentInterviewInstId !== instId) {
                           currentStore.reset();
                         }
-                        
+
                         // 更新 Store
                         setData({
                           dealId: currentDeal.id,
@@ -929,7 +918,7 @@ const App: React.FC = () => {
                       }
 
                       Toast.clear();
-                      
+
                       // 这里的回退逻辑，通常从新建流程过来，我们希望它回退到哪里？
                       // 既然是“去掉多余的页面”，可能用户希望回退到详情页，或者首页？
                       // 暂时保持回退到 DUE_DILIGENCE，因为这是逻辑上的上一级
@@ -1085,17 +1074,17 @@ const App: React.FC = () => {
                           });
                         }
                       } catch (e) {
-                         console.error('Failed to refresh deal detail:', e);
-                         setCurrentDeal({
-                            ...currentDeal,
-                            templateId: newTemplateId,
-                          });
+                        console.error('Failed to refresh deal detail:', e);
+                        setCurrentDeal({
+                          ...currentDeal,
+                          templateId: newTemplateId,
+                        });
                       }
                     } else if (currentDeal) {
-                         setCurrentDeal({
-                            ...currentDeal,
-                            templateId: newTemplateId,
-                          });
+                      setCurrentDeal({
+                        ...currentDeal,
+                        templateId: newTemplateId,
+                      });
                     }
                     // 返回到之前的页面
                     navigateBackward(previousView);
@@ -1109,50 +1098,50 @@ const App: React.FC = () => {
                   templateId={previewTemplate.id}
                   onBack={() => navigateBackward(previousView)}
                   onSelect={currentDeal?.id ? async (templateId) => {
-                     // 避免重复选择
-                     if (currentDeal.templateId === templateId) {
-                        return;
-                     }
-                     
-                     try {
-                        Toast.loading({ message: '更换中...', duration: 0 });
-                        const res = await dealService.changeReportTemplate({
-                          id: currentDeal.id,
-                          templateId: templateId,
-                        });
-                        Toast.clear();
+                    // 避免重复选择
+                    if (currentDeal.templateId === templateId) {
+                      return;
+                    }
 
-                        if (res.success) {
-                          Toast.success('更换成功');
-                          // 刷新详情以获取最新问题列表
-                          try {
-                              const detailRes = await dealService.getDealInstDetail(currentDeal.id);
-                              if (detailRes.success && detailRes.data) {
-                                  setCurrentDeal(detailRes.data);
-                              } else {
-                                  setCurrentDeal({
-                                    ...currentDeal,
-                                    templateId: templateId
-                                  });
-                              }
-                          } catch(e) {
-                              console.error('Refresh deal failed', e);
-                              setCurrentDeal({
-                                ...currentDeal,
-                                templateId: templateId
-                              });
+                    try {
+                      Toast.loading({ message: '更换中...', duration: 0 });
+                      const res = await dealService.changeReportTemplate({
+                        id: currentDeal.id,
+                        templateId: templateId,
+                      });
+                      Toast.clear();
+
+                      if (res.success) {
+                        Toast.success('更换成功');
+                        // 刷新详情以获取最新问题列表
+                        try {
+                          const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+                          if (detailRes.success && detailRes.data) {
+                            setCurrentDeal(detailRes.data);
+                          } else {
+                            setCurrentDeal({
+                              ...currentDeal,
+                              templateId: templateId
+                            });
                           }
-
-                          // 返回到尽调详情页
-                          navigateBackward(View.DUE_DILIGENCE);
-                        } else {
-                          Toast.fail(res.message || '更换失败');
+                        } catch (e) {
+                          console.error('Refresh deal failed', e);
+                          setCurrentDeal({
+                            ...currentDeal,
+                            templateId: templateId
+                          });
                         }
-                     } catch (error) {
-                        Toast.clear();
-                        console.error('Failed to change template:', error);
-                        Toast.fail('更换失败');
-                     }
+
+                        // 返回到尽调详情页
+                        navigateBackward(View.DUE_DILIGENCE);
+                      } else {
+                        Toast.fail(res.message || '更换失败');
+                      }
+                    } catch (error) {
+                      Toast.clear();
+                      console.error('Failed to change template:', error);
+                      Toast.fail('更换失败');
+                    }
                   } : undefined}
                 />
               )}
@@ -1181,24 +1170,24 @@ const App: React.FC = () => {
                   onDeleteQuestion={undefined}
                   onAddQuestion={undefined}
                   onSave={async (finalQuestions) => {
-                     const deal = currentDealRef.current;
-                     if (deal) {
-                        try {
-                            await dealService.createOrUpdateDealInst({
-                                id: deal.id,
-                                questionId: deal.questionId,
-                                questionInfoList: finalQuestions
-                            });
-                            
-                            setCurrentDeal({
-                              ...deal,
-                              questionInfoList: finalQuestions
-                            });
-                        } catch (e) {
-                            console.error('Save all questions failed:', e);
-                            throw e; // Check if QuestionsListPage handles this
-                        }
-                     }
+                    const deal = currentDealRef.current;
+                    if (deal) {
+                      try {
+                        await dealService.createOrUpdateDealInst({
+                          id: deal.id,
+                          questionId: deal.questionId,
+                          questionInfoList: finalQuestions
+                        });
+
+                        setCurrentDeal({
+                          ...deal,
+                          questionInfoList: finalQuestions
+                        });
+                      } catch (e) {
+                        console.error('Save all questions failed:', e);
+                        throw e; // Check if QuestionsListPage handles this
+                      }
+                    }
                   }}
                 />
               )}
@@ -1221,8 +1210,8 @@ const App: React.FC = () => {
                 />
               )}
               {currentView === View.MESSAGE_CENTER && (
-                <MessageCenterPage 
-                  onBack={() => navigateBackward(View.HOME)} 
+                <MessageCenterPage
+                  onBack={() => navigateBackward(View.HOME)}
                 />
               )}
             </motion.div>
