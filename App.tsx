@@ -557,9 +557,10 @@ const App: React.FC = () => {
              return;
           }
 
-          const { text, isFinal } = parsed;
+          const { text, isFinal, roleId: currentRoleId } = parsed;
+          if (!text.trim()) return; // 如果没有文字内容，不处理，避免出现空的"识别中"气泡
+          
           const { transcriptionList, setTranscriptionList, addTranscriptionChunk, updateTempTranscription } = store;
-          const currentRoleId = '1';
           
           if (isFinal) {
             // 最终结果
@@ -597,25 +598,25 @@ const App: React.FC = () => {
             }
           } else {
              // 中间结果
-             const lastItem = transcriptionList[transcriptionList.length - 1];
+            //  const lastItem = transcriptionList[transcriptionList.length - 1];
              
-             if (lastItem && String(lastItem.roleId) === String(currentRoleId)) {
-               const updatedList = [...transcriptionList];
-               updatedList[updatedList.length - 1] = {
-                 ...lastItem,
-                 content: lastItem.content + "", 
-                 timestamp: Date.now(),
-               };
-               setTranscriptionList(updatedList);
-             } else {
-                addTranscriptionChunk({
-                 id: `trans_${Date.now()}_${Math.random()}`,
-                 content: "", 
-                 roleId: currentRoleId,
-                 timestamp: Date.now(),
-                 isFinal: false,
-                });
-             }
+            //  if (lastItem && String(lastItem.roleId) === String(currentRoleId)) {
+            //    const updatedList = [...transcriptionList];
+            //    updatedList[updatedList.length - 1] = {
+            //      ...lastItem,
+            //      content: lastItem.content + "", 
+            //      timestamp: Date.now(),
+            //    };
+            //    setTranscriptionList(updatedList);
+            //  } else {
+            //     addTranscriptionChunk({
+            //      id: `trans_${Date.now()}_${Math.random()}`,
+            //      content: "", 
+            //      roleId: currentRoleId,
+            //      timestamp: Date.now(),
+            //      isFinal: false,
+            //     });
+            //  }
           }
         }
       }

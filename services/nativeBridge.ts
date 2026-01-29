@@ -278,6 +278,7 @@ interface XunfeiTranscriptionResult {
         ws: Array<{
           cw: Array<{
             w: string;  // 识别的文字
+            rl?: string | number; // 角色标识
           }>;
         }>;
       }>;
@@ -292,20 +293,10 @@ interface XunfeiTranscriptionResult {
 export function handleTranscriptionResult(jsonString: string): {
   text: string;
   isFinal: boolean;
+  roleId: string;
 } | null {
   try {
     const result: XunfeiTranscriptionResult = JSON.parse(jsonString);
-    
-    // DEBUG: Show RAW RESULT using overlay
-    // if (typeof document !== 'undefined' && !document.getElementById('debug-overlay-raw')) {
-    //   const div = document.createElement('div');
-    //   div.id = 'debug-overlay-raw';
-    //   // Center of screen, very visible
-    //   div.style.cssText = 'position:fixed;top:20%;left:5%;width:90%;height:300px;background:rgba(0,0,0,0.9);color:#ffff00;z-index:100005;overflow:auto;padding:20px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;border:2px solid yellow;';
-    //   div.innerText = "--- RAW RESULT ---\n" + JSON.stringify(result, null, 2);
-    //   div.onclick = () => document.body.removeChild(div);
-    //   document.body.appendChild(div);
-    // }
 
     if (result.cn && result.cn.st && result.cn.st.rt) {
       // 兼容字符串 "0" 和数字 0
@@ -318,18 +309,26 @@ export function handleTranscriptionResult(jsonString: string): {
       const isTypeFinal = String(typeVal) === "0";
 
       let text = '';
+      let roleId = '1'; // 默认角色1
+      let roleFound = false;
       const rt = result.cn.st.rt;
 
       for (const item of rt) {
         if (item.ws) {
           for (const w of item.ws) {
-            if (w.cw && w.cw[0] && w.cw[0].w) {
-              text += w.cw[0].w;
+            if (w.cw && w.cw[0]) {
+              const cw = w.cw[0];
+              if (cw.w) text += cw.w;
+              // 提取角色ID，取第一个出现的作为本段话的角色
+              if (!roleFound && cw.rl !== undefined) {
+                roleId = String(cw.rl).trim();
+                roleFound = true;
+              }
             }
           }
         }
       }
-      return { text, isFinal: isTypeFinal };
+      return { text, isFinal: isTypeFinal, roleId };
     }
   } catch (e) {
     console.error('解析转写结果失败:', e);
