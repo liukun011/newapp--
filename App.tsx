@@ -5,7 +5,7 @@ import { Home, User, Plus } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import { useRecordingStore } from './store/useRecordingStore';
 import { dealService } from './services/dealService';
-import SplashScreen from './pages/SplashScreen';
+// import SplashScreen from './pages/SplashScreen'; (已禁用)
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import DueDiligencePage from './pages/DueDiligencePage';
@@ -32,9 +32,7 @@ import { nativeBridge, handleTranscriptionResult } from './services/nativeBridge
 
 const App: React.FC = () => {
   const appContainerRef = useRef<HTMLDivElement>(null);
-  // 启动页状态
-
-  const [showSplash, setShowSplash] = useState(true);
+  // 启动页状态已禁用
 
   const [currentView, setCurrentView] = useState<View>(() => {
     const token = localStorage.getItem('zov-user-token');
@@ -295,14 +293,7 @@ const App: React.FC = () => {
     }, 400);
   };
 
-  // 启动页定时器
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 1500); // 1.5秒后隐藏启动页
 
-    return () => clearTimeout(timer);
-  }, []);
 
   // 监听 401 未授权事件
   useEffect(() => {
@@ -626,27 +617,8 @@ const App: React.FC = () => {
     <>
       <div style={backgroundStyle} />
 
-      {/* Splash Screen with fade out animation */}
-      {showSplash ? (
-        <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 9999,
-            backgroundColor: 'white',
-          }}
-        >
-          <SplashScreen />
-        </motion.div>
-      ) : (
-        /* Main App - only render after splash is hidden */
-        <div ref={appContainerRef} className="w-full max-w-md mx-auto min-h-screen relative overflow-y-auto overflow-x-hidden bg-transparent">
+      {/* Main App */}
+      <div ref={appContainerRef} className="w-full max-w-md mx-auto min-h-screen relative overflow-y-auto overflow-x-hidden bg-transparent">
           {/* Custom Limit Tips Toast */}
           {showLimitTips && (
             <div className="fixed top-24 left-4 right-4 z-[100] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center pointer-events-none">
@@ -882,7 +854,12 @@ const App: React.FC = () => {
                 <MaterialUploadPage
                   deal={currentDeal}
                   onBack={() => navigateBackward(View.HOME)}
-                  onConfirm={() => navigateForward(View.DUE_DILIGENCE)}
+                  onConfirm={() => {
+                    // 刚新建完确认进入详情，重置栈，使得返回直接回到首页
+                    setViewStack([View.HOME, View.DUE_DILIGENCE]);
+                    setNavDirection('forward');
+                    setCurrentView(View.DUE_DILIGENCE);
+                  }}
                   onStartInterview={async () => {
                     if (!currentDeal) return;
                     try {
@@ -934,12 +911,12 @@ const App: React.FC = () => {
                   onEditInfo={handleEditCorporateInfo}
                   onChangeTemplate={() => {
                     setPreviousView(View.MATERIAL_UPLOAD);
-                    setCurrentView(View.TEMPLATE_SELECTION);
+                    navigateForward(View.TEMPLATE_SELECTION);
                   }}
                   onPreviewTemplate={(name, url) => {
                     setPreviewTemplate({ name, url });
                     setPreviousView(View.MATERIAL_UPLOAD);
-                    setCurrentView(View.TEMPLATE_PREVIEW);
+                    navigateForward(View.TEMPLATE_PREVIEW);
                   }}
                   initialTab={materialUploadTab}
                   onTabChange={setMaterialUploadTab}
@@ -948,7 +925,11 @@ const App: React.FC = () => {
               {currentView === View.AI_GENERATION && (
                 <AiGenerationPage
                   onBack={() => navigateBackward(View.MATERIAL_UPLOAD)}
-                  onConfirm={() => setCurrentView(View.DUE_DILIGENCE)}
+                  onConfirm={() => {
+                    setViewStack([View.HOME, View.DUE_DILIGENCE]);
+                    setNavDirection('forward');
+                    setCurrentView(View.DUE_DILIGENCE);
+                  }}
                 />
               )}
               {currentView === View.RECORDING && (
@@ -1026,7 +1007,7 @@ const App: React.FC = () => {
                         logo: updatedLogo,
                       });
                     }
-                    setCurrentView(previousView);
+                    navigateBackward(previousView);
                   }}
                 />
               )}
@@ -1256,8 +1237,7 @@ const App: React.FC = () => {
                     const res = await dealService.createOrUpdateDealInst({});
                     if (res.success && res.data) {
                       setCurrentDeal(res.data);
-                      setNavDirection('forward');
-                      setCurrentView(View.MATERIAL_UPLOAD);
+                      navigateForward(View.MATERIAL_UPLOAD);
                     }
                   } catch (error) {
                     console.error("Failed to create deal:", error);
@@ -1282,7 +1262,6 @@ const App: React.FC = () => {
             </div>
           )}
         </div>
-      )}
     </>
   );
 };

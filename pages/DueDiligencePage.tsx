@@ -480,23 +480,24 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       try {
         Toast.loading({ message: '归档中...', duration: 0, forbidClick: true });
         const res = await dealService.archiveDeal(currentDeal.id);
-        Toast.clear();
         
         if (res.success) {
-           Toast.success('归档成功');
-           // 刷新详情
-           const detailRes = await dealService.getDealInstDetail(currentDeal.id);
-           if (detailRes.success && detailRes.data) {
-             setDealDetail(detailRes.data);
-             onDealDetailLoadedRef.current?.(detailRes.data);
-           }
+          Toast.success('归档成功');
+          // 刷新详情
+          const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+          if (detailRes.success && detailRes.data) {
+            setDealDetail(detailRes.data);
+            onDealDetailLoadedRef.current?.(detailRes.data);
+          }
         } else {
-          Toast.fail(res.message || '归档失败');
+          // 如果业务逻辑提示失败，直接抛出错误信息
+          throw new Error(res.message || '归档失败');
         }
-      } catch (error) {
-        Toast.clear();
+      } catch (error: any) {
         console.error('Archive failed:', error);
-        Toast.fail('归档失败');
+        // 不在这里手动 clear，也不必重复 fail，因为 request.ts 拦截器已经处理了
+        // 如果拦截器没有处理，或者需要确保显示，可以保留 fail 但不要在前面 clear
+        Toast.fail(error.message || '归档失败');
       }
     }).catch(() => {
       // 取消归档
