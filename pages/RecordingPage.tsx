@@ -353,14 +353,6 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       confirmButtonColor: '#4E3EF8',
     })
       .then(async () => {
-        // 结束时如果是录音状态，先调用停止
-        if (isRecording) {
-          // if (window.Android?.stopRecord) {
-          //   window.Android.stopRecord();
-          // }
-          nativeBridge.stopRecording();
-        }
-
         if (!interviewInstId) {
           // 如果没有 ID，直接重置并返回
           resetStore();
@@ -374,16 +366,17 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
         Toast.loading({ message: '正在保存...', forbidClick: true, duration: 0 });
         try {
-          // 1. 并行上传录音文件和转写内容
-          try {
-            await Promise.all([
-              uploadRecordingFile(),
-              uploadTranscriptionContent()
-            ]);
-
-
-          } catch (e) {
-            console.error('上传过程异常:', e);
+          // 只有在录音中才执行：停止录音 + 上传文件/转写
+          if (isRecording) {
+            nativeBridge.stopRecording();
+            try {
+              await Promise.all([
+                uploadRecordingFile(),
+                uploadTranscriptionContent()
+              ]);
+            } catch (e) {
+              console.error('上传过程异常:', e);
+            }
           }
           // 3. 结束访谈
           const res = await dealService.overInterviewInst(interviewInstId);

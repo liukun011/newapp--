@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Mic } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { dealService } from '../services/dealService';
 import { nativeBridge, handleTranscriptionResult } from '../services/nativeBridge';
+import { useRecordingStore } from '../store/useRecordingStore';
 
 interface VoiceInputModalProps {
   visible: boolean;
@@ -20,7 +21,34 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   initialContent = ''
 }) => {
   const [content, setContent] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
+  const [isLocalRecording, setIsLocalRecording] = useState(false);
+  
+  // 引用追踪录音状态，用于组件卸载时清理
+  const isLocalRecordingRef = useRef(isLocalRecording);
+  useEffect(() => {
+    isLocalRecordingRef.current = isLocalRecording;
+  }, [isLocalRecording]);
+
+  // 组件卸载时的保护机制：如果正在录音，强制停止
+  useEffect(() => {
+    return () => {
+      if (isLocalRecordingRef.current) {
+        console.log('[VoiceInput] Unmounting while recording, forcing stop...');
+        try {
+          if (nativeBridge) {
+            nativeBridge.stopRecording();
+          }
+        } catch (e) {
+          console.error('[VoiceInput] Error stopping recording on unmount:', e);
+        }
+      }
+    };
+  }, []); // 仅在卸载时执行
+
+  // 监听全局录音状态
+  const isGlobalRecording = useRecordingStore(state => state.isRecording);
+  const currentInterviewInstId = useRecordingStore(state => state.currentInterviewInstId);
+  const recordingSeconds = useRecordingStore(state => state.recordingSeconds);
 
   // 当弹框打开时，设置初始内容
   useEffect(() => {
@@ -70,6 +98,9 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     if (!visible) return;
 
     const handleTranscription = (response: any) => {
+       // 如果不是当前弹窗发起的录音，不处理转写结果
+       if (!isLocalRecording) return;
+
        // 参考 nativeBridge.ts 中的 handleTranscriptionResult 逻辑
        if (response.data) {
          try {
@@ -88,7 +119,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
     };
 
     const handleInterrupt = () => {
-       setIsRecording(false);
+       setIsLocalRecording(false);
        Toast.info('录音已中断');
     };
 
@@ -113,11 +144,11 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
         console.error('Error removing native listeners:', e);
       }
     };
-  }, [visible]);
+  }, [visible, isLocalRecording]);
 
   // 关闭时确保停止录音
   useEffect(() => {
-    if (!visible && isRecording) {
+    if (!visible && isLocalRecording) {
       try {
         if (nativeBridge) {
           nativeBridge.stopRecording();
@@ -125,26 +156,37 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       } catch (e) {
         console.error('Error stopping recording:', e);
       }
-      setIsRecording(false);
+      setIsLocalRecording(false);
     }
-  }, [visible, isRecording]);
+  }, [visible, isLocalRecording]);
 
   const handleRecordClick = () => {
     try {
-      if (isRecording) {
+      if (isLocalRecording) {
         // 停止录音
         if (nativeBridge) nativeBridge.stopRecording();
-        setIsRecording(false);
+        setIsLocalRecording(false);
       } else {
+        // 检查是否有全局悬浮窗（即是否有未结束的访谈）
+        const hasActiveInterview = currentInterviewInstId && (recordingSeconds > 0 || isGlobalRecording);
+        
+        console.log('check active interview:', { isGlobalRecording, hasActiveInterview });
+
+        // 检查全局录音状态或存在未结束的访谈
+        if (hasActiveInterview) {
+          Toast.fail('您正有一个访谈正在进行中，暂时不支持开启新任务。');
+          return;
+        }
+
         // 开始录音
         if (nativeBridge) nativeBridge.startRecording();
-        setIsRecording(true);
+        setIsLocalRecording(true);
         Toast.info('开始录音，请说话...');
       }
     } catch (e) {
       console.error('Record action failed:', e);
       Toast.fail('录音操作失败');
-      setIsRecording(false);
+      setIsLocalRecording(false);
     }
   };
 
@@ -168,11 +210,11 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
           <div className="flex items-center gap-3">
             <button 
               onClick={() => {
-                if(isRecording) {
+                if(isLocalRecording) {
                   try {
                     if (nativeBridge) nativeBridge.stopRecording();
                   } catch(e) { console.error(e); }
-                  setIsRecording(false);
+                  setIsLocalRecording(false);
                 }
                 onClose();
               }}
@@ -207,7 +249,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             <button 
               onClick={handleRecordClick}
               className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 shadow-lg ${
-                isRecording 
+                isLocalRecording 
                   ? 'bg-red-500 animate-pulse' 
                   : 'bg-indigo-500 hover:bg-indigo-600'
               }`}
@@ -215,7 +257,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
               <Mic size={24} className="text-white" />
             </button>
             <span className="mt-2 text-sm text-gray-500">
-              {isRecording ? '录音中...' : '点击录音转写'}
+              {isLocalRecording ? '录音中...' : '点击录音转写'}
             </span>
           </div>
         </div>
