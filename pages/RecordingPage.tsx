@@ -534,7 +534,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
        
        nativeBridge.on('getRecordingStatus', statusHandler);
        nativeBridge.getRecordingStatus();
-    }, 2000);
+    }, 5000);
   };
 
   useEffect(() => {

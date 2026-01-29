@@ -71,6 +71,16 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     fetchDealDetail();
   }, [deal?.id]);
 
+  // Sync dealDetail with deal prop when it changes (critical for back navigation updates from parent)
+  useEffect(() => {
+    if (deal) {
+        setDealDetail((prev) => {
+            // Only update if IDs match to avoid race conditions, or just trust the parent
+            return deal.id === prev?.id ? { ...prev, ...deal } : deal;
+        });
+    }
+  }, [deal]);
+
   // 使用详情数据，如果没有则使用传入的 deal
   const currentDeal = dealDetail || deal;
   const isFinishedInterview = currentDeal?.status === '4';

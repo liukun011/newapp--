@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { ArrowLeft, FileText, Pencil, ArrowUp, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toast } from 'react-vant';
@@ -54,8 +53,8 @@ const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
     }
   };
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+  return (
+    <div className="fixed inset-0 z-[50] flex items-center justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50"
@@ -98,8 +97,7 @@ const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
           </button>
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 };
 
@@ -125,8 +123,8 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
     }
   };
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+  return (
+    <div className="fixed inset-0 z-[50] flex items-center justify-center">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50"
@@ -169,8 +167,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           </button>
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 };
 
@@ -179,9 +176,6 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   dealLogo,
   questionInfoList = [],
   onBack,
-  onUpdateQuestion,
-  onDeleteQuestion,
-  onAddQuestion,
   onSave,
   isArchived = false,
 }) => {
@@ -252,9 +246,19 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
       }
   };
 
-  // 劫持返回按钮
+  useEffect(() => {
+    (window as any).onNativeBack = () => {
+      handleBack();
+    };
+    return () => {
+      if ((window as any).onNativeBack) {
+        // 不需要强制还原，App.tsx 的 useEffect 会在视图切换时自动更新此函数
+      }
+    };
+  }, [handleSave]);
+
   const handleBack = () => {
-      handleSave();
+    handleSave();
   };
 
   // 回到顶部
@@ -515,9 +519,9 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
         onConfirm={handleConfirmEdit}
       />
 
-      {/* 删除确认弹框 - Portal to Body */}
-      {deleteModalVisible && deletingQuestion && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      {/* 删除确认弹框 - Direct Render */}
+      {deleteModalVisible && deletingQuestion && (
+        <div className="fixed inset-0 z-[50] flex items-center justify-center">
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/50"
@@ -553,8 +557,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </div>
   );

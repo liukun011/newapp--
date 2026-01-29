@@ -49,7 +49,7 @@ const App: React.FC = () => {
   const [viewStack, setViewStack] = useState<View[]>([View.HOME]);
   const [templateOrigin, setTemplateOrigin] = useState<View>(View.HOME);
   // Track current selected deal
-  const [currentDeal, setCurrentDeal] = useState<DealRecord | null>(() => {
+  const [currentDeal, _setCurrentDeal] = useState<DealRecord | null>(() => {
     try {
       const savedDeal = sessionStorage.getItem('zov-current-deal');
       return savedDeal ? JSON.parse(savedDeal) : null;
@@ -57,11 +57,21 @@ const App: React.FC = () => {
       return null;
     }
   });
-  // Ref to track currentDeal for async handlers to avoid stale closures
+
   const currentDealRef = useRef<DealRecord | null>(currentDeal);
-  useEffect(() => {
-    currentDealRef.current = currentDeal;
-  }, [currentDeal]);
+  
+  const setCurrentDeal = (deal: DealRecord | null) => {
+      currentDealRef.current = deal;
+      _setCurrentDeal(deal);
+      // 同时更新 sessionStorage，保持原有逻辑一致性（虽然 useEffect 已经做了）
+      if (deal) {
+        sessionStorage.setItem('zov-current-deal', JSON.stringify(deal));
+      } else {
+        sessionStorage.removeItem('zov-current-deal');
+      }
+  };
+  // Ref to track currentDeal for async handlers to avoid stale closures
+
 
   // 录音状态管理 (使用 Zustand Store)
   const {
@@ -336,6 +346,15 @@ const App: React.FC = () => {
             setNavDirection('backward');
             setCurrentView(previousView || View.HOME);
             setViewStack(newStack);
+
+            // 如果回退到详情页，尝试刷新详情数据
+            if (previousView === View.DUE_DILIGENCE && currentDealRef.current?.id) {
+                 dealService.getDealInstDetail(currentDealRef.current.id).then(res => {
+                     if (res.success && res.data) {
+                         setCurrentDeal(res.data);
+                     }
+                 }).catch(err => console.error('Auto-refresh deal detail failed:', err));
+            }
         } 
         // 情况B: 栈里没记录了（比如刷新后 stack重置了，但 currentView 是二级页面），强制回首页
         else {
@@ -897,7 +916,7 @@ const App: React.FC = () => {
                         
                         // 更新 Store
                         setData({
-                          // dealId: currentDeal.id,
+                          dealId: currentDeal.id,
                           interviewInstId: instId,
                           title: instTitle || ''
                         });
@@ -923,7 +942,6 @@ const App: React.FC = () => {
                       Toast.fail('进入访谈失败');
                     }
                   }}
-                  onGenerateAI={() => setCurrentView(View.AI_GENERATION)}
                   onEditInfo={handleEditCorporateInfo}
                   onChangeTemplate={() => {
                     setPreviousView(View.MATERIAL_UPLOAD);
@@ -1053,15 +1071,33 @@ const App: React.FC = () => {
                   }}
                   currentTemplateId={currentDeal?.templateId}
                   dealId={currentDeal?.id}
-                  onTemplateChanged={(newTemplateId) => {
-                    // 更新 currentDeal 的 templateId
-                    if (currentDeal) {
-                      setCurrentDeal({
-                        ...currentDeal,
-                        templateId: newTemplateId,
-                      });
+                  onTemplateChanged={async (newTemplateId) => {
+                    // 更换成功后刷新详情以更新问题列表
+                    if (currentDeal?.id) {
+                      try {
+                        const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+                        if (detailRes.success && detailRes.data) {
+                          setCurrentDeal(detailRes.data);
+                        } else {
+                          setCurrentDeal({
+                            ...currentDeal,
+                            templateId: newTemplateId,
+                          });
+                        }
+                      } catch (e) {
+                         console.error('Failed to refresh deal detail:', e);
+                         setCurrentDeal({
+                            ...currentDeal,
+                            templateId: newTemplateId,
+                          });
+                      }
+                    } else if (currentDeal) {
+                         setCurrentDeal({
+                            ...currentDeal,
+                            templateId: newTemplateId,
+                          });
                     }
-                    // 更换成功后返回到之前的页面
+                    // 返回到之前的页面
                     navigateBackward(previousView);
                   }}
                 />
@@ -1088,11 +1124,25 @@ const App: React.FC = () => {
 
                         if (res.success) {
                           Toast.success('更换成功');
-                          // 更新当前 Deal 状态
-                          setCurrentDeal({
-                            ...currentDeal,
-                            templateId: templateId
-                          });
+                          // 刷新详情以获取最新问题列表
+                          try {
+                              const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+                              if (detailRes.success && detailRes.data) {
+                                  setCurrentDeal(detailRes.data);
+                              } else {
+                                  setCurrentDeal({
+                                    ...currentDeal,
+                                    templateId: templateId
+                                  });
+                              }
+                          } catch(e) {
+                              console.error('Refresh deal failed', e);
+                              setCurrentDeal({
+                                ...currentDeal,
+                                templateId: templateId
+                              });
+                          }
+
                           // 返回到尽调详情页
                           navigateBackward(View.DUE_DILIGENCE);
                         } else {

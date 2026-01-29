@@ -36,7 +36,6 @@ instance.interceptors.request.use(
 // 响应拦截器：处理状态码
 instance.interceptors.response.use(
   (response) => {
-    console.log('response', response);
     const res = response.data;
     // 全局处理业务逻辑错误
     if (res && typeof res === 'object' && res.success === false) {

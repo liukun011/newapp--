@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useThrottleFn } from "../hooks/useThrottleFn";
-import { createPortal } from "react-dom";
 import {
   Search,
   Trash2,
@@ -523,10 +522,10 @@ const HomePage: React.FC<HomePageProps> = ({
         {/* Floating Action Button (Create New) */}
 
 
-      {/* 删除确认弹框 - Portal to Body */}
-      {showDeleteConfirm && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          {/* 半透明背景 */}
+      {/* 删除确认弹框 - Direct Render */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* 背景遮罩 */}
           <div 
             className="absolute inset-0 bg-black/40"
             onClick={cancelDelete}
@@ -534,19 +533,17 @@ const HomePage: React.FC<HomePageProps> = ({
           
           {/* 弹框内容 */}
           <div className="relative bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-fadeIn">
-            {/* 标题 */}
-            <h3 className="text-center text-lg font-semibold text-slate-800 mb-4">
-              提示
-            </h3>
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                <Trash2 size={32} className="text-red-500" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">确认删除？</h3>
+              <p className="text-slate-500 text-center text-[14px] leading-relaxed">
+                删除后该尽调记录下的所有附件、转写及报告将无法找回，请谨慎操作。
+              </p>
+            </div>
             
-            {/* 提示文字 */}
-            <p className="text-center text-slate-600 mb-6">
-              是否确认删除当前访谈?
-            </p>
-            
-            {/* 按钮组 */}
-            <div className="flex gap-3">
-              {/* 取消按钮 */}
+            <div className="flex gap-3 mt-2">
               <button
                 onClick={cancelDelete}
                 className="flex-1 h-12 rounded-full border-2 border-gray-200 text-slate-700 font-medium hover:bg-gray-50 active:scale-95 transition-all"
@@ -557,19 +554,18 @@ const HomePage: React.FC<HomePageProps> = ({
               {/* 确认按钮 */}
               <button
                 onClick={handleConfirmDeleteThrottled}
-                className="flex-1 h-12 rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30"
+                className="flex-1 h-12 rounded-full bg-red-500 text-white font-medium hover:bg-red-600 active:scale-95 transition-all shadow-lg shadow-red-500/30"
               >
                 确认
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
 
-      {/* 新建尽调弹框 - Portal to Body */}
-      {showCreateModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      {/* 新建尽调弹框 - Direct Render */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* 半透明背景 */}
           <div 
             className="absolute inset-0 bg-black/40"
@@ -614,8 +610,7 @@ const HomePage: React.FC<HomePageProps> = ({
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </div>
   );
