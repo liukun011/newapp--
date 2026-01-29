@@ -251,11 +251,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         >
           {isPasswordMode ? '验证码登录' : '密码登录'}
         </button>
-        {isPasswordMode && (
+        {/* {isPasswordMode && (
            <button className="text-sm text-slate-500 hover:text-indigo-600">
              忘记密码
            </button>
-        )}
+        )} */}
       </div>
 
       {/* Main Action Button */}
@@ -302,7 +302,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       </Button>
 
       {/* Bottom Agreement */}
-      <div className="mt-auto mb-4 flex items-center justify-center">
+      <div className="fixed bottom-6 left-0 right-0 flex items-center justify-center z-10">
          <label className="flex items-center space-x-2 text-xs text-gray-400 cursor-pointer">
             <input 
               type="checkbox" 

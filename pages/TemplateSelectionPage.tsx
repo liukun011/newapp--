@@ -7,7 +7,7 @@ import { dealService } from '../services/dealService';
 
 interface TemplateSelectionPageProps {
   onBack: () => void;
-  onPreview: (name: string, url: string) => void;
+  onPreview: (name: string, url: string, id: string) => void;
   currentTemplateId?: string;
   dealId?: string; // 尽调实例 ID
   onTemplateChanged?: (newTemplateId: string) => void; // 模板更换成功的回调
@@ -150,9 +150,8 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
                     className="p-2 text-gray-400 hover:text-gray-600"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // 预览模板文件
                       if (template.outTemplateUrl) {
-                        onPreview(template.reportTemplateName, template.outTemplateUrl);
+                        onPreview(template.reportTemplateName, template.outTemplateUrl, template.id);
                       } else {
                         Toast.info('暂无预览文件');
                       }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { Home, User, Plus } from 'lucide-react';
-import { Toast } from 'react-vant';
+import { Toast, Dialog } from 'react-vant';
 import { useRecordingStore } from './store/useRecordingStore';
 import { dealService } from './services/dealService';
 import SplashScreen from './pages/SplashScreen';
@@ -139,7 +139,7 @@ const App: React.FC = () => {
 
 
   // 模板预览数据 - 从 sessionStorage 恢复
-  const [previewTemplate, setPreviewTemplate] = useState<{ name: string; url: string } | null>(() => {
+  const [previewTemplate, setPreviewTemplate] = useState<{ name: string; url: string; id?: string } | null>(() => {
     try {
       const saved = sessionStorage.getItem('zov-preview-template');
       return saved ? JSON.parse(saved) : null;
@@ -158,7 +158,7 @@ const App: React.FC = () => {
   }, [previewTemplate]);
   
   // 报告预览数据
-  const [previewReport, setPreviewReport] = useState<{ name: string; reportUrl: string; previewUrl: string } | null>(() => {
+  const [previewReport, setPreviewReport] = useState<{ name: string; reportUrl: string; previewUrl: string; showDownloadButton?: boolean } | null>(() => {
     try {
       const saved = sessionStorage.getItem('zov-preview-report');
       return saved ? JSON.parse(saved) : null;
@@ -491,20 +491,23 @@ const App: React.FC = () => {
            if (store.isRecording) {
                console.log('正在执行中断保存流程...');
                store.setIsRecording(false);
-               Toast.loading({ message: '录音被迫中断，正在保存...', forbidClick: true, duration: 0 });
                
                try {
+                   // 静默保存
                    await Promise.all([
                        uploadTranscriptionBatch(),
                        store.currentInterviewInstId ? uploadAudioFile(store.currentInterviewInstId) : Promise.resolve()
                    ]);
-                   Toast.success('录音已保存');
                } catch (e) {
                    console.error(e);
-                   Toast.fail('保存失败');
                } finally {
-                   Toast.clear();
                    store.reset();
+                   // 保存完成后弹窗提示
+                   Dialog.alert({
+                       title: '提示',
+                       message: '访谈录音因麦克风异常中断了！',
+                       confirmButtonText: '确认',
+                   });
                }
            } else {
                console.log('无论是录音状态与否，都收到了中断信号');
@@ -846,8 +849,8 @@ const App: React.FC = () => {
                     setPreviousView(View.DUE_DILIGENCE);
                     navigateForward(View.HISTORY);
                   }}
-                  onPreviewReport={(name, reportUrl, previewUrl) => {
-                    setPreviewReport({ name, reportUrl, previewUrl });
+                  onPreviewReport={(name, reportUrl, previewUrl, showDownloadButton) => {
+                    setPreviewReport({ name, reportUrl, previewUrl, showDownloadButton });
                     setPreviousView(View.DUE_DILIGENCE);
                     navigateForward(View.REPORT_PREVIEW);
                   }}
@@ -1044,8 +1047,8 @@ const App: React.FC = () => {
               {currentView === View.TEMPLATE_SELECTION && (
                 <TemplateSelectionPage
                   onBack={() => navigateBackward(previousView)}
-                  onPreview={(name, url) => {
-                    setPreviewTemplate({ name, url });
+                  onPreview={(name, url, id) => {
+                    setPreviewTemplate({ name, url, id });
                     setCurrentView(View.TEMPLATE_PREVIEW);
                   }}
                   currentTemplateId={currentDeal?.templateId}
@@ -1067,7 +1070,40 @@ const App: React.FC = () => {
                 <TemplatePreviewPage
                   templateName={previewTemplate.name}
                   templateUrl={previewTemplate.url}
+                  templateId={previewTemplate.id}
                   onBack={() => navigateBackward(previousView)}
+                  onSelect={currentDeal?.id ? async (templateId) => {
+                     // 避免重复选择
+                     if (currentDeal.templateId === templateId) {
+                        return;
+                     }
+                     
+                     try {
+                        Toast.loading({ message: '更换中...', duration: 0 });
+                        const res = await dealService.changeReportTemplate({
+                          id: currentDeal.id,
+                          templateId: templateId,
+                        });
+                        Toast.clear();
+
+                        if (res.success) {
+                          Toast.success('更换成功');
+                          // 更新当前 Deal 状态
+                          setCurrentDeal({
+                            ...currentDeal,
+                            templateId: templateId
+                          });
+                          // 返回到尽调详情页
+                          navigateBackward(View.DUE_DILIGENCE);
+                        } else {
+                          Toast.fail(res.message || '更换失败');
+                        }
+                     } catch (error) {
+                        Toast.clear();
+                        console.error('Failed to change template:', error);
+                        Toast.fail('更换失败');
+                     }
+                  } : undefined}
                 />
               )}
               {currentView === View.REPORT_PREVIEW && previewReport && (
@@ -1075,6 +1111,7 @@ const App: React.FC = () => {
                   reportName={previewReport.name}
                   reportUrl={previewReport.reportUrl}
                   previewUrl={previewReport.previewUrl}
+                  showDownloadButton={(previewReport as any).showDownloadButton}
                   onBack={() => {
                     console.log('[ReportPreview] Navigating back, previousView:', previousView);
                     console.log('[ReportPreview] Current deal:', currentDeal);

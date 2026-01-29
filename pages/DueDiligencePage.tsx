@@ -18,7 +18,7 @@ interface DueDiligencePageProps {
   onNavigateToQuestions?: () => void;
   onEditInfo?: () => void;
   onChangeTemplate?: () => void;
-  onPreviewReport?: (name: string, reportUrl: string, previewUrl: string) => void;
+  onPreviewReport?: (name: string, reportUrl: string, previewUrl: string, showDownloadButton?: boolean) => void;
   onNavigateToHistory?: (dealId: string) => void;
   onDealDetailLoaded?: (detail: DealRecord) => void;
 }
@@ -338,11 +338,12 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         Toast.clear();
         
         if (res.success && res.data) {
-          // 使用报告预览页面打开
+          // 尽调报告卡片点击：仅查看，不显示下载按钮
           onPreviewReport?.(
             currentDeal.report.fileName || '尽调报告',
             currentDeal.report.fileUrl,
-            res.data
+            res.data,
+            false 
           );
         } else {
           Toast.fail(res.message || '打开报告失败');
@@ -357,19 +358,28 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     }
   }, 1000);
 
-  const handleDownloadReportThrottled = useThrottleFn(() => {
-    if (currentDeal?.report?.fileUrl && currentDeal?.report?.fileName) {
+  const handleDownloadReportThrottled = useThrottleFn(async () => {
+    if (currentDeal?.report?.id && currentDeal?.report?.fileUrl) {
       try {
-        const link = document.createElement('a');
-        link.href = currentDeal.report.fileUrl;
-        link.download = currentDeal.report.fileName || '尽调报告.docx';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        Toast.success('开始下载');
+        Toast.loading({ message: '正在打开下载页...', duration: 0, forbidClick: true });
+        const res = await dealService.viewReportUrl(currentDeal.report.id, currentDeal.report.fileUrl);
+        Toast.clear();
+        
+        if (res.success && res.data) {
+          // 立即下载按钮点击：进入预览页，且底部显示“立即下载”按钮
+          onPreviewReport?.(
+            currentDeal.report.fileName || '尽调报告',
+            currentDeal.report.fileUrl,
+            res.data,
+            true 
+          );
+        } else {
+          Toast.fail(res.message || '打开失败');
+        }
       } catch (error) {
-        console.error('Download failed:', error);
-        Toast.fail('下载失败');
+        Toast.clear();
+        console.error('View report failed:', error);
+        Toast.fail('打开失败');
       }
     } else {
       Toast.fail('报告文件不存在');
@@ -444,33 +454,43 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
      onNavigateToRecording();
   }, 1000);
 
-  const handleArchiveThrottled = useThrottleFn(async () => {
-    if (!currentDeal?.id) {
-      Toast.fail('尽调信息不存在');
-      return;
-    }
-
-    try {
-      Toast.loading({ message: '归档中...', duration: 0, forbidClick: true });
-      const res = await dealService.archiveDeal(currentDeal.id);
-      Toast.clear();
-      
-      if (res.success) {
-         Toast.success('归档成功');
-         // 刷新详情
-         const detailRes = await dealService.getDealInstDetail(currentDeal.id);
-         if (detailRes.success && detailRes.data) {
-           setDealDetail(detailRes.data);
-           onDealDetailLoadedRef.current?.(detailRes.data);
-         }
-      } else {
-        Toast.fail(res.message || '归档失败');
+  const handleArchiveThrottled = useThrottleFn(() => {
+    Dialog.confirm({
+      title: '提示',
+      message: '请确认所有访谈工作已完成。归档后仅支持查看和导出报告，不再支持编辑。',
+      cancelButtonText: '暂不归档',
+      confirmButtonText: '确认归档',
+      confirmButtonColor: '#4E3EF8',
+    }).then(async () => {
+      if (!currentDeal?.id) {
+        Toast.fail('尽调信息不存在');
+        return;
       }
-    } catch (error) {
-      Toast.clear();
-      console.error('Archive failed:', error);
-      Toast.fail('归档失败');
-    }
+
+      try {
+        Toast.loading({ message: '归档中...', duration: 0, forbidClick: true });
+        const res = await dealService.archiveDeal(currentDeal.id);
+        Toast.clear();
+        
+        if (res.success) {
+           Toast.success('归档成功');
+           // 刷新详情
+           const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+           if (detailRes.success && detailRes.data) {
+             setDealDetail(detailRes.data);
+             onDealDetailLoadedRef.current?.(detailRes.data);
+           }
+        } else {
+          Toast.fail(res.message || '归档失败');
+        }
+      } catch (error) {
+        Toast.clear();
+        console.error('Archive failed:', error);
+        Toast.fail('归档失败');
+      }
+    }).catch(() => {
+      // 取消归档
+    });
   }, 1000);
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F8FA] relative">

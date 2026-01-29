@@ -1,11 +1,13 @@
 import React from 'react';
 import { ArrowLeft, Download } from 'lucide-react';
 import { Toast } from 'react-vant';
+import { nativeBridge } from '../services/nativeBridge';
 
 interface ReportPreviewPageProps {
   reportName: string;
   reportUrl: string;
   previewUrl: string;
+  showDownloadButton?: boolean;
   onBack: () => void;
 }
 
@@ -13,22 +15,36 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
   reportName,
   reportUrl,
   previewUrl,
+  showDownloadButton = false,
   onBack
 }) => {
   const handleDownload = () => {
-    try {
-      // 创建一个隐藏的 a 标签来触发下载
-      const link = document.createElement('a');
-      link.href = reportUrl;
-      link.download = reportName || '尽调报告.docx';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      Toast.success('开始下载');
-    } catch (error) {
-      console.error('Download failed:', error);
-      Toast.fail('下载失败');
-    }
+      // 监听下载结果
+      const handleDownloadResult = (response: any) => {
+        console.log('[Native] Download Callback:', JSON.stringify(response));
+
+        // 兼容处理：检查外层 message 是否为 "下载成功" 或 success=true
+        if (response.success) {
+           if (response.data?.percent === 100 || response.message === '下载成功') {
+              Toast.success('下载成功');
+              nativeBridge.off('onDownloadResult', handleDownloadResult);
+           }
+        } else {
+           // 失败
+           Toast.fail(response.message || '下载失败');
+           nativeBridge.off('onDownloadResult', handleDownloadResult);
+        }
+      };
+  
+      nativeBridge.on('onDownloadResult', handleDownloadResult);
+      
+      Toast.loading({ message: '开始下载...', duration: 1000 });
+      nativeBridge.downloadFile({ filePath: reportUrl });
+  
+      // Timeout protection
+      setTimeout(() => {
+          nativeBridge.off('onDownloadResult', handleDownloadResult);
+      }, 60000);
   };
 
   return (
@@ -60,15 +76,17 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
       </div>
 
       {/* Download Button */}
-      <div className="bg-white px-4 py-3 shadow-lg border-t border-gray-100 relative z-[60]">
-        <button
-          onClick={handleDownload}
-          className="w-full py-3 bg-indigo-600 text-white rounded-full font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
-        >
-          <Download size={20} />
-          立即下载
-        </button>
-      </div>
+      {showDownloadButton && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 z-[60]">
+          <button
+            onClick={handleDownload}
+            className="w-full py-3 bg-indigo-600 text-white rounded-full font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-indigo-200"
+          >
+            <Download size={20} />
+            立即下载
+          </button>
+        </div>
+      )}
     </div>
   );
 };

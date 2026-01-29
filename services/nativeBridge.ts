@@ -245,6 +245,13 @@ class NativeBridgeService {
   // ==================== 其他接口 ====================
 
   /**
+   * 下载文件
+   */
+  downloadFile(params: { filePath: string }) {
+    this.callNative('downloadFile', params);
+  }
+
+  /**
    * 关闭应用
    */
   closeApp() {

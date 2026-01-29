@@ -5,12 +5,16 @@ import { SitesUrl } from '../constants';
 interface TemplatePreviewPageProps {
   templateName: string;
   templateUrl: string;
+  templateId?: string;
+  onSelect?: (id: string) => void;
   onBack: () => void;
 }
 
 const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
   templateName,
   templateUrl,
+  templateId,
+  onSelect,
   onBack
 }) => {
   return (
@@ -26,7 +30,7 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
       </div>
 
       {/* Preview Content */}
-      <div className="flex-1 relative overflow-hidden bg-white">
+      <div className="flex-1 relative overflow-hidden bg-white mb-[80px]"> 
         {templateUrl ? (
           <iframe 
             className="absolute inset-0 w-full h-full border-none"
@@ -39,6 +43,18 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
           </div>
         )}
       </div>
+
+      {/* Select Button - Fixed at bottom */}
+      {onSelect && templateId && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 z-50 safe-area-bottom">
+           <button
+             onClick={() => onSelect(templateId)}
+             className="w-full py-3 bg-indigo-600 text-white rounded-full font-bold active:scale-95 transition-transform shadow-lg shadow-indigo-200"
+           >
+             选择此模板
+           </button>
+        </div>
+      )}
     </div>
   );
 };
