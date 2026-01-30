@@ -55,6 +55,19 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
     fetchTemplates();
   }, [activeTab]);
 
+  // 监听原生返回键
+  useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      onBack();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [onBack]);
+
   const handleDelete = (id: string) => {
     setDeletingTemplateId(id);
     setIsDeleteModalOpen(true);

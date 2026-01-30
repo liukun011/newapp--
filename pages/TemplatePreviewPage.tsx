@@ -17,6 +17,19 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
   onSelect,
   onBack
 }) => {
+  // 监听原生返回键
+  React.useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      onBack();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [onBack]);
+
   return (
     <div className="flex flex-col h-screen bg-[#F7F8FA]">
       {/* Header */}

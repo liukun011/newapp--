@@ -27,7 +27,7 @@ import MessageCenterPage from './pages/MessageCenterPage';
 import HistoryRecordsPage from './pages/HistoryRecordsPage';
 import HistoryDetailPage from './pages/HistoryDetailPage';
 import ReportPreviewPage from './pages/ReportPreviewPage';
-import { View, DealRecord, QuestionInfo } from './types';
+import { View, DealRecord } from './types';
 import { COLORS } from './constants';
 import RecordingFloatBubble from './components/RecordingFloatBubble';
 import { nativeBridge, handleTranscriptionResult } from './services/nativeBridge';

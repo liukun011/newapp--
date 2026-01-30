@@ -112,6 +112,19 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
       };
   }, []);
 
+  // 监听原生返回键
+  useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      onBack();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [onBack]);
+
   const handleChooseFile = () => {
       if (isUploadingRef.current) return;
       nativeBridge.chooseFile();

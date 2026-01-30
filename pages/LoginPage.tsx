@@ -90,10 +90,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <span className="text-2xl font-bold text-slate-900 tracking-wider">用户登录</span>
             <button 
               className="text-slate-400 hover:text-indigo-600 transition-colors flex justify-center items-center gap-1"
-              onClick={() => setViewState('SMS')}
+              onClick={() => setViewState('PASSWORD')}
             >
               <Edit2 size={16} />
-              <span>短信验证登录</span>
+              <span>密码登录</span>
             </button>
           </div>
 

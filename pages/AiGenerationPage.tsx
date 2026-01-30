@@ -32,12 +32,22 @@ const AiGenerationPage: React.FC<AiGenerationPageProps> = ({ onBack, onConfirm }
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-      // Automatically show modal after a short delay for demo purposes? 
-      // No, prototype shows modal over list, likely triggered by user action or auto.
-      // We'll let user trigger it via "Confirm" button on the list.
     }, 2500);
     return () => clearTimeout(timer);
   }, []);
+
+  // 监听原生返回键
+  useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      onBack();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [onBack]);
 
   const toggleQuestion = (id: number) => {
     if (selectedQuestions.includes(id)) {

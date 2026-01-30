@@ -67,6 +67,19 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     fetchDealDetail();
   }, [fetchDealDetail]);
 
+  // 监听原生返回键
+  useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      onBack();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [onBack]);
+
 
 
   // 上传状态锁，防止重复触发

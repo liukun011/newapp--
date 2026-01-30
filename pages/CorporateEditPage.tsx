@@ -108,6 +108,19 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
       };
   }, []);
 
+  // 监听原生返回键
+  useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      onBack();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [onBack]);
+
   // 将网络图片转换为 Base64
   const imageToBase64 = async (imagePath: string): Promise<string> => {
     try {

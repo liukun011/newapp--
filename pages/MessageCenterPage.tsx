@@ -57,6 +57,19 @@ const MessageCenterPage: React.FC<MessageCenterPageProps> = ({ onBack }) => {
     // Additional navigation logic can go here
   };
 
+  // 监听原生返回键
+  React.useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      onBack();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [onBack]);
+
   const getIcon = (type: Message['type']) => {
     switch (type) {
       case 'report':

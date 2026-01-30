@@ -29,6 +29,19 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
     fetchData();
   }, [dealId]);
 
+  // 监听原生返回键
+  useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      onBack();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [onBack]);
+
   const fetchData = async () => {
     setLoading(true);
     try {

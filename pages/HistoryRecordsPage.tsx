@@ -46,6 +46,19 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
     // eslint-disable-next-line
   }, [dealId]);
 
+  // 监听原生返回键
+  useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      onBack();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [onBack]);
+
   const handleEditClick = (record: any) => {
     setCurrentEditId(record.interviewInstId || record.id || '');
     setCurrentEditTitle(record.interviewInstTitle || '');

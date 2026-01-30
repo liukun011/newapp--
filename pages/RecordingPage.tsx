@@ -84,6 +84,19 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     refreshDealInfo();
   }, [deal?.id]);
 
+  // 监听原生返回键
+  useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      onBack();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [onBack]);
+
   // Update Store with current Deal ID when entering page
   const setData = useRecordingStore(state => state.setData);
 

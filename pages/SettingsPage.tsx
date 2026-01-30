@@ -185,6 +185,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
           </button> */}
         </div>
         <div className="flex items-center gap-2">
+          {/* 占位符，平衡右侧编辑按钮，确保名称水平居中 */}
+          <div className="w-8" /> 
           <h2 className="text-[18px] font-bold text-slate-800">{userName || '未登录'}</h2>
           <button
             onClick={() => {

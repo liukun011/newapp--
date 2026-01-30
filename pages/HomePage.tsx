@@ -102,33 +102,57 @@ const HomePage: React.FC<HomePageProps> = ({
   const lastScrollTop = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // 处理滚动，控制 Header 显隐
+  // 用来锁定状态切换，防止在动画过程中由于布局调整导致的频繁跳变
+  const isTogglingRef = useRef(false);
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (isTogglingRef.current) return;
+
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    const scrollDiff = scrollTop - lastScrollTop.current;
     
-    // 底部边界检测：如果接近底部，强制隐藏 Header
-    // 增加容错(scrollHeight - clientHeight - 20)
-    const isAtBottom = scrollHeight > clientHeight && (scrollTop + clientHeight >= scrollHeight - 20);
+    // 1. 只有当列表数量较多且内容显著超过视口时，才允许执行滚动隐藏逻辑
+    // 门槛恢复为 6 条，缓冲区设为 200，确保隐藏后不会产生过度回弹
+    if (deals.length < 6 || scrollHeight <= clientHeight + 200) {
+      if (!isHeaderVisible) setIsHeaderVisible(true);
+      lastScrollTop.current = scrollTop;
+      return;
+    }
+
+    // 2. 顶部边界检测：回到顶部附近立即显示
+    if (scrollTop <= 20) {
+      if (!isHeaderVisible) setIsHeaderVisible(true);
+      lastScrollTop.current = scrollTop;
+      return;
+    }
+
+    // 3. 底部边界检测：如果接近底部，强制隐藏 Header
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 30;
     if (isAtBottom) {
       if (isHeaderVisible) {
+        isTogglingRef.current = true;
         setIsHeaderVisible(false);
+        setTimeout(() => { isTogglingRef.current = false; }, 500);
       }
       lastScrollTop.current = scrollTop;
       return;
     }
 
-    // 如果回到了顶部（或者非常接近顶部），显示 Header
-    if (scrollTop <= 10) {
+    // 4. 方向检测：向上滚动显示，向下滚动隐藏
+    if (scrollDiff < -5) {
+      // 明显向上滚动
       if (!isHeaderVisible) {
+        isTogglingRef.current = true;
         setIsHeaderVisible(true);
+        setTimeout(() => { isTogglingRef.current = false; }, 500);
       }
-      lastScrollTop.current = scrollTop;
-      return;
-    }
-
-    // 只要离开顶部一定距离，就隐藏 Header
-    if (scrollTop > 60 && isHeaderVisible) {
-      setIsHeaderVisible(false);
+    } else if (scrollDiff > 5 && scrollTop > 100) {
+      // 明显向下滚动，且离开顶部一定距离后再隐藏
+      if (isHeaderVisible) {
+        isTogglingRef.current = true;
+        setIsHeaderVisible(false);
+        setTimeout(() => { isTogglingRef.current = false; }, 500);
+      }
     }
     
     lastScrollTop.current = scrollTop;
@@ -361,7 +385,7 @@ const HomePage: React.FC<HomePageProps> = ({
               <h2 className="text-[19px] font-black text-[#1A4B8B] mb-2 leading-tight transition-all duration-500">
                 {bannerItems[currentBannerIndex].title}
               </h2>
-              <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90 transition-all duration-500">
+              <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90 transition-all duration-500 min-h-[54px]">
                 {bannerItems[currentBannerIndex].description}
               </p>
               <div className="mt-3 flex gap-1.5">
@@ -385,7 +409,7 @@ const HomePage: React.FC<HomePageProps> = ({
               <img 
                 src="/talk-assistant/assets/home.png" 
                 alt="AI Analysis" 
-                className="w-full h-full object-contain object-right-bottom scale-110 translate-y-2 translate-x-2"
+                className="w-full h-full object-contain object-right-bottom scale-110 -translate-y-5 translate-x-2"
               />
             </div>
           </div>

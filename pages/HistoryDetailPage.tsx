@@ -66,6 +66,19 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
     }
   }, [interviewInstId]);
 
+  // 监听原生返回键
+  useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      onBack();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [onBack]);
+
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const togglePlay = () => {
