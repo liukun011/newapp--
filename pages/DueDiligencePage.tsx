@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, Pencil, Mic, ChevronRight, FilePlus, Camera, Image as ImageIcon, FileText, Archive } from 'lucide-react';
+import { ArrowLeft, Pencil, Mic, ChevronRight, FilePlus, Archive } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import Mascot from '../components/Mascot';
 import { COLORS } from '../constants';
-import { DealRecord, DealReportStatusEnum, Resource } from '../types';
+import { DealRecord, DealReportStatusEnum } from '../types';
 import { dealService } from '../services/dealService';
 import { nativeBridge } from '@/services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
@@ -277,56 +277,12 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     e.target.value = '';
   };
 
-  const uploadOptions = [
-    { id: 'camera', label: '相机', icon: Camera },
-    { id: 'gallery', label: '相册', icon: ImageIcon },
-    { id: 'file', label: '文件', icon: FileText },
-    { id: 'voice', label: '语音录入', icon: Mic },
-  ];
 
-  const handleUploadClick = async (id: string) => {
-    switch (id) {
-      case 'camera':
-        nativeBridge.openCamera();
-        break;
-      case 'gallery':
-        nativeBridge.openPhotoLibrary();
-        break;
-      case 'file':
-        nativeBridge.chooseFile();
-        break;
-      case 'voice':
-        // 检查是否已有补充文本 (type='4')
-        const resources = dealDetail?.resources || [];
-        // 也需要合并 supplementary 字段
-        let allResources = [...resources];
-        if (dealDetail?.supplementary && Array.isArray(dealDetail.supplementary)) {
-             allResources.unshift(...(dealDetail.supplementary as Resource[]));
-        }
 
-        const supplementaryResource = allResources.find(r => r.type === '4');
-        if (supplementaryResource?.fileUrl) {
-          try {
-            Toast.loading({ message: '加载中...', duration: 0 });
-            const response = await fetch(supplementaryResource.fileUrl);
-            const text = await response.text();
-            Toast.clear();
-            setVoiceModalInitialContent(text);
-          } catch (error) {
-            Toast.clear();
-            console.error('Failed to load supplementary text:', error);
-            setVoiceModalInitialContent('');
-          }
-        } else {
-          setVoiceModalInitialContent('');
-        }
-        setVoiceModalVisible(true);
-        break;
-    }
-  };
+
 
   // Throttled Handlers
-  const handleUploadClickThrottled = useThrottleFn(handleUploadClick, 1000);
+
   
   const handleBackThrottled = useThrottleFn(onBack, 1000);
   const handleEditInfoThrottled = useThrottleFn(() => onEditInfo?.(), 1000);
@@ -771,36 +727,19 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                <p className="text-xs text-gray-400 mt-1">AI智能解析</p>
             </div>
             
-            <div className="flex items-center justify-between mt-4">
-               <div className="flex gap-2">
-                 {(currentDeal?.status === '5') ? (
-                   // 已归档状态：显示立即查看按钮
-                   <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleNavigateMaterialsThrottled();
-                    }}
-                    className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100"
-                   >
-                     立即查看
-                   </button>
-                 ) : (
-                   // 未归档状态：显示上传图标
-                   uploadOptions.map(opt => (
-                     <button 
-                      key={opt.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleUploadClickThrottled(opt.id);
-                      }}
-                      className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-slate-500 active:bg-gray-100 transition-colors"
-                     >
-                       <opt.icon size={16} strokeWidth={2} />
-                     </button>
-                   ))
-                 )}
+            <div className="flex items-end justify-between mt-4">
+               <div className="flex flex-wrap gap-1.5 flex-1 mr-1">
+                 <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNavigateMaterialsThrottled();
+                  }}
+                  className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100 whitespace-nowrap"
+                 >
+                   {currentDeal?.status === '5' ? '立即查看' : '立即添加'}
+                 </button>
                </div>
-               <FilePlus className="text-gray-300 w-8 h-8 opacity-50" strokeWidth={1.5} />
+               <FilePlus className="text-gray-300 w-8 h-8 opacity-50 flex-shrink-0" strokeWidth={1.5} />
             </div>
           </div>
 
