@@ -22,6 +22,52 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [pageLoading, setPageLoading] = useState(true);
+
+  // Moved hooks to top level to comply with Rules of Hooks
+  const handleOneClickLogin = useThrottleFn(async () => {
+    if (!agreed) {
+      Toast.info('请先阅读并同意用户协议和隐私政策');
+      return;
+    }
+    Toast.info({ 
+      message: '功能开发中，敬请期待！', 
+    });
+  });
+
+  const handleMainLogin = useThrottleFn(async () => {
+    if (!agreed) {
+      Toast.info('请先阅读并同意用户协议和隐私政策');
+      return;
+    }
+    if (isPasswordMode) {
+      try {
+        const res = await authService.login(phone, password);
+        if (res.successful && res.data) {
+          localStorage.setItem('zov-user-token', res.data.accessToken);
+          localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
+          onLogin();
+        } else {
+           Toast.fail(res.message || '登录失败');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+      }
+    } else {
+       try {
+         const res = await authService.loginWithPhoneCode(phone, code);
+         if (res.successful && res.data) {
+           localStorage.setItem('zov-user-token', res.data.accessToken);
+           localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
+           onLogin();
+         } else {
+           Toast.fail(res.message || '登录失败');
+         }
+       } catch (error) {
+         console.error('Login error:', error);
+       }
+    }
+  });
 
   // Countdown timer
   useEffect(() => {
@@ -40,6 +86,23 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     }, 4000);
     return () => clearInterval(timer);
   }, [viewState]);
+
+  // Initial Loading Simulation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (pageLoading) {
+    return (
+      <div className="fixed inset-0 bg-white z-[999] flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <p className="text-gray-400 text-sm">资源加载中...</p>
+      </div>
+    );
+  }
 
   // Landing Page View (Carousel + Bottom Sheet)
   if (viewState === 'LANDING') {
@@ -112,27 +175,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               block 
               size="large" 
               variant="secondary"
-              onClick={useThrottleFn(async () => {
-                if (!agreed) {
-                  Toast.info('请先阅读并同意用户协议和隐私政策');
-                  return;
-                }
-                // try {
-                //   const res = await authService.login('13278852398', 'Jwx1998...');
-                //   if (res.successful && res.data) {
-                //     localStorage.setItem('zov-user-token', res.data.accessToken);
-                //     localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
-                //     onLogin();
-                //   } else {
-                //     Toast.fail(res.message || '登录失败');
-                //   }
-                // } catch (error) {
-                //   console.error('Login error:', error);
-                // }
-                Toast.info({ 
-                  message: '功能开发中，敬请期待！', 
-                });
-              })} 
+              onClick={handleOneClickLogin}
               className="border-slate-200 text-slate-600 font-normal"
             >
               本机号码一键登录
@@ -262,39 +305,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <Button 
         block 
         size="large" 
-        onClick={useThrottleFn(async () => {
-          if (!agreed) {
-            Toast.info('请先阅读并同意用户协议和隐私政策');
-            return;
-          }
-          if (isPasswordMode) {
-            try {
-              const res = await authService.login(phone, password);
-              if (res.successful && res.data) {
-                localStorage.setItem('zov-user-token', res.data.accessToken);
-                localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
-                onLogin();
-              } else {
-                 Toast.fail(res.message || '登录失败');
-              }
-            } catch (error) {
-              console.error('Login error:', error);
-            }
-          } else {
-             try {
-               const res = await authService.loginWithPhoneCode(phone, code);
-               if (res.successful && res.data) {
-                 localStorage.setItem('zov-user-token', res.data.accessToken);
-                 localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
-                 onLogin();
-               } else {
-                 Toast.fail(res.message || '登录失败');
-               }
-             } catch (error) {
-               console.error('Login error:', error);
-             }
-          }
-        })}
+        onClick={handleMainLogin}
         disabled={!phone || (isPasswordMode ? !password : !code)}
         className="shadow-xl shadow-indigo-500/20"
       >

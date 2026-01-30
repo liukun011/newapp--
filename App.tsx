@@ -43,8 +43,44 @@ const App: React.FC = () => {
     const savedView = sessionStorage.getItem('zov-current-view');
     return (savedView as View) || View.HOME;
   });
+
   // Track the previous view to support returning from the Edit screen
   const [previousView, setPreviousView] = useState<View>(View.HOME);
+
+  // iOS Swipe Back & Browser Back Support
+  // 核心逻辑：利用 History API 制造“伪历史”，使得浏览器/WebView 认为有后退空间，从而允许侧滑手势。
+  // 当侧滑触发 'popstate' 时，拦截它，执行我们自己的导航逻辑，并立即把历史记录补回去，实现“无限拦截”。
+  useEffect(() => {
+    if (typeof history === 'undefined' || typeof window === 'undefined') return;
+
+    // 1. 初始化：挂载时推入一个状态，确保栈深 >= 2，激活侧滑能力
+    // 使用随机 ID 避免某些浏览器的去重优化
+    const pushState = () => {
+      history.pushState({ key: Date.now() }, '', window.location.href);
+    };
+
+    const handlePopState = (event: PopStateEvent) => {
+      console.log('[App] PopState (Swipe/Back) detected.');
+      
+      // 2. 拦截后立即补回历史记录，保持栈结构，防止真的退出了 App 或到了空页面
+      // 注意：这会让浏览器 URL 保持不变（或变回原样），同时允许下一次继续侧滑
+      pushState();
+
+      // 3. 触发业务层的返回逻辑
+      if ((window as any).onNativeBack) {
+        (window as any).onNativeBack();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    // 首次推入
+    pushState();
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   // Navigation Stack for handling Native Back
   const [viewStack, setViewStack] = useState<View[]>([View.HOME]);
@@ -374,8 +410,8 @@ const App: React.FC = () => {
         return;
       }
 
-      // 如果当前在首页、登录页，才是真正的退出时机
-      if (currentView === View.HOME || currentView === View.LOGIN) {
+      // 如果当前在首页、登录页、或者我的设置页，才是真正的退出时机
+      if (currentView === View.HOME || currentView === View.LOGIN || currentView === View.SETTINGS) {
         // 如果栈里还有东西（异常情况），先清空栈回首页
         if (viewStack.length > 1 && currentView === View.HOME) {
           // 已经在首页了，但栈还不空，重置栈

@@ -68,6 +68,8 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
     };
   }, [onBack]);
 
+
+
   const handleDelete = (id: string) => {
     setDeletingTemplateId(id);
     setIsDeleteModalOpen(true);

@@ -14,7 +14,7 @@ export const COLORS = {
 
 // 站点地址配置
 export const SitesUrl = {
-  preview: 'http://113.44.121.105:8012/onlinePreview', // 预览
+  preview: 'https://xiaoli.binarysee.com/kkfileview/onlinePreview', // 预览
 };
 
 // Login Carousel Slides
