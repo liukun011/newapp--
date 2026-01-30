@@ -276,6 +276,17 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     // 清空 input 以便再次选择同一文件
     e.target.value = '';
   };
+<<<<<<< HEAD
+=======
+
+
+
+
+
+  // Throttled Handlers
+
+
+>>>>>>> 8ce75e892fcc1756f3a1109ae25cc246a730fe0d
   const handleBackThrottled = useThrottleFn(onBack, 1000);
   const handleEditInfoThrottled = useThrottleFn(() => onEditInfo?.(), 1000);
   const handleNavigateMaterialsThrottled = useThrottleFn(onNavigateToMaterials, 1000);
@@ -721,20 +732,32 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               <h3 className="font-bold text-slate-800 text-[16px]">尽调资料</h3>
               <p className="text-xs text-gray-400 mt-1">AI智能解析</p>
             </div>
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> 8ce75e892fcc1756f3a1109ae25cc246a730fe0d
             <div className="flex items-end justify-between mt-4">
-               <div className="flex flex-wrap gap-1.5 flex-1 mr-1">
-                 <button 
+              <div className="flex flex-wrap gap-1.5 flex-1 mr-1">
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleNavigateMaterialsThrottled();
                   }}
                   className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100 whitespace-nowrap"
+<<<<<<< HEAD
                  >
                    {currentDeal?.status === '5' ? '立即查看' : '立即添加'}
                  </button>
                </div>
                <FilePlus className="text-gray-300 w-8 h-8 opacity-50 flex-shrink-0" strokeWidth={1.5} />
+=======
+                >
+                  {currentDeal?.status === '5' ? '立即查看' : '立即添加'}
+                </button>
+              </div>
+              <FilePlus className="text-gray-300 w-8 h-8 opacity-50 flex-shrink-0" strokeWidth={1.5} />
+>>>>>>> 8ce75e892fcc1756f3a1109ae25cc246a730fe0d
             </div>
           </div>
 
