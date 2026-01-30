@@ -278,39 +278,12 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   };
 
 
-<<<<<<< HEAD
-=======
-  const handleUploadClick = async (id: string) => {
-    switch (id) {
-      case 'camera':
-        nativeBridge.openCamera();
-        break;
-      case 'gallery':
-        nativeBridge.openPhotoLibrary();
-        break;
-      case 'file':
-        nativeBridge.chooseFile();
-        break;
-      case 'voice':
-        // 检查是否已有补充文本 (type='4')
-        const resources = dealDetail?.resources || [];
-        // 也需要合并 supplementary 字段
-        let allResources = [...resources];
-        if (dealDetail?.supplementary && Array.isArray(dealDetail.supplementary)) {
-          allResources.unshift(...(dealDetail.supplementary as Resource[]));
-        }
->>>>>>> a7c28439e0560d6581f300820094b31e0d124b23
 
 
 
   // Throttled Handlers
-<<<<<<< HEAD
 
-  
-=======
-  const handleUploadClickThrottled = useThrottleFn(handleUploadClick, 1000);
 
->>>>>>> a7c28439e0560d6581f300820094b31e0d124b23
   const handleBackThrottled = useThrottleFn(onBack, 1000);
   const handleEditInfoThrottled = useThrottleFn(() => onEditInfo?.(), 1000);
   const handleNavigateMaterialsThrottled = useThrottleFn(onNavigateToMaterials, 1000);
@@ -756,54 +729,20 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               <h3 className="font-bold text-slate-800 text-[16px]">尽调资料</h3>
               <p className="text-xs text-gray-400 mt-1">AI智能解析</p>
             </div>
-<<<<<<< HEAD
-            
+
             <div className="flex items-end justify-between mt-4">
-               <div className="flex flex-wrap gap-1.5 flex-1 mr-1">
-                 <button 
+              <div className="flex flex-wrap gap-1.5 flex-1 mr-1">
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleNavigateMaterialsThrottled();
                   }}
                   className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100 whitespace-nowrap"
-                 >
-                   {currentDeal?.status === '5' ? '立即查看' : '立即添加'}
-                 </button>
-               </div>
-               <FilePlus className="text-gray-300 w-8 h-8 opacity-50 flex-shrink-0" strokeWidth={1.5} />
-=======
-
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex gap-2">
-                {(currentDeal?.status === '5') ? (
-                  // 已归档状态：显示立即查看按钮
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleNavigateMaterialsThrottled();
-                    }}
-                    className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100"
-                  >
-                    立即查看
-                  </button>
-                ) : (
-                  // 未归档状态：显示上传图标
-                  uploadOptions.map(opt => (
-                    <button
-                      key={opt.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleUploadClickThrottled(opt.id);
-                      }}
-                      className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-slate-500 active:bg-gray-100 transition-colors"
-                    >
-                      <opt.icon size={16} strokeWidth={2} />
-                    </button>
-                  ))
-                )}
+                >
+                  {currentDeal?.status === '5' ? '立即查看' : '立即添加'}
+                </button>
               </div>
-              <FilePlus className="text-gray-300 w-8 h-8 opacity-50" strokeWidth={1.5} />
->>>>>>> a7c28439e0560d6581f300820094b31e0d124b23
+              <FilePlus className="text-gray-300 w-8 h-8 opacity-50 flex-shrink-0" strokeWidth={1.5} />
             </div>
           </div>
 
