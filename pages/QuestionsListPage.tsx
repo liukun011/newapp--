@@ -54,20 +54,20 @@ const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[50] flex flex-col items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[50] flex flex-col items-center p-4 overflow-y-auto">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl w-full max-w-[340px] shadow-xl animate-fadeIn my-auto">
+      <div className="relative bg-white rounded-2xl w-full max-w-[340px] shadow-xl animate-fadeIn mt-[20vh]">
         {/* Header */}
         <div className="pt-5 pb-3 text-center">
           <h3 className="text-lg font-semibold text-slate-800">新增问题</h3>
         </div>
-        
+
         {/* Content */}
         <div className="px-5 pb-5">
           <div className="relative">
@@ -79,7 +79,7 @@ const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
             />
           </div>
         </div>
-        
+
         {/* Footer Buttons */}
         <div className="flex border-t border-gray-100">
           <button
@@ -124,20 +124,20 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[50] flex flex-col items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[50] flex flex-col items-center p-4 overflow-y-auto">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl w-full max-w-[340px] shadow-xl animate-fadeIn my-auto">
+      <div className="relative bg-white rounded-2xl w-full max-w-[340px] shadow-xl animate-fadeIn mt-[20vh]">
         {/* Header */}
         <div className="pt-5 pb-3 text-center">
           <h3 className="text-lg font-semibold text-slate-800">编辑问题</h3>
         </div>
-        
+
         {/* Content */}
         <div className="px-5 pb-5">
           <div className="relative">
@@ -149,7 +149,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
             />
           </div>
         </div>
-        
+
         {/* Footer Buttons */}
         <div className="flex border-t border-gray-100">
           <button
@@ -171,7 +171,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
   );
 };
 
-const QuestionsListPage: React.FC<QuestionsListPageProps> = ({ 
+const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   dealName = '尽调详情',
   dealLogo,
   questionInfoList = [],
@@ -181,14 +181,14 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  
+
   // 编辑弹框状态
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionInfo | null>(null);
-  
+
   // 新增弹框状态
   const [addModalVisible, setAddModalVisible] = useState(false);
-  
+
   // 删除确认弹框状态
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletingQuestion, setDeletingQuestion] = useState<QuestionInfo | null>(null);
@@ -198,7 +198,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
   // 本地问题列表状态
   const [localQuestions, setLocalQuestions] = useState<QuestionInfo[]>(questionInfoList);
-  
+
   // 标记是否有修改
   const isDirtyRef = useRef(false);
 
@@ -228,22 +228,22 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
   // 统一保存逻辑
   const handleSave = async () => {
-      if (!onSave || !isDirtyRef.current) {
-          onBack();
-          return;
-      }
-      
-      Toast.loading({ message: '保存中...', duration: 0, forbidClick: true });
-      try {
-          await onSave(localQuestions);
-          Toast.clear();
-          onBack();
-      } catch (e) {
-          Toast.clear();
-          // 允许失败时留在此页重试，或者强制退出视需求而定
-          // 这里不仅提示，且不退出
-          console.error('Save failed on back', e);
-      }
+    if (!onSave || !isDirtyRef.current) {
+      onBack();
+      return;
+    }
+
+    Toast.loading({ message: '保存中...', duration: 0, forbidClick: true });
+    try {
+      await onSave(localQuestions);
+      Toast.clear();
+      onBack();
+    } catch (e) {
+      Toast.clear();
+      // 允许失败时留在此页重试，或者强制退出视需求而定
+      // 这里不仅提示，且不退出
+      console.error('Save failed on back', e);
+    }
   };
 
   useEffect(() => {
@@ -273,23 +273,23 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
   // 确认添加 (纯本地)
   const handleConfirmAdd = (questionName: string) => {
-      const newQuestion: QuestionInfo = {
-        // id: `temp_${Date.now()}`,
-        questionName: questionName.trim(),
-        questionIndex: localQuestions.length + 1,
-        recStatus: '1',
-        questionAnswer: null,
-        questionAnswerTime: null,
-        questionStatus: '0',
-        templateId: '',
-        agencyId: '',
-        CHECKED: false,
-      };
-      
-      setLocalQuestions(prev => [...prev, newQuestion]);
-      isDirtyRef.current = true;
-      Toast.success('添加成功');
-      setAddModalVisible(false);
+    const newQuestion: QuestionInfo = {
+      // id: `temp_${Date.now()}`,
+      questionName: questionName.trim(),
+      questionIndex: localQuestions.length + 1,
+      recStatus: '1',
+      questionAnswer: null,
+      questionAnswerTime: null,
+      questionStatus: '0',
+      templateId: '',
+      agencyId: '',
+      CHECKED: false,
+    };
+
+    setLocalQuestions(prev => [...prev, newQuestion]);
+    isDirtyRef.current = true;
+    Toast.success('添加成功');
+    setAddModalVisible(false);
   };
 
   // 点击编辑按钮，打开弹框
@@ -307,10 +307,10 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   // 确认编辑 (纯本地)
   const handleConfirmEdit = (questionName: string) => {
     if (editingQuestion) {
-      setLocalQuestions(prev => prev.map(q => 
-          q.id === editingQuestion.id 
-            ? { ...q, questionName: questionName.trim() } 
-            : q
+      setLocalQuestions(prev => prev.map(q =>
+        q.id === editingQuestion.id
+          ? { ...q, questionName: questionName.trim() }
+          : q
       ));
       isDirtyRef.current = true;
       Toast.success('修改成功');
@@ -334,12 +334,12 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   const handleConfirmDelete = () => {
     if (deletingQuestion) {
       setLocalQuestions(prev => {
-          const filtered = prev.filter(q => q.id !== deletingQuestion.id);
-          // 重新生成序号
-          return filtered.map((q, index) => ({
-              ...q,
-              questionIndex: index + 1
-          }));
+        const filtered = prev.filter(q => q.id !== deletingQuestion.id);
+        // 重新生成序号
+        return filtered.map((q, index) => ({
+          ...q,
+          questionIndex: index + 1
+        }));
       });
       isDirtyRef.current = true;
       Toast.success('删除成功');
@@ -355,8 +355,8 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
     <div className="flex flex-col min-h-screen bg-white">
       {/* NavBar */}
       <div className="flex items-center justify-center px-4 py-3 relative border-b border-gray-100">
-        <button 
-          onClick={handleBack} 
+        <button
+          onClick={handleBack}
           className="absolute left-4 p-2 text-slate-700 hover:bg-slate-50 rounded-full active:bg-slate-100 transition-colors"
         >
           <ArrowLeft size={24} />
@@ -365,7 +365,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
       </div>
 
       {/* Content */}
-      <div 
+      <div
         className="flex-1 overflow-hidden px-4 pb-24"
       >
         {/* Deal Info Card */}
@@ -397,11 +397,11 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
                 return (
                   <div key={question.id} className="border-b border-gray-100 last:border-0">
-                    <div 
+                    <div
                       className={`flex items-start justify-between py-4 ${isChecked ? 'cursor-pointer' : ''}`}
                       onClick={() => {
                         if (isChecked) {
-                           setExpandedQuestionId(isExpanded ? null : question.id!);
+                          setExpandedQuestionId(isExpanded ? null : question.id!);
                         }
                       }}
                     >
@@ -410,19 +410,19 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                           {index + 1}. {question.questionName}
                         </span>
                         {isChecked && (
-                           <span className="mt-1 text-indigo-400">
-                             {isExpanded ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
-                           </span>
+                          <span className="mt-1 text-indigo-400">
+                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </span>
                         )}
                       </div>
 
                       <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
                         {/* 编辑按钮 - 仅未归档且未命中时显示 */}
                         {!isArchived && !isChecked && (
-                          <button 
+                          <button
                             onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditQuestion(question);
+                              e.stopPropagation();
+                              handleEditQuestion(question);
                             }}
                             className="p-2 text-gray-300 hover:text-indigo-500 transition-colors"
                           >
@@ -431,10 +431,10 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                         )}
                         {/* 删除按钮 - 仅未归档且未命中时显示 */}
                         {!isArchived && !isChecked && (
-                          <button 
+                          <button
                             onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenDeleteModal(question);
+                              e.stopPropagation();
+                              handleOpenDeleteModal(question);
                             }}
                             className="p-2 text-gray-300 hover:text-red-500 transition-colors"
                           >
@@ -455,17 +455,17 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                           className="overflow-hidden"
                         >
                           <div className="bg-indigo-50/50 rounded-xl p-4 mb-4 text-sm text-slate-600 leading-relaxed">
-                             <div className="font-medium text-indigo-900 mb-1 flex items-center gap-2">
-                               <div className="w-1 h-3 bg-indigo-500 rounded-full"/>
-                               参考回答：
-                             </div>
-                             {question.questionAnswer || '暂无回答内容'}
-                             
-                             {question.questionAnswerTime && (
-                                <div className="mt-2 text-xs text-gray-400 text-right">
-                                  {question.questionAnswerTime}
-                                </div>
-                             )}
+                            <div className="font-medium text-indigo-900 mb-1 flex items-center gap-2">
+                              <div className="w-1 h-3 bg-indigo-500 rounded-full" />
+                              参考回答：
+                            </div>
+                            {question.questionAnswer || '暂无回答内容'}
+
+                            {question.questionAnswerTime && (
+                              <div className="mt-2 text-xs text-gray-400 text-right">
+                                {question.questionAnswerTime}
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       )}
@@ -487,16 +487,16 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
       {/* Scroll to Top Button */}
       {(!isArchived && showScrollTop) && (
-        <button 
+        <button
           onClick={scrollToTop}
           className="fixed right-4 bottom-40 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-colors border border-gray-100 z-30"
         >
           <ArrowUp size={20} />
         </button>
       )}
-      
+
       {/* Main Action Button: Add Question (Normal) OR Scroll Top (Archived) */}
-      <button 
+      <button
         onClick={isArchived ? scrollToTop : handleAddQuestionClick}
         className="fixed right-4 bottom-24 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 z-40"
         style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
@@ -523,11 +523,11 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
       {deleteModalVisible && deletingQuestion && (
         <div className="fixed inset-0 z-[50] flex items-center justify-center">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/50"
             onClick={handleCloseDeleteModal}
           />
-          
+
           {/* Modal */}
           <div className="relative bg-white rounded-2xl w-[85%] max-w-[320px] shadow-xl animate-fadeIn overflow-hidden">
             {/* Header */}
@@ -540,7 +540,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                 确定要删除该问题吗？删除后无法恢复。
               </p>
             </div>
-            
+
             {/* Footer Buttons */}
             <div className="flex border-t border-gray-100">
               <button

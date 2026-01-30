@@ -23,6 +23,8 @@ html, body {
   overflow: hidden; /* Hide global scrollbar */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%; /* Prevent font scaling in landscape */
+  text-size-adjust: 100%;
 }
 
 #root {

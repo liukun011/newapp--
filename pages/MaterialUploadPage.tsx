@@ -84,16 +84,16 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       console.log('Fetching deal detail for:', deal.id);
       const res = await dealService.getDealInstDetail(deal.id);
       if (res.success && res.data) {
-         console.log('Deal detail loaded:', res.data);
-         // 合并 resources 和 supplementary
-         const resourcesList = res.data.resources || [];
-         const supplementaryList = Array.isArray(res.data.supplementary) 
-           ? (res.data.supplementary as Resource[]).map(item => ({ ...item, type: '4' }))
-           : [];
-         
-         const merged = [...supplementaryList, ...resourcesList];
-         console.log('Merged resources:', merged);
-         setResources(merged);
+        console.log('Deal detail loaded:', res.data);
+        // 合并 resources 和 supplementary
+        const resourcesList = res.data.resources || [];
+        const supplementaryList = Array.isArray(res.data.supplementary)
+          ? (res.data.supplementary as Resource[]).map(item => ({ ...item, type: '4' }))
+          : [];
+
+        const merged = [...supplementaryList, ...resourcesList];
+        console.log('Merged resources:', merged);
+        setResources(merged);
       }
     } catch (error) {
       console.error('Failed to fetch deal detail:', error);
@@ -239,11 +239,11 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     const handleNativeImageUpload = async (localUrl: string) => {
       if (!deal?.id) return;
       if (isUploadingRef.current) return; // 防止重复触发
-      
+
       isUploadingRef.current = true;
       try {
         Toast.loading({ message: '上传中...', duration: 0, forbidClick: true });
-        
+
         // 1. 调用 Native 上传文件到 MinIO/OBS
         const token = localStorage.getItem('zov-user-token') || '';
         const uploadHost = 'http://68.79.42.215/report/upload/file'; // 硬编码
@@ -256,46 +256,46 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
         console.log('[Native上传] Params:', JSON.stringify(params, null, 2));
         console.log('[Native上传] 开始上传:', localUrl);
-        
+
         const serverUrl = await new Promise<string>((resolve, reject) => {
-           const resultHandler = (res: any) => {
-             // 兼容 errno=0 或 success=true
-             const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
-             const isSuccess = res.success && (resultData?.success === true || resultData?.errno === 0);
+          const resultHandler = (res: any) => {
+            // 兼容 errno=0 或 success=true
+            const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
+            const isSuccess = res.success && (resultData?.success === true || resultData?.errno === 0);
 
-             if (isSuccess) {
-               const url = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
-               if (url) {
-                 nativeBridge.off('onUploadResult', resultHandler);
-                 resolve(url);
-               }
-             } else if (res.success && res.data?.percent !== undefined) {
-               // 进度
-               // Toast.loading({ message: `上传中 ${res.data.percent}%...`, duration: 0 });
-             } else {
-               // 失败
-               if (res.success === false || (resultData && resultData.success === false)) {
-                 nativeBridge.off('onUploadResult', resultHandler);
-                 reject(new Error(resultData?.message || res.message || '上传失败'));
-               }
-             }
-           };
+            if (isSuccess) {
+              const url = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
+              if (url) {
+                nativeBridge.off('onUploadResult', resultHandler);
+                resolve(url);
+              }
+            } else if (res.success && res.data?.percent !== undefined) {
+              // 进度
+              // Toast.loading({ message: `上传中 ${res.data.percent}%...`, duration: 0 });
+            } else {
+              // 失败
+              if (res.success === false || (resultData && resultData.success === false)) {
+                nativeBridge.off('onUploadResult', resultHandler);
+                reject(new Error(resultData?.message || res.message || '上传失败'));
+              }
+            }
+          };
 
-           nativeBridge.on('onUploadResult', resultHandler);
-           nativeBridge.uploadInterviewFile(params);
-           
-           // 超时
-           setTimeout(() => {
-             nativeBridge.off('onUploadResult', resultHandler);
-             reject(new Error('上传超时'));
-           }, 60000);
+          nativeBridge.on('onUploadResult', resultHandler);
+          nativeBridge.uploadInterviewFile(params);
+
+          // 超时
+          setTimeout(() => {
+            nativeBridge.off('onUploadResult', resultHandler);
+            reject(new Error('上传超时'));
+          }, 60000);
         });
 
         console.log('[Native上传] 成功，URL:', serverUrl);
 
         // 2. 调用后端绑定接口
         const bindRes = await dealService.uploadDealResource(deal.id, [serverUrl]);
-        
+
         Toast.clear();
         if (bindRes.success) {
           Toast.success('上传成功');
@@ -316,22 +316,22 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
     // 注册 imageSelected 监听 (直接使用 on 监听以便 cleanup)
     const handleImageSelected = (res: any) => {
-        if (res.success && res.data && res.data.imageURL) {
-            handleNativeImageUpload(res.data.imageURL);
-        }
+      if (res.success && res.data && res.data.imageURL) {
+        handleNativeImageUpload(res.data.imageURL);
+      }
     };
     nativeBridge.on('imageSelected', handleImageSelected);
 
     // 监听文件选择回调
     const handleFileSelected = (res: any) => {
-        // 根据提供的结构：res.data.fileURL
-        if (res.success && res.data && res.data.fileURL) {
-             const path = res.data.fileURL;
-             console.log('[MaterialUploadPage] 收到文件选择回调:', path);
-             handleNativeImageUpload(path);
-        } else {
-             console.warn('[MaterialUploadPage] 文件选择回调数据格式不匹配:', JSON.stringify(res));
-        }
+      // 根据提供的结构：res.data.fileURL
+      if (res.success && res.data && res.data.fileURL) {
+        const path = res.data.fileURL;
+        console.log('[MaterialUploadPage] 收到文件选择回调:', path);
+        handleNativeImageUpload(path);
+      } else {
+        console.warn('[MaterialUploadPage] 文件选择回调数据格式不匹配:', JSON.stringify(res));
+      }
     };
     nativeBridge.on('fileSelected', handleFileSelected);
 
@@ -493,9 +493,9 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const handleRefreshQuestionsThrottled = useThrottleFn(async () => {
     // 清除问题列表缓存并重新加载
     setLoadedTabs(prev => {
-        const newSet = new Set(prev);
-        newSet.delete('questions');
-        return newSet;
+      const newSet = new Set(prev);
+      newSet.delete('questions');
+      return newSet;
     });
     await fetchQuestions();
     Toast.success('刷新成功');
@@ -525,61 +525,61 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   }, 1000);
 
   const handleQuestionAddThrottled = useThrottleFn(() => {
-     setNewQuestionName('');
-     setQuestionAddModalVisible(true);
+    setNewQuestionName('');
+    setQuestionAddModalVisible(true);
   }, 1000);
 
   const handleUpdateQuestionThrottled = useThrottleFn(async () => {
-      if (editedQuestionName.trim() && editingQuestion) {
-        const updatedList = questions.map(q =>
-          q.id === editingQuestion.id
-            ? { ...q, questionName: editedQuestionName.trim() }
-            : q
-        );
-        setQuestions(updatedList);
-        Toast.success('修改成功');
-      }
-      setQuestionEditModalVisible(false);
+    if (editedQuestionName.trim() && editingQuestion) {
+      const updatedList = questions.map(q =>
+        q.id === editingQuestion.id
+          ? { ...q, questionName: editedQuestionName.trim() }
+          : q
+      );
+      setQuestions(updatedList);
+      Toast.success('修改成功');
+    }
+    setQuestionEditModalVisible(false);
   }, 1000);
 
   const handleAddQuestionConfirmThrottled = useThrottleFn(async () => {
-      if (newQuestionName.trim()) {
-        const newQuestion: QuestionInfo = {
-          // Temporarily use random ID if needed, or backend will ignore/replace it
-          id: String(Date.now()), 
-          questionName: newQuestionName.trim(),
-          questionIndex: questions.length + 1,
-          recStatus: '1',
-          questionAnswer: null,
-          questionAnswerTime: null,
-          questionStatus: '0',
-          templateId: '', // Should be filled if known, or backend handles
-          agencyId: '',
-          CHECKED: false,
-        };
+    if (newQuestionName.trim()) {
+      const newQuestion: QuestionInfo = {
+        // Temporarily use random ID if needed, or backend will ignore/replace it
+        id: String(Date.now()),
+        questionName: newQuestionName.trim(),
+        questionIndex: questions.length + 1,
+        recStatus: '1',
+        questionAnswer: null,
+        questionAnswerTime: null,
+        questionStatus: '0',
+        templateId: '', // Should be filled if known, or backend handles
+        agencyId: '',
+        CHECKED: false,
+      };
 
-        const updatedList = [...questions, newQuestion];
-        setQuestions(updatedList);
-        Toast.success('添加成功');
-      }
-      setQuestionAddModalVisible(false);
+      const updatedList = [...questions, newQuestion];
+      setQuestions(updatedList);
+      Toast.success('添加成功');
+    }
+    setQuestionAddModalVisible(false);
   }, 1000);
 
   const handleDeleteQuestionConfirmThrottled = useThrottleFn(async () => {
-      if (deletingQuestion) {
-        // Filter out the deleted question
-        const remainingQuestions = questions.filter(q => q.id !== deletingQuestion.id);
-        
-        // Re-index remaining questions (FRONTEND MANAGEMENT as requested)
-        const reindexedList = remainingQuestions.map((q, index) => ({
-             ...q,
-             questionIndex: index + 1
-        }));
+    if (deletingQuestion) {
+      // Filter out the deleted question
+      const remainingQuestions = questions.filter(q => q.id !== deletingQuestion.id);
 
-        setQuestions(reindexedList);
-        Toast.success('删除成功');
-      }
-      setQuestionDeleteModalVisible(false);
+      // Re-index remaining questions (FRONTEND MANAGEMENT as requested)
+      const reindexedList = remainingQuestions.map((q, index) => ({
+        ...q,
+        questionIndex: index + 1
+      }));
+
+      setQuestions(reindexedList);
+      Toast.success('删除成功');
+    }
+    setQuestionDeleteModalVisible(false);
   }, 1000);
 
   const uploadOptions = [
@@ -592,22 +592,22 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   // 批量保存问题逻辑
   const saveQuestions = async () => {
     if (!deal?.id || !loadedTabs.has('questions')) return;
-    
+
     try {
-        await dealService.createOrUpdateDealInst({
-            id: deal.id,
-            questionId: deal.questionId,
-            questionInfoList: questions
-        });
+      await dealService.createOrUpdateDealInst({
+        id: deal.id,
+        questionId: deal.questionId,
+        questionInfoList: questions
+      });
     } catch (e) {
-        console.error('Auto-save questions failed', e);
+      console.error('Auto-save questions failed', e);
     }
   };
 
   // Throttled Handlers (Defined here to access functions declared above)
-   const handleBackThrottled = useThrottleFn(async () => {
-      await saveQuestions();
-      onBack();
+  const handleBackThrottled = useThrottleFn(async () => {
+    await saveQuestions();
+    onBack();
   }, 1000);
 
   // 监听原生返回键
@@ -619,55 +619,55 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       // 这里的逻辑由 App.tsx 根据 currentView 自动刷新，所以此处不需要手动恢复
     };
   }, [handleBackThrottled]);
-  
+
   const handleEditInfoThrottled = useThrottleFn(() => onEditInfo?.(), 1000);
   const handleUploadClickThrottled = useThrottleFn(handleUploadClick, 1000);
-  
+
   const handleStartInterviewThrottled = useThrottleFn(async () => {
-      // 校验是否有正在进行的访谈（悬浮窗存在 即 currentDealId 不为空）
-      // 如果正在进行的是当前这个 Deal 的访谈，则可以直接进入
-      if (currentDealId && currentDealId !== deal?.id) {
-        setShowLimitTips(true);
-        setTimeout(() => setShowLimitTips(false), 3000);
-        return;
-      }
-      
-      await saveQuestions();
-      onStartInterview();
+    // 校验是否有正在进行的访谈（悬浮窗存在 即 currentDealId 不为空）
+    // 如果正在进行的是当前这个 Deal 的访谈，则可以直接进入
+    if (currentDealId && currentDealId !== deal?.id) {
+      setShowLimitTips(true);
+      setTimeout(() => setShowLimitTips(false), 3000);
+      return;
+    }
+
+    await saveQuestions();
+    onStartInterview();
   }, 1000);
-  
+
   const handleConfirmThrottled = useThrottleFn(async () => {
-      await saveQuestions();
-      (onConfirm || onBack)();
+    await saveQuestions();
+    (onConfirm || onBack)();
   }, 1000);
-  
+
   const handleDeleteResourceThrottled = useThrottleFn(handleDeleteResource, 1000);
   const handleConfirmRenameThrottled = useThrottleFn(handleConfirmRename, 1000);
   const handleOpenRenameModalThrottled = useThrottleFn(handleOpenRenameModal, 1000);
-  
+
   const handleGenerateAIPreviewThrottled = useThrottleFn((resource: Resource) => {
     // 优先处理补充资料（语音录入/文本）
     if (resource.type === '4') {
-        const fetchSupplementary = async () => {
-             try {
-               if (resource.fileUrl) {
-                 Toast.loading({ message: '加载中...', duration: 0 });
-                 const response = await fetch(resource.fileUrl);
-                 const text = await response.text();
-                 Toast.clear();
-                 setVoiceModalInitialContent(text);
-                 setVoiceModalVisible(true);
-               } else {
-                 Toast.fail('补充资料链接不存在');
-               }
-             } catch (error) {
-               Toast.clear();
-               console.error('Failed to fetch supplementary text:', error);
-               Toast.fail('加载补充资料失败');
-             }
-         };
-         fetchSupplementary();
-         return;
+      const fetchSupplementary = async () => {
+        try {
+          if (resource.fileUrl) {
+            Toast.loading({ message: '加载中...', duration: 0 });
+            const response = await fetch(resource.fileUrl);
+            const text = await response.text();
+            Toast.clear();
+            setVoiceModalInitialContent(text);
+            setVoiceModalVisible(true);
+          } else {
+            Toast.fail('补充资料链接不存在');
+          }
+        } catch (error) {
+          Toast.clear();
+          console.error('Failed to fetch supplementary text:', error);
+          Toast.fail('加载补充资料失败');
+        }
+      };
+      fetchSupplementary();
+      return;
     }
 
     // 普通文件预览
@@ -810,7 +810,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
             {/* Uploaded Files List */}
             {/* Uploaded Files List */}
-            {resources.length > 0 && (
+            {resources.length > 0 ? (
               <div className="mx-4 bg-white rounded-2xl shadow-sm pb-4">
                 <div className="sticky top-[154px] z-20 bg-white px-4 py-4 rounded-t-2xl border-b border-gray-100">
                   <h3 className="text-sm font-bold text-slate-800">已上传资料 ({resources.length})</h3>
@@ -859,6 +859,15 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                     );
                   })}
                 </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center pt-16 pb-8">
+                <img
+                  src={`${basePath}assets/kno.png`}
+                  alt="暂无资料"
+                  className="w-[200px] h-auto mb-4 opacity-90"
+                />
+                <p className="text-sm text-slate-500 font-medium">快上传你的资料，体验AI智能分析</p>
               </div>
             )}
           </div>
