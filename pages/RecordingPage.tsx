@@ -9,6 +9,7 @@ import { dealService } from '../services/dealService';
 
 import { useRecordingStore } from '../store/useRecordingStore';
 import { nativeBridge } from '../services/nativeBridge';
+import config from '../config';
 
 
 
@@ -229,7 +230,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
               // 获取 Token
               const token = localStorage.getItem('zov-user-token') || '';
 
-              const uploadHost = 'http://68.79.42.215/report/upload/file';
+              const uploadHost = config.uploadUrl; // 环境配置
 
               const params = {
                 host: uploadHost,

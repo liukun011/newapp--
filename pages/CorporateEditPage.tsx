@@ -7,6 +7,7 @@ import { DealRecord } from '../types';
 import { dealService } from '../services/dealService';
 
 import { nativeBridge } from '../services/nativeBridge';
+import config from '../config';
 
 interface CorporateEditPageProps {
   deal: DealRecord | null;
@@ -39,7 +40,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
           Toast.loading({ message: '图片处理中...', duration: 0, forbidClick: true });
           
           const token = localStorage.getItem('zov-user-token') || '';
-          const uploadHost = 'http://68.79.42.215/report/upload/file'; // 硬编码，需保持一致
+          const uploadHost = config.uploadUrl; // 环境配置
 
           const params = {
               host: uploadHost,

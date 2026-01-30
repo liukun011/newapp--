@@ -5,6 +5,7 @@ import { Toast } from 'react-vant';
 import Button from '../components/Button';
 import { templateService } from '../services/templateService';
 import { nativeBridge } from '../services/nativeBridge';
+import config from '../config';
 
 interface UploadTemplatePageProps {
   onBack: () => void;
@@ -36,7 +37,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
           Toast.loading({ message: '文件处理中...', duration: 0, forbidClick: true });
           
           const token = localStorage.getItem('zov-user-token') || '';
-          const uploadHost = 'http://68.79.42.215/report/upload/file'; // 硬编码
+          const uploadHost = config.uploadUrl; // 从配置获取
 
           const params = {
               host: uploadHost,

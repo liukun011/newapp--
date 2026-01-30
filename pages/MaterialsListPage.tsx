@@ -4,6 +4,7 @@ import { Toast, Dialog } from 'react-vant';
 import VoiceInputModal from '../components/VoiceInputModal';
 import { dealService } from '../services/dealService';
 import { nativeBridge } from '../services/nativeBridge';
+import config from '../config';
 import { Resource, DealReportStatusEnum } from '../types';
 
 interface MaterialsListPageProps {
@@ -98,7 +99,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
         
         // 1. 调用 Native 上传文件到 MinIO/OBS
         const token = localStorage.getItem('zov-user-token') || '';
-        const uploadHost = 'http://68.79.42.215/report/upload/file'; // 硬编码，根据用户请求
+        const uploadHost = config.uploadUrl; // 环境配置
 
         const params = {
           host: uploadHost,

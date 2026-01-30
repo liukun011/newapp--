@@ -28,6 +28,7 @@ import HistoryRecordsPage from './pages/HistoryRecordsPage';
 import HistoryDetailPage from './pages/HistoryDetailPage';
 import ReportPreviewPage from './pages/ReportPreviewPage';
 import { View, DealRecord } from './types';
+import config from './config';
 import { COLORS } from './constants';
 import RecordingFloatBubble from './components/RecordingFloatBubble';
 import { nativeBridge, handleTranscriptionResult } from './services/nativeBridge';
@@ -499,7 +500,7 @@ const App: React.FC = () => {
 
           console.log('[自动保存] 准备上传文件:', fileUrl);
           const token = localStorage.getItem('zov-user-token') || '';
-          const uploadHost = 'http://68.79.42.215/report/upload/file';
+          const uploadHost = config.uploadUrl;
 
           const handleUploadResult = (res: any) => {
             console.log('[自动保存] 上传结果回调:', JSON.stringify(res));

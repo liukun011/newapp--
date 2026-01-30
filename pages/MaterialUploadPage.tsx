@@ -10,6 +10,7 @@ import { templateService, ReportTemplate } from '../services/templateService';
 import { questionService, TemplateInfo } from '../services/questionService';
 import { nativeBridge } from '../services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
+import config from '../config';
 
 interface MaterialUploadPageProps {
   deal: DealRecord | null;
@@ -270,7 +271,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
         // 1. 调用 Native 上传文件到 MinIO/OBS
         const token = localStorage.getItem('zov-user-token') || '';
-        const uploadHost = 'http://68.79.42.215/report/upload/file'; // 硬编码
+        const uploadHost = config.uploadUrl; // 环境配置
 
         const params = {
           host: uploadHost,

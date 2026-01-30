@@ -32,6 +32,9 @@ const config = {
   isDev: env === 'development',
   isTest: env === 'test',
   isProd: env === 'production',
+
+  // 上传地址
+  uploadUrl: `${import.meta.env.VITE_API_BASE_URL || 'http://68.79.42.215/report'}/upload/file`,
 };
 
 // 打印当前环境配置（仅在开发和测试环境）
