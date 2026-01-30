@@ -632,6 +632,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
         visible={voiceModalVisible}
         dealId={dealId}
         initialContent={voiceModalInitialContent}
+        readOnly={isArchived}
         onClose={() => {
           setVoiceModalVisible(false);
           setVoiceModalInitialContent(''); // 清空初始内容

@@ -11,6 +11,7 @@ interface VoiceInputModalProps {
   onSave: (content: string) => void;
   dealId?: string;
   initialContent?: string;
+  readOnly?: boolean;
 }
 
 const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
@@ -18,7 +19,8 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
   onClose,
   onSave,
   dealId,
-  initialContent = ''
+  initialContent = '',
+  readOnly = false
 }) => {
   const [content, setContent] = useState('');
   const [isLocalRecording, setIsLocalRecording] = useState(false);
@@ -225,7 +227,8 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             
             <button 
               onClick={handleSave}
-              className="px-5 py-1.5 border border-[#4E3EF8] text-[#4E3EF8] rounded-full text-base font-medium active:scale-95 transition-transform"
+              disabled={readOnly}
+              className={`px-5 py-1.5 border border-[#4E3EF8] text-[#4E3EF8] rounded-full text-base font-medium transition-transform ${readOnly ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
             >
               保存
             </button>
@@ -238,7 +241,8 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="请输入需要补充的文字信息，或点击录音按钮进行语音输入..."
-            className="w-full h-48 p-4 pb-16 bg-gray-50 rounded-2xl text-sm text-slate-700 placeholder-gray-400 resize-none border border-gray-200 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+            readOnly={readOnly}
+            className="w-full h-48 p-4 pb-16 bg-gray-50 rounded-2xl text-sm text-slate-700 placeholder-gray-400 resize-none border border-gray-200 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 disabled:bg-gray-100 disabled:text-gray-500"
           />
           
           {/* Voice Record Button - positioned on bottom border */}
@@ -248,10 +252,13 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
           >
             <button 
               onClick={handleRecordClick}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 shadow-lg ${
-                isLocalRecording 
-                  ? 'bg-red-500 animate-pulse' 
-                  : 'bg-indigo-500 hover:bg-indigo-600'
+              disabled={readOnly}
+              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg ${
+                readOnly 
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : isLocalRecording 
+                    ? 'bg-red-500 animate-pulse active:scale-95' 
+                    : 'bg-indigo-500 hover:bg-indigo-600 active:scale-95'
               }`}
             >
               <Mic size={24} className="text-white" />
