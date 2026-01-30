@@ -40,7 +40,8 @@ instance.interceptors.response.use(
     // 全局处理业务逻辑错误
     if (res && typeof res === 'object' && res.success === false) {
       const msg = res.message || '请求失败';
-      Toast.fail(msg);
+      //  Toast.fail(msg);
+      //      Toast({ type: 'fail', message: res.message, duration: 10000 });
 
       return Promise.reject(new Error(msg));
     }
