@@ -22,5 +22,13 @@ export default defineConfig({
   build: {
     outDir: 'talk-assistant',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        // 添加时间戳到文件名，确保每次构建都是唯一的文件名，解决缓存问题
+        entryFileNames: `assets/[name]-[hash]-${new Date().getTime()}.js`,
+        chunkFileNames: `assets/[name]-[hash]-${new Date().getTime()}.js`,
+        assetFileNames: `assets/[name]-[hash]-${new Date().getTime()}.[ext]`,
+      },
+    },
   },
 });

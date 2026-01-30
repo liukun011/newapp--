@@ -150,8 +150,8 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
                     className="p-2 text-gray-400 hover:text-gray-600"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (template.outTemplateUrl) {
-                        onPreview(template.reportTemplateName, template.outTemplateUrl, template.id);
+                      if (template.viewTemplateUrl) {
+                        onPreview(template.reportTemplateName, template.viewTemplateUrl, template.id);
                       } else {
                         Toast.info('暂无预览文件');
                       }

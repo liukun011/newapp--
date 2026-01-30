@@ -499,26 +499,28 @@ const App: React.FC = () => {
         console.log('当前录音状态:', store.isRecording);
 
         if (store.isRecording) {
-          console.log('正在执行中断保存流程...');
-          store.setIsRecording(false);
+            console.log('正在执行中断保存流程...');
+            store.setIsRecording(false);
 
-          try {
-            // 静默保存
-            await Promise.all([
-              uploadTranscriptionBatch(),
-              store.currentInterviewInstId ? uploadAudioFile(store.currentInterviewInstId) : Promise.resolve()
-            ]);
-          } catch (e) {
-            console.error(e);
-          } finally {
-            store.reset();
-            // 保存完成后弹窗提示
-            Dialog.alert({
-              title: '提示',
-              message: '访谈录音因麦克风异常中断了！',
-              confirmButtonText: '确认',
-            });
-          }
+            try {
+              // 静默保存，但不重置状态
+              await Promise.all([
+                uploadTranscriptionBatch(),
+                store.currentInterviewInstId ? uploadAudioFile(store.currentInterviewInstId) : Promise.resolve()
+              ]);
+            } catch (e) {
+              console.error(e);
+            } finally {
+              // store.reset(); // 不要重置状态，否则会退出访谈
+              
+              // 弹窗提示暂停
+              Dialog.alert({
+                title: '录音已暂停',
+                message: '录音因外部原因（如来电、后台运行）中断，请点击“继续录音”恢复。',
+                confirmButtonText: '我知道了',
+                confirmButtonColor: '#4E3EF8',
+              });
+            }
         } else {
           console.log('无论是录音状态与否，都收到了中断信号');
           // 可选：如果不在录音中，也提示一下，方便调试确认链路通畅

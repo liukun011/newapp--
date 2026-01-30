@@ -29,7 +29,7 @@ export interface ReportTemplate {
   dealInstId: string | null;
   dealInstTitle: string | null;
   outTemplateId: string;
-  outTemplateUrl: string; // 模板文件URL
+  viewTemplateUrl: string; // 模板文件URL
   questionId: number;
   recStatus: string;
   reportTemplateName: string; // 模板名称

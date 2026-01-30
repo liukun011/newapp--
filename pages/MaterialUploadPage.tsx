@@ -901,7 +901,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                       className="!h-8 !px-4 !border-gray-200 !text-gray-600 !rounded-full !font-normal"
                       onClick={() => {
                         if (onPreviewTemplate && currentTemplate) {
-                          onPreviewTemplate(currentTemplate.reportTemplateName, currentTemplate.outTemplateUrl);
+                          onPreviewTemplate(currentTemplate.reportTemplateName, currentTemplate.viewTemplateUrl);
                         }
                       }}
                     >
