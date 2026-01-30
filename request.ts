@@ -51,7 +51,7 @@ instance.interceptors.response.use(
     const message = error.response?.data?.message || error.message || '网络错误';
 
     // 抛出错误提示
-    Toast.fail(message);
+    Toast.fail({ message, duration: 3000 });
 
     if (error.response?.status === 401) {
       localStorage.removeItem('zov-user-token');

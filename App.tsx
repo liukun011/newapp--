@@ -131,7 +131,7 @@ const App: React.FC = () => {
       // If message is undefined (legacy call), treat code as message
       const displayMsg = message ? `${message} (${code})` : code;
 
-      Toast.fail(displayMsg);
+      Toast.fail({ message: displayMsg, duration: 3000 });
 
       if (useRecordingStore.getState().isRecording) {
         useRecordingStore.getState().setIsRecording(false);
@@ -259,7 +259,7 @@ const App: React.FC = () => {
     const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
     setScrollPositions(prev => ({ ...prev, [currentView]: scrollTop }));
 
-    // Push new view to stack
+    // Push new view to stack                                                                                                                                                         
     setViewStack(prev => [...prev, view]);
 
     setNavDirection('forward');
@@ -901,8 +901,26 @@ const App: React.FC = () => {
                       // 这里的回退逻辑，通常从新建流程过来，我们希望它回退到哪里？
                       // 既然是“去掉多余的页面”，可能用户希望回退到详情页，或者首页？
                       // 暂时保持回退到 DUE_DILIGENCE，因为这是逻辑上的上一级
+                      // setRecordingBackView(View.DUE_DILIGENCE);
+                      // setPreviousView(View.MATERIAL_UPLOAD);
+                      // navigateForward(View.RECORDING);
+
+                      // 现在统一重构路由栈为：HOME -> DUE_DILIGENCE -> RECORDING
                       setRecordingBackView(View.DUE_DILIGENCE);
-                      setPreviousView(View.MATERIAL_UPLOAD);
+                      setPreviousView(View.DUE_DILIGENCE);
+
+                      // 重构路由栈，确保原生返回能回到详情页：HOME -> DUE_DILIGENCE -> RECORDING
+                      // setViewStack([View.HOME, View.DUE_DILIGENCE, View.RECORDING]);
+                      // setNavDirection('forward');
+                      // setCurrentView(View.RECORDING);
+                      // setTimeout(() => {
+                      //   window.scrollTo(0, 0);
+                      // }, 400);
+                      
+                      // 先重置栈为 [HOME, DUE_DILIGENCE]，模拟是从详情页跳进来的
+                      setViewStack([View.HOME, View.DUE_DILIGENCE]);
+                      
+                      // 然后使用 navigateForward 导航到录音页，这会自动把 RECORDING 压入栈并处理动画
                       navigateForward(View.RECORDING);
                     } catch (error) {
                       Toast.clear();
@@ -1082,7 +1100,14 @@ const App: React.FC = () => {
                   templateName={previewTemplate.name}
                   templateUrl={previewTemplate.url}
                   templateId={previewTemplate.id}
-                  onBack={() => navigateBackward(previousView)}
+                  onBack={() => {
+                    // 与原生返回保持一致，取栈中倒数第二个页面
+                    if (viewStack.length > 1) {
+                      navigateBackward(viewStack[viewStack.length - 2]);
+                    } else {
+                      navigateBackward(previousView);
+                    }
+                  }}
                   onSelect={currentDeal?.id ? async (templateId) => {
                     // 避免重复选择
                     if (currentDeal.templateId === templateId) {

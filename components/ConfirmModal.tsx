@@ -6,9 +6,21 @@ interface ConfirmModalProps {
   message: string;
   onClose: () => void;
   onConfirm: () => void;
+  icon?: React.ReactNode;
+  confirmText?: string;
+  cancelText?: string;
 }
 
-const ConfirmModal: React.FC<ConfirmModalProps> = ({ isOpen, title, message, onClose, onConfirm }) => {
+const ConfirmModal: React.FC<ConfirmModalProps> = ({ 
+  isOpen, 
+  title, 
+  message, 
+  onClose, 
+  onConfirm,
+  icon,
+  confirmText = '确认',
+  cancelText = '取消'
+}) => {
   if (!isOpen) return null;
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -20,44 +32,57 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ isOpen, title, message, onC
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onKeyDown={handleKeyPress}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6" onKeyDown={handleKeyPress}>
       {/* 背景遮罩 */}
       <div 
-        className="absolute inset-0 bg-black bg-opacity-50"
+        className="absolute inset-0 bg-black/50 animate-fadeIn"
         onClick={onClose}
       />
       
       {/* 弹窗内容 */}
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-auto overflow-hidden">
-        {/* 标题 */}
-        <div className="pt-8 pb-4 px-6 text-center">
-          <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
-        </div>
-
-        {/* 提示信息 */}
-        <div className="pb-6 px-6 text-center">
-          <p className="text-[15px] text-gray-500">{message}</p>
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-[320px] mx-auto overflow-hidden animate-scaleIn">
+        <div className="pt-8 pb-4 px-6 text-center text-slate-900">
+          {/* 可选展示 Icon */}
+          {icon && (
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full flex items-center justify-center">
+              {icon}
+            </div>
+          )}
+          <h2 className="text-lg font-bold mb-2">{title}</h2>
+          <p className="text-sm text-gray-500 leading-relaxed">{message}</p>
         </div>
 
         {/* 按钮组 */}
-        <div className="px-6 pb-8 flex gap-3">
+        <div className="px-6 pb-8 pt-2 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3.5 bg-white border-2 border-gray-200 text-gray-700 text-[15px] font-medium rounded-full hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            className="flex-1 py-3 border-2 border-gray-100 text-slate-600 text-[15px] font-medium rounded-full hover:bg-gray-50 active:bg-gray-100 transition-colors"
           >
-            取消
+            {cancelText}
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-6 py-3.5 text-white text-[15px] font-medium rounded-full transition-all"
+            className="flex-1 py-3 text-white text-[15px] font-bold rounded-full shadow-lg shadow-indigo-100 active:scale-95 transition-all"
             style={{
               background: 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)',
             }}
           >
-            确认
+            {confirmText}
           </button>
         </div>
       </div>
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.9); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.15s ease-out; }
+        .animate-scaleIn { animation: scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+      `}</style>
     </div>
   );
 };

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { ChevronRight, FileText, PenTool, HelpCircle, Settings, LogOut, Layers, Edit2 } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { authService } from '../services/authService';
-import Button from '../components/Button';
+import { useRecordingStore } from '../store/useRecordingStore';
+import ConfirmModal from '../components/ConfirmModal';
 
 
 interface SettingsPageProps {
@@ -16,7 +16,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   onNavigateToTemplates
 }) => {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [userName, setUserName] = useState('');
   // const [avatar, setAvatar] = useState('');
   const [renameModalVisible, setRenameModalVisible] = useState(false);
@@ -50,15 +49,17 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   }, []);
 
   const handleLogout = async () => {
-    setIsLoggingOut(true);
     try {
       await authService.logout();
       Toast.success('已退出登录');
+      
+      // Reset recording state upon logout
+      useRecordingStore.getState().reset();
+      
       onLogout();
     } catch (error) {
+      useRecordingStore.getState().reset(); // Ensure reset happens even if API fails
       onLogout();
-    } finally {
-      setIsLoggingOut(false);
     }
   };
 
@@ -220,46 +221,17 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
 
 
-      {/* Custom Logout Confirmation Dialog - Portaled to body to overlay Bottom Bar */}
-      {showLogoutDialog && createPortal(
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-[2px] animate-fadeIn"
-          onClick={() => setShowLogoutDialog(false)}
-        >
-          <div
-            className="bg-white rounded-2xl w-[85%] max-w-[320px] overflow-hidden shadow-2xl animate-scaleIn"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="pt-8 pb-4 px-6 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full flex items-center justify-center">
-                <LogOut size={28} className="text-indigo-500" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-800 mb-2">退出登录</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">
-                确定要退出当前账号吗？退出后需要重新登录才能使用。
-              </p>
-            </div>
-            <div className="px-6 pb-6 pt-2 grid grid-cols-2 gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => setShowLogoutDialog(false)}
-                className="!rounded-full !h-11 !text-[15px] !border-gray-200 !text-slate-600"
-              >
-                取消
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="!rounded-full !h-11 !text-[15px] !bg-gradient-to-r !from-indigo-500 !to-purple-500 shadow-lg shadow-indigo-200"
-              >
-                {isLoggingOut ? '退出中...' : '确认退出'}
-              </Button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showLogoutDialog}
+        title="退出登录"
+        message="确定要退出当前账号吗？退出后需要重新登录才能使用。"
+        icon={<LogOut size={28} className="text-indigo-500" />}
+        confirmText="确认退出"
+        cancelText="取消"
+        onClose={() => setShowLogoutDialog(false)}
+        onConfirm={handleLogout}
+      />
 
       {/* Rename Modal */}
       {renameModalVisible && (

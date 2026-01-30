@@ -31,6 +31,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [renameTarget, setRenameTarget] = useState<Resource | null>(null);
   const [newFileName, setNewFileName] = useState('');
+  const [hasInterviewRecords, setHasInterviewRecords] = useState(false);
 
   // 监听 props reportStatus 的变化
   useEffect(() => {
@@ -55,6 +56,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
           : [];
         
         setResources([...supplementary, ...resources]);
+        setHasInterviewRecords(res.data.interviewInstList && res.data.interviewInstList.length > 0);
       }
     } catch (error) {
       console.error('Failed to fetch deal detail:', error);
@@ -377,6 +379,14 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
         Toast.fail('尽调ID不存在');
         return;
       }
+
+      // 检查访谈记录和补充资料是否都为空
+      if (!hasInterviewRecords && resources.length === 0) {
+        setTimeout(() => {
+          Toast.fail({ message: '访谈记录和补充资料不能同时为空，请先添加内容', duration: 3000 });
+        }, 100);
+        return;
+      }
       
       try {
         Toast.loading({ message: '请求生成中...', duration: 0, forbidClick: true });
@@ -388,12 +398,16 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
           // 跳转回尽调详情界面
           onBack();
         } else {
-          Toast.fail(res.message || '生成请求失败');
+          setTimeout(() => {
+            Toast.fail({ message: res.message || '生成请求失败', duration: 3000 });
+          }, 100);
         }
       } catch (error) {
         Toast.clear();
         console.error('Generate report failed:', error);
-        Toast.fail('生成请求失败');
+        setTimeout(() => {
+          Toast.fail({ message: '生成请求失败', duration: 3000 });
+        }, 100);
       }
     })
     .catch(() => {

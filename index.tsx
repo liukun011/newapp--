@@ -1,4 +1,9 @@
 import ReactDOM from 'react-dom/client';
+import { Toast } from 'react-vant';
+
+// Set global Toast duration to 3 seconds as early as possible
+Toast.setDefaultOptions({ duration: 3000 });
+
 import App from './App';
 import './index.css';
 import VConsole from 'vconsole';

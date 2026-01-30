@@ -203,6 +203,14 @@ const HomePage: React.FC<HomePageProps> = ({
       const res = await dealService.deleteDealInst(deletingDealId);
       if (res.success) {
         Toast.success('删除成功');
+
+        // Check if the deleted deal is the currently active one for recording
+        const store = useRecordingStore.getState();
+        if (store.currentDealId === deletingDealId) {
+          console.log('[HomePage] Deleting active deal, resetting recording store...');
+          store.reset();
+        }
+
         // 删除成功后刷新列表
         fetchDeals();
       } else {

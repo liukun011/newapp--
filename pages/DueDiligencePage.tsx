@@ -359,7 +359,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       const hasSupplementaryMaterials = currentDeal.resources && currentDeal.resources.length > 0;
 
       if (!hasInterviewRecords && !hasSupplementaryMaterials) {
-        Toast.fail('访谈记录和补充资料不能同时为空，请先添加内容');
+        // 增加小延迟以解决安卓端 Dialog 关闭时可能导致的 Toast 一闪而过的问题
+        setTimeout(() => {
+          Toast.fail({ message: '访谈记录和补充资料不能同时为空，请先添加内容', duration: 3000 });
+        }, 100);
         return;
       }
 
@@ -379,16 +382,17 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           } catch (error) {
             console.error('Failed to refresh deal detail:', error);
           }
-        } else {
-          Toast({ type: 'fail', message: res.message || '生成报告失败', duration: 5000 });
-        }
+          } else {
+            setTimeout(() => {
+              Toast({ type: 'fail', message: res.message || '生成报告失败', duration: 3000 });
+            }, 100);
+          }
       } catch (error) {
         Toast.clear();
         console.error('Generate report failed:', error);
-        const toast = Toast({ type: 'fail', message: (error as any).message || '生成报告失败', duration: 5000 });
         setTimeout(() => {
-          toast.clear();
-        }, 5000);
+          Toast({ type: 'fail', message: (error as any).message || '生成报告失败', duration: 3000 });
+        }, 100);
       }
     }).catch(() => { });
   }, 1000);
@@ -648,7 +652,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                         const hasSupplementaryMaterials = currentDeal.resources && currentDeal.resources.length > 0;
 
                         if (!hasInterviewRecords && !hasSupplementaryMaterials) {
-                          Toast.fail('访谈记录和补充资料不能同时为空，请先添加内容');
+                          // 增加小延迟解决安卓端 UI 冲突
+                          setTimeout(() => {
+                            Toast.fail({ message: '访谈记录和补充资料不能同时为空，请先添加内容', duration: 3000 });
+                          }, 100);
                           return;
                         }
 
@@ -671,12 +678,16 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                               console.error('Failed to refresh deal detail:', error);
                             }
                           } else {
-                            Toast({ type: 'fail', message: res.message || '生成报告失败', duration: 5000 });
+                            setTimeout(() => {
+                              Toast({ type: 'fail', message: res.message || '生成报告失败', duration: 3000 });
+                            }, 100);
                           }
                         } catch (error) {
                           Toast.clear();
                           console.error('Generate report failed:', error);
-                          Toast({ type: 'fail', message: (error as any).message || '生成报告失败', duration: 10000 });
+                          setTimeout(() => {
+                            Toast({ type: 'fail', message: (error as any).message || '生成报告失败', duration: 3000 });
+                          }, 100);
                         }
                       }).catch(() => {
                         // 用户取消
