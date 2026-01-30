@@ -248,13 +248,14 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   };
 
   useEffect(() => {
-    (window as any).onNativeBack = () => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
       handleBack();
     };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
     return () => {
-      if ((window as any).onNativeBack) {
-        // 不需要强制还原，App.tsx 的 useEffect 会在视图切换时自动更新此函数
-      }
+      window.removeEventListener('requestNativeBack', handleNativeBack);
     };
   }, [handleSave]);
 

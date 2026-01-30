@@ -276,7 +276,42 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     // 清空 input 以便再次选择同一文件
     e.target.value = '';
   };
-  const handleBackThrottled = useThrottleFn(onBack, 1000);
+  // 批量保存问题逻辑 (应对模板更换后的同步)
+  const saveQuestions = async () => {
+    // 如果 currentDeal 存在且有同步过来的问题列表，则执行保存
+    // 注意：由于 DueDiligencePage 本身不编辑问题，这里主要是保存 App.tsx 同步过来的新模板问题
+    if (!currentDeal?.id || !currentDeal.questionInfoList || currentDeal.questionInfoList.length === 0) return;
+
+    try {
+      await dealService.createOrUpdateDealInst({
+        id: currentDeal.id,
+        questionId: currentDeal.questionId,
+        questionInfoList: currentDeal.questionInfoList
+      });
+      console.log('[DueDiligencePage] Questions auto-saved');
+    } catch (e) {
+      console.error('[DueDiligencePage] Auto-save questions failed', e);
+    }
+  };
+
+  const handleBackThrottled = useThrottleFn(async () => {
+    await saveQuestions();
+    onBack();
+  }, 1000);
+
+  // 监听原生返回键 (拦截并执行保存)
+  useEffect(() => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
+      handleBackThrottled();
+    };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
+    return () => {
+      window.removeEventListener('requestNativeBack', handleNativeBack);
+    };
+  }, [handleBackThrottled]);
+
   const handleEditInfoThrottled = useThrottleFn(() => onEditInfo?.(), 1000);
   const handleNavigateMaterialsThrottled = useThrottleFn(onNavigateToMaterials, 1000);
   const handleNavigateQuestionsThrottled = useThrottleFn(() => onNavigateToQuestions?.(), 1000);

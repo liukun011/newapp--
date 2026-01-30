@@ -165,6 +165,30 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     // 如果 deal 存在且当前是 upload tab，这将触发下方的 loadTabData 重新加载
   }, [deal?.id]);
 
+  // 当全局 deal 中的问题列表变化时（如在 App.tsx 中更换了模板并同步了问题），同步到本地状态
+  useEffect(() => {
+    if (deal?.questionInfoList && deal.questionInfoList.length > 0) {
+      console.log('[MaterialUploadPage] Syncing questions from deal prop:', deal.questionInfoList.length);
+      setQuestions(deal.questionInfoList);
+      // 同时标记该 tab 已加载，以便在退出时能够执行保存逻辑
+      setLoadedTabs(prev => new Set(prev).add('questions'));
+    }
+  }, [deal?.questionInfoList]);
+
+  // 当模板 ID 变化时，重新获取分类信息以保持 UI 一致 (不覆盖 questions，questions 由上面的 effect 处理)
+  useEffect(() => {
+    if (deal?.questionId) {
+      questionService.queryTemplateCategories(String(deal.questionId)).then(res => {
+        if (res.success && res.data) {
+          setTemplateCategories(res.data);
+          // 选中匹配的分类
+          const matched = res.data.find(c => String(c.id) === String(deal.questionId));
+          if (matched) setSelectedCategoryId(matched.id);
+        }
+      });
+    }
+  }, [deal?.templateId, deal?.questionId]);
+
   // 当 activeTab 变化时，懒加载对应 tab 的数据
   useEffect(() => {
     const loadTabData = async () => {
@@ -591,7 +615,8 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
   // 批量保存问题逻辑
   const saveQuestions = async () => {
-    if (!deal?.id || !loadedTabs.has('questions')) return;
+    // 只要有 questions 数据且有 deal.id，就允许保存
+    if (!deal?.id || questions.length === 0) return;
 
     try {
       await dealService.createOrUpdateDealInst({
@@ -599,6 +624,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         questionId: deal.questionId,
         questionInfoList: questions
       });
+      console.log('[MaterialUploadPage] Questions saved successfully');
     } catch (e) {
       console.error('Auto-save questions failed', e);
     }
@@ -612,11 +638,14 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
   // 监听原生返回键
   useEffect(() => {
-    (window as any).onNativeBack = () => {
+    const handleNativeBack = (e: Event) => {
+      e.preventDefault();
       handleBackThrottled();
     };
+
+    window.addEventListener('requestNativeBack', handleNativeBack);
     return () => {
-      // 这里的逻辑由 App.tsx 根据 currentView 自动刷新，所以此处不需要手动恢复
+      window.removeEventListener('requestNativeBack', handleNativeBack);
     };
   }, [handleBackThrottled]);
 
