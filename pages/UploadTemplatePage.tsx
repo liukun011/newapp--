@@ -282,13 +282,13 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
       </div>
 
       {/* Fixed Bottom Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 pb-8">
-        <div className="flex gap-3 max-w-md mx-auto">
+      {/* Fixed Bottom Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30 flex gap-3">
           <Button
             variant="secondary"
             block
             onClick={onCancel}
-            className="flex-1 !rounded-full !h-12 !text-base !border-gray-200 !text-gray-700"
+            className="flex-1 !rounded-full !h-12 !text-base !bg-white shadow-lg !border-0 !text-gray-700"
           >
             取消
           </Button>
@@ -303,7 +303,6 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
           >
             {loading ? '提交中...' : '提交审核'}
           </Button>
-        </div>
       </div>
     </div>
   );
