@@ -29,6 +29,7 @@ export const authService = {
       data: {
         mobile,
         captcha,
+        autoRegister: true,
       },
     });
   },
