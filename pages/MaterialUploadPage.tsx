@@ -12,6 +12,7 @@ import { nativeBridge } from '../services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
 import config from '../config';
 
+
 interface MaterialUploadPageProps {
   deal: DealRecord | null;
   onBack: () => void;
@@ -818,21 +819,20 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
 
             {/* AI Analysis Card - Temporarily Hidden */}
-            {/* <div className="mx-4 rounded-2xl p-4 flex items-center justify-between relative overflow-hidden shadow-sm"
-              style={{ background: 'linear-gradient(90deg, #Eef2ff 0%, #F5f3ff 100%)' }}>
+            {/* <div
+              className="mx-4 rounded-2xl p-4 flex items-center justify-between relative overflow-hidden shadow-sm bg-gradient-to-r from-indigo-50 to-violet-50">
               <div className="flex items-center gap-4 relative z-10">
                 <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm text-indigo-500">
                   <Sparkles size={28} fill="currentColor" className="opacity-90" />
                 </div>
                 <div>
-                  <h3 className="text-[16px] font-bold text-indigo-900 mb-1">AI 智能分析助手</h3>
-                  <p className="text-xs text-indigo-400/80">AI智能补全问题并预警风险</p>
+                  <h3 className="text-base font-bold text-slate-800">AI资料分析</h3>
+                  <p className="text-xs text-slate-500 mt-1">自动提炼关键信息</p>
                 </div>
               </div>
-
               <button
+                className="px-4 py-1.5 bg-white text-indigo-600 text-xs font-bold rounded-full shadow-sm active:scale-95 transition-transform z-10"
                 onClick={onGenerateAI}
-                className="px-4 py-1.5 bg-indigo-500/10 text-indigo-600 rounded-full text-xs font-bold hover:bg-indigo-500/20 active:scale-95 transition-all"
               >
                 去生成
               </button>
@@ -851,7 +851,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                     return (
                       <div
                         key={resource.id}
-                        className="flex items-center py-3 gap-3"
+                        className="flex items-center py-3 gap-3 group border-b border-transparent last:border-b-0 hover:bg-gray-50 transition-colors rounded-lg px-2 -mx-2 mb-1"
                       >
                         {/* File Icon */}
                         <div className="w-10 h-10 flex-shrink-0">
@@ -940,7 +940,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                     <Button
                       variant="primary"
                       size="small"
-                      className="!h-8 !px-4 !bg-[#4E3EF8] !rounded-full !shadow-indigo-200 !font-normal"
+                      className="!h-8 !px-4 !rounded-full !shadow-indigo-200 !font-normal bg-indigo-600"
                       onClick={onChangeTemplate}
                     >
                       <RefreshCw size={14} className="mr-1.5" /> 更换
@@ -1057,8 +1057,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
             {/* Add Question Button */}
             <button
               onClick={handleQuestionAddThrottled}
-              className="fixed right-6 bottom-24 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 z-40"
-              style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+              className="fixed right-6 bottom-24 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 z-40 bg-primary-gradient"
             >
               <Plus size={24} />
             </button>
@@ -1140,8 +1139,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               </button>
               <button
                 onClick={handleConfirmRenameThrottled}
-                className="flex-1 py-3 text-base font-medium text-white rounded-full transition-colors"
-                style={{ background: 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)' }}
+                className="flex-1 py-3 text-base font-medium text-white rounded-full transition-colors shadow-lg shadow-indigo-200 active:scale-95 transition-transform bg-confirm-gradient"
               >
                 确认
               </button>
@@ -1178,8 +1176,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               </button>
               <button
                 onClick={handleUpdateQuestionThrottled}
-                className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors"
-                style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+                className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors bg-primary-gradient"
               >
                 确认
               </button>
@@ -1251,8 +1248,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               </button>
               <button
                 onClick={handleAddQuestionConfirmThrottled}
-                className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors"
-                style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+                className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors bg-primary-gradient"
               >
                 确认
               </button>

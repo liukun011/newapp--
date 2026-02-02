@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Toast } from 'react-vant';
 import { QuestionInfo } from '../types';
 
+
 interface QuestionsListPageProps {
   dealName?: string;
   dealLogo?: string;
@@ -91,8 +92,7 @@ const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors"
-            style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+            className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors bg-primary-gradient"
           >
             确认
           </button>
@@ -161,8 +161,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors"
-            style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+            className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors bg-primary-gradient"
           >
             确认
           </button>
@@ -500,8 +499,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
       {/* Main Action Button: Add Question (Normal) OR Scroll Top (Archived) */}
       <button
         onClick={isArchived ? scrollToTop : handleAddQuestionClick}
-        className="fixed right-4 bottom-24 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 z-40"
-        style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #6B5EFF 100%)' }}
+        className="fixed right-4 bottom-24 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 z-40 bg-primary-gradient"
       >
         {isArchived ? <ArrowUp size={24} /> : <Plus size={24} />}
       </button>

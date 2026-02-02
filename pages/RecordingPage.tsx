@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, History, Pause, Mic, Square, ChevronDown, ChevronUp, CheckCircle, User } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  Pause, 
+  Square, 
+  Mic, 
+  History as HistoryIcon,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle,
+  User
+} from 'lucide-react';
 import { Dialog, Toast } from 'react-vant';
 import SoundWave from '../components/SoundWave';
 import Button from '../components/Button';
@@ -10,6 +20,7 @@ import { dealService } from '../services/dealService';
 import { useRecordingStore } from '../store/useRecordingStore';
 import { nativeBridge } from '../services/nativeBridge';
 import config from '../config';
+
 
 
 
@@ -365,7 +376,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       message: '确定要结束当前的访谈吗？结束将停止录音并保存记录。',
       confirmButtonText: '确定结束',
       cancelButtonText: '继续访谈',
-      confirmButtonColor: '#4E3EF8',
+      confirmButtonColor: '#4337F1',
     })
       .then(async () => {
         if (!interviewInstId) {
@@ -586,7 +597,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
           className="p-2 -mr-2 text-slate-700"
           onClick={onHistoryClick}
         >
-          <History size={22} />
+          <HistoryIcon size={18} />
         </button>
       </div>
 
@@ -607,7 +618,9 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                 alt="Countdown Bear"
                 className="w-full h-full object-contain"
               />
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl font-extrabold text-[#4E3EF8] mt-8 mr-1 transform rotate-[-5deg]">
+              <span
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl font-extrabold mt-8 mr-1 transform rotate-[-5deg] text-primary"
+              >
                 {countdown}
               </span>
             </div>

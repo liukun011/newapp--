@@ -224,7 +224,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
             }}
             className="w-full h-1 bg-gray-200 rounded-full appearance-none cursor-pointer accent-indigo-500"
             style={{
-              background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${progress}%, #e5e7eb ${progress}%, #e5e7eb 100%)`
+              background: `linear-gradient(to right, #4337F1 0%, #4337F1 ${progress}%, #e5e7eb ${progress}%, #e5e7eb 100%)`
             }}
           />
         </div>

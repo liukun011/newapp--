@@ -89,7 +89,7 @@ const MessageCenterPage: React.FC<MessageCenterPageProps> = ({ onBack }) => {
       case 'assistant':
         return (
            <div className="w-10 h-10 rounded-full bg-[#F2F1FF] flex items-center justify-center flex-shrink-0">
-             <MessageSquare className="text-[#4E3EF8]" size={20} />
+             <MessageSquare className="text-primary" size={20} />
            </div>
         );
     }

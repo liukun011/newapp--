@@ -29,7 +29,7 @@ import HistoryDetailPage from './pages/HistoryDetailPage';
 import ReportPreviewPage from './pages/ReportPreviewPage';
 import { View, DealRecord } from './types';
 import config from './config';
-import { COLORS } from './constants';
+
 import RecordingFloatBubble from './components/RecordingFloatBubble';
 import { nativeBridge, handleTranscriptionResult } from './services/nativeBridge';
 
@@ -281,15 +281,7 @@ const App: React.FC = () => {
 
   // 背景渐变样式
   // Using a fixed background to prevent repaint on scroll
-  const backgroundStyle = {
-    background: `linear-gradient(180deg, ${COLORS.backgroundStart} 0%, ${COLORS.backgroundEnd} 100%)`,
-    position: 'fixed' as const,
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    zIndex: -1,
-  };
+
 
   /**
    * 更换模板时同步更新问题列表
@@ -615,7 +607,7 @@ const App: React.FC = () => {
                 title: '录音已暂停',
                 message: '录音因外部原因（如来电、后台运行）中断，请点击“继续录音”恢复。',
                 confirmButtonText: '我知道了',
-                confirmButtonColor: '#4E3EF8',
+                confirmButtonColor: '#4337F1',
               });
             }
         } else {
@@ -714,7 +706,7 @@ const App: React.FC = () => {
 
   return (
     <>
-      <div style={backgroundStyle} />
+      <div className="fixed inset-0 w-full h-full z-[-1] bg-page-gradient" />
 
       {/* Main App */}
       <div ref={appContainerRef} className="w-full max-w-md mx-auto min-h-screen relative overflow-y-auto overflow-x-hidden bg-transparent">
@@ -1326,7 +1318,7 @@ const App: React.FC = () => {
               </button>
 
               <button
-                className="w-[64px] h-[64px] rounded-full bg-[#4E3EF8] shadow-xl shadow-indigo-500/40 flex items-center justify-center -mt-12 active:scale-95 transition-transform z-50"
+                className="w-[64px] h-[64px] rounded-full shadow-xl shadow-indigo-500/40 flex items-center justify-center -mt-12 active:scale-95 transition-transform z-50 bg-primary"
                 onClick={async () => {
                   try {
                     const res = await dealService.createOrUpdateDealInst({});

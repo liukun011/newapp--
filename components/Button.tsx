@@ -1,5 +1,5 @@
 import React from 'react';
-import { COLORS } from '../constants';
+
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'text';
@@ -22,13 +22,13 @@ const Button: React.FC<ButtonProps> = ({
   
   let variantStyles = "";
   if (variant === 'primary') {
-    variantStyles = `text-white shadow-lg shadow-indigo-500/30`;
+    variantStyles = `bg-primary text-white shadow-lg shadow-indigo-500/30`;
   } else if (variant === 'secondary') {
     variantStyles = "bg-white text-slate-800 border border-slate-200 shadow-sm";
   } else if (variant === 'outline') {
-    variantStyles = "bg-transparent border border-indigo-500 text-indigo-600";
+    variantStyles = "bg-transparent border border-primary text-primary";
   } else if (variant === 'text') {
-    variantStyles = "bg-transparent text-indigo-600 p-0 h-auto min-h-0";
+    variantStyles = "bg-transparent text-primary p-0 h-auto min-h-0";
   }
 
   let sizeStyles = "";
@@ -42,10 +42,7 @@ const Button: React.FC<ButtonProps> = ({
     <button
       className={`${baseStyles} ${variantStyles} ${sizeStyles} ${blockStyles} ${className}`}
       disabled={loading || props.disabled}
-      style={{
-        backgroundColor: variant === 'primary' ? COLORS.primary : undefined,
-        borderColor: variant === 'outline' ? COLORS.primary : undefined,
-      }}
+
       {...props}
     >
       {loading ? (

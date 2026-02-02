@@ -297,10 +297,9 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
             block
             onClick={handleSubmitThrottled}
             disabled={loading}
-            className="flex-1 !rounded-full !h-12 !text-base shadow-lg"
-            style={{
-              background: loading ? '#9CA3AF' : 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)',
-            }}
+            className={`flex-1 !rounded-full !h-12 !text-base shadow-lg ${
+              loading ? 'bg-gray-400' : 'bg-confirm-gradient'
+            }`}
           >
             {loading ? '提交中...' : '提交审核'}
           </Button>

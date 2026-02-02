@@ -69,12 +69,7 @@ const RenameModal: React.FC<RenameModalProps> = ({ isOpen, initialValue, onClose
           <button
             onClick={handleConfirm}
             disabled={!inputValue.trim()}
-            className="flex-1 px-6 py-3.5 text-white text-[15px] font-medium rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              background: inputValue.trim() 
-                ? 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)' 
-                : '#9CA3AF',
-            }}
+            className="flex-1 px-6 py-3.5 text-white text-[15px] font-medium rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-confirm-gradient"
           >
             确认
           </button>

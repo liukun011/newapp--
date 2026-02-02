@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { SitesUrl } from '../constants';
+import config from '../config';
 
 interface TemplatePreviewPageProps {
   templateName: string;
@@ -47,7 +47,7 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
         {templateUrl ? (
           <iframe 
             className="absolute inset-0 w-full h-full border-none"
-            src={`${SitesUrl.preview}?url=${encodeURIComponent(window.btoa(unescape(encodeURIComponent(templateUrl))))}`} 
+            src={`${config.previewUrl}?url=${encodeURIComponent(window.btoa(unescape(encodeURIComponent(templateUrl))))}`} 
             title="模板预览"
           />
         ) : (

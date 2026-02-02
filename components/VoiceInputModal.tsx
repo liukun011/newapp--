@@ -5,6 +5,7 @@ import { dealService } from '../services/dealService';
 import { nativeBridge, handleTranscriptionResult } from '../services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
 
+
 interface VoiceInputModalProps {
   visible: boolean;
   onClose: () => void;
@@ -228,7 +229,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             <button 
               onClick={handleSave}
               disabled={readOnly}
-              className={`px-5 py-1.5 border border-[#4E3EF8] text-[#4E3EF8] rounded-full text-base font-medium transition-transform ${readOnly ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+              className={`px-5 py-1.5 border rounded-full text-base font-medium transition-transform border-primary text-primary ${readOnly ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
             >
               保存
             </button>

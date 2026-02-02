@@ -1,22 +1,3 @@
-import { Question, ChatMessage, Interview } from './types';
-
-// Colors
-export const COLORS = {
-  primary: '#4E3EF8', // Deep Violet/Indigo
-  backgroundStart: '#E0E7FF', // Light Purple
-  backgroundEnd: '#EFF6FF', // Soft Blue
-  textMain: '#1A1A1A',
-  textSecondary: '#858b9c',
-  white: '#FFFFFF',
-  border: '#EBEDF0',
-  success: '#07C160',
-};
-
-// 站点地址配置
-export const SitesUrl = {
-  preview: 'https://xiaoli.binarysee.com/kkfileview/onlinePreview', // 预览
-};
-
 // Login Carousel Slides
 export const LOGIN_SLIDES = [
   {
@@ -38,52 +19,6 @@ export const LOGIN_SLIDES = [
     id: 4,
     title: "帮您成为更好的自己，生活工作两不误",
     desc: "在每一个关键节点提供专业力量，全程守护您的成长之路",
-  }
-];
-
-// Mock Transcription Chat
-export const MOCK_CHAT: ChatMessage[] = [
-  {
-    id: '1',
-    sender: 'User',
-    text: "张总您好，感谢您的时间。我们之前已经审阅了公司2020至2023年的审计报告。今天想就几个关键财务问题与您深入沟通。首先，我们看到公司过去三年收入增长非常亮眼，年复合增长率超过50%。能否请您拆解一下？",
-  },
-  {
-    id: '2',
-    sender: 'Interviewee',
-    text: "李经理好，您的问题很关键。我们的增长是一个组合效应，但可以量化说明：约60%来自现有核心产品在华东、华南新城市渠道的渗透（新客户拓展）；约30%来自我们智能安防系列产品上市后带来的增量。",
-  }
-];
-
-// Mock Interviews for Home Page
-export const MOCK_INTERVIEWS: Interview[] = [
-  {
-    id: 1,
-    title: "A公司流贷尽调访谈",
-    date: "2023-10-24 14:30",
-    status: 'ongoing',
-    type: "尽调",
-  },
-  {
-    id: 2,
-    title: "B公司高管管理层访谈",
-    date: "2023-10-22 09:00",
-    status: 'ongoing',
-    type: "访谈",
-  },
-  {
-    id: 3,
-    title: "C公司前期初步沟通",
-    date: "2023-10-15 16:00",
-    status: 'archived',
-    type: "会议",
-  },
-  {
-    id: 4,
-    title: "D公司现场考察记录",
-    date: "2023-09-28 10:00",
-    status: 'archived',
-    type: "考察",
   }
 ];
 

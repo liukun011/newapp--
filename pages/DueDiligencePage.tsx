@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, Pencil, Mic, ChevronRight, FilePlus, Archive } from 'lucide-react';
+import { ArrowLeft, ChevronRight, AlertCircle, FilePlus, Mic, Archive } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import Mascot from '../components/Mascot';
-import { COLORS } from '../constants';
+
 import { DealRecord, DealReportStatusEnum } from '../types';
 import { dealService } from '../services/dealService';
 import { nativeBridge } from '@/services/nativeBridge';
@@ -461,7 +461,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       message: '请确认所有访谈工作已完成。归档后仅支持查看和导出报告，不再支持编辑。',
       cancelButtonText: '暂不归档',
       confirmButtonText: '确认归档',
-      confirmButtonColor: '#4E3EF8',
+      confirmButtonColor: '#4337F1',
     }).then(async () => {
       if (!currentDeal?.id) {
         Toast.fail('尽调信息不存在');
@@ -521,10 +521,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
       {/* Background Gradient for Top Section */}
       <div
-        className="absolute top-0 left-0 right-0 h-[400px] z-0 pointer-events-none"
-        style={{
-          background: `linear-gradient(180deg, ${COLORS.backgroundStart} 0%, rgba(247,248,250,0) 100%)`
-        }}
+            className="absolute top-0 left-0 right-0 h-48 z-0 bg-due-diligence-gradient"
       />
 
       {/* NavBar */}
@@ -550,7 +547,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             onClick={handleEditInfoThrottled}
             className="p-2 -mr-2 text-slate-700 hover:bg-white/50 rounded-full"
           >
-            <Pencil size={20} />
+            <AlertCircle size={20} />
           </button>
         )}
       </div>
@@ -593,8 +590,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           <div className="rounded-3xl shadow-lg overflow-hidden">
             {/* 上半部分 - 报告信息 */}
             <div
-              className="rounded-t-3xl p-5 relative overflow-hidden text-white cursor-pointer active:opacity-90 transition-opacity"
-              style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #7062ff 100%)' }}
+              className="rounded-t-3xl p-5 relative overflow-hidden text-white cursor-pointer bg-primary-gradient"
               onClick={handleReportPreviewThrottled}
             >
               <div className="relative z-10 max-w-[65%]">
@@ -654,8 +650,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           </div>
         ) : (
           // 其他状态 - 原来的卡片样式
-          <div className="rounded-3xl p-5 shadow-lg relative overflow-hidden text-white"
-            style={{ background: 'linear-gradient(135deg, #4E3EF8 0%, #7062ff 100%)' }}>
+          <div className="rounded-3xl p-5 shadow-lg relative overflow-hidden text-white bg-primary-gradient">
             <div className="relative z-10 max-w-[65%]">
               <h2 className="text-xl font-bold mb-1.5">尽调报告</h2>
               <p className="text-white text-xs mb-4 font-light">访谈既报告，洞察更高效。小狸智能捕捉核心要点。</p>
@@ -676,7 +671,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                         message: '系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告',
                         confirmButtonText: '确认',
                         cancelButtonText: '取消',
-                        confirmButtonColor: '#4E3EF8',
+                        confirmButtonColor: '#4337F1',
                       }).then(async () => {
                         if (!currentDeal?.id) {
                           Toast.fail('尽调信息不存在');

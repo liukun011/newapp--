@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { COLORS } from '../constants';
+
 
 const SoundWave: React.FC<{ isRecording: boolean }> = ({ isRecording }) => {
   const [bars, setBars] = useState<number[]>(Array(30).fill(10));
@@ -21,10 +21,9 @@ const SoundWave: React.FC<{ isRecording: boolean }> = ({ isRecording }) => {
       {bars.map((height, index) => (
         <div
           key={index}
-          className="w-[4px] rounded-full transition-all duration-150 ease-in-out"
+          className="w-[4px] rounded-full transition-all duration-150 ease-in-out bg-primary"
           style={{
             height: `${height}px`,
-            backgroundColor: COLORS.primary,
             opacity: 0.6 + (height / 80), // Taller bars are more opaque
           }}
         />

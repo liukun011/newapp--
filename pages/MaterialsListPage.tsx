@@ -706,8 +706,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
               </button>
               <button
                 onClick={handleConfirmRename}
-                className="flex-1 py-3 text-base font-medium text-white rounded-full transition-colors"
-                style={{ background: 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)' }}
+                className="flex-1 py-3 text-base font-medium text-white rounded-full active:scale-95 transition-all bg-confirm-gradient"
               >
                 确认
               </button>

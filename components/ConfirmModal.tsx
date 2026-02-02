@@ -62,10 +62,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3 text-white text-[15px] font-bold rounded-full shadow-lg shadow-indigo-100 active:scale-95 transition-all"
-            style={{
-              background: 'linear-gradient(90deg, #5B4EF8 0%, #6B5EFF 100%)',
-            }}
+            className="flex-1 py-3 text-base font-medium text-white rounded-full active:scale-95 transition-all bg-confirm-gradient"
           >
             {confirmText}
           </button>

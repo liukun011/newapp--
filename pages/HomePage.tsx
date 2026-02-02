@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { SwipeCell, PullRefresh, Toast } from "react-vant";
 import Mascot from "../components/Mascot";
-import { COLORS } from "../constants";
+
 import { DealRecord } from "../types";
 import { dealService } from "../services/dealService";
 import { useRecordingStore } from "../store/useRecordingStore";
@@ -323,10 +323,7 @@ const HomePage: React.FC<HomePageProps> = ({
     <div className="flex flex-col h-screen relative bg-[#F7F8FA]">
       {/* Top Gradient Background */}
       <div
-        className="absolute top-0 left-0 right-0 h-64 z-0 pointer-events-none"
-        style={{
-          background: `linear-gradient(180deg, ${COLORS.backgroundStart} 0%, rgba(255,255,255,0) 100%)`,
-        }}
+        className="absolute top-0 left-0 right-0 h-64 z-0 pointer-events-none bg-page-gradient-fade"
       />
 
       {/* Header Area */}
@@ -521,10 +518,8 @@ const HomePage: React.FC<HomePageProps> = ({
                         
                         <div>
                            <button
-                             className={`text-[13px] font-medium px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-md transition-transform ${
-                               item.status === '5'
-                                 ? 'bg-gray-100 text-gray-400 shadow-none'
-                                 : 'bg-[#4E3EF8] text-white shadow-indigo-200 active:scale-95'
+                             className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-md active:scale-95 transition-all ${
+                               item.status === '5' ? 'bg-gray-300' : 'bg-primary'
                              }`}
                              onClick={(e) => handleRecordClickThrottled(e, item)}
                            >
@@ -557,7 +552,9 @@ const HomePage: React.FC<HomePageProps> = ({
       {/* Bottom Tab Bar */}
       <div className="fixed bottom-0 left-0 right-0 h-[60px] bg-white border-t border-gray-100 flex items-center justify-between px-12 z-40 pb-safe">
         {/* Home Tab (Active) */}
-        <button className="flex flex-col items-center justify-center gap-1 text-[#4E3EF8]">
+        <button 
+          className="flex flex-col items-center justify-center gap-1 text-primary"
+        >
            <Home size={24} strokeWidth={2.5} />
            <span className="text-[10px] font-medium">首页</span>
         </button>
@@ -566,7 +563,7 @@ const HomePage: React.FC<HomePageProps> = ({
         <div className="absolute left-1/2 -top-6 -translate-x-1/2 p-1.5 bg-[#F7F8FA] rounded-full">
            <button 
              onClick={() => setShowCreateModal(true)}
-             className="w-14 h-14 bg-[#4E3EF8] rounded-full shadow-lg shadow-indigo-300 flex items-center justify-center text-white active:scale-95 transition-transform"
+             className="w-14 h-14 rounded-full shadow-lg shadow-indigo-300 flex items-center justify-center text-white active:scale-95 transition-transform bg-primary"
            >
              <Plus size={28} strokeWidth={2.5} />
            </button>
@@ -665,7 +662,7 @@ const HomePage: React.FC<HomePageProps> = ({
               <button
                 onClick={handleCreateDealThrottled}
                 disabled={creating}
-                className="flex-1 h-11 rounded-full bg-indigo-600 text-white font-medium hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-70 disabled:active:scale-100"
+                className="flex-1 h-11 rounded-full bg-primary text-white font-medium active:scale-95 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-70 disabled:active:scale-100"
               >
                 {creating ? "创建中..." : "开启尽调"}
               </button>

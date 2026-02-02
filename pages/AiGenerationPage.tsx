@@ -80,7 +80,7 @@ const AiGenerationPage: React.FC<AiGenerationPageProps> = ({ onBack, onConfirm }
         {/* Loading Bar */}
         <div className="w-64 h-1.5 bg-indigo-100 rounded-full overflow-hidden mb-6">
            <div 
-             className="h-full bg-[#4E3EF8] rounded-full animate-[width_2s_ease-in-out_infinite]" 
+             className="h-full rounded-full animate-[width_2s_ease-in-out_infinite] bg-primary" 
              style={{ width: '50%', animationName: 'shimmer', animationDuration: '2s', animationIterationCount: 'infinite' }} 
            />
            <style>{`
@@ -117,7 +117,7 @@ const AiGenerationPage: React.FC<AiGenerationPageProps> = ({ onBack, onConfirm }
              >
                 <div 
                   className={`mt-0.5 w-5 h-5 rounded-[4px] flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${
-                    isSelected ? 'bg-[#4E3EF8] border-[#4E3EF8]' : 'border-2 border-gray-300 bg-white'
+                    isSelected ? 'bg-primary border-primary' : 'border-2 border-gray-300 bg-white'
                   }`}
                 >
                    {isSelected && <Check size={14} className="text-white" strokeWidth={3} />}
@@ -144,7 +144,7 @@ const AiGenerationPage: React.FC<AiGenerationPageProps> = ({ onBack, onConfirm }
             variant="primary" 
             block 
             onClick={handleInitialConfirm} 
-            className="!rounded-full !bg-[#4E3EF8] !h-12 !text-[16px] shadow-indigo-500/25"
+            className="!rounded-full !h-12 !text-[16px] shadow-indigo-500/25 bg-primary"
          >
             确认
          </Button>
@@ -161,7 +161,7 @@ const AiGenerationPage: React.FC<AiGenerationPageProps> = ({ onBack, onConfirm }
                        <label key={opt} className="flex items-center justify-between cursor-pointer group" onClick={() => setStorageCategory(opt)}>
                           <span className="text-[15px] text-slate-700 font-medium">{opt}</span>
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-colors ${
-                             storageCategory === opt ? 'border-[#4E3EF8] bg-[#4E3EF8]' : 'border-gray-300 group-hover:border-gray-400'
+                             storageCategory === opt ? 'border-primary bg-primary' : 'border-gray-300 group-hover:border-gray-400'
                           }`}>
                              {storageCategory === opt && <Check size={12} className="text-white" strokeWidth={3} />}
                           </div>
@@ -179,7 +179,7 @@ const AiGenerationPage: React.FC<AiGenerationPageProps> = ({ onBack, onConfirm }
                  </Button>
                  <Button 
                     variant="primary"
-                    className="!rounded-full !h-10 !text-[15px] bg-[#4E3EF8]"
+                    className="!rounded-full !h-10 !text-[15px] bg-primary"
                     onClick={onConfirm}
                  >
                     确认

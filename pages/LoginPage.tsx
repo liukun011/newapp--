@@ -4,6 +4,7 @@ import { ArrowLeft, Edit2 } from 'lucide-react';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { LOGIN_SLIDES } from '../constants';
+
 import { authService } from '../services/authService';
 import { Toast } from 'react-vant';
 
@@ -12,6 +13,8 @@ interface LoginPageProps {
 }
 
 type ViewState = 'LANDING' | 'SMS' | 'PASSWORD';
+
+
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const basePath = import.meta.env.BASE_URL || '/';
@@ -114,7 +117,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
          <div className="flex-1 flex flex-col items-center justify-center px-6 pt-8 text-center" style={{ paddingBottom: '26rem' }}>
            {/* Text Content */}
            <div className="mb-8 mt-0 min-h-[120px] flex flex-col justify-center">
-              <h2 className="text-2xl font-bold text-[#4E3EF8] mb-4 leading-snug">
+              <h2 className="text-2xl font-bold mb-4 leading-snug text-primary">
                 {slide.title}
               </h2>
               <p className="text-slate-600 text-sm leading-relaxed px-4">
@@ -136,7 +139,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
              {LOGIN_SLIDES.map((_, idx) => (
                <div 
                   key={idx}
-                  className={`h-2 rounded-full transition-all duration-300 ${idx === currentSlide ? 'w-6 bg-[#4E3EF8]' : 'w-2 bg-indigo-200'}`}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    idx === currentSlide
+                      ? 'w-6 bg-primary'
+                      : 'bg-indigo-100'
+                  }`}
                />
              ))}
            </div>
@@ -166,7 +173,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               block 
               size="large" 
               onClick={() => setViewState('SMS')}
-              className="shadow-xl shadow-indigo-500/20"
+              className="shadow-xl shadow-indigo-500/20 bg-primary text-white"
             >
               验证码登录
             </Button>
