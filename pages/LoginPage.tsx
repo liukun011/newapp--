@@ -26,23 +26,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [agreed, setAgreed] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [pageLoading, setPageLoading] = useState(true);
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
+  const [previousViewState, setPreviousViewState] = useState<ViewState | null>(null);
+  const [returnToModal, setReturnToModal] = useState(false);
 
-  // Moved hooks to top level to comply with Rules of Hooks
-  const handleOneClickLogin = useThrottleFn(async () => {
-    if (!agreed) {
-      Toast.info('请先阅读并同意用户协议和隐私政策');
-      return;
-    }
-    Toast.info({ 
-      message: '功能开发中，敬请期待！', 
-    });
-  });
+  // Helper to enter agreement/privacy view
+  const openLegalView = (target: 'AGREEMENT' | 'PRIVACY') => {
+    setPreviousViewState(viewState);
+    setViewState(target);
+  };
 
-  const handleMainLogin = useThrottleFn(async () => {
-    if (!agreed) {
-      Toast.info('请先阅读并同意用户协议和隐私政策');
-      return;
-    }
+  // Perform actual login logic
+  const performLogin = async () => {
     if (isPasswordMode) {
       try {
         const res = await authService.login(phone, password);
@@ -70,7 +65,45 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
          console.error('Login error:', error);
        }
     }
+  };
+
+  // Moved hooks to top level to comply with Rules of Hooks
+  const handleOneClickLogin = useThrottleFn(async () => {
+    if (!agreed) {
+      setShowAgreementModal(true);
+      return;
+    }
+    Toast.info({ 
+      message: '功能开发中，敬请期待！', 
+    });
   });
+
+  const handleMainLogin = useThrottleFn(async () => {
+    if (!agreed) {
+      setShowAgreementModal(true);
+      return;
+    }
+    await performLogin();
+  });
+
+  const handleAgreementConfirm = () => {
+    setAgreed(true);
+    setShowAgreementModal(false);
+    // If visibility was triggered by "One Click Login", ideally we should distinguish or just proceed with main login if form filled.
+    // Given the flow, checking input validity for proceed is good.
+    // But simplistic approach: if modal confirmed, user obviously wants to proceed.
+    // However, we don't know which button triggered it. 
+    // For simplicity: after confirming agreement, we execute the main login if we are in PASSWORD/SMS view.
+    if (viewState === 'PASSWORD' || viewState === 'SMS') {
+       if (phone && (password || code)) {
+          performLogin();
+       }
+    } else if (viewState === 'LANDING') {
+       // Should match OneClick login but simpler to just set agreed and let user click again or trigger if we tracked the pending action. 
+       // For now, just setting agreed is enough UX improvement, or we can Toast "Please click login again". 
+       // Better: Just set agreed. User clicks button again -> Works.
+    }
+  };
 
   // Countdown timer
   useEffect(() => {
@@ -113,7 +146,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="min-h-screen bg-white flex flex-col relative">
         <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-10">
           <button 
-            onClick={() => setViewState('LANDING')}
+            onClick={() => {
+              setViewState(previousViewState || 'LANDING');
+              if (returnToModal) {
+                setShowAgreementModal(true);
+                setReturnToModal(false);
+              }
+            }}
             className="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-full transition-colors"
           >
             <ArrowLeft size={24} />
@@ -176,7 +215,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="min-h-screen bg-white flex flex-col relative">
         <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-10">
           <button 
-            onClick={() => setViewState('LANDING')}
+            onClick={() => {
+              setViewState(previousViewState || 'LANDING');
+              if (returnToModal) {
+                setShowAgreementModal(true);
+                setReturnToModal(false);
+              }
+            }}
             className="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-full transition-colors"
           >
             <ArrowLeft size={24} />
@@ -383,14 +428,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 我已阅读并同意 
                 <span 
                   className="text-indigo-600 mx-1 underline underline-offset-2 active:opacity-70"
-                  onClick={(e) => { e.preventDefault(); setViewState('AGREEMENT'); }}
+                  onClick={(e) => { e.preventDefault(); openLegalView('AGREEMENT'); }}
                 >
                   用户协议
                 </span>
                 和
                 <span 
                   className="text-indigo-600 mx-1 underline underline-offset-2 active:opacity-70"
-                  onClick={(e) => { e.preventDefault(); setViewState('PRIVACY'); }}
+                  onClick={(e) => { e.preventDefault(); openLegalView('PRIVACY'); }}
                 >
                   隐私政策
                 </span>
@@ -520,22 +565,74 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             />
             <span>
               我已阅读并同意 
-              <span 
+               <span 
                 className="text-indigo-600 mx-1 underline underline-offset-2 active:opacity-70"
-                onClick={(e) => { e.preventDefault(); setViewState('AGREEMENT'); }}
+                onClick={(e) => { e.preventDefault(); openLegalView('AGREEMENT'); }}
               >
                 用户协议
               </span> 
               和 
               <span 
                 className="text-indigo-600 mx-1 underline underline-offset-2 active:opacity-70"
-                onClick={(e) => { e.preventDefault(); setViewState('PRIVACY'); }}
+                onClick={(e) => { e.preventDefault(); openLegalView('PRIVACY'); }}
               >
                 隐私政策
               </span>
             </span>
          </label>
       </div>
+
+      {/* Agreement Confirmation Modal */}
+      {showAgreementModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-black/40 backdrop-blur-[2px]">
+          <div className="bg-white w-full max-w-[320px] rounded-2xl p-6 flex flex-col items-center animate-[scale_0.2s_ease-out]">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">账号使用协议及隐私保护</h3>
+            <p className="text-[14px] text-slate-600 leading-relaxed text-center mb-6">
+              为保障你的合法权益，请阅读并同意
+              <span 
+                className="text-indigo-600 cursor-pointer mx-1"
+                onClick={() => { 
+                  setShowAgreementModal(false); 
+                  setReturnToModal(true); 
+                  openLegalView('AGREEMENT'); 
+                }}
+              >
+                账号使用协议
+              </span>
+              和
+              <span 
+                className="text-indigo-600 cursor-pointer mx-1"
+                onClick={() => { 
+                  setShowAgreementModal(false); 
+                  setReturnToModal(true); 
+                  openLegalView('PRIVACY'); 
+                }}
+              >
+                隐私政策
+              </span>
+              ，我们将严格保护你的个人信息安全。
+            </p>
+            
+            <div className="w-full space-y-3">
+              <Button 
+                block 
+                className="!bg-[#4337F1] !rounded-full !h-11 !text-[16px] shadow-lg shadow-indigo-500/30"
+                onClick={handleAgreementConfirm}
+              >
+                同意并继续
+              </Button>
+              <Button 
+                block 
+                variant="secondary"
+                className="!bg-gray-100 !border-0 !text-slate-500 !rounded-full !h-11 !text-[16px]"
+                onClick={() => setShowAgreementModal(false)}
+              >
+                不同意
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
