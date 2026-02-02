@@ -18,6 +18,7 @@ export const authService = {
       data: {
         account,
         password,
+        autoRegister: true,
       },
     });
   },
