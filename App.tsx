@@ -793,9 +793,8 @@ const App: React.FC = () => {
                           currentStore.reset();
                         }
 
-                        // 更新 Zustand Store
+                        // 更新 Zustand Store (不设置 dealId，等真正开始录音时再设置)
                         setData({
-                          // dealId: deal.id, // Move to active start
                           interviewInstId: instId,
                           title: instTitle || ''
                         });
@@ -884,9 +883,8 @@ const App: React.FC = () => {
                           currentStore.reset();
                         }
 
-                        // 更新 Zustand Store
+                        // 更新 Zustand Store (不设置 dealId，等真正开始录音时再设置)
                         setData({
-                          // dealId: currentDeal.id,
                           interviewInstId: instId,
                           title: instTitle || '',
                         });
@@ -971,9 +969,8 @@ const App: React.FC = () => {
                           currentStore.reset();
                         }
 
-                        // 更新 Store
+                        // 更新 Store (不设置 dealId，等真正开始录音时再设置)
                         setData({
-                          dealId: currentDeal.id,
                           interviewInstId: instId,
                           title: instTitle || ''
                         });

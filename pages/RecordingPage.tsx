@@ -502,11 +502,10 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
           const instTitle = deal.interviewCust ? `${deal.interviewCust}的访谈` : '新访谈';
           console.log(`[H5] Re-created interview instance: ${currentInstId}`);
 
-          // 更新 Store
+          // 更新 Store (不设置 dealId，等真正开始录音时再设置)
           setData({
             interviewInstId: currentInstId,
-            title: instTitle,
-            dealId: deal.id
+            title: instTitle
           });
         } else {
           Toast.fail('创建访谈失败，无法开始录音');
@@ -523,7 +522,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     const surveyId = currentInstId || '';
     console.log(`[H5] Calling startRecord with surveyId: ${surveyId}`);
 
-    // Update global store
+    // Update global store - set dealId when recording actually starts
     if (deal?.id) {
       setData({ dealId: deal.id });
     }

@@ -44,6 +44,11 @@ const HomePage: React.FC<HomePageProps> = ({
   const [showLimitTips, setShowLimitTips] = useState(false);
   const { currentDealId } = useRecordingStore();
   
+  // 分页状态
+  const [pageNo, setPageNo] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  
   // 删除确认弹框
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingDealId, setDeletingDealId] = useState<string | null>(null);
@@ -80,12 +85,12 @@ const HomePage: React.FC<HomePageProps> = ({
     // 首次渲染立即请求
     if (isFirstRender.current) {
       isFirstRender.current = false;
-      fetchDeals();
+      fetchDeals(true, true); // 首次加载，重置分页
       return;
     }
 
-    // 只有切换Tab时才自动执行搜索
-    fetchDeals();
+    // 只有切换Tab或搜索时才重新加载
+    fetchDeals(true, true); // 重置分页
   }, [activeTab, searchQuery]);
 
   // AI Banner 自动轮播
@@ -96,6 +101,22 @@ const HomePage: React.FC<HomePageProps> = ({
 
     return () => clearInterval(interval);
   }, [bannerItems.length]);
+
+  // 自动加载更多直到内容可滚动
+  useEffect(() => {
+    // 延迟检查，确保DOM已更新
+    const timer = setTimeout(() => {
+      if (scrollContainerRef.current && !loading && !loadingMore && hasMore && deals.length > 0) {
+        const { scrollHeight, clientHeight } = scrollContainerRef.current;
+        // 如果内容高度不足以产生滚动条，自动加载更多
+        if (scrollHeight <= clientHeight) {
+          loadMore();
+        }
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [deals, loading, loadingMore, hasMore]);
 
   // Header 显隐控制
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -110,6 +131,12 @@ const HomePage: React.FC<HomePageProps> = ({
 
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     const scrollDiff = scrollTop - lastScrollTop.current;
+    
+    // 检测是否滚动到底部，触发加载更多
+    const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50;
+    if (isNearBottom && hasMore && !loadingMore && !loading) {
+      loadMore();
+    }
     
     // 1. 只有当列表数量较多且内容显著超过视口时，才允许执行滚动隐藏逻辑
     // 门槛恢复为 6 条，缓冲区设为 200，确保隐藏后不会产生过度回弹
@@ -158,13 +185,48 @@ const HomePage: React.FC<HomePageProps> = ({
     lastScrollTop.current = scrollTop;
   };
 
-  const fetchDeals = async (showGlobalLoading = true) => {
+  // 加载更多数据
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    
+    setLoadingMore(true);
+    try {
+      const nextPage = pageNo + 1;
+      const res = await dealService.queryDealInstList({
+        pageNo: nextPage,
+        pageSize: 10, // 每次加载10条
+        dealInstTitle: searchQuery,
+        status: activeTab === "ongoing" ? ["1"] : ["5"],
+      });
+
+      if (res.success && res.data) {
+        const newDeals = res.data.records || [];
+        setDeals(prev => [...prev, ...newDeals]);
+        setPageNo(nextPage);
+        setHasMore(newDeals.length >= 10); // 返回10条说明还有更多
+        
+        // 强制 SwipeCell 重新渲染
+        setTimeout(() => {
+          setSwipeCellKey(prev => prev + 1);
+        }, 100);
+      }
+    } catch (error) {
+      console.error("Failed to load more deals:", error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const fetchDeals = async (showGlobalLoading = true, resetPage = false) => {
     if (showGlobalLoading) setLoading(true);
+    
+    const currentPage = resetPage ? 1 : pageNo;
+    
     try {
       // 如果是下拉刷新，人为增加一点延迟，让Loading动画展示得更清楚
       const apiPromise = dealService.queryDealInstList({
-        pageNo: 0,
-        pageSize: 50,
+        pageNo: currentPage,
+        pageSize: 10, // 每次加载10条
         dealInstTitle: searchQuery,
         status: activeTab === "ongoing" ? ["1"] : ["5"], 
       });
@@ -177,7 +239,18 @@ const HomePage: React.FC<HomePageProps> = ({
 
       if (res.success && res.data) {
         console.log(res.data);
-        setDeals(res.data.records || []);
+        const newDeals = res.data.records || [];
+        
+        if (resetPage) {
+          setDeals(newDeals);
+          setPageNo(1);
+        } else {
+          setDeals(prev => [...prev, ...newDeals]);
+        }
+        
+        // 判断是否还有更多数据（返回10条说明还有更多）
+        setHasMore(newDeals.length >= 10);
+        
         // 强制 SwipeCell 重新渲染，确保滑动功能正常
         setTimeout(() => {
           setSwipeCellKey(prev => prev + 1);
@@ -531,6 +604,23 @@ const HomePage: React.FC<HomePageProps> = ({
                   </SwipeCell>
                 </div>
               ))}
+
+              {/* 加载更多指示器 */}
+              {loadingMore && (
+                <div className="flex items-center justify-center py-4">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-indigo-500 rounded-full animate-spin"></div>
+                    <span className="text-xs">加载中...</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* 没有更多数据提示 */}
+              {!hasMore && deals.length > 0 && (
+                <div className="flex items-center justify-center py-4">
+                  <span className="text-xs text-gray-400">没有更多数据了</span>
+                </div>
+              )}
 
               {deals.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20 opacity-80">

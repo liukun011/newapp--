@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, ChevronRight, AlertCircle, FilePlus, Mic, Archive } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Edit2, FilePlus, Mic, Archive } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import Mascot from '../components/Mascot';
 
@@ -545,9 +545,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         ) : (
           <button
             onClick={handleEditInfoThrottled}
-            className="p-2 -mr-2 text-slate-700 hover:bg-white/50 rounded-full"
+            className="p-2 -mr-2 text-slate-700 hover:bg-white/50 rounded-full cursor-pointer"
           >
-            <AlertCircle size={20} />
+            <Edit2 size={20} />
           </button>
         )}
       </div>
@@ -760,7 +760,19 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             onClick={handleNavigateMaterialsThrottled}
           >
             <div>
-              <h3 className="font-bold text-slate-800 text-[16px]">尽调资料</h3>
+              <div className="flex items-baseline gap-2">
+                <h3 className="font-bold text-slate-800 text-[16px]">尽调资料</h3>
+                {(() => {
+                  const resourcesCount = currentDeal?.resources?.length || 0;
+                  const supplementaryCount = Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary.length : 0;
+                  const totalCount = resourcesCount + supplementaryCount;
+                  return totalCount > 0 ? (
+                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[11px] font-bold shadow-md shadow-indigo-200">
+                      {totalCount}
+                    </span>
+                  ) : null;
+                })()}
+              </div>
               <p className="text-xs text-gray-400 mt-1">AI智能解析</p>
             </div>
             

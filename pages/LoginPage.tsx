@@ -416,11 +416,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         </div>
 
         {/* Agreement Checkbox - Fixed at bottom of page */}
-        <div className="fixed bottom-6 left-0 right-0 flex items-start justify-center px-8 z-30">
-           <label className="flex items-start space-x-2 text-xs text-gray-400 cursor-pointer leading-tight max-w-[280px]">
+        <div className="fixed bottom-6 left-0 right-0 flex items-center justify-center px-8 z-30">
+           <label className="flex items-center space-x-2 text-xs text-gray-400 cursor-pointer">
               <input 
                 type="checkbox" 
-                className="mt-0.5 accent-indigo-600 w-3.5 h-3.5 rounded-full"
+                className="accent-indigo-600 w-3.5 h-3.5 rounded-full"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
               />
