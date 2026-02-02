@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, ChevronRight, Edit2, FilePlus, Mic, Archive } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
-import Mascot from '../components/Mascot';
 
 import { DealRecord, DealReportStatusEnum } from '../types';
 import { dealService } from '../services/dealService';
@@ -556,13 +555,17 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       <div className="flex-1 overflow-y-auto px-4 pb-24 relative z-10 space-y-4">
 
         {/* Status Bar / Mascot Message */}
-        <div className="flex items-end mt-2 mb-4 relative">
-          <div className="w-16 h-16 mr-3 flex-shrink-0 relative z-20">
-            <Mascot size="small" />
+        <div className="flex items-end mt-8 mb-4 relative">
+          <div className="w-20 h-20 absolute left-6 -bottom-1.5 z-20">
+            <img 
+              src="/talk-assistant/assets/xiaoliye.png" 
+              alt="小狸" 
+              className="w-full h-full object-contain"
+            />
           </div>
 
-          <div className="bg-white rounded-tr-2xl rounded-br-2xl rounded-bl-2xl p-3 shadow-sm relative z-10 flex-1 mb-2">
-            <p className="text-sm text-slate-700 font-medium">
+          <div className="w-full bg-white rounded-3xl p-3 pl-28 shadow-sm relative z-10 flex-1">
+            <p className="text-[13px] text-slate-700 font-medium leading-tight">
               {(currentDeal?.status === '5')
                 ? '访谈归档，内容仅供查阅和下载'
                 : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING
@@ -575,14 +578,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             </p>
           </div>
         </div>
-
-        {/* Advice Card - 暂时隐藏，后续开放 */}
-        {/* <div className="bg-white rounded-2xl p-5 shadow-sm">
-          <h2 className="text-slate-900 font-bold text-[16px] mb-3">尽调建议</h2>
-          <p className="text-slate-600 text-sm leading-relaxed text-justify">
-            A公司2024年营收显著下滑，建议深入考察其经营层面。上传流水，可获更详尽的专项分析。
-          </p>
-        </div> */}
 
         {/* Report Card */}
         {currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED ? (

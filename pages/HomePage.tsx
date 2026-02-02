@@ -308,8 +308,8 @@ const HomePage: React.FC<HomePageProps> = ({
           store.reset();
         }
 
-        // 删除成功后刷新列表
-        fetchDeals();
+        // 删除成功后刷新列表（重置分页，从第1页开始加载）
+        fetchDeals(true, true);
       } else {
         Toast.fail(res.message || '删除失败');
       }
@@ -532,9 +532,18 @@ const HomePage: React.FC<HomePageProps> = ({
               <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
               <p className="text-gray-400 text-sm mt-4">加载中...</p>
             </div>
+          ) : deals.length === 0 ? (
+            // 空状态 - 不使用下拉刷新
+            <div className="flex-1 min-h-full flex flex-col items-center justify-center opacity-80">
+               <div className="relative mb-3 flex items-center justify-center">
+                 <Mascot size="medium" />
+               </div>
+               <p className="text-xs text-gray-400">小狸可以帮你做访谈记录，写尽调报告</p>
+            </div>
           ) : (
+            // 有数据 - 使用下拉刷新
             <PullRefresh 
-              onRefresh={() => fetchDeals(false)}
+              onRefresh={() => fetchDeals(false, true)} // 下拉刷新，不显示全局loading但重置分页
               successText={
                 <div className="flex items-center justify-center gap-1 text-gray-600">
                   <Check size={16} />
@@ -621,15 +630,6 @@ const HomePage: React.FC<HomePageProps> = ({
                   <span className="text-xs text-gray-400">没有更多数据了</span>
                 </div>
               )}
-
-              {deals.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-20 opacity-80">
-                   <div className="w-24 h-24 relative mb-2">
-                     <Mascot size="small" />
-                   </div>
-                   <p className="text-xs text-gray-400">小狸可以帮你做访谈记录，写尽调报告</p>
-                </div>
-              )}
               </div>
             </PullRefresh>
           )}
@@ -640,26 +640,13 @@ const HomePage: React.FC<HomePageProps> = ({
 
 
       {/* Bottom Tab Bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-[60px] bg-white border-t border-gray-100 flex items-center justify-between px-12 z-40 pb-safe">
-        {/* Home Tab (Active) */}
+      <div className="fixed bottom-0 left-0 right-0 h-[60px] bg-white border-t border-gray-100 flex items-center justify-around px-12 z-40 pb-safe">
         <button 
           className="flex flex-col items-center justify-center gap-1 text-primary"
         >
            <Home size={24} strokeWidth={2.5} />
            <span className="text-[10px] font-medium">首页</span>
         </button>
-
-        {/* Center Add Button */}
-        <div className="absolute left-1/2 -top-6 -translate-x-1/2 p-1.5 bg-[#F7F8FA] rounded-full">
-           <button 
-             onClick={() => setShowCreateModal(true)}
-             className="w-14 h-14 rounded-full shadow-lg shadow-indigo-300 flex items-center justify-center text-white active:scale-95 transition-transform bg-primary"
-           >
-             <Plus size={28} strokeWidth={2.5} />
-           </button>
-        </div>
-
-        {/* Profile Tab */}
         <button 
           onClick={onNavigateToSettings}
           className="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600"
