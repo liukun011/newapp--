@@ -8,6 +8,8 @@ interface ReportPreviewPageProps {
   reportUrl: string;
   previewUrl: string;
   showDownloadButton?: boolean;
+  actionButtonText?: string;
+  onAction?: () => void;
   onBack: () => void;
 }
 
@@ -16,6 +18,8 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
   reportUrl,
   previewUrl,
   showDownloadButton = false,
+  actionButtonText,
+  onAction,
   onBack
 }) => {
   const handleDownload = () => {
@@ -88,16 +92,25 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
         )}
       </div>
 
-      {/* Download Button */}
-      {showDownloadButton && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 z-[60]">
-          <button
-            onClick={handleDownload}
-            className="w-full py-3 bg-indigo-600 text-white rounded-full font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-indigo-200"
-          >
-            <Download size={20} />
-            立即下载
-          </button>
+      {/* Action Button (Download or Custom) */}
+      {(showDownloadButton || actionButtonText) && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 z-[60] bg-white border-t border-gray-100 safe-area-bottom">
+          {showDownloadButton ? (
+            <button
+              onClick={handleDownload}
+              className="w-full py-3 bg-indigo-600 text-white rounded-full font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-indigo-200"
+            >
+              <Download size={20} />
+              立即下载
+            </button>
+          ) : (
+            <button
+              onClick={onAction}
+              className="w-full py-3 bg-[#4337F1] text-white rounded-full font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-indigo-200"
+            >
+              {actionButtonText}
+            </button>
+          )}
         </div>
       )}
     </div>

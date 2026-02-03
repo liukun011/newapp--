@@ -11,7 +11,7 @@ import Mascot from '@/components/Mascot';
 interface MaterialsListPageProps {
   dealId?: string;
   onBack: () => void;
-  onPreviewFile?: (name: string, url: string) => void;
+  onPreviewFile?: (name: string, url: string, fileId: string) => void;
   isArchived?: boolean;
   reportStatus?: any; // 报告状态
 }
@@ -542,7 +542,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                       // 普通文件，预览
                       if (resource.fileUrl) {
                         if (onPreviewFile) {
-                          onPreviewFile(resource.fileName, resource.fileUrl);
+                          onPreviewFile(resource.fileName, resource.fileUrl, resource.id);
                         } else {
                           window.open(resource.fileUrl, '_blank');
                         }

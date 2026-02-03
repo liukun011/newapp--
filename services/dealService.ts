@@ -1,5 +1,5 @@
 import { request } from '../request';
-import { ApiResponse, PageData, DealRecord } from '../types';
+import { ApiResponse, PageData, DealRecord, ReportRecord } from '../types';
 
 /**
  * 尽调相关服务
@@ -303,10 +303,29 @@ export const dealService = {
    * @param fileId 文件 ID
    * @param fileUrl 文件 URL
    */
-  viewReportUrl: (fileId: string, fileUrl: string) => {
-    return request<ApiResponse<any>>('/webInterface/url/view', {
+  viewReportUrl: (fileId: string | undefined | null, fileUrl: string) => {
+    // 手动拼接参数，避免 axios 自动转码
+    let url = `/webInterface/url/view?url=${fileUrl}`;
+    if (fileId) {
+      url += `&fileId=${fileId}`;
+    }
+    return request<ApiResponse<any>>(url, {
       method: 'GET',
-      params: { fileId, fileUrl },
+    });
+  },
+
+  /**
+   * 分页查询报告列表
+   * POST /deal/queryDealReportListByPage
+   */
+  queryDealReportListByPage: (params: {
+    pageNo: number;
+    pageSize: number;
+    fileName?: string; // 搜索关键词
+  }) => {
+    return request<ApiResponse<PageData<ReportRecord>>>('/deal/queryDealReportListByPage', {
+      method: 'POST',
+      data: params,
     });
   },
 };

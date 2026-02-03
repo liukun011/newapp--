@@ -130,6 +130,25 @@ export interface DealRecord {
   templateId: any;
 }
 
+export interface ReportRecord {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  relationId: string;    // 关联ID (如尽调实例ID)
+  type: string;          // 文件类型标识
+  fileCreateFinishTime: string | null; // 文件创建完成时间
+  lastModifiedTime: string | null;     // 最后修改时间
+  finishTime: string | null;
+  createDate: string | null;
+  matchNum: number;
+  total: number;
+  progress: any;
+  
+  // UI 辅助字段 (可能需要前端处理或后续接口补充)
+  dealInstName?: string; 
+  status?: string;      
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;

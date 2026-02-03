@@ -36,10 +36,6 @@ const config = {
   // 上传地址
   uploadUrl: `${import.meta.env.VITE_API_BASE_URL || 'http://68.79.42.215/report'}/upload/file`,
 
-  // 模板预览地址
-  previewUrl: env === 'production' 
-    ? 'https://xiaoli.binarysee.com/kkfileview/onlinePreview' : env === 'test' 
-    ? 'http://113.44.121.105:8012/onlinePreview' : 'http://113.44.121.105:8012/onlinePreview',
 };
 
 // 打印当前环境配置（仅在开发和测试环境）

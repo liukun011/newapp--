@@ -207,7 +207,14 @@ const App: React.FC = () => {
   }, [previewTemplate]);
 
   // 报告预览数据
-  const [previewReport, setPreviewReport] = useState<{ name: string; reportUrl: string; previewUrl: string; showDownloadButton?: boolean } | null>(() => {
+  const [previewReport, setPreviewReport] = useState<{ 
+    name: string; 
+    reportUrl: string; 
+    previewUrl: string; 
+    showDownloadButton?: boolean;
+    templateId?: string;
+    actionType?: 'select_template';
+  } | null>(() => {
     try {
       const saved = sessionStorage.getItem('zov-preview-report');
       return saved ? JSON.parse(saved) : null;
@@ -766,12 +773,14 @@ const App: React.FC = () => {
                   onTabChange={setHomeTab}
                   onNavigateToDetail={(deal) => {
                     setCurrentDeal(deal);
+                    setPreviousView(View.HOME);
                     navigateForward(View.DUE_DILIGENCE);
                   }}
                   onCreateNewDeal={(deal) => {
                     console.log('[App] onCreateNewDeal triggered. Current Stack:', viewStack);
                     setCurrentDeal(deal);
                     // 必须使用 navigateForward 将新页面压入栈中，保证能从资料页返回首页
+                    setPreviousView(View.HOME);
                     navigateForward(View.MATERIAL_UPLOAD);
                   }}
                   onNavigateToRecording={async (deal) => {
@@ -835,7 +844,7 @@ const App: React.FC = () => {
               {currentView === View.DUE_DILIGENCE && (
                 <DueDiligencePage
                   deal={currentDeal}
-                  onBack={() => navigateBackward(View.HOME)}
+                  onBack={() => navigateBackward(previousView === View.REPORTS_LIST ? View.REPORTS_LIST : View.HOME)}
                   onNavigateToRecording={async () => {
                     if (!currentDeal?.id) {
                       Toast.fail('尽调信息不存在');
@@ -932,10 +941,30 @@ const App: React.FC = () => {
                 <MaterialsListPage
                   dealId={currentDeal?.id}
                   onBack={() => navigateBackward(previousView === View.RECORDING ? View.RECORDING : View.DUE_DILIGENCE)}
-                  onPreviewFile={(name, url) => {
-                    setPreviewTemplate({ name, url });
-                    setPreviousView(View.MATERIALS_LIST);
-                    navigateForward(View.TEMPLATE_PREVIEW);
+                  onPreviewFile={async (name, url, fileId) => {
+                    try {
+                      Toast.loading({ message: '正在加载预览...', duration: 0, forbidClick: true });
+                      // 直接调用服务获取预览地址，跳过 TemplatePreviewPage 中间页
+                      const res = await dealService.viewReportUrl(fileId, url);
+                      Toast.clear();
+
+                      if (res.success && res.data) {
+                        setPreviewReport({ 
+                          name, 
+                          reportUrl: url, 
+                          previewUrl: res.data, 
+                          showDownloadButton: false 
+                        });
+                        setPreviousView(View.MATERIALS_LIST);
+                        navigateForward(View.REPORT_PREVIEW);
+                      } else {
+                        Toast.fail(res.message || '加载预览失败');
+                      }
+                    } catch (error) {
+                      Toast.clear();
+                      console.error('Preview failed:', error);
+                      Toast.fail('加载预览失败');
+                    }
                   }}
                   isArchived={currentDeal?.status === '5'}
                   reportStatus={currentDeal?.reportStatus}
@@ -1024,6 +1053,13 @@ const App: React.FC = () => {
                   onPreviewTemplate={(name, url) => {
                     setPreviewTemplate({ name, url });
                     setPreviousView(View.MATERIAL_UPLOAD);
+                    // 这里是从 Upload 页跳过去的预览，也算是模板预览，应该也要跳过 ID（但这里 url 可能是本地 blob？）
+                    // 如果是从 Upload 页通过 onViewList 跳到 Listing 再跳预览...
+                    // 暂时这里是上传前的预览？
+                    // 实际上这里是上传完成后 onViewList 跳到 MyTemplates，然后 MyTemplates 跳预览。
+                    // MaterialUploadPage 里的 onPreviewTemplate 是什么？
+                    // 看代码 MaterialUploadPage 似乎没有调用 onPreviewTemplate。
+                    // 只有 TemplateSelectionPage 调用 onPreview。
                     navigateForward(View.TEMPLATE_PREVIEW);
                   }}
                   initialTab={materialUploadTab}
@@ -1145,10 +1181,43 @@ const App: React.FC = () => {
               )}
               {currentView === View.TEMPLATE_SELECTION && (
                 <TemplateSelectionPage
-                  onBack={() => navigateBackward(previousView)}
-                  onPreview={(name, url, id) => {
-                    setPreviewTemplate({ name, url, id });
-                    navigateForward(View.TEMPLATE_PREVIEW);
+                  onBack={() => {
+                      // 使用 stack 历史回退，避免 previousView 被预览操作污染
+                      console.log('[TemplateSelection] onBack check stack:', viewStack);
+                      let backTarget = viewStack.length > 1 ? viewStack[viewStack.length - 2] : View.DUE_DILIGENCE;
+                      if (!backTarget) backTarget = View.HOME; // 防止 undefined
+                      
+                      console.log('[TemplateSelection] navigating back to:', backTarget);
+                      navigateBackward(backTarget);
+                  }}
+                  onPreview={async (name, url, id) => {
+                    // 直接调用服务获取预览地址，跳过 TemplatePreviewPage 中间页
+                    try {
+                        Toast.loading({ message: '正在加载预览...', duration: 0, forbidClick: true });
+                        // 模板预览不传 ID
+                        const res = await dealService.viewReportUrl(undefined, url);
+                        Toast.clear();
+
+                        if (res.success && res.data) {
+                            setPreviewReport({ 
+                                name, 
+                                reportUrl: url, 
+                                previewUrl: res.data, 
+                                templateId: id,
+                                actionType: 'select_template',
+                                showDownloadButton: false
+                            });
+                            // 设置 View.TEMPLATE_SELECTION 为 previousView，以便从预览页返回能回到列表
+                            setPreviousView(View.TEMPLATE_SELECTION);
+                            navigateForward(View.REPORT_PREVIEW);
+                        } else {
+                            Toast.fail(res.message || '加载预览失败');
+                        }
+                    } catch (error) {
+                        Toast.clear();
+                        console.error('Template preview failed:', error);
+                        Toast.fail('加载预览失败');
+                    }
                   }}
                   currentTemplateId={currentDeal?.templateId}
                   dealId={currentDeal?.id}
@@ -1172,6 +1241,7 @@ const App: React.FC = () => {
                   templateName={previewTemplate.name}
                   templateUrl={previewTemplate.url}
                   templateId={previewTemplate.id}
+                  skipIdInPreview={previousView === View.TEMPLATE_SELECTION || previousView === View.MY_TEMPLATES} // 如果是从模板选择页或模板管理页进来的，跳过 ID；如果是资料预览(MATERIALS_LIST)则不跳过
                   onBack={() => {
                     // 与原生返回保持一致，取栈中倒数第二个页面
                     if (viewStack.length > 1) {
@@ -1211,6 +1281,27 @@ const App: React.FC = () => {
                       Toast.fail('更换失败');
                     }
                   } : undefined}
+                  onPreviewReport={(name, url, previewUrl, showDownload) => {
+                    // 设置预览数据
+                    setPreviewReport({ name, reportUrl: url, previewUrl, showDownloadButton: showDownload });
+                    
+                    // 使用 Replace 模式跳转：将当前的 TEMPLATE_PREVIEW 替换为 REPORT_PREVIEW
+                    // 这样点击返回时，会直接回到上一级（如模板选择页），避免死循环
+                    const parentView = viewStack[viewStack.length - 2] || View.HOME;
+                    setPreviousView(parentView);
+                    
+                    setViewStack(prev => {
+                      const newStack = [...prev];
+                      // 替换栈顶
+                      if (newStack.length > 0) {
+                        newStack[newStack.length - 1] = View.REPORT_PREVIEW;
+                      }
+                      return newStack;
+                    });
+                    
+                    // 切换视图（不使用 navigateForward 以避免 push）
+                    setCurrentView(View.REPORT_PREVIEW);
+                  }}
                 />
               )}
               {currentView === View.REPORT_PREVIEW && previewReport && (
@@ -1219,6 +1310,44 @@ const App: React.FC = () => {
                   reportUrl={previewReport.reportUrl}
                   previewUrl={previewReport.previewUrl}
                   showDownloadButton={(previewReport as any).showDownloadButton}
+                  actionButtonText={previewReport.actionType === 'select_template' ? '使用此模板' : undefined}
+                  onAction={previewReport.actionType === 'select_template' && currentDeal?.id && previewReport.templateId ? async () => {
+                     // 处理选择模板逻辑
+                     const templateId = previewReport.templateId!;
+                     // 避免重复选择
+                     if (currentDeal.templateId === templateId) {
+                         Toast.info('当前已是该模板');
+                         return;
+                     }
+
+                     try {
+                       Toast.loading({ message: '更换中...', duration: 0 });
+                       const res = await dealService.changeReportTemplate({
+                         id: currentDeal.id,
+                         templateId: templateId,
+                       });
+                       Toast.clear();
+
+                       if (res.success) {
+                         Toast.success('更换成功');
+                         
+                         // 同步问题列表 (如果有定义该函数)
+                         // 假设该函数在作用域内
+                         if (typeof handleTemplateChangeSyncQuestions === 'function') {
+                            await handleTemplateChangeSyncQuestions(templateId);
+                         }
+
+                         // 返回到尽调详情页 (跳过 TemplateSelection, 直接回详情)
+                         navigateBackward(View.DUE_DILIGENCE);
+                       } else {
+                         Toast.fail(res.message || '更换失败');
+                       }
+                     } catch (error) {
+                       Toast.clear();
+                       console.error('Failed to change template:', error);
+                       Toast.fail('更换失败');
+                     }
+                  } : undefined}
                   onBack={() => {
                     console.log('[ReportPreview] Navigating back, previousView:', previousView);
                     console.log('[ReportPreview] Current deal:', currentDeal);
@@ -1297,6 +1426,33 @@ const App: React.FC = () => {
               {currentView === View.REPORTS_LIST && (
                 <ReportsListPage
                   onBack={() => navigateBackward(View.HOME)}
+                  onPreviewReport={(name, url, previewUrl, showDownloadButton) => {
+                    setPreviewReport({ name, reportUrl: url, previewUrl, showDownloadButton });
+                    setPreviousView(View.REPORTS_LIST);
+                    navigateForward(View.REPORT_PREVIEW);
+                  }}
+                  onViewDealDetail={async (dealId) => {
+                      if (!dealId) return;
+                      try {
+                          Toast.loading({ message: '加载中...', duration: 0, forbidClick: true });
+                          // 获取详情
+                          const res = await dealService.getDealInstDetail(dealId);
+                          Toast.clear();
+                          
+                          if (res.success && res.data) {
+                              setCurrentDeal(res.data);
+                              // 设置 previousView 为 REPORTS_LIST，以便从详情页返回时能回列表
+                              setPreviousView(View.REPORTS_LIST);
+                              navigateForward(View.DUE_DILIGENCE);
+                          } else {
+                              Toast.fail(res.message || '获取尽调详情失败');
+                          }
+                      } catch (error) {
+                          Toast.clear();
+                          console.error('Fetch deal detail failed:', error);
+                          Toast.fail('获取详情失败');
+                      }
+                  }}
                 />
               )}
             </motion.div>
