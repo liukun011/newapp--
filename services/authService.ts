@@ -77,4 +77,10 @@ export const authService = {
       data: formData,
     });
   },
+  // 注销账号
+  deleteAccount: async (): Promise<any> => {
+    return request<any>('https://user.binarysee.com/token/unregister', {
+      method: 'POST',
+    });
+  },
 };

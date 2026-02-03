@@ -19,6 +19,8 @@ export enum View {
   MANAGEMENT = 'MANAGEMENT',          // ManagementPage - 业务支撑管理页
   REPORTS_LIST = 'REPORTS_LIST',      // ReportsListPage - 报告列表页
   REPORT_PREVIEW = 'REPORT_PREVIEW',  // ReportPreviewPage - 报告预览页
+  USER_AGREEMENT = 'USER_AGREEMENT',  // UserAgreementPage - 用户协议页
+  PRIVACY_POLICY = 'PRIVACY_POLICY',  // PrivacyPolicyPage - 隐私政策页
 }
 
 
