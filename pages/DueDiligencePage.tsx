@@ -596,7 +596,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               </div>
 
               {/* Rocket Mascot Image */}
-              <div className="absolute right-1 top-1/2 -translate-y-1/2 mt-0 w-36 h-36">
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 w-36 h-36">
                 <img
                   src={`${basePath}assets/rocketxiaoli.png`}
                   alt="Rocket Mascot"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { Home, User, Plus } from 'lucide-react';
+import { Home, User, Plus, FileText, Layers } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import { useRecordingStore } from './store/useRecordingStore';
 import { dealService } from './services/dealService';
@@ -23,6 +23,8 @@ import TemplatePreviewPage from './pages/TemplatePreviewPage';
 import QuestionsListPage from './pages/QuestionsListPage';
 import SettingsPage from './pages/SettingsPage';
 import MessageCenterPage from './pages/MessageCenterPage';
+import ManagementPage from './pages/ManagementPage';
+import ReportsListPage from './pages/ReportsListPage';
 
 import HistoryRecordsPage from './pages/HistoryRecordsPage';
 import HistoryDetailPage from './pages/HistoryDetailPage';
@@ -1280,6 +1282,23 @@ const App: React.FC = () => {
                   onBack={() => navigateBackward(View.HOME)}
                 />
               )}
+              {currentView === View.MANAGEMENT && (
+                <ManagementPage
+                  onNavigateToTemplates={() => {
+                    setTemplateOrigin(View.MANAGEMENT);
+                    navigateForward(View.MY_TEMPLATES);
+                  }}
+                  onNavigateToQuestionLibrary={() => {
+                    // TODO: Add question library navigation
+                    Toast.info('问题清单功能开发中');
+                  }}
+                />
+              )}
+              {currentView === View.REPORTS_LIST && (
+                <ReportsListPage
+                  onBack={() => navigateBackward(View.HOME)}
+                />
+              )}
             </motion.div>
           </AnimatePresence>
           {/* 全局录音悬浮窗 - 胶囊样式 */}
@@ -1298,9 +1317,10 @@ const App: React.FC = () => {
             />
           )}
 
-          {/* Global Fixed Bottom Navigation Bar - Only for Home and Settings */}
-          {(currentView === View.HOME || currentView === View.SETTINGS) && (
-            <div className="fixed bottom-0 left-0 right-0 h-[70px] bg-white border-t border-gray-100 z-40 flex items-center justify-around pb-1 shadow-[0_-4px_8px_rgba(0,0,0,0.02)]">
+          {/* Global Fixed Bottom Navigation Bar - Only for Home, Management, Reports and Settings */}
+          {(currentView === View.HOME || currentView === View.SETTINGS || currentView === View.MANAGEMENT || currentView === View.REPORTS_LIST) && (
+            <div className="fixed bottom-0 left-0 right-0 h-[70px] bg-white border-t border-gray-100 z-40 flex items-center justify-around pb-1 shadow-[0_-2px_8px_rgba(0,0,0,0.02)]">
+              {/* 首页 */}
               <button
                 className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
                 onClick={() => {
@@ -1310,10 +1330,23 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <Home size={26} className={currentView === View.HOME ? "text-slate-800" : "text-gray-400"} strokeWidth={2.5} />
-                <span className={`text-[11px] font-bold ${currentView === View.HOME ? "text-slate-800" : "text-gray-400"}`}>首页</span>
+                <Home size={24} className={currentView === View.HOME ? "text-primary" : "text-gray-400"} strokeWidth={currentView === View.HOME ? 2.5 : 2} />
+                <span className={`text-[10px] font-medium ${currentView === View.HOME ? "text-primary" : "text-gray-400"}`}>首页</span>
               </button>
 
+              {/* 报告 */}
+              <button
+                className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
+                onClick={() => {
+                  // TODO: Create ReportsListPage component
+                  navigateForward(View.REPORTS_LIST);
+                }}
+              >
+                <FileText size={24} className={currentView === View.REPORTS_LIST ? "text-primary" : "text-gray-400"} strokeWidth={currentView === View.REPORTS_LIST ? 2.5 : 2} />
+                <span className={`text-[10px] font-medium ${currentView === View.REPORTS_LIST ? "text-primary" : "text-gray-400"}`}>报告</span>
+              </button>
+
+              {/* 中间新增按钮 */}
               <button
                 className="w-[64px] h-[64px] rounded-full shadow-xl shadow-indigo-500/40 flex items-center justify-center -mt-12 active:scale-95 transition-transform z-50 bg-primary"
                 onClick={async () => {
@@ -1331,8 +1364,20 @@ const App: React.FC = () => {
                 <Plus size={32} className="text-white" strokeWidth={3} />
               </button>
 
+              {/* 管理 */}
               <button
-                className="flex flex-col items-center gap-1 min-w-[64px] pt-1 group"
+                className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
+                onClick={() => {
+                  navigateForward(View.MANAGEMENT);
+                }}
+              >
+                <Layers size={24} className={currentView === View.MANAGEMENT ? "text-primary" : "text-gray-400"} strokeWidth={currentView === View.MANAGEMENT ? 2.5 : 2} />
+                <span className={`text-[10px] font-medium ${currentView === View.MANAGEMENT ? "text-primary" : "text-gray-400"}`}>管理</span>
+              </button>
+
+              {/* 我的 */}
+              <button
+                className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
                 onClick={() => {
                   if (currentView !== View.SETTINGS) {
                     setNavDirection('forward');
@@ -1340,11 +1385,12 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <User size={26} className={currentView === View.SETTINGS ? "text-slate-800" : "text-gray-400"} strokeWidth={2.5} />
-                <span className={`text-[11px] font-bold ${currentView === View.SETTINGS ? "text-slate-800" : "text-gray-400"}`}>我的</span>
+                <User size={24} className={currentView === View.SETTINGS ? "text-primary" : "text-gray-400"} strokeWidth={currentView === View.SETTINGS ? 2.5 : 2} />
+                <span className={`text-[10px] font-medium ${currentView === View.SETTINGS ? "text-primary" : "text-gray-400"}`}>我的</span>
               </button>
             </div>
           )}
+
         </div>
     </>
   );

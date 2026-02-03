@@ -13,7 +13,7 @@ interface AuthResponse {
 export const authService = {
   // 密码登录
   login: async (account: string, password: string): Promise<AuthResponse> => {
-    return request<AuthResponse>('https://user.binarysee.com/api/iam/sso/login-with-password', {
+    return request<AuthResponse>('https://user.binarysee.com.cn/api/iam/sso/login-with-password', {
       method: 'POST',
       data: {
         account,
@@ -24,7 +24,7 @@ export const authService = {
   },
   // 验证码登录
   loginWithPhoneCode: async (mobile: string, captcha: string): Promise<AuthResponse> => {
-    return request<AuthResponse>('https://user.binarysee.com/api/iam/sso/login-with-phonecode', {
+    return request<AuthResponse>('https://user.binarysee.com.cn/api/iam/sso/login-with-phonecode', {
       method: 'POST',
       data: {
         mobile,
@@ -36,7 +36,7 @@ export const authService = {
 
   // 发送验证码
   sendSms: async (mobile: string): Promise<AuthResponse> => {
-    return request<AuthResponse>('https://user.binarysee.com/api/iam/sso/send-sms', {
+    return request<AuthResponse>('https://user.binarysee.com.cn/api/iam/sso/send-sms', {
       method: 'POST',
       data: {
         mobile,
@@ -47,21 +47,21 @@ export const authService = {
 
   // 退出登录
   logout: async (): Promise<AuthResponse> => {
-    return request<AuthResponse>('https://user.binarysee.com/api/iam/token/logout', {
+    return request<AuthResponse>('https://user.binarysee.com.cn/api/iam/token/logout', {
       method: 'POST',
     });
   },
 
   // 获取用户信息
   getUserInfo: async (): Promise<any> => {
-    return request<any>('https://user.binarysee.com/api/iam/users/userinfo', {
+    return request<any>('https://user.binarysee.com.cn/api/iam/users/userinfo', {
       method: 'POST',
     });
   },
 
   // 更新用户信息
   updateUserInfo: async (data: any): Promise<any> => {
-    return request<any>('https://user.binarysee.com/api/iam/token/change_info', {
+    return request<any>('https://user.binarysee.com.cn/api/iam/token/change_info', {
       method: 'PUT',
       data,
     });
@@ -72,7 +72,7 @@ export const authService = {
     const formData = new FormData();
     formData.append('file', file);
     
-    return request<any>('https://user.binarysee.com/api/iam/users/upload', {
+    return request<any>('https://user.binarysee.com.cn/api/iam/users/upload', {
       method: 'POST',
       data: formData,
     });

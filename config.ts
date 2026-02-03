@@ -39,7 +39,7 @@ const config = {
   // 模板预览地址
   previewUrl: env === 'production' 
     ? 'https://xiaoli.binarysee.com/kkfileview/onlinePreview' : env === 'test' 
-    ? 'http://68.79.42.215/report/onlinePreview' : 'http://113.44.121.105:8012/onlinePreview',
+    ? 'http://113.44.121.105:8012/onlinePreview' : 'http://113.44.121.105:8012/onlinePreview',
 };
 
 // 打印当前环境配置（仅在开发和测试环境）

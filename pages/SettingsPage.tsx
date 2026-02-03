@@ -111,21 +111,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   };
 
   const menuItemsGroup1 = [
-    {
-      icon: FileText,
-      label: '模板管理',
-      color: 'text-blue-500',
-      bg: 'bg-blue-50',
-      onClick: () => {
-        if (onNavigateToTemplates) {
-          onNavigateToTemplates();
-        } else {
-          Toast.info('功能开发中');
-        }
-      }
-    },
     { icon: Layers, label: '问题清单', color: 'text-green-500', bg: 'bg-green-50', onClick: () => Toast.info('功能开发中，敬请期待！') },
   ];
+
 
   const menuItemsGroup2 = [
     { icon: PenTool, label: '小狸共创官', color: 'text-orange-500', bg: 'bg-orange-50', onClick: () => Toast.info('功能开发中，敬请期待！') },

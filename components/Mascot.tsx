@@ -20,10 +20,6 @@ const Mascot: React.FC<{ size?: 'small' | 'medium' | 'large' }> = ({ size = 'med
           WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
         }}
       />
-      
-      {/* Floating Elements (Decorative) */}
-      <div className="absolute -top-2 -right-4 text-2xl animate-bounce" style={{ animationDelay: '0.2s' }}>✨</div>
-      <div className="absolute top-10 -left-6 text-xl animate-bounce" style={{ animationDelay: '0.7s' }}>🎵</div>
     </div>
   );
 };

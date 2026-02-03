@@ -16,8 +16,11 @@ export enum View {
   HISTORY = 'HISTORY',                // HistoryRecordsPage - 历史访谈页
   HISTORY_DETAIL = 'HISTORY_DETAIL',  // HistoryDetailPage - 历史访谈详情页
   MESSAGE_CENTER = 'MESSAGE_CENTER',  // MessageCenterPage - 消息中心页
+  MANAGEMENT = 'MANAGEMENT',          // ManagementPage - 业务支撑管理页
+  REPORTS_LIST = 'REPORTS_LIST',      // ReportsListPage - 报告列表页
   REPORT_PREVIEW = 'REPORT_PREVIEW',  // ReportPreviewPage - 报告预览页
 }
+
 
 // 尽调状态枚举
 export enum DealStatusEnum {

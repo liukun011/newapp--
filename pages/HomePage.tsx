@@ -7,8 +7,6 @@ import {
   Bell,
   FileText,
   Plus,
-  Home,
-  User,
 } from "lucide-react";
 import { SwipeCell, PullRefresh, Toast } from "react-vant";
 import Mascot from "../components/Mascot";
@@ -33,6 +31,7 @@ const HomePage: React.FC<HomePageProps> = ({
   onNavigateToRecording,
   onCreateNewDeal,
   onNavigateToSettings,
+  onNavigateToTemplates,
   initialTab = "ongoing",
   onTabChange,
 }) => {
@@ -637,24 +636,6 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       </div>
 
-
-
-      {/* Bottom Tab Bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-[60px] bg-white border-t border-gray-100 flex items-center justify-around px-12 z-40 pb-safe">
-        <button 
-          className="flex flex-col items-center justify-center gap-1 text-primary"
-        >
-           <Home size={24} strokeWidth={2.5} />
-           <span className="text-[10px] font-medium">首页</span>
-        </button>
-        <button 
-          onClick={onNavigateToSettings}
-          className="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600"
-        >
-           <User size={24} />
-           <span className="text-[10px] font-medium">我的</span>
-        </button>
-      </div>
 
 
       {/* 删除确认弹框 - Direct Render */}
