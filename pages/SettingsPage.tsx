@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, FileText, LogOut, Edit2, Shield, FileCheck, Trash2 } from 'lucide-react';
+import { ChevronRight, LogOut, Edit2, Shield, FileCheck, Trash2 } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { authService } from '../services/authService';
 import { useRecordingStore } from '../store/useRecordingStore';
@@ -16,7 +16,7 @@ interface SettingsPageProps {
 
 const SettingsPage: React.FC<SettingsPageProps> = ({
   onLogout,
-  onNavigateToTemplates,
+  // onNavigateToTemplates,
   onNavigateToUserAgreement,
   onNavigateToPrivacyPolicy
 }) => {
@@ -148,19 +148,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   };
 
   const menuItemsGroup1 = [
-    {
-      icon: FileText,
-      label: '模板管理',
-      color: 'text-blue-500',
-      bg: 'bg-blue-50',
-      onClick: () => {
-        if (onNavigateToTemplates) {
-          onNavigateToTemplates();
-        } else {
-          Toast.info('功能开发中');
-        }
-      }
-    },
+    // {
+    //   icon: FileText,
+    //   label: '模板管理',
+    //   color: 'text-blue-500',
+    //   bg: 'bg-blue-50',
+    //   onClick: () => {
+    //     if (onNavigateToTemplates) {
+    //       onNavigateToTemplates();
+    //     } else {
+    //       Toast.info('功能开发中');
+    //     }
+    //   }
+    // },
     { 
         icon: FileCheck, 
         label: '用户协议', 
