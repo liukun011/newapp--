@@ -128,14 +128,9 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
 
                     {/* Text Content */}
                     <div className="flex-1 min-w-0 pt-0.5">
-                      <h3 className="text-base font-bold text-gray-800 mb-1 truncate leading-tight">
+                      <h3 className="text-base font-bold text-gray-800 mb-1 line-clamp-2 leading-tight">
                         {formatTitle(report.fileName)}
                       </h3>
-                      <p className="text-xs text-gray-400 truncate">
-                        {report.dealInstName 
-                          ? `${report.dealInstName}，深度剖析业务核心与市场策略` 
-                          : '深度剖析业务核心与市场策略'}
-                      </p>
                     </div>
                   </div>
 

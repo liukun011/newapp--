@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { Home, User, Plus, FileText, Layers } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import { useRecordingStore } from './store/useRecordingStore';
 import { dealService } from './services/dealService';
@@ -1507,7 +1507,12 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <Home size={24} className={currentView === View.HOME ? "text-primary" : "text-gray-400"} strokeWidth={currentView === View.HOME ? 2.5 : 2} />
+                <img 
+                  src="/talk-assistant/assets/homebt.png" 
+                  alt="首页" 
+                  className="w-6 h-6 object-contain mb-0.5"
+                  style={{ filter: currentView === View.HOME ? 'invert(22%) sepia(97%) saturate(3966%) hue-rotate(236deg) brightness(98%) contrast(105%)' : 'grayscale(100%) opacity(0.4)' }}
+                />
                 <span className={`text-[10px] font-medium ${currentView === View.HOME ? "text-primary" : "text-gray-400"}`}>首页</span>
               </button>
 
@@ -1519,7 +1524,12 @@ const App: React.FC = () => {
                   navigateForward(View.REPORTS_LIST);
                 }}
               >
-                <FileText size={24} className={currentView === View.REPORTS_LIST ? "text-primary" : "text-gray-400"} strokeWidth={currentView === View.REPORTS_LIST ? 2.5 : 2} />
+                <img 
+                  src="/talk-assistant/assets/report.png" 
+                  alt="报告" 
+                  className="w-6 h-6 object-contain mb-0.5"
+                  style={{ filter: currentView === View.REPORTS_LIST ? 'invert(22%) sepia(97%) saturate(3966%) hue-rotate(236deg) brightness(98%) contrast(105%)' : 'grayscale(100%) opacity(0.4)' }}
+                />
                 <span className={`text-[10px] font-medium ${currentView === View.REPORTS_LIST ? "text-primary" : "text-gray-400"}`}>报告</span>
               </button>
 
@@ -1548,7 +1558,12 @@ const App: React.FC = () => {
                   navigateForward(View.MANAGEMENT);
                 }}
               >
-                <Layers size={24} className={currentView === View.MANAGEMENT ? "text-primary" : "text-gray-400"} strokeWidth={currentView === View.MANAGEMENT ? 2.5 : 2} />
+                <img 
+                  src="/talk-assistant/assets/manage.png" 
+                  alt="管理" 
+                  className="w-6 h-6 object-contain mb-0.5"
+                  style={{ filter: currentView === View.MANAGEMENT ? 'invert(22%) sepia(97%) saturate(3966%) hue-rotate(236deg) brightness(98%) contrast(105%)' : 'grayscale(100%) opacity(0.4)' }}
+                />
                 <span className={`text-[10px] font-medium ${currentView === View.MANAGEMENT ? "text-primary" : "text-gray-400"}`}>管理</span>
               </button>
 
@@ -1563,7 +1578,12 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <User size={24} className={currentView === View.SETTINGS ? "text-primary" : "text-gray-400"} strokeWidth={currentView === View.SETTINGS ? 2.5 : 2} />
+                <img 
+                  src="/talk-assistant/assets/person.png" 
+                  alt="我的" 
+                  className="w-6 h-6 object-contain mb-0.5"
+                  style={{ filter: currentView === View.SETTINGS ? 'invert(22%) sepia(97%) saturate(3966%) hue-rotate(236deg) brightness(98%) contrast(105%)' : 'grayscale(100%) opacity(0.4)' }}
+                />
                 <span className={`text-[10px] font-medium ${currentView === View.SETTINGS ? "text-primary" : "text-gray-400"}`}>我的</span>
               </button>
             </div>
