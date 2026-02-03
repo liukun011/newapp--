@@ -592,7 +592,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 <h2 className="text-xl font-bold mb-1.5">
                   尽调报告
                 </h2>
-                <p className="text-white text-xs mb-2 font-light">访谈既报告，洞察更高效。小狸智能捕捉核心要点。</p>
+                <p className="text-white text-xs mb-2 font-light">访谈即报告，洞察更高效。小狸快速捕捉核心要点。</p>
               </div>
 
               {/* Rocket Mascot Image */}
@@ -648,7 +648,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           <div className="rounded-3xl p-5 shadow-lg relative overflow-hidden text-white bg-primary-gradient">
             <div className="relative z-10 max-w-[65%]">
               <h2 className="text-xl font-bold mb-1.5">尽调报告</h2>
-              <p className="text-white text-xs mb-4 font-light">访谈既报告，洞察更高效。小狸智能捕捉核心要点。</p>
+              <p className="text-white text-xs mb-4 font-light">访谈即报告，洞察更高效。小狸快速捕捉核心要点。</p>
 
               {currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING ? (
                 // 报告生成中 - 显示 loading
@@ -768,7 +768,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   ) : null;
                 })()}
               </div>
-              <p className="text-xs text-gray-400 mt-1">AI智能解析</p>
+              <p className="text-xs text-gray-400 mt-1">自动解析</p>
             </div>
             
             <div className="flex items-end justify-between mt-4">
@@ -791,7 +791,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[140px]">
             <div>
               <h3 className="font-bold text-slate-800 text-[16px]">访谈录音</h3>
-              <p className="text-xs text-gray-400 mt-1">AI智能转写</p>
+              <p className="text-xs text-gray-400 mt-1">语音转写</p>
             </div>
 
             <div className="flex items-end justify-between mt-4">

@@ -236,7 +236,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
            
            <h2 className="text-xl font-bold mb-4">1. 引言</h2>
            <p className="text-[15px] leading-relaxed mb-8 text-justify text-slate-600">
-             欢迎使用“小狸报告”（简称“本平台”）。作为一款专注于线下访谈与调研场景的智能效率工具，通过“录音转写 + AI 报告生成”双核心能力，帮助业务人员突破时空限制，显著提升现场信息整理与调研报告输出效率，为后续分析与决策提供清晰可靠的信息支持。本平台由北京零壹视界科技有限公司（简称“我们”）提供服务或运营控制。
+             欢迎使用“小狸报告”（简称“本平台”）。作为一款专注于线下访谈与调研场景的效率工具，通过“录音转写 + 自动报告生成”双核心能力，帮助业务人员突破时空限制，显著提升现场信息整理与调研报告输出效率，为后续分析与决策提供清晰可靠的信息支持。本平台由北京零壹视界科技有限公司（简称“我们”）提供服务或运营控制。
            </p>
            <p className="text-[15px] leading-relaxed mb-8 text-justify text-slate-600">
              本隐私政策旨在向您说明我们在提供服务过程中如何收集、使用、存储及保护您的个人信息，并告知您所享有的权利。请在使用我们的产品或服务前仔细阅读并理解本隐私政策的所有内容。如果您对本隐私政策有任何疑问，请通过Email：<a href="mailto:support@binarysee.com" className="text-indigo-600 underline">support@binarysee.com</a>与我们联系。

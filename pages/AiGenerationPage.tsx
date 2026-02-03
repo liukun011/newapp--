@@ -101,7 +101,7 @@ const AiGenerationPage: React.FC<AiGenerationPageProps> = ({ onBack, onConfirm }
       {/* Navbar */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white z-10">
         <button onClick={onBack} className="p-2 -ml-2"><ArrowLeft size={24} className="text-slate-800"/></button>
-        <h1 className="text-lg font-bold text-slate-800">AI生成问题集合</h1>
+        <h1 className="text-lg font-bold text-slate-800">自动生成问题集合</h1>
         <button onClick={onBack} className="text-slate-500 text-[15px] font-medium p-2 -mr-2">取消</button>
       </div>
 

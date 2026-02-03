@@ -17,7 +17,7 @@ const SplashScreen: React.FC = () => {
         {/* Logo and Title */}
         <div className="text-center mb-4 animate-fadeIn z-10">
           <h1 className="text-5xl font-bold text-indigo-600 mb-6">
-            小狸AI
+            小狸报告
           </h1>
           <div className="text-xl text-indigo-500 font-medium">
             更高效率、更多自由
@@ -28,7 +28,7 @@ const SplashScreen: React.FC = () => {
         <div className="relative z-10 flex items-center justify-center">
           <img 
             src={`${basePath}assets/homebeginimg.png`}
-            alt="小狸AI吉祥物" 
+            alt="小狸吉祥物" 
             className="object-contain animate-fadeIn"
             style={{ width: '450px', height: '450px', animationDelay: '0.2s' }}
           />

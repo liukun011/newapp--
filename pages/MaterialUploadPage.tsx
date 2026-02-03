@@ -897,7 +897,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                   alt="暂无资料"
                   className="w-[200px] h-auto mb-4 opacity-90"
                 />
-                <p className="text-sm text-slate-500 font-medium">快上传你的资料，体验AI智能分析</p>
+                <p className="text-sm text-slate-500 font-medium">快上传你的资料，体验自动分析</p>
               </div>
             )}
           </div>

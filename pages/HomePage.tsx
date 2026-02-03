@@ -64,16 +64,16 @@ const HomePage: React.FC<HomePageProps> = ({
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const bannerItems = [
     {
-      title: "AI 智能资料分析",
-      description: "AI赋能，全方位深度挖掘资料细节与潜在规律，智能提炼高价值关键信息"
+      title: "资料分析",
+      description: "全方位深度挖掘资料细节与潜在规律，提炼高价值关键信息"
     },
     {
-      title: "智能问题生成",
+      title: "自动问题生成",
       description: "基于上传资料自动生成专业访谈问题，提升尽调效率与质量"
     },
     {
       title: "实时语音转写",
-      description: "访谈过程实时转写记录，AI智能匹配问题答案，自动生成结构化报告"
+      description: "访谈过程实时转写记录，自动匹配问题答案，生成结构化报告"
     }
   ];
 
@@ -477,7 +477,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <div className="absolute top-0 right-0 bottom-0 w-[45%]">
               <img 
                 src="/talk-assistant/assets/home.png" 
-                alt="AI Analysis" 
+                alt="Analysis" 
                 className="w-full h-full object-contain object-right-bottom scale-110 -translate-y-5 translate-x-2"
               />
             </div>

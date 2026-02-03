@@ -5,7 +5,7 @@ export enum View {
   RECORDING = 'RECORDING',            // RecordingPage - 访谈录音页
   MATERIALS_LIST = 'MATERIALS_LIST',  // MaterialsListPage - 尽调资料列表页
   MATERIAL_UPLOAD = 'MATERIAL_UPLOAD',// MaterialUploadPage - 资料上传页（多标签）
-  AI_GENERATION = 'AI_GENERATION',    // AiGenerationPage - AI生成报告页
+  AI_GENERATION = 'AI_GENERATION',    // AiGenerationPage - 自动生成报告页
   CORPORATE_EDIT = 'CORPORATE_EDIT',  // CorporateEditPage - 企业信息编辑页
   MY_TEMPLATES = 'MY_TEMPLATES',      // MyTemplatesPage - 我的模板页
   UPLOAD_TEMPLATE = 'UPLOAD_TEMPLATE',// UploadTemplatePage - 上传访谈模板页
