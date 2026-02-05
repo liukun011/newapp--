@@ -723,7 +723,7 @@ const App: React.FC = () => {
       <div className="fixed inset-0 w-full h-full z-[-1] bg-page-gradient" />
 
       {/* Main App */}
-      <div ref={appContainerRef} className="w-full max-w-md mx-auto min-h-screen relative overflow-y-auto overflow-x-hidden bg-transparent">
+      <div ref={appContainerRef} className="w-full max-w-md mx-auto h-screen relative overflow-hidden bg-transparent">
           {/* Custom Limit Tips Toast */}
           {showLimitTips && (
             <div className="fixed top-24 left-4 right-4 z-[100] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center pointer-events-none">
