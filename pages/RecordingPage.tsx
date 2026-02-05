@@ -24,6 +24,8 @@ import config from '../config';
 
 
 
+
+
 interface RecordingPageProps {
   deal: DealRecord | null;
   onBack: () => void;
@@ -36,6 +38,12 @@ interface RecordingPageProps {
   onFinish?: () => void;
   onDealUpdate?: (deal: DealRecord) => void;
 }
+
+const formatTime = (time: number) => {
+  const minutes = Math.floor(time / 60);
+  const seconds = time % 60;
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
 
 const RecordingPage: React.FC<RecordingPageProps> = ({
   deal,
@@ -673,12 +681,12 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
       const timer = setTimeout(() => {
         setCountdown(prev => prev - 1);
-      }, 1000);
-
+      }, 1000);    
       return () => clearTimeout(timer);
     }
   }, [countdown]);
 
+  // Return statement starts here
   return (
     <div className="fixed inset-0 flex flex-col bg-[#F7F8FA]">
 
@@ -699,14 +707,20 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       </div>
 
       {/* Header Area: Timer & SoundWave */}
-      <div className="bg-white pt-6 pb-2 text-center z-10">
-        <SoundWave isRecording={isRecording} />
-        <div className="mt-2 text-3xl font-mono font-medium text-slate-800 tracking-wider">
-          {formatTime(seconds)}
-        </div>
-      </div>
 
-      <div className="flex-1 flex flex-col relative min-h-0">
+
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto relative min-h-0 bg-[#F7F8FA] scroll-smooth"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        {/* Header - Moved Inside for Scroll */}
+        <div className="bg-white pt-6 pb-2 text-center relative z-10">
+           <SoundWave isRecording={isRecording} />
+           <div className="mt-2 text-3xl font-mono font-medium text-slate-800 tracking-wider">
+             {formatTime(seconds)}
+           </div>
+        </div>
         {countdown > 0 && (
           <div className="absolute inset-0 z-50 bg-white flex flex-col items-center pt-24">
             <div className="w-56 h-56 flex items-center justify-center relative">
@@ -726,7 +740,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         )}
 
         {/* Tabs */}
-        <div className="bg-white mt-1 border-t border-gray-100 z-10 transition-all">
+        {/* Tabs */}
+        <div className="sticky top-0 z-40 bg-white mt-1 border-t border-gray-100 shadow-sm transition-all">
           <div className="flex">
             <button
               className={`flex-1 py-3 text-sm font-medium relative transition-colors ${activeTab === 'questions' ? 'text-indigo-600' : 'text-gray-500'}`}
@@ -750,11 +765,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         </div>
 
         {/* Scrollable Content Area */}
-        <div
-          ref={scrollContainerRef}
-          className="flex-1 h-0 w-full overflow-y-auto px-4 scroll-smooth relative"
-          style={{ WebkitOverflowScrolling: 'touch' }}
-        >
+        {/* Scrollable Content Area Wrapper */}
+        <div className="px-4 pb-0 pt-2 relative">
 
           {/* Question List Tab */}
           <div className={activeTab === 'questions' ? 'block' : 'hidden'}>
@@ -864,7 +876,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                                 {/* Name Label */}
                                 <div className="flex items-center gap-2 mb-1.5 ml-1">
                                   <span className="text-xs text-slate-500 font-medium">
-                                    访谈对象{item.roleId || index + 1}
+                                    {item.contentType || `访谈对象${item.roleId || index + 1}`}
                                   </span>
                                   {isRecognizing && (
                                     <span className="inline-flex items-center gap-0.5 text-[10px] text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">

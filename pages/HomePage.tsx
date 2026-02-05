@@ -119,68 +119,16 @@ const HomePage: React.FC<HomePageProps> = ({
     return () => clearTimeout(timer);
   }, [deals, loading, loadingMore, hasMore]);
 
-  // Header 显隐控制
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const lastScrollTop = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // 用来锁定状态切换，防止在动画过程中由于布局调整导致的频繁跳变
-  const isTogglingRef = useRef(false);
-
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (isTogglingRef.current) return;
-
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    const scrollDiff = scrollTop - lastScrollTop.current;
     
     // 检测是否滚动到底部，触发加载更多
     const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50;
     if (isNearBottom && hasMore && !loadingMore && !loading) {
       loadMore();
-    }
-    
-    // 1. 只有当列表数量较多且内容显著超过视口时，才允许执行滚动隐藏逻辑
-    // 门槛恢复为 6 条，缓冲区设为 200，确保隐藏后不会产生过度回弹
-    if (deals.length < 6 || scrollHeight <= clientHeight + 200) {
-      if (!isHeaderVisible) setIsHeaderVisible(true);
-      lastScrollTop.current = scrollTop;
-      return;
-    }
-
-    // 2. 顶部边界检测：回到顶部附近立即显示
-    if (scrollTop <= 20) {
-      if (!isHeaderVisible) setIsHeaderVisible(true);
-      lastScrollTop.current = scrollTop;
-      return;
-    }
-
-    // 3. 底部边界检测：如果接近底部，强制隐藏 Header
-    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 30;
-    if (isAtBottom) {
-      if (isHeaderVisible) {
-        isTogglingRef.current = true;
-        setIsHeaderVisible(false);
-        setTimeout(() => { isTogglingRef.current = false; }, 500);
-      }
-      lastScrollTop.current = scrollTop;
-      return;
-    }
-
-    // 4. 方向检测：向上滚动显示，向下滚动隐藏
-    if (scrollDiff < -5) {
-      // 明显向上滚动
-      if (!isHeaderVisible) {
-        isTogglingRef.current = true;
-        setIsHeaderVisible(true);
-        setTimeout(() => { isTogglingRef.current = false; }, 500);
-      }
-    } else if (scrollDiff > 5 && scrollTop > 100) {
-      // 明显向下滚动，且离开顶部一定距离后再隐藏
-      if (isHeaderVisible) {
-        isTogglingRef.current = true;
-        setIsHeaderVisible(false);
-        setTimeout(() => { isTogglingRef.current = false; }, 500);
-      }
     }
     
     lastScrollTop.current = scrollTop;
@@ -395,17 +343,11 @@ const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div className="flex flex-col h-screen relative bg-[#F7F8FA]">
-      {/* Top Gradient Background */}
-      <div
-        className="absolute top-0 left-0 right-0 h-64 z-0 pointer-events-none bg-page-gradient-fade"
-      />
-
-      {/* Header Area */}
-      <div className="bg-gradient-to-b from-[#E0EAFF] to-[#F7F8FA] px-4 pt-12 flex-shrink-0 relative transition-all duration-300 ease-in-out">
-        
+      {/* Top Fixed Header: Search & Bell */}
+      <div className="bg-[#F7F8FA] px-4 pt-4 pb-0 flex-shrink-0 relative z-40">
         {/* Custom Limit Tips Toast */}
         {showLimitTips && (
-           <div className="fixed top-24 left-4 right-4 z-50 animate-[slideDown_0.3s_ease-out_forwards] flex justify-center">
+           <div className="fixed top-20 left-4 right-4 z-[100] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center">
              <div className="bg-black/30 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
                <span className="text-sm font-medium tracking-wide">
                  您正有一个访谈正在进行中，暂时不支持开启新任务。
@@ -414,8 +356,7 @@ const HomePage: React.FC<HomePageProps> = ({
            </div>
         )}
 
-        {/* Header: Search & Bell */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3">
           {/* Search Box */}
           <div className="flex-1 relative">
             <input
@@ -424,7 +365,7 @@ const HomePage: React.FC<HomePageProps> = ({
               value={searchTerm}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              className="w-full h-[44px] px-5 bg-white rounded-full text-[15px] text-slate-800 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+              className="w-full h-[44px] px-5 bg-white rounded-full text-[15px] text-slate-800 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all border border-gray-100"
             />
             <button
               onClick={handleSearch}
@@ -435,7 +376,7 @@ const HomePage: React.FC<HomePageProps> = ({
           </div>
           
           <button 
-            className="relative w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm active:scale-95 transition-transform"
+            className="relative w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm border border-gray-100 active:scale-95 transition-transform"
             onClick={() => Toast.info({ 
               message: '功能开发中，敬请期待！',
             })}
@@ -444,117 +385,118 @@ const HomePage: React.FC<HomePageProps> = ({
              <div className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
           </button>
         </div>
-
-        {/* AI Analysis Banner - Carousel - Collapsible Container */}
-        <div 
-          className={`overflow-hidden transition-all duration-500 ease-in-out ${
-             isHeaderVisible ? 'max-h-[180px] opacity-100 mb-2' : 'max-h-0 opacity-0 mb-0'
-          }`}
-        >
-          <div className="bg-gradient-to-r from-[#EAF2FF] to-[#DCE9FF] rounded-2xl p-5 relative shadow-sm h-full">
-            <div className="relative z-10 max-w-[60%]">
-              <h2 className="text-[19px] font-black text-[#1A4B8B] mb-2 leading-tight transition-all duration-500">
-                {bannerItems[currentBannerIndex].title}
-              </h2>
-              <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90 transition-all duration-500 min-h-[54px]">
-                {bannerItems[currentBannerIndex].description}
-              </p>
-              <div className="mt-3 flex gap-1.5">
-                {bannerItems.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentBannerIndex(index)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      index === currentBannerIndex 
-                        ? 'w-4 bg-white' 
-                        : 'w-1.5 bg-white/60 hover:bg-white/80'
-                    }`}
-                    aria-label={`切换到第${index + 1}个横幅`}
-                  />
-                ))}
-              </div>
-            </div>
-            
-            {/* Right Image */}
-            <div className="absolute top-0 right-0 bottom-0 w-[45%]">
-              <img 
-                src="/talk-assistant/assets/home.png" 
-                alt="Analysis" 
-                className="w-full h-full object-contain object-right-bottom scale-110 -translate-y-5 translate-x-2"
-              />
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col relative z-10 min-h-0 bg-[#F7F8FA] rounded-t-3xl -mt-4 px-4 pt-6">
-        
-        <h3 className="text-lg font-bold text-slate-800 mb-4 px-1">访谈记录</h3>
-
-        {/* Tabs - Segmented Control Style */}
-        <div className="bg-gray-100 p-1 rounded-xl flex mb-4">
-          <button
-            className={`flex-1 py-2 text-[14px] font-bold rounded-lg transition-all ${
-              activeTab === "ongoing" 
-                ? "bg-white text-indigo-600 shadow-sm" 
-                : "text-gray-500 hover:text-gray-600"
-            }`}
-            onClick={() => {
-              setActiveTab("ongoing");
-              onTabChange?.("ongoing");
-            }}
-          >
-            进行中
-          </button>
-          <button
-            className={`flex-1 py-2 text-[14px] font-bold rounded-lg transition-all ${
-              activeTab === "archived" 
-                ? "bg-white text-indigo-600 shadow-sm" 
-                : "text-gray-500 hover:text-gray-600"
-            }`}
-            onClick={() => {
-              setActiveTab("archived");
-              onTabChange?.("archived");
-            }}
-          >
-            已归档
-          </button>
-        </div>
-
-        {/* List */}
-        <div 
-            ref={scrollContainerRef}
-            onScroll={handleScroll}
-            className="flex-1 overflow-y-auto pb-32 min-h-0 -mx-4 px-4 scroll-smooth"
-        >
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-              <p className="text-gray-400 text-sm mt-4">加载中...</p>
-            </div>
-          ) : deals.length === 0 ? (
-            // 空状态 - 不使用下拉刷新
-            <div className="flex-1 min-h-full flex flex-col items-center justify-center opacity-80">
-               <div className="relative mb-3 flex items-center justify-center">
-                 <Mascot size="medium" />
-               </div>
-               <p className="text-xs text-gray-400">小狸可以帮你做访谈记录，写尽调报告</p>
-            </div>
-          ) : (
-            // 有数据 - 使用下拉刷新
-            <PullRefresh 
-              onRefresh={() => fetchDeals(false, true)} // 下拉刷新，不显示全局loading但重置分页
-              successText={
-                <div className="flex items-center justify-center gap-1 text-gray-600">
-                  <Check size={16} />
-                  <span>加载成功</span>
-                </div>
-              }
-              headHeight={60}
-              style={{ minHeight: '100%' }}
+      {/* Main Scrollable Content Area */}
+      <div 
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto relative z-10 scroll-smooth bg-[#F7F8FA]"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+          {/* Banner inside scroll area */}
+          <div className="px-4 mb-[14px] mt-[14px]">
+            <div 
+              className="rounded-2xl p-5 relative shadow-sm overflow-hidden"
+              style={{ background: 'linear-gradient(270deg, #C3D1FD 0%, #CADCF9 0%, #E6F2FF 100%)', minHeight: '150px' }}
             >
-              <div className="flex flex-col pb-4">
+              <div className="relative z-10 max-w-[60%]">
+                <h2 className="text-[19px] font-black text-[#1A4B8B] mb-2 leading-tight transition-all duration-500">
+                  {bannerItems[currentBannerIndex].title}
+                </h2>
+                <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90 transition-all duration-500 min-h-[54px]">
+                  {bannerItems[currentBannerIndex].description}
+                </p>
+                <div className="mt-3 flex gap-1.5">
+                  {bannerItems.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentBannerIndex(index);
+                      }}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        index === currentBannerIndex 
+                          ? 'w-4 bg-white' 
+                          : 'w-1.5 bg-white/40 hover:bg-white/60'
+                      }`}
+                      aria-label={`切换到第${index + 1}个横幅`}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              {/* Right Image */}
+              <div className="absolute top-0 right-0 bottom-0 w-[45%] pointer-events-none">
+                <img 
+                  src="/talk-assistant/assets/home.png" 
+                  alt="Analysis" 
+                  className="w-full h-full object-contain object-right-bottom scale-110 -translate-y-5 translate-x-2"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Sticky Header: Title + Tabs */}
+          <div className="sticky top-0 z-40 bg-[#F7F8FA] pt-1 pb-2 px-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
+            <h3 className="text-lg font-bold text-slate-800 mb-2 px-1">访谈记录</h3>
+            <div className="bg-gray-100 p-1 rounded-xl flex">
+              <button
+                className={`flex-1 py-1.5 text-[14px] font-bold rounded-lg transition-all ${
+                  activeTab === "ongoing" 
+                    ? "bg-white text-indigo-600 shadow-sm" 
+                    : "text-gray-500 hover:text-gray-600"
+                }`}
+                onClick={() => {
+                  setActiveTab("ongoing");
+                  onTabChange?.("ongoing");
+                }}
+              >
+                进行中
+              </button>
+              <button
+                className={`flex-1 py-1.5 text-[14px] font-bold rounded-lg transition-all ${
+                  activeTab === "archived" 
+                    ? "bg-white text-indigo-600 shadow-sm" 
+                    : "text-gray-500 hover:text-gray-600"
+                }`}
+                onClick={() => {
+                  setActiveTab("archived");
+                  onTabChange?.("archived");
+                }}
+              >
+                已归档
+              </button>
+            </div>
+          </div>
+
+          {/* List Content with PullRefresh */}
+          <PullRefresh 
+            onRefresh={() => fetchDeals(false, true)}
+            successText={
+              <div className="flex items-center justify-center gap-1 text-gray-600">
+                <Check size={16} />
+                <span>加载成功</span>
+              </div>
+            }
+            headHeight={60}
+            style={{ minHeight: '100%', overflow: 'visible' }}
+          >
+          <div className="px-4">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                <p className="text-gray-400 text-sm mt-4">加载中...</p>
+              </div>
+            ) : deals.length === 0 ? (
+              <div className="min-h-[40vh] flex flex-col items-center justify-center opacity-80">
+                 <div className="relative mb-3 flex items-center justify-center">
+                   <Mascot size="medium" />
+                 </div>
+                 <p className="text-xs text-gray-400">小狸可以帮你做访谈记录，写尽调报告</p>
+              </div>
+            ) : (
+              <div className="flex flex-col pb-32">
                 {deals.map((item) => (
                 <div key={item.id} className="mb-2">
                   <SwipeCell
@@ -606,7 +548,7 @@ const HomePage: React.FC<HomePageProps> = ({
                         </div>
                       </div>
 
-                      {/* Divider (Full Width with margin) usually full width looks cleaner or margin x-4 */}
+                      {/* Divider */}
                       <div className="h-[1px] bg-gray-100 mx-4" />
                       
                       {/* Lower Section: Time + Button */}
@@ -647,10 +589,9 @@ const HomePage: React.FC<HomePageProps> = ({
                 </div>
               )}
               </div>
-            </PullRefresh>
-          )}
-          
-        </div>
+            )}
+          </div>
+          </PullRefresh>
       </div>
 
 

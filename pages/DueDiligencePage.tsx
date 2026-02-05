@@ -518,41 +518,38 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         onChange={handleFileChange}
       />
 
-      {/* Background Gradient for Top Section */}
-      <div
-            className="absolute top-0 left-0 right-0 h-48 z-0 bg-due-diligence-gradient"
-      />
-
-      {/* NavBar */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3">
-        {/* Custom Limit Tips Toast */}
-        {showLimitTips && (
-          <div className="fixed top-24 left-4 right-4 z-[1000] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center">
-            <div className="bg-black/30 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
-              <span className="text-sm font-medium tracking-wide">
-                您正有一个访谈正在进行中，暂时不支持开启新任务。
-              </span>
+      {/* Fixed Sticky NavBar */}
+      <div className="sticky top-0 z-50 bg-white border-b border-gray-100/50">
+        <div className="flex items-center justify-between px-4 py-3">
+          {/* Custom Limit Tips Toast */}
+          {showLimitTips && (
+            <div className="fixed top-24 left-4 right-4 z-[1000] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center">
+              <div className="bg-black/30 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
+                <span className="text-sm font-medium tracking-wide">
+                  您正有一个访谈正在进行中，暂时不支持开启新任务。
+                </span>
+              </div>
             </div>
-          </div>
-        )}
-        <button onClick={handleBackThrottled} className="p-2 -ml-2 text-slate-700 hover:bg-white/50 rounded-full">
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="text-lg font-bold text-slate-800">{currentDeal?.interviewCust || '尽调详情'}</h1>
-        {currentDeal?.status === '5' ? (
-          <div className="w-9" />
-        ) : (
-          <button
-            onClick={handleEditInfoThrottled}
-            className="p-2 -mr-2 text-slate-700 hover:bg-white/50 rounded-full cursor-pointer"
-          >
-            <Edit2 size={20} />
+          )}
+          <button onClick={handleBackThrottled} className="p-2 -ml-2 text-slate-700 hover:bg-white/50 rounded-full">
+            <ArrowLeft size={24} />
           </button>
-        )}
+          <h1 className="text-lg font-bold text-slate-800 truncate px-2">{currentDeal?.interviewCust || '尽调详情'}</h1>
+          {currentDeal?.status === '5' ? (
+            <div className="w-9" />
+          ) : (
+            <button
+              onClick={handleEditInfoThrottled}
+              className="p-2 -mr-2 text-slate-700 hover:bg-white/50 rounded-full cursor-pointer"
+            >
+              <Edit2 size={20} />
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-24 relative z-10 space-y-4">
+      {/* Scrollable Content Container */}
+      <div className="flex-1 overflow-y-auto px-4 pb-44 relative z-10 space-y-4 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
 
         {/* Status Bar / Mascot Message */}
         <div className="flex items-end mt-8 mb-4 relative">
@@ -588,7 +585,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             </div>
 
             {/* Header */}
-            <div className="flex items-center gap-1.5 mb-2 relative z-10 px-1.5">
+            <div className="flex items-center gap-1.5 mb-2 relative z-10 px-2.5">
               <div className="w-7 h-7 bg-[#EFF4FF] rounded-full flex items-center justify-center text-indigo-600 shadow-sm">
                  <Sparkles size={14} fill="currentColor" strokeWidth={1.5} />
               </div>
@@ -596,14 +593,14 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             </div>
 
             {/* Content */}
-            <div className="relative z-10 mb-2 px-1.5 max-h-[58px] overflow-y-auto">
+            <div className="relative z-10 mb-2 px-2.5 max-h-[58px] overflow-y-auto">
               <p className="text-[14px] text-slate-700 leading-snug font-bold text-justify tracking-normal">
                  {currentDeal.dealSummary}
                </p>
              </div>
 
             {/* Footer */}
-            <div className="relative z-10 flex items-center pt-2 border-t border-gray-100 px-1.5">
+            <div className="relative z-10 flex items-center pt-2 border-t border-gray-100 px-2.5">
                <div className="flex items-center gap-1 text-gray-400">
                   <MessageSquare size={12} />
                   <span className="text-[10px] font-medium">自动提炼 · 仅供参考</span>

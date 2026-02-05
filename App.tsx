@@ -1498,7 +1498,7 @@ const App: React.FC = () => {
 
           {/* Global Fixed Bottom Navigation Bar - Only for Home, Management, Reports and Settings */}
           {(currentView === View.HOME || currentView === View.SETTINGS || currentView === View.MANAGEMENT || currentView === View.REPORTS_LIST) && (
-            <div className="fixed bottom-0 left-0 right-0 h-[70px] bg-white border-t border-gray-100 z-40 flex items-center justify-around pb-1 shadow-[0_-2px_8px_rgba(0,0,0,0.02)]">
+            <div className="fixed bottom-0 left-0 right-0 h-[70px] bg-white border-t border-[#E5E5E5] z-50 flex items-center justify-around pb-1 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
               {/* 首页 */}
               <button
                 className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
@@ -1551,9 +1551,9 @@ const App: React.FC = () => {
                 <span className={`text-[10px] font-medium ${currentView === View.REPORTS_LIST ? "text-primary" : "text-gray-400"}`}>报告</span>
               </button>
 
-              {/* 中间新增按钮 */}
+              {/* 中间新增按钮 - Top-Half Only Border & Padding */}
               <button
-                className="w-[64px] h-[64px] rounded-full shadow-xl shadow-indigo-500/40 flex items-center justify-center -mt-12 active:scale-95 transition-transform z-50 bg-primary"
+                className="relative w-[64px] h-[64px] -mt-12 z-50 active:scale-95 transition-transform rounded-full flex items-center justify-center"
                 onClick={async () => {
                   try {
                     const res = await dealService.createOrUpdateDealInst({});
@@ -1566,7 +1566,20 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <Plus size={32} className="text-white" strokeWidth={3} />
+                {/* Purple Circle Body (Centered, 54px effectively) */}
+                <div className="w-[54px] h-[54px] rounded-full bg-primary shadow-xl shadow-indigo-500/40 flex items-center justify-center z-10">
+                   <Plus size={32} className="text-white" strokeWidth={3} />
+                </div>
+                
+                {/* Top Half White Spacer (The "Padding") with Guillotine Crop */}
+                <div className="absolute top-0 left-0 w-full h-[23px] overflow-hidden pointer-events-none z-0">
+                  <div className="w-[64px] h-[64px] rounded-full border-[5px] border-white box-border" />
+                </div>
+
+                {/* Top Half Gray Border Line with Guillotine Crop */}
+                <div className="absolute top-0 left-0 w-full h-[23px] overflow-hidden pointer-events-none z-20">
+                  <div className="w-[64px] h-[64px] rounded-full border border-[#E5E5E5] box-border" />
+                </div>
               </button>
 
               {/* 管理 */}

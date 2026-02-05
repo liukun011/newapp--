@@ -184,4 +184,5 @@ export interface TranscriptionItem {
   content: string;
   timestamp?: number;
   isFinal?: boolean;
+  contentType?: string;
 }
