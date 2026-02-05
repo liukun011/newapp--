@@ -133,8 +133,9 @@ export const dealService = {
    */
   updateInterviewInst: (params: {
     interviewInstId: string;
-    interviewInstTitle: string;
-    interviewCustom: string;
+    interviewInstTitle?: string;
+    interviewCustom?: string;
+    interviewInstStatus?: string;
   }) => {
     return request<ApiResponse<any>>('/interview/updateInterviewInst', {
       method: 'POST',
@@ -325,6 +326,17 @@ export const dealService = {
     return request<ApiResponse<PageData<ReportRecord>>>('/deal/queryDealReportListByPage', {
       method: 'POST',
       data: params,
+    });
+  },
+
+  /**
+   * 生成尽调总结
+   * POST /interview/summary/{id}
+   * @param id 尽调实例 ID
+   */
+  generateInterviewSummary: (id: string) => {
+    return request<ApiResponse<any>>(`/interview/summary/${id}`, {
+      method: 'POST',
     });
   },
 };

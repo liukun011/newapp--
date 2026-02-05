@@ -40,6 +40,18 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     setLocalReportStatus(reportStatus);
   }, [reportStatus]);
 
+  // 封装返回逻辑：离开前生成总结
+  const handleBackWithSummary = useCallback(() => {
+    if (dealId) {
+      console.log('Leaving MaterialsListPage: Generating summary for dealId:', dealId);
+      // Fire-and-forget call
+      dealService.generateInterviewSummary(dealId).catch(err => {
+        console.error('Failed to generate summary on exit:', err);
+      });
+    }
+    onBack();
+  }, [dealId, onBack]);
+
   // 获取尽调详情数据
   const fetchDealDetail = useCallback(async () => {
     if (!dealId) return;
@@ -73,7 +85,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
   useEffect(() => {
     const handleNativeBack = (e: Event) => {
       e.preventDefault();
-      onBack();
+      handleBackWithSummary();
     };
 
     window.addEventListener('requestNativeBack', handleNativeBack);
@@ -411,7 +423,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
         if (res.success) {
           Toast.success('已开始生成报告');
           // 跳转回尽调详情界面
-          onBack();
+          handleBackWithSummary();
         } else {
           setTimeout(() => {
             Toast.fail({ message: res.message || '生成请求失败', duration: 3000 });
@@ -465,7 +477,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
       {/* NavBar */}
       <div className="flex items-center justify-center px-4 py-3 relative border-b border-gray-100">
         <button 
-          onClick={onBack} 
+          onClick={handleBackWithSummary} 
           className="absolute left-4 p-2 text-slate-700 hover:bg-slate-50 rounded-full active:bg-slate-100 transition-colors"
         >
           <ArrowLeft size={24} />

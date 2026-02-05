@@ -130,6 +130,8 @@ export interface DealRecord {
   resources: Resource[];
   supplementary: any;
   templateId: any;
+  dealSummary?: string;
+  lastModifiedDate?: string;
 }
 
 export interface ReportRecord {

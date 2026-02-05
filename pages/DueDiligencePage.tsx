@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, ChevronRight, Edit2, FilePlus, Mic, Archive } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Edit2, FilePlus, Mic, Archive, Sparkles, MessageSquare } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
 import { DealRecord, DealReportStatusEnum } from '../types';
@@ -578,6 +578,39 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             </p>
           </div>
         </div>
+
+        {/* 访谈小总结 Card */}
+        {currentDeal?.dealSummary && (
+          <div className="bg-white rounded-2xl p-3.5 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden mb-3 border border-indigo-50/50">
+            {/* Background Quote Text */}
+            <div className="absolute -top-3 -right-1 pointer-events-none select-none">
+               <span className="text-[100px] leading-[1] font-serif text-[#F3F6FF] opacity-90">”</span>
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center gap-1.5 mb-2 relative z-10 px-1.5">
+              <div className="w-7 h-7 bg-[#EFF4FF] rounded-full flex items-center justify-center text-indigo-600 shadow-sm">
+                 <Sparkles size={14} fill="currentColor" strokeWidth={1.5} />
+              </div>
+              <h3 className="text-[15px] font-black text-slate-800 tracking-tight">访谈小总结</h3>
+            </div>
+
+            {/* Content */}
+            <div className="relative z-10 mb-2 px-1.5 max-h-[58px] overflow-y-auto">
+              <p className="text-[14px] text-slate-700 leading-snug font-bold text-justify tracking-normal">
+                 {currentDeal.dealSummary}
+               </p>
+             </div>
+
+            {/* Footer */}
+            <div className="relative z-10 flex items-center pt-2 border-t border-gray-100 px-1.5">
+               <div className="flex items-center gap-1 text-gray-400">
+                  <MessageSquare size={12} />
+                  <span className="text-[10px] font-medium">自动提炼 · 仅供参考</span>
+               </div>
+            </div>
+          </div>
+        )}
 
         {/* Report Card */}
         {currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED ? (

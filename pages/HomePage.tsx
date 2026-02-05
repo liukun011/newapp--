@@ -7,6 +7,7 @@ import {
   Bell,
   FileText,
   Plus,
+  Clock,
 } from "lucide-react";
 import { SwipeCell, PullRefresh, Toast } from "react-vant";
 import Mascot from "../components/Mascot";
@@ -14,6 +15,7 @@ import Mascot from "../components/Mascot";
 import { DealRecord } from "../types";
 import { dealService } from "../services/dealService";
 import { useRecordingStore } from "../store/useRecordingStore";
+import { formatTime } from "../utils/dateUtils";
 
 interface HomePageProps {
   onNavigateToDetail: (deal: DealRecord) => void;
@@ -568,45 +570,60 @@ const HomePage: React.FC<HomePageProps> = ({
                   >
                     <div
                       onClick={() => handleNavigateThrottled(item)}
-                      className="bg-white rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex gap-4 active:scale-[0.99] transition-transform"
+                      className="bg-white rounded-2xl flex flex-col shadow-[0_2px_8px_rgba(0,0,0,0.04)] active:scale-[0.99] transition-transform overflow-hidden"
                     >
-                      {/* Icon/Logo */}
-                      <div className="w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center shadow-inner bg-indigo-50 text-indigo-500 overflow-hidden">
-                        {item.logo ? (
-                          <img 
-                            src={item.logo} 
-                            alt={item.interviewCust}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <FileText size={30} className="drop-shadow-sm" />
-                        )}
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0 flex flex-col justify-between h-16">
-                        <div className="flex justify-between items-start">
-                          <h3 className="text-[16px] font-bold text-slate-800 truncate mb-1">
-                            {item.interviewCust}
-                          </h3>
-                          {/* 优先使用全局缓存判断是否访谈中 */}
-                          {(currentDealId === item.id) && (
-                            <span className="px-2.5 py-1 bg-[#E0F7FA] text-[#00B5B5] text-[11px] font-medium rounded-lg">
-                              访谈中
-                            </span>
+                      {/* Upper Section: Icon + Title/Summary */}
+                      <div className="flex gap-4 p-4 pb-3">
+                        {/* Icon/Logo */}
+                        <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center shadow-inner bg-indigo-50 text-indigo-500 overflow-hidden">
+                          {item.logo ? (
+                            <img 
+                              src={item.logo} 
+                              alt={item.interviewCust}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <FileText size={24} className="drop-shadow-sm" />
                           )}
                         </div>
-                        
-                        <div>
-                           <button
-                             className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-md active:scale-95 transition-all ${
-                               item.status === '5' ? 'bg-gray-300' : 'bg-primary'
-                             }`}
-                             onClick={(e) => handleRecordClickThrottled(e, item)}
-                           >
-                             <Plus size={14} strokeWidth={2.5} /> 访谈录音
-                           </button>
+
+                        {/* Text Content */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <div className="flex justify-between items-start mb-1">
+                            <h3 className="text-[16px] font-bold text-slate-800 truncate pr-2 flex-1 leading-snug">
+                              {item.interviewCust}
+                            </h3>
+                            {/* 访谈中 标签 */}
+                            {(currentDealId === item.id) && (
+                              <span className="flex-shrink-0 px-2 py-0.5 bg-[#E0F7FA] text-[#00B5B5] text-[10px] font-medium rounded-md transform translate-y-0.5 ml-1">
+                                访谈中
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[13px] text-gray-400 truncate">
+                             {item.dealSummary || "没有上传资料，请尽快上传您的访谈资料"}
+                          </p>
                         </div>
+                      </div>
+
+                      {/* Divider (Full Width with margin) usually full width looks cleaner or margin x-4 */}
+                      <div className="h-[1px] bg-gray-100 mx-4" />
+                      
+                      {/* Lower Section: Time + Button */}
+                      <div className="flex justify-between items-center px-4 py-3">
+                         <div className="flex items-center gap-1.5 text-gray-300">
+                           <Clock size={13} />
+                           <span className="text-[12px] font-medium">{formatTime(item.lastModifiedDate, true)}</span>
+                         </div>
+
+                         <button
+                           className={`flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-md active:scale-95 transition-all ${
+                             item.status === '5' ? 'bg-gray-300 shadow-none' : 'bg-[#4337F1]'
+                           }`}
+                           onClick={(e) => handleRecordClickThrottled(e, item)}
+                         >
+                           <Plus size={14} strokeWidth={2.5} /> 访谈录音
+                         </button>
                       </div>
                     </div>
                   </SwipeCell>

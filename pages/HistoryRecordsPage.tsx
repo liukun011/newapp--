@@ -4,6 +4,7 @@ import { Dialog, Toast } from 'react-vant';
 
 import Mascot from '../components/Mascot';
 import { dealService } from '../services/dealService';
+import { formatTime } from '../utils/dateUtils';
 
 interface HistoryRecordsPageProps {
   onBack: () => void;
@@ -90,14 +91,12 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
   };
 
   const formatTimeDisplay = (record: any) => {
-    const beginTime = record.interviewInstBeginTime;
-    if (beginTime && beginTime.length >= 12) {
-      // YYYYMMDDHHMMSS -> YYYY-MM-DD HH:MM:SS
-      return `${beginTime.substring(0, 4)}-${beginTime.substring(4, 6)}-${beginTime.substring(6, 8)} ${beginTime.substring(8, 10)}:${beginTime.substring(10, 12)}:${beginTime.substring(12, 14)}`;
+    if (record.interviewInstBeginTime) {
+      return formatTime(record.interviewInstBeginTime, true);
     }
 
     if (record.lastModifiedTime) {
-      return record.lastModifiedTime;
+      return formatTime(record.lastModifiedTime, true);
     }
 
     return '-';

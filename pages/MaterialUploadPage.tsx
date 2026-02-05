@@ -632,9 +632,20 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     }
   };
 
+  // 辅助函数：离开页面时触发总结生成
+  const callGenerateSummary = async () => {
+    if (deal?.id) {
+      console.log('Leaving MaterialUploadPage: Generating summary for dealId:', deal.id);
+      dealService.generateInterviewSummary(deal.id).catch(err => {
+        console.error('Failed to generate summary on exit:', err);
+      });
+    }
+  };
+
   // Throttled Handlers (Defined here to access functions declared above)
   const handleBackThrottled = useThrottleFn(async () => {
     await saveQuestions();
+    callGenerateSummary();
     onBack();
   }, 1000);
 
@@ -664,11 +675,13 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     }
 
     await saveQuestions();
+    callGenerateSummary();
     onStartInterview();
   }, 1000);
 
   const handleConfirmThrottled = useThrottleFn(async () => {
     await saveQuestions();
+    callGenerateSummary();
     (onConfirm || onBack)();
   }, 1000);
 

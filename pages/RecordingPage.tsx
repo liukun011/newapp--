@@ -617,6 +617,16 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
     nativeBridge.startRecordingWithParams({ surveyId, roleType: 2 });
     onToggleRecording();
+
+    // 更新访谈状态为进行中(2)
+    dealService.updateInterviewInst({
+      interviewInstId: surveyId,
+      interviewInstStatus: '2'
+    }).then(() => {
+      console.log('[H5] Updated interview status to 2');
+    }).catch(err => {
+      console.warn('[H5] Failed to update interview status:', err);
+    });
     // 手动更新 ref 以应对可能的 React 异步更新延迟，确保定时器中能读到预期状态
     isRecordingRef.current = true;
 
