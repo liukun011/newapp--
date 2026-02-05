@@ -35,7 +35,7 @@ import { View, DealRecord } from './types';
 import config from './config';
 
 import RecordingFloatBubble from './components/RecordingFloatBubble';
-import { nativeBridge, handleTranscriptionResult } from './services/nativeBridge';
+import { nativeBridge } from './services/nativeBridge';
 
 const App: React.FC = () => {
   const appContainerRef = useRef<HTMLDivElement>(null);
@@ -462,132 +462,134 @@ const App: React.FC = () => {
     };
   }, [currentView, viewStack]);
 
+  // ========== 注释：Native已自动处理上传，前端无需调用 ==========
   // 提取上传转写逻辑
-  const uploadTranscriptionBatch = async () => {
-    const { transcriptionList, currentInterviewInstId } = useRecordingStore.getState();
+  // const uploadTranscriptionBatch = async () => {
+  //   const { transcriptionList, currentInterviewInstId } = useRecordingStore.getState();
+  //
+  //   if (!currentInterviewInstId || transcriptionList.length === 0) {
+  //     return;
+  //   }
+  //
+  //   // 只上传最终结果（isFinal: true）
+  //   const finalResults = transcriptionList.filter(item => item.isFinal);
+  //
+  //   if (finalResults.length === 0) {
+  //     return;
+  //   }
+  //
+  //   try {
+  //     const contentList = finalResults.map(item => ({
+  //       id: item.roleId,
+  //       content: item.content,
+  //     }));
+  //
+  //     console.log('[上传转写] 上传内容:', contentList.length, '条');
+  //
+  //     await dealService.uploadInterviewInstContent({
+  //       interviewInstId: currentInterviewInstId,
+  //       contentList,
+  //     });
+  //
+  //     console.log('[上传转写] 上传成功');
+  //   } catch (error) {
+  //     console.error('[上传转写] 上传失败:', error);
+  //   }
+  // };
 
-    if (!currentInterviewInstId || transcriptionList.length === 0) {
-      return;
-    }
 
-    // 只上传最终结果（isFinal: true）
-    const finalResults = transcriptionList.filter(item => item.isFinal);
-
-    if (finalResults.length === 0) {
-      return;
-    }
-
-    try {
-      const contentList = finalResults.map(item => ({
-        id: item.roleId,
-        content: item.content,
-      }));
-
-      console.log('[上传转写] 上传内容:', contentList.length, '条');
-
-      await dealService.uploadInterviewInstContent({
-        interviewInstId: currentInterviewInstId,
-        contentList,
-      });
-
-      console.log('[上传转写] 上传成功');
-    } catch (error) {
-      console.error('[上传转写] 上传失败:', error);
-    }
-  };
-
-  // 提取上传录音文件逻辑
-  const uploadAudioFile = async (interviewInstId: string) => {
-    console.log('[自动保存] 开始尝试上传录音文件...');
-    return new Promise((resolve) => {
-      let isResolved = false;
-
-      // 1. 全局超时保护 (10秒)，防止死锁
-      const safeTimeout = setTimeout(() => {
-        if (!isResolved) {
-          isResolved = true;
-          console.warn('[自动保存] 上传流程超时，强制结束');
-          // 移除监听，防止后续回调干扰
-          nativeBridge.off('getAudioList');
-          nativeBridge.off('onUploadResult');
-          resolve(false);
-        }
-      }, 10000);
-
-      // 安全的 resolve 包装
-      const safeResolve = (val: boolean) => {
-        if (!isResolved) {
-          isResolved = true;
-          clearTimeout(safeTimeout);
-          resolve(val);
-        }
-      };
-
-      const handleAudioList = async (response: any) => {
-        console.log('[自动保存] getAudioList回调:', JSON.stringify(response));
-        nativeBridge.off('getAudioList', handleAudioList);
-
-        if (response.success && response.data && response.data.list && response.data.list.length > 0) {
-          const latestAudio = response.data.list[0];
-          const fileUrl = (latestAudio.fileURL || "").trim();
-
-          if (!fileUrl) {
-            console.warn('[自动保存] 录音文件URL为空');
-            safeResolve(false);
-            return;
-          }
-
-          console.log('[自动保存] 准备上传文件:', fileUrl);
-          const token = localStorage.getItem('zov-user-token') || '';
-          const uploadHost = config.uploadUrl;
-
-          const handleUploadResult = (res: any) => {
-            console.log('[自动保存] 上传结果回调:', JSON.stringify(res));
-            // 简单判断结果
-            const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
-            if (resultData && (resultData.success === true || resultData.errno === 0)) {
-              const uploadedUrl = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
-              if (uploadedUrl) {
-                dealService.saveInterviewInstRecordFile({
-                  path: uploadedUrl,
-                  interviewInstId
-                }).then(() => {
-                  console.log('[自动保存] 录音文件已绑定成功');
-                  safeResolve(true);
-                }).catch((err) => {
-                  console.error('[自动保存] 绑定文件失败', err);
-                  safeResolve(false);
-                });
-              } else {
-                console.warn('[自动保存] 未获取到上传后的URL');
-                safeResolve(false);
-              }
-              nativeBridge.off('onUploadResult', handleUploadResult);
-            } else if (res.success === false || (resultData && resultData.success === false)) {
-              console.warn('[自动保存] 上传失败');
-              nativeBridge.off('onUploadResult', handleUploadResult);
-              safeResolve(false);
-            }
-          };
-
-          nativeBridge.on('onUploadResult', handleUploadResult);
-          nativeBridge.uploadInterviewFile({
-            host: uploadHost,
-            authorization: token,
-            filePath: fileUrl
-          });
-
-        } else {
-          console.warn('[自动保存] 未找到录音文件列表');
-          safeResolve(false);
-        }
-      };
-
-      nativeBridge.on('getAudioList', handleAudioList);
-      console.log('[自动保存] 调用 getAudioList...');
-      nativeBridge.getAudioList({ surveyId: interviewInstId, page: 0, pageSize: 999 });
-    });
-  };
+  // 提取上传录音文件逻辑（Native已自动处理，以下代码已注释）
+  // const uploadAudioFile = async (interviewInstId: string) => {
+  //   console.log('[自动保存] 开始尝试上传录音文件...');
+  //   return new Promise((resolve) => {
+  //     let isResolved = false;
+  //
+  //     // 1. 全局超时保护 (10秒)，防止死锁
+  //     const safeTimeout = setTimeout(() => {
+  //       if (!isResolved) {
+  //         isResolved = true;
+  //         console.warn('[自动保存] 上传流程超时，强制结束');
+  //         // 移除监听，防止后续回调干扰
+  //         nativeBridge.off('getAudioList');
+  //         nativeBridge.off('onUploadResult');
+  //         resolve(false);
+  //       }
+  //     }, 10000);
+  //
+  //     // 安全的 resolve 包装
+  //     const safeResolve = (val: boolean) => {
+  //       if (!isResolved) {
+  //         isResolved = true;
+  //         clearTimeout(safeTimeout);
+  //         resolve(val);
+  //       }
+  //     };
+  //
+  //     const handleAudioList = async (response: any) => {
+  //       console.log('[自动保存] getAudioList回调:', JSON.stringify(response));
+  //       nativeBridge.off('getAudioList', handleAudioList);
+  //
+  //       if (response.success && response.data && response.data.list && response.data.list.length > 0) {
+  //         const latestAudio = response.data.list[0];
+  //         const fileUrl = (latestAudio.fileURL || "").trim();
+  //
+  //         if (!fileUrl) {
+  //           console.warn('[自动保存] 录音文件URL为空');
+  //           safeResolve(false);
+  //           return;
+  //         }
+  //
+  //         console.log('[自动保存] 准备上传文件:', fileUrl);
+  //         const token = localStorage.getItem('zov-user-token') || '';
+  //         const uploadHost = config.uploadUrl;
+  //
+  //         const handleUploadResult = (res: any) => {
+  //           console.log('[自动保存] 上传结果回调:', JSON.stringify(res));
+  //           // 简单判断结果
+  //           const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
+  //           if (resultData && (resultData.success === true || resultData.errno === 0)) {
+  //             const uploadedUrl = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
+  //             if (uploadedUrl) {
+  //               dealService.saveInterviewInstRecordFile({
+  //                 path: uploadedUrl,
+  //                 interviewInstId
+  //               }).then(() => {
+  //                 console.log('[自动保存] 录音文件已绑定成功');
+  //                 safeResolve(true);
+  //               }).catch((err) => {
+  //                 console.error('[自动保存] 绑定文件失败', err);
+  //                 safeResolve(false);
+  //               });
+  //             } else {
+  //               console.warn('[自动保存] 未获取到上传后的URL');
+  //               safeResolve(false);
+  //             }
+  //             nativeBridge.off('onUploadResult', handleUploadResult);
+  //           } else if (res.success === false || (resultData && resultData.success === false)) {
+  //             console.warn('[自动保存] 上传失败');
+  //             nativeBridge.off('onUploadResult', handleUploadResult);
+  //             safeResolve(false);
+  //           }
+  //         };
+  //
+  //         nativeBridge.on('onUploadResult', handleUploadResult);
+  //         nativeBridge.uploadInterviewFile({
+  //           host: uploadHost,
+  //           authorization: token,
+  //           filePath: fileUrl
+  //         });
+  //
+  //       } else {
+  //         console.warn('[自动保存] 未找到录音文件列表');
+  //         safeResolve(false);
+  //       }
+  //     };
+  //
+  //     nativeBridge.on('getAudioList', handleAudioList);
+  //     console.log('[自动保存] 调用 getAudioList...');
+  //     nativeBridge.getAudioList({ surveyId: interviewInstId, page: 0, pageSize: 999 });
+  //   });
+  // };
 
   // 监听录音中断
   useEffect(() => {
@@ -603,11 +605,11 @@ const App: React.FC = () => {
             store.setIsRecording(false);
 
             try {
-              // 静默保存，但不重置状态
-              await Promise.all([
-                uploadTranscriptionBatch(),
-                store.currentInterviewInstId ? uploadAudioFile(store.currentInterviewInstId) : Promise.resolve()
-              ]);
+              // 注释：Native会自动上传，前端无需调用
+              // await Promise.all([
+              //   uploadTranscriptionBatch(),
+              //   store.currentInterviewInstId ? uploadAudioFile(store.currentInterviewInstId) : Promise.resolve()
+              // ]);
             } catch (e) {
               console.error(e);
             } finally {
@@ -633,82 +635,83 @@ const App: React.FC = () => {
     return () => nativeBridge.off('recordingInterrupted', handleInterruption);
   }, []);
 
+  // ========== 注释：改为使用离线转写轮询，不再监听实时转写结果 ==========
   // 监听实时转写结果
-  useEffect(() => {
-    let sentenceCount = 0; // 记录最终结果的句子数
-
-    // 这里的 uploadTranscriptionBatch 引用外部定义的函数
-
-    const handleTranscription = (response: any) => {
-      if (response.success && response.data) {
-        const parsed = handleTranscriptionResult(response.data);
-
-        if (parsed) {
-          const store = useRecordingStore.getState();
-          // 如果全局未处于录音状态（例如在资料上传页使用了局部录音），则忽略全局监听收到的转写
-          if (!store.isRecording) {
-            return;
-          }
-
-
-
-          const { text, isFinal, roleId } = parsed;
-          const { transcriptionList, setTranscriptionList, addTranscriptionChunk, updateTempTranscription } = store;
-
-          if (isFinal) {
-            // 最终结果
-            const lastItem = transcriptionList[transcriptionList.length - 1];
-
-            // 确定当前 RoleId:
-            // 1. 如果 Native 解析出了明确的角色(非0)，则使用该角色
-            // 2. 如果 Native 没给角色(或为0)，则延续上一个气泡的角色 (模拟 Native 的 currentRole 逻辑)
-            // 3. 如果都没有，默认为 '1'
-            const currentRoleId = roleId || (lastItem ? lastItem.roleId : '1');
-
-            console.log('[App] Transcription Final - Parsing Role:', roleId, 'Effective Role:', currentRoleId);
-
-            if (lastItem && String(lastItem.roleId) === String(currentRoleId)) {
-              // roleId 相同，拼接内容到最后一条记录
-              const updatedList = [...transcriptionList];
-              updatedList[updatedList.length - 1] = {
-                ...lastItem,
-                content: lastItem.content + text,
-                isFinal: true,
-                timestamp: Date.now(),
-              };
-              setTranscriptionList(updatedList);
-            } else {
-              // roleId 不同或首次添加，创建新记录
-              addTranscriptionChunk({
-                id: `trans_${Date.now()}_${Math.random()}`,
-                content: text,
-                roleId: currentRoleId,
-                timestamp: Date.now(),
-                isFinal: true,
-              });
-            }
-
-            // 清空临时转写
-            updateTempTranscription('');
-
-            // 计数并检查是否需要上传
-            sentenceCount++;
-            if (sentenceCount >= 6) {
-              uploadTranscriptionBatch();
-              sentenceCount = 0; // 重置计数
-            }
-          }
-          // Ignore intermediate results (isFinal: false) as requested
-        }
-      }
-    };
-
-    nativeBridge.on('transcriptionResult', handleTranscription);
-
-    return () => {
-      nativeBridge.off('transcriptionResult', handleTranscription);
-    };
-  }, [currentView]); // 依赖 currentView 以确保闭包中拿到最新值
+  // useEffect(() => {
+  //   let sentenceCount = 0; // 记录最终结果的句子数
+  //
+  //   // 这里的 uploadTranscriptionBatch 引用外部定义的函数
+  //
+  //   const handleTranscription = (response: any) => {
+  //     if (response.success && response.data) {
+  //       const parsed = handleTranscriptionResult(response.data);
+  //
+  //       if (parsed) {
+  //         const store = useRecordingStore.getState();
+  //         // 如果全局未处于录音状态（例如在资料上传页使用了局部录音），则忽略全局监听收到的转写
+  //         if (!store.isRecording) {
+  //           return;
+  //         }
+  //
+  //
+  //
+  //         const { text, isFinal, roleId } = parsed;
+  //         const { transcriptionList, setTranscriptionList, addTranscriptionChunk, updateTempTranscription } = store;
+  //
+  //         if (isFinal) {
+  //           // 最终结果
+  //           const lastItem = transcriptionList[transcriptionList.length - 1];
+  //
+  //           // 确定当前 RoleId:
+  //           // 1. 如果 Native 解析出了明确的角色(非0)，则使用该角色
+  //           // 2. 如果 Native 没给角色(或为0)，则延续上一个气泡的角色 (模拟 Native 的 currentRole 逻辑)
+  //           // 3. 如果都没有，默认为 '1'
+  //           const currentRoleId = roleId || (lastItem ? lastItem.roleId : '1');
+  //
+  //           console.log('[App] Transcription Final - Parsing Role:', roleId, 'Effective Role:', currentRoleId);
+  //
+  //           if (lastItem && String(lastItem.roleId) === String(currentRoleId)) {
+  //             // roleId 相同，拼接内容到最后一条记录
+  //             const updatedList = [...transcriptionList];
+  //             updatedList[updatedList.length - 1] = {
+  //               ...lastItem,
+  //               content: lastItem.content + text,
+  //               isFinal: true,
+  //               timestamp: Date.now(),
+  //             };
+  //             setTranscriptionList(updatedList);
+  //           } else {
+  //             // roleId 不同或首次添加，创建新记录
+  //             addTranscriptionChunk({
+  //               id: `trans_${Date.now()}_${Math.random()}`,
+  //               content: text,
+  //               roleId: currentRoleId,
+  //               timestamp: Date.now(),
+  //               isFinal: true,
+  //             });
+  //           }
+  //
+  //           // 清空临时转写
+  //           updateTempTranscription('');
+  //
+  //           // 注释：Native会自动上传，前端无需调用
+  //           // sentenceCount++;
+  //           // if (sentenceCount >= 6) {
+  //           //   uploadTranscriptionBatch();
+  //           //   sentenceCount = 0;
+  //           // }
+  //         }
+  //         // Ignore intermediate results (isFinal: false) as requested
+  //       }
+  //     }
+  //   };
+  //
+  //   nativeBridge.on('transcriptionResult', handleTranscription);
+  //
+  //   return () => {
+  //     nativeBridge.off('transcriptionResult', handleTranscription);
+  //   };
+  // }, [currentView]); // 依赖 currentView 以确保闭包中拿到最新值
 
   const handleEditCorporateInfo = () => {
     setPreviousView(currentView);
@@ -1507,11 +1510,19 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <img 
-                  src="/talk-assistant/assets/homebt.png" 
-                  alt="首页" 
-                  className="w-6 h-6 object-contain mb-0.5"
-                  style={{ filter: currentView === View.HOME ? 'invert(22%) sepia(97%) saturate(3966%) hue-rotate(236deg) brightness(98%) contrast(105%)' : 'grayscale(100%) opacity(0.4)' }}
+                <div 
+                  className="w-6 h-6 mb-0.5"
+                  style={{
+                    backgroundColor: currentView === View.HOME ? '#4337F1' : '#9CA3AF',
+                    WebkitMaskImage: 'url(/talk-assistant/assets/homebt.png)',
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskImage: 'url(/talk-assistant/assets/homebt.png)',
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center'
+                  }}
                 />
                 <span className={`text-[10px] font-medium ${currentView === View.HOME ? "text-primary" : "text-gray-400"}`}>首页</span>
               </button>
@@ -1520,15 +1531,22 @@ const App: React.FC = () => {
               <button
                 className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
                 onClick={() => {
-                  // TODO: Create ReportsListPage component
                   navigateForward(View.REPORTS_LIST);
                 }}
               >
-                <img 
-                  src="/talk-assistant/assets/report.png" 
-                  alt="报告" 
-                  className="w-6 h-6 object-contain mb-0.5"
-                  style={{ filter: currentView === View.REPORTS_LIST ? 'invert(22%) sepia(97%) saturate(3966%) hue-rotate(236deg) brightness(98%) contrast(105%)' : 'grayscale(100%) opacity(0.4)' }}
+                <div 
+                  className="w-6 h-6 mb-0.5"
+                  style={{
+                    backgroundColor: currentView === View.REPORTS_LIST ? '#4337F1' : '#9CA3AF',
+                    WebkitMaskImage: 'url(/talk-assistant/assets/report.png)',
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskImage: 'url(/talk-assistant/assets/report.png)',
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center'
+                  }}
                 />
                 <span className={`text-[10px] font-medium ${currentView === View.REPORTS_LIST ? "text-primary" : "text-gray-400"}`}>报告</span>
               </button>
@@ -1558,11 +1576,19 @@ const App: React.FC = () => {
                   navigateForward(View.MANAGEMENT);
                 }}
               >
-                <img 
-                  src="/talk-assistant/assets/manage.png" 
-                  alt="管理" 
-                  className="w-6 h-6 object-contain mb-0.5"
-                  style={{ filter: currentView === View.MANAGEMENT ? 'invert(22%) sepia(97%) saturate(3966%) hue-rotate(236deg) brightness(98%) contrast(105%)' : 'grayscale(100%) opacity(0.4)' }}
+                <div 
+                  className="w-6 h-6 mb-0.5"
+                  style={{
+                    backgroundColor: currentView === View.MANAGEMENT ? '#4337F1' : '#9CA3AF',
+                    WebkitMaskImage: 'url(/talk-assistant/assets/manage.png)',
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskImage: 'url(/talk-assistant/assets/manage.png)',
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center'
+                  }}
                 />
                 <span className={`text-[10px] font-medium ${currentView === View.MANAGEMENT ? "text-primary" : "text-gray-400"}`}>管理</span>
               </button>
@@ -1578,11 +1604,19 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <img 
-                  src="/talk-assistant/assets/person.png" 
-                  alt="我的" 
-                  className="w-6 h-6 object-contain mb-0.5"
-                  style={{ filter: currentView === View.SETTINGS ? 'invert(22%) sepia(97%) saturate(3966%) hue-rotate(236deg) brightness(98%) contrast(105%)' : 'grayscale(100%) opacity(0.4)' }}
+                <div 
+                  className="w-6 h-6 mb-0.5"
+                  style={{
+                    backgroundColor: currentView === View.SETTINGS ? '#4337F1' : '#9CA3AF',
+                    WebkitMaskImage: 'url(/talk-assistant/assets/person.png)',
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskImage: 'url(/talk-assistant/assets/person.png)',
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center'
+                  }}
                 />
                 <span className={`text-[10px] font-medium ${currentView === View.SETTINGS ? "text-primary" : "text-gray-400"}`}>我的</span>
               </button>

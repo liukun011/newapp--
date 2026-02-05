@@ -527,7 +527,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       <div className="relative z-10 flex items-center justify-between px-4 py-3">
         {/* Custom Limit Tips Toast */}
         {showLimitTips && (
-          <div className="fixed top-24 left-4 right-4 z-50 animate-[slideDown_0.3s_ease-out_forwards] flex justify-center">
+          <div className="fixed top-24 left-4 right-4 z-[1000] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center">
             <div className="bg-black/30 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
               <span className="text-sm font-medium tracking-wide">
                 您正有一个访谈正在进行中，暂时不支持开启新任务。

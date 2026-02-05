@@ -197,6 +197,18 @@ class NativeBridgeService {
     this.callNative('uploadInterviewFile', params);
   }
 
+  /**
+   * 设置人声录音上传参数（Native自动处理上传）
+   * 只需在开始录音时调用一次
+   */
+  setHumanVoiceAudioFileUploadParameters(params: {
+    host: string;
+    token: string;
+    interviewInstId: string;
+  }) {
+    this.callNative('setHumanVoiceAudioFileUplaodParameters', params);
+  }
+
   // ==================== 媒体相关接口 ====================
 
   /**
@@ -297,17 +309,6 @@ export function handleTranscriptionResult(jsonString: string): {
 } | null {
   try {
     const result: XunfeiTranscriptionResult = JSON.parse(jsonString);
-
-    // DEBUG: Show RAW RESULT using overlay
-    // if (typeof document !== 'undefined' && !document.getElementById('debug-overlay-raw')) {
-    //   const div = document.createElement('div');
-    //   div.id = 'debug-overlay-raw';
-    //   // Center of screen, very visible
-    //   div.style.cssText = 'position:fixed;top:20%;left:5%;width:90%;height:300px;background:rgba(0,0,0,0.9);color:#ffff00;z-index:100005;overflow:auto;padding:20px;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;border:2px solid yellow;';
-    //   div.innerText = "--- RAW RESULT ---\n" + JSON.stringify(result, null, 2);
-    //   div.onclick = () => document.body.removeChild(div);
-    //   document.body.appendChild(div);
-    // }
 
     if (result.cn && result.cn.st && result.cn.st.rt) {
       // 兼容字符串 "0" 和数字 0
