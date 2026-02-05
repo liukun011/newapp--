@@ -9,7 +9,8 @@ import {
   ChevronDown,
   ChevronUp,
   CheckCircle,
-  User
+  User,
+  Clock
 } from 'lucide-react';
 import { Dialog, Toast } from 'react-vant';
 import SoundWave from '../components/SoundWave';
@@ -68,6 +69,18 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
   // Scroll container ref
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const headerRef = React.useRef<HTMLDivElement>(null);
+  const [showTimeTitle, setShowTimeTitle] = useState(false);
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current && headerRef.current) {
+      if (scrollContainerRef.current.scrollTop > headerRef.current.offsetHeight - 20) {
+        setShowTimeTitle(true);
+      } else {
+        setShowTimeTitle(false);
+      }
+    }
+  };
 
   // 刷新 Deal 详情
   const refreshDealInfo = async () => {
@@ -695,8 +708,15 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         <button onClick={onBack} className="p-2 -ml-2 text-slate-700">
           <ArrowLeft size={22} />
         </button>
-        <h1 className="text-lg font-bold text-slate-800">
-          {interviewInstTitle || deal?.interviewCust || '访谈录音'}
+        <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+          {showTimeTitle ? (
+            <>
+              <Clock size={18} className="text-indigo-600" />
+              <span className="text-indigo-600 font-mono text-[17px]">{formatTime(seconds)}</span>
+            </>
+          ) : (
+            interviewInstTitle || deal?.interviewCust || '访谈录音'
+          )}
         </h1>
         <button
           className="p-2 -mr-2 text-slate-700"
@@ -713,9 +733,10 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto relative min-h-0 bg-[#F7F8FA] scroll-smooth"
         style={{ WebkitOverflowScrolling: 'touch' }}
+        onScroll={handleScroll}
       >
         {/* Header - Moved Inside for Scroll */}
-        <div className="bg-white pt-6 pb-2 text-center relative z-10">
+        <div ref={headerRef} className="bg-white pt-6 pb-2 text-center relative z-10">
            <SoundWave isRecording={isRecording} />
            <div className="mt-2 text-3xl font-mono font-medium text-slate-800 tracking-wider">
              {formatTime(seconds)}

@@ -127,7 +127,14 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
               <div
                 key={record.interviewInstId || record.id}
                 className="bg-white p-4 rounded-xl shadow-sm border border-slate-50 active:scale-[0.99] transition-transform flex items-center gap-4 cursor-pointer"
-                onClick={() => onRecordClick?.(record)}
+                onClick={() => {
+                  // Only allow navigation if recordStatus is '2' (Merged/Ready)
+                  if (record.recordStatus !== '2') {
+                    Toast.info('录音合并中，请稍后再试！');
+                    return;
+                  }
+                  onRecordClick?.(record);
+                }}
               >
 
                 {/* Icon Block */}
