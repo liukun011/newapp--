@@ -495,7 +495,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     });
   }, 1000);
   return (
-    <div className="flex flex-col h-full bg-[#F7F8FA] relative">
+    <div className="absolute inset-0 flex flex-col bg-[#F7F8FA] overflow-hidden">
       {/* 隐藏的文件输入框 */}
       <input
         type="file"
@@ -519,8 +519,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         onChange={handleFileChange}
       />
 
-      {/* Fixed Sticky NavBar */}
-      <div className="sticky top-0 z-50 bg-white border-b border-gray-100/50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-100/50 relative z-50 shrink-0">
         <div className="flex items-center justify-between px-4 py-3">
           {/* Custom Limit Tips Toast */}
           {showLimitTips && (
@@ -550,62 +550,62 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       </div>
 
       {/* Scrollable Content Container */}
-      <div className="flex-1 overflow-y-auto px-4 pb-20 relative z-10 space-y-4 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
-
-        {/* Status Bar / Mascot Message */}
-        <div className="flex items-end mt-8 mb-4 relative">
-          <div className="w-20 h-20 absolute left-6 -bottom-1.5 z-20">
-            <img 
-              src="/talk-assistant/assets/xiaoliye.png" 
-              alt="小狸" 
-              className="w-full h-full object-contain"
-            />
-          </div>
-
-          <div className="w-full bg-white rounded-3xl p-3 pl-28 shadow-sm relative z-10 flex-1">
-            <p className="text-[13px] text-slate-700 font-medium leading-tight">
-              {(currentDeal?.status === '5')
-                ? '访谈归档，内容仅供查阅和下载'
-                : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING
-                  ? '小狸全速生成报告中，请稍候'
-                  : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED
-                    ? '报告已生成! 可以继续完善信息'
-                    : isFinishedInterview
-                      ? '本次访谈已完成，可查看历史记录或生成报告'
-                      : '记录创建成功，赶紧开始访谈吧...'}
-            </p>
-          </div>
-        </div>
-
-        {/* 访谈小总结 Card */}
-        {currentDeal?.dealSummary && (
-          <div className="bg-white rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden mb-3 border border-indigo-50/50">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-3 relative z-10 px-0.5">
-              <div className="flex items-center gap-2">
-                <h3 className="text-[15px] font-black text-slate-800 tracking-tight">访谈小总结</h3>
-                <div className="bg-[#F4F7FF] text-[#86909C] text-[10px] px-2 py-0.5 rounded-md font-medium">
-                  自动提炼，仅供参考
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-                className="flex items-center gap-1 bg-[#F0F2FF] text-indigo-600 px-2.5 py-1 rounded-full text-[12px] font-bold active:scale-95 transition-all"
-              >
-                {isSummaryExpanded ? '收起' : '展开'}
-                {isSummaryExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              </button>
+      <div className="flex-1 min-h-0 overflow-y-auto relative z-10 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="px-4 pb-32 space-y-4">
+          {/* Status Bar / Mascot Message */}
+          <div className="flex items-end mt-8 mb-4 relative">
+            <div className="w-20 h-20 absolute left-6 -bottom-1.5 z-20">
+              <img 
+                src="/talk-assistant/assets/xiaoliye.png" 
+                alt="小狸" 
+                className="w-full h-full object-contain"
+              />
             </div>
 
-            {/* Content */}
-            <div className={`relative z-10 px-0.5 transition-all duration-300`}>
-              <p className={`text-[14px] text-slate-700 leading-snug font-bold text-justify tracking-normal ${!isSummaryExpanded ? 'line-clamp-2' : ''}`}>
-                 {currentDeal.dealSummary}
-               </p>
-             </div>
+            <div className="w-full bg-white rounded-3xl p-3 pl-28 shadow-sm relative z-10 flex-1">
+              <p className="text-[13px] text-slate-700 font-medium leading-tight">
+                {(currentDeal?.status === '5')
+                  ? '访谈归档，内容仅供查阅和下载'
+                  : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING
+                    ? '小狸全速生成报告中，请稍候'
+                    : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED
+                      ? '报告已生成! 可以继续完善信息'
+                      : isFinishedInterview
+                        ? '本次访谈已完成，可查看历史记录或生成报告'
+                        : '记录创建成功，赶紧开始访谈吧...'}
+              </p>
+            </div>
           </div>
-        )}
+
+          {/* 访谈小总结 Card */}
+          {currentDeal?.dealSummary && (
+            <div className="bg-white rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden mb-3 border border-indigo-50/50">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-3 relative z-10 px-0.5">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-[15px] font-black text-slate-800 tracking-tight">访谈小总结</h3>
+                  <div className="bg-[#F4F7FF] text-[#86909C] text-[10px] px-2 py-0.5 rounded-md font-medium">
+                    自动提炼，仅供参考
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                  className="flex items-center gap-1 bg-[#F0F2FF] text-indigo-600 px-2.5 py-1 rounded-full text-[12px] font-bold active:scale-95 transition-all"
+                >
+                  {isSummaryExpanded ? '收起' : '展开'}
+                  {isSummaryExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className={`relative z-10 px-0.5 transition-all duration-300`}>
+                <p className={`text-[14px] text-slate-700 leading-snug font-bold text-justify tracking-normal ${!isSummaryExpanded ? 'line-clamp-2' : ''}`}>
+                  {currentDeal.dealSummary}
+                </p>
+              </div>
+            </div>
+          )}
 
         {/* Report Card */}
         {currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED ? (
@@ -876,7 +876,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           );
         })()}
 
+        {/* Bottom Spacer */}
+        <div className="h-40" aria-hidden="true" />
       </div>
+    </div>
 
       {/* Fixed Archive Button at Bottom */}
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30">

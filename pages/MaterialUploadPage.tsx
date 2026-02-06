@@ -20,7 +20,7 @@ interface MaterialUploadPageProps {
   onStartInterview: () => void;
   onEditInfo?: () => void;
   onChangeTemplate?: () => void;
-  onPreviewTemplate?: (name: string, url: string) => void;
+  onPreviewTemplate?: (name: string, url: string, id: string) => void;
   initialTab?: string; // 初始激活的标签页
   onTabChange?: (tab: string) => void; // 标签页切换时的回调
 }
@@ -718,7 +718,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     if (resource.fileUrl) {
       // 使用预览页面打开文件
       if (onPreviewTemplate) {
-        onPreviewTemplate(resource.fileName, resource.fileUrl);
+        onPreviewTemplate(resource.fileName, resource.fileUrl, '');
       } else {
         // 降级方案：在新窗口打开
         window.open(resource.fileUrl, '_blank');
@@ -944,7 +944,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                       className="!h-8 !px-4 !border-gray-200 !text-gray-600 !rounded-full !font-normal"
                       onClick={() => {
                         if (onPreviewTemplate && currentTemplate) {
-                          onPreviewTemplate(currentTemplate.reportTemplateName, currentTemplate.viewTemplateUrl);
+                          onPreviewTemplate(currentTemplate.reportTemplateName, currentTemplate.viewTemplateUrl, currentTemplate.id);
                         }
                       }}
                     >

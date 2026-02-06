@@ -38,7 +38,9 @@ export const dealService = {
    */
   queryInterviewInstContentListByPage: (params: {
     interviewInstId: string;
-    cacheCount: number;
+    cacheCount?: number;
+    pageNum?: number;
+    pageSize?: number;
   }) => {
     return request<ApiResponse<PageData<any>>>('/interview/queryInterviewInstContentListByPage', {
       method: 'POST',

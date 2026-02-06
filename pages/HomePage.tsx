@@ -480,7 +480,6 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
             }
             headHeight={60}
-            style={{ minHeight: '100%', overflow: 'visible' }}
           >
           <div className="px-4">
             {loading ? (
@@ -496,7 +495,7 @@ const HomePage: React.FC<HomePageProps> = ({
                  <p className="text-xs text-gray-400">小狸可以帮你做访谈记录，写尽调报告</p>
               </div>
             ) : (
-              <div className="flex flex-col pb-32">
+              <div className={`flex flex-col ${deals.length <= 2 ? 'pb-4' : 'pb-32'}`}>
                 {deals.map((item) => (
                 <div key={item.id} className="mb-2">
                   <SwipeCell

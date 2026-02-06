@@ -345,10 +345,10 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
                    </div>
                    
                    <div className="flex-1">
-                     <div className="text-xs text-gray-500 mb-1.5 ml-1">
-                       访谈对象{item.id}
+                     <div className="text-xs text-slate-500 mb-1.5 ml-1 font-medium">
+                       {item.contentType || `访谈对象${item.roleId || item.id || ''}`}
                      </div>
-                     <div className="bg-[#F0F5FF] p-3.5 rounded-xl rounded-tl-sm text-[15px] text-slate-700 leading-relaxed">
+                     <div className="bg-[#F0F5FF] p-3.5 rounded-2xl rounded-tl-sm text-[15px] text-slate-700 leading-relaxed shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
                        {item.content || '暂无内容'}
                      </div>
                    </div>
