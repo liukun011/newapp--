@@ -45,6 +45,53 @@ var _hmt = _hmt || [];
   s.parentNode.insertBefore(hm, s);
 })();
 </script>
+<script>
+    // 1. 优化版 UUID 生成逻辑（你的代码）
+    function getOrCreateUUID() {
+      let uuid = localStorage.getItem('app_h5_uuid');
+      if (uuid) return uuid;
+
+      uuid = sessionStorage.getItem('app_h5_uuid_session');
+      if (uuid) {
+        localStorage.setItem('app_h5_uuid', uuid);
+        return uuid;
+      }
+
+      uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+
+      localStorage.setItem('app_h5_uuid', uuid);
+      sessionStorage.setItem('app_h5_uuid_session', uuid);
+      document.cookie = `app_h5_uuid=${uuid}; path=/; max-age=31536000`;
+
+      return uuid;
+    }
+
+    // 2. 生成/获取 UUID
+    const userUUID = getOrCreateUUID();
+
+    // 3. 核心：把 UUID 作为「访客级自定义变量」传给百度统计
+    // 解释：
+    // - 第一个参数 1：自定义维度索引（后台要对应）
+    // - 第二个参数：维度名称（自己识别用）
+    // - 第三个参数：维度值（就是我们的 UUID）
+    // - 第四个参数 1：作用域为「访客级别」（整个访问周期内生效，核心解决 UV 重复）
+    _hmt.push(['_setCustomVar', 1, 'app_h5_user_uuid', userUUID, 1]);
+
+    // 4. 可选：自定义事件也带上 UUID（强化数据关联）
+    // 比如上报页面停留时长时，把 UUID 作为标签的一部分
+    let pageStartTime = Date.now();
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        const stayTime = (Date.now() - pageStartTime) / 1000;
+        // 上报事件：分类、行为、标签（带UUID）、数值（时长）
+        _hmt.push(['_trackEvent', '页面停留', window.location.href, `uuid:${userUUID}`, stayTime]);
+        pageStartTime = Date.now();
+      }
+    });
+</script>
 </head>
   <body>
     <div id="root"></div>
