@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, ChevronRight, Edit2, FilePlus, Mic, Archive, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Edit2, FilePlus, Mic, Archive, ChevronDown, ChevronUp, RotateCw } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
 import { DealRecord, DealReportStatusEnum } from '../types';
@@ -589,13 +589,43 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   </div>
                 </div>
                 
-                <button 
-                  onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-                  className="flex items-center gap-1 bg-[#F0F2FF] text-indigo-600 px-2.5 py-1 rounded-full text-[12px] font-bold active:scale-95 transition-all"
-                >
-                  {isSummaryExpanded ? '收起' : '展开'}
-                  {isSummaryExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      if (!currentDeal?.id) return;
+                      try {
+                        Toast.loading({ message: '正在刷新总结...', duration: 0, forbidClick: true });
+                        const res = await dealService.generateInterviewSummary(currentDeal.id, true);
+                        if (res.success) {
+                          // 刷新详情以获取最新总结
+                          const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+                          if (detailRes.success && detailRes.data) {
+                            setDealDetail(detailRes.data);
+                            onDealDetailLoadedRef.current?.(detailRes.data);
+                            Toast.success('刷新成功');
+                          }
+                        } else {
+                          Toast.fail(res.message || '刷新失败');
+                        }
+                      } catch (error) {
+                        console.error('Refresh summary failed:', error);
+                        Toast.fail('刷新失败');
+                      } finally {
+                        Toast.clear();
+                      }
+                    }}
+                    className="p-1 text-indigo-400 hover:text-indigo-600 transition-colors active:scale-95"
+                  >
+                    <RotateCw size={14} />
+                  </button>
+                  <button 
+                    onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                    className="flex items-center gap-1 bg-[#F0F2FF] text-indigo-600 px-2.5 py-1 rounded-full text-[12px] font-bold active:scale-95 transition-all"
+                  >
+                    {isSummaryExpanded ? '收起' : '展开'}
+                    {isSummaryExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                </div>
               </div>
 
               {/* Content */}
@@ -721,7 +751,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                    // Loading State
                    <div className="flex items-center gap-2 py-1 mr-auto pl-2">
                      <div className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin"></div>
-                     <span className="text-white/90 text-xs font-medium">智能生成中...</span>
+                     <span className="text-white/90 text-xs font-medium">小狸全速生成报告中，请稍候...</span>
                    </div>
                 ) : (
                    // Action Buttons

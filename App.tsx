@@ -1056,8 +1056,8 @@ const App: React.FC = () => {
                     setPreviousView(View.MATERIAL_UPLOAD);
                     navigateForward(View.TEMPLATE_SELECTION);
                   }}
-                  onPreviewTemplate={async (name, url, id) => {
-                    if (id) {
+                  onPreviewTemplate={async (name, url, id, type) => {
+                    if (type === 'template') {
                       // 模板预览：走新逻辑，支持"使用此模板"
                       try {
                         Toast.loading({ message: '正在加载预览...', duration: 0, forbidClick: true });
@@ -1088,10 +1088,31 @@ const App: React.FC = () => {
                         Toast.fail('加载预览失败');
                       }
                     } else {
-                      // 资料文件预览：走旧逻辑
-                      setPreviewTemplate({ name, url });
-                      setPreviousView(View.MATERIAL_UPLOAD);
-                      navigateForward(View.TEMPLATE_PREVIEW);
+                      // 资料文件预览
+                      try {
+                        Toast.loading({ message: '正在加载预览...', duration: 0, forbidClick: true });
+                        // 调用 viewReportUrl 获取预览链接，传入 fileId (即 id)
+                        const res = await dealService.viewReportUrl(id, url);
+                        Toast.clear();
+
+                        if (res.success && res.data) {
+                          setPreviewReport({
+                            name,
+                            reportUrl: url,
+                            previewUrl: res.data,
+                            showDownloadButton: false,
+                            returnTargetView: View.MATERIAL_UPLOAD
+                          });
+                          setPreviousView(View.MATERIAL_UPLOAD);
+                          navigateForward(View.REPORT_PREVIEW);
+                        } else {
+                           Toast.fail(res.message || '加载预览失败');
+                        }
+                      } catch(error) {
+                        Toast.clear();
+                        console.error('File preview failed:', error);
+                        Toast.fail('加载预览失败');
+                      }
                     }
                   }}
                   initialTab={materialUploadTab}

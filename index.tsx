@@ -10,8 +10,8 @@ import './index.css';
 import VConsole from 'vconsole';
 
 if (
-  import.meta.env.MODE === 'development' || 
-  import.meta.env.MODE === 'test'
+  import.meta.env.MODE === 'development'
+  // || import.meta.env.MODE === 'test'
   //  ||  import.meta.env.MODE === 'production'
   ) {
   new VConsole();
