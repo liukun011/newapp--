@@ -333,12 +333,14 @@ export const dealService = {
 
   /**
    * 生成尽调总结
-   * POST /interview/summary/{id}
+   * POST /interview/summary
    * @param id 尽调实例 ID
+   * @param isDirect 是否直接生成（可选）
    */
-  generateInterviewSummary: (id: string) => {
-    return request<ApiResponse<any>>(`/interview/summary/${id}`, {
+  generateInterviewSummary: (id: string, isDirect?: boolean) => {
+    return request<ApiResponse<any>>('/interview/summary', {
       method: 'POST',
+      data: { id, isDirect },
     });
   },
 };
