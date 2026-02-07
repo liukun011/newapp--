@@ -19,7 +19,6 @@ import { formatTime } from "../utils/dateUtils";
 
 interface HomePageProps {
   onNavigateToDetail: (deal: DealRecord) => void;
-  onCreateNewDeal?: (deal: DealRecord) => void;
   onNavigateToRecording?: (deal: DealRecord) => void;
   onNavigateToTemplates?: () => void;
   onNavigateToSettings?: () => void;
@@ -31,7 +30,6 @@ interface HomePageProps {
 const HomePage: React.FC<HomePageProps> = ({ 
   onNavigateToDetail, 
   onNavigateToRecording,
-  onCreateNewDeal,
   onNavigateToSettings,
   onNavigateToTemplates,
   initialTab = "ongoing",
@@ -55,9 +53,7 @@ const HomePage: React.FC<HomePageProps> = ({
   const [deletingDealId, setDeletingDealId] = useState<string | null>(null);
 
   // 新建尽调弹框
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newCustomerName, setNewCustomerName] = useState("");
-  const [creating, setCreating] = useState(false);
+
 
   // SwipeCell 强制刷新 key
   const [swipeCellKey, setSwipeCellKey] = useState(0);
@@ -236,6 +232,11 @@ const HomePage: React.FC<HomePageProps> = ({
   };
 
   const handleDelete = async (id: string) => {
+    // 校验是否有正在进行的访谈（悬浮窗存在 即 currentDealId 不为空）
+    if (currentDealId && currentDealId === id) {
+      Toast.info('当前访谈正在录音中，无法删除');
+      return;
+    }
     // 显示确认弹框
     setDeletingDealId(id);
     setShowDeleteConfirm(true);
@@ -277,36 +278,7 @@ const HomePage: React.FC<HomePageProps> = ({
     setDeletingDealId(null);
   };
 
-  // 处理新建尽调
-  const handleCreateDeal = async () => {
-    if (!newCustomerName.trim()) {
-      Toast.info('请输入客户名称');
-      return;
-    }
 
-    try {
-      setCreating(true);
-      const res = await dealService.createOrUpdateDealInst({
-        interviewCust: newCustomerName.trim(),
-      });
-
-      if (res.success && res.data) {
-        Toast.success('创建成功');
-        setShowCreateModal(false);
-        setNewCustomerName("");
-        
-        // 跳转到资料上传页，并传递刚创建的 Deal
-        onCreateNewDeal?.(res.data);
-      } else {
-        Toast.fail(res.message || '创建失败');
-      }
-    } catch (error) {
-      console.error('Create failed:', error);
-      Toast.fail('创建失败');
-    } finally {
-      setCreating(false);
-    }
-  };
 
   // Throttled Handlers
   const handleNavigateThrottled = useThrottleFn((item: DealRecord) => {
@@ -339,7 +311,7 @@ const HomePage: React.FC<HomePageProps> = ({
   }, 1000);
 
   const handleConfirmDeleteThrottled = useThrottleFn(confirmDelete, 1000);
-  const handleCreateDealThrottled = useThrottleFn(handleCreateDeal, 1000);
+
 
   return (
     <div className="flex flex-col h-screen relative bg-[#F7F8FA]">
@@ -595,6 +567,9 @@ const HomePage: React.FC<HomePageProps> = ({
 
 
 
+
+
+
       {/* 删除确认弹框 - Direct Render */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -636,55 +611,7 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       )}
 
-      {/* 新建尽调弹框 - Direct Render */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* 半透明背景 */}
-          <div 
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setShowCreateModal(false)}
-          />
-          
-          {/* 弹框内容 */}
-          <div className="relative bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-fadeIn">
-            {/* 标题 */}
-            <h3 className="text-center text-lg font-bold text-slate-800 mb-6">
-              新建尽调
-            </h3>
-            
-            {/* 输入框 */}
-            <div className="mb-6">
-              <label className="block text-sm text-slate-500 mb-2 pl-1">被访企业名称</label>
-              <input
-                type="text"
-                value={newCustomerName}
-                onChange={(e) => setNewCustomerName(e.target.value)}
-                placeholder="请输入企业名称"
-                className="w-full h-12 px-4 bg-gray-50 rounded-xl text-slate-800 border-none focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
-                autoFocus
-              />
-            </div>
-            
-            {/* 按钮组 */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="flex-1 h-11 rounded-full border border-gray-200 text-slate-600 font-medium hover:bg-gray-50 active:scale-95 transition-all"
-              >
-                取消
-              </button>
-              
-              <button
-                onClick={handleCreateDealThrottled}
-                disabled={creating}
-                className="flex-1 h-11 rounded-full bg-primary text-white font-medium active:scale-95 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-70 disabled:active:scale-100"
-              >
-                {creating ? "创建中..." : "开启尽调"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

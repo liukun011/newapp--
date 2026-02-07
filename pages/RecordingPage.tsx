@@ -40,11 +40,7 @@ interface RecordingPageProps {
   onDealUpdate?: (deal: DealRecord) => void;
 }
 
-const formatTime = (time: number) => {
-  const minutes = Math.floor(time / 60);
-  const seconds = time % 60;
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-};
+
 
 const RecordingPage: React.FC<RecordingPageProps> = ({
   deal,
@@ -844,23 +840,23 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                 {transcriptionList.length > 0 && (
                   <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
                     {/* 容器头部信息 */}
-                    <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-50">
+                    <div className="flex items-center justify-between gap-1 mb-4 pb-2 border-b border-slate-50">
                       {/* 左侧：时间段 */}
-                      <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded-full whitespace-nowrap shrink-0">
                         <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
                           <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
                           <path d="M7 3.5V7L9.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                         </svg>
-                        <span className="font-medium tracking-wide">
+                        <span className="font-medium">
                            {/* 显示从 00:00:00 到当前的具体录音时间点 */}
                            00:00:00 - {formatTime(seconds)}
                         </span>
                       </div>
 
                       {/* 右侧：标签与操作 */}
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 whitespace-nowrap ml-auto shrink-0">
                         {/* 智能精修标签 */}
-                        <div className="flex items-center gap-1 bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded text-[10px] font-medium border border-indigo-100">
+                        <div className="flex items-center gap-1 bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[10px] font-medium border border-indigo-100">
                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                              <circle cx="12" cy="12" r="3"></circle>
                              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.4 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1.4z"></path>
@@ -871,7 +867,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                         {/* 收起按钮 */}
                         <div 
                           onClick={() => setIsTranscriptionCollapsed(!isTranscriptionCollapsed)}
-                          className="flex items-center gap-1 text-slate-400 text-xs cursor-pointer hover:text-slate-600 active:scale-95 transition-transform"
+                          className="flex items-center gap-0.5 text-slate-400 text-xs cursor-pointer hover:text-slate-600 active:scale-95 transition-transform"
                         >
                           {isTranscriptionCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
                           <span>{isTranscriptionCollapsed ? '展开' : '收起'}</span>

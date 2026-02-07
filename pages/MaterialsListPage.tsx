@@ -660,7 +660,17 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
               <input
                 type="text"
                 value={newFileName}
-                onChange={(e) => setNewFileName(e.target.value)}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  // 1. 限制最大长度 30
+                  if (val.length > 30) {
+                    val = val.slice(0, 30);
+                  }
+                  // 2. 过滤特殊字符: \ | / ? * < > 、连续的点 .. 
+                  val = val.replace(/([\\\|\/\?\*\<\>]|\.\.)/g, '');
+                  setNewFileName(val);
+                }}
+                maxLength={30}
                 className="w-full px-4 py-3 text-base text-slate-800 border border-gray-200 rounded-full focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
                 placeholder="请输入文件名"
               />

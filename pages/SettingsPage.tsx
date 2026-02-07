@@ -321,14 +321,27 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
             <h3 className="text-center text-lg font-bold text-slate-800 mb-6">修改昵称</h3>
 
             <div className="relative mb-8">
-              <input
-                type="text"
+              <textarea
                 value={newNickName}
-                onChange={(e) => setNewNickName(e.target.value)}
-                className="w-full px-4 py-3 text-base text-slate-800 border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+                onChange={(e) => {
+                  let val = e.target.value;
+                  // 1. Limit max length 50
+                  if (val.length > 50) {
+                    val = val.slice(0, 50);
+                  }
+                  // 2. Filter special chars: \ | / ? * < > .. and newlines
+                  val = val.replace(/([\\\|\/\?\*\<\>]|\.\.|[\r\n])/g, '');
+                  setNewNickName(val);
+                }}
+                maxLength={50}
+                rows={3}
+                className="w-full px-4 py-3 text-base text-slate-800 border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all resize-none"
                 placeholder="请输入新昵称"
                 autoFocus
               />
+              <div className="text-right text-xs text-slate-400 mt-1">
+                {newNickName.length}/50
+              </div>
             </div>
 
             <div className="flex gap-3">

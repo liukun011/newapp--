@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Check, FileSpreadsheet, Eye, RefreshCw, MinusCircle, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, Pencil, Camera, Image as ImageIcon, FileText, Mic, Check, FileSpreadsheet, Eye, RefreshCw, MinusCircle, Trash2, Plus, Edit2 } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import Button from '../components/Button';
 import VoiceInputModal from '../components/VoiceInputModal';
@@ -769,17 +769,23 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       />
 
       {/* NavBar */}
-      <div className="flex items-center justify-between px-4 py-3 sticky top-0 bg-white z-10">
-        <button onClick={handleBackThrottled} className="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-full">
+      {/* NavBar */}
+      <div className="flex items-center justify-between px-4 py-3 sticky top-0 bg-white z-10 relative">
+        <button onClick={handleBackThrottled} className="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-full z-20">
           <ArrowLeft size={24} />
         </button>
-        <div className="flex items-center gap-2">
-          <h1 className="text-lg font-bold text-slate-800">{deal?.interviewCust || ''}</h1>
-          <button onClick={handleEditInfoThrottled} className="p-1 hover:bg-gray-100 rounded-full">
-            <Pencil size={16} className="text-gray-400" />
-          </button>
+        
+        {/* Centered Title */}
+        <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
+           <h1 className="text-lg font-bold text-slate-800 max-w-[200px] truncate pointer-events-auto">
+             {deal?.interviewCust || ''}
+           </h1>
         </div>
-        <div className="w-10" /> {/* Spacer for centering */}
+
+        {/* Right Edit Button */}
+        <button onClick={handleEditInfoThrottled} className="p-2 -mr-2 text-slate-700 hover:bg-gray-100 rounded-full z-20">
+           <Edit2 size={20} className="text-slate-700" />
+        </button>
       </div>
 
       {/* Tabs */}
@@ -1166,7 +1172,17 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               <input
                 type="text"
                 value={newFileName}
-                onChange={(e) => setNewFileName(e.target.value)}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  // 1. 限制最大长度 30
+                  if (val.length > 30) {
+                    val = val.slice(0, 30);
+                  }
+                  // 2. 过滤特殊字符: \ | / ? * < > 、连续的点 .. 
+                  val = val.replace(/([\\\|\/\?\*\<\>]|\.\.)/g, '');
+                  setNewFileName(val);
+                }}
+                maxLength={30}
                 className="w-full px-4 py-3 text-base text-slate-800 border border-gray-200 rounded-full focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
                 placeholder="请输入文件名"
               />

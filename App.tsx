@@ -274,6 +274,11 @@ const App: React.FC = () => {
     }
   }, [currentView]);
 
+  // 新建尽调弹框状态
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [creating, setCreating] = useState(false);
+
   useEffect(() => {
     if (currentDeal) {
       sessionStorage.setItem('zov-current-deal', JSON.stringify(currentDeal));
@@ -719,6 +724,39 @@ const App: React.FC = () => {
     navigateForward(View.CORPORATE_EDIT);
   };
 
+  // 处理新建尽调
+  const handleCreateDeal = async () => {
+    if (!newCustomerName.trim()) {
+      Toast.info('请输入访谈对象名称');
+      return;
+    }
+
+    try {
+      setCreating(true);
+      const res = await dealService.createOrUpdateDealInst({
+        interviewCust: newCustomerName.trim(),
+      });
+
+      if (res.success && res.data) {
+        Toast.success('创建成功');
+        setShowCreateModal(false);
+        setNewCustomerName("");
+        
+        setCurrentDeal(res.data);
+        // 必须使用 navigateForward 将新页面压入栈中，保证能从资料页返回首页
+        setPreviousView(View.HOME);
+        navigateForward(View.MATERIAL_UPLOAD);
+      } else {
+        Toast.fail(res.message || '创建失败');
+      }
+    } catch (error) {
+      console.error('Create failed:', error);
+      Toast.fail('创建失败');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <>
       <div className="fixed inset-0 w-full h-full z-[-1] bg-page-gradient" />
@@ -782,13 +820,7 @@ const App: React.FC = () => {
                     setPreviousView(View.HOME);
                     navigateForward(View.DUE_DILIGENCE);
                   }}
-                  onCreateNewDeal={(deal) => {
-                    console.log('[App] onCreateNewDeal triggered. Current Stack:', viewStack);
-                    setCurrentDeal(deal);
-                    // 必须使用 navigateForward 将新页面压入栈中，保证能从资料页返回首页
-                    setPreviousView(View.HOME);
-                    navigateForward(View.MATERIAL_UPLOAD);
-                  }}
+
                   onNavigateToRecording={async (deal) => {
                     try {
                       // 调用接口创建访谈实例
@@ -1607,19 +1639,10 @@ const App: React.FC = () => {
               </button>
 
               {/* 中间新增按钮 - Top-Half Only Border & Padding */}
+              {/* 中间新增按钮 - Top-Half Only Border & Padding */}
               <button
                 className="relative w-[64px] h-[64px] -mt-12 z-50 active:scale-95 transition-transform rounded-full flex items-center justify-center"
-                onClick={async () => {
-                  try {
-                    const res = await dealService.createOrUpdateDealInst({});
-                    if (res.success && res.data) {
-                      setCurrentDeal(res.data);
-                      navigateForward(View.MATERIAL_UPLOAD);
-                    }
-                  } catch (error) {
-                    console.error("Failed to create deal:", error);
-                  }
-                }}
+                onClick={() => setShowCreateModal(true)}
               >
                 {/* Purple Circle Body (Centered, 54px effectively) */}
                 <div className="w-[54px] h-[54px] rounded-full bg-primary shadow-xl shadow-indigo-500/40 flex items-center justify-center z-10">
@@ -1692,6 +1715,56 @@ const App: React.FC = () => {
           )}
 
         </div>
+
+      {/* 新建尽调弹框 - Global Render */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* 半透明背景 */}
+          <div 
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowCreateModal(false)}
+          />
+          
+          {/* 弹框内容 */}
+          <div className="relative bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-fadeIn">
+            {/* 标题 */}
+            <h3 className="text-center text-lg font-bold text-slate-800 mb-6">
+              新建访谈
+            </h3>
+            
+            {/* 输入框 */}
+            <div className="mb-6">
+              <label className="block text-sm text-slate-500 mb-2 pl-1">访谈对象：</label>
+              <input
+                type="text"
+                value={newCustomerName}
+                onChange={(e) => setNewCustomerName(e.target.value)}
+                placeholder="请输入访谈对象"
+                className="w-full h-12 px-4 bg-gray-50 rounded-xl text-slate-800 border-none focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                autoFocus
+              />
+            </div>
+            
+            {/* 按钮组 */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 h-11 rounded-full border border-gray-200 text-slate-600 font-medium hover:bg-gray-50 active:scale-95 transition-all"
+              >
+                取消
+              </button>
+              
+              <button
+                onClick={handleCreateDeal}
+                disabled={creating}
+                className="flex-1 h-11 rounded-full bg-primary text-white font-medium active:scale-95 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-70 disabled:active:scale-100"
+              >
+                {creating ? "创建中..." : "确定"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

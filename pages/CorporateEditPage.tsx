@@ -237,13 +237,29 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
         <div className="w-full">
             <label className="block text-sm text-slate-500 mb-3 pl-1">被访企业名称</label>
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-transparent focus-within:border-indigo-200 transition-colors">
-                <input 
-                    type="text" 
+                <textarea 
                     value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full text-[16px] text-slate-800 font-medium outline-none bg-transparent placeholder-gray-300"
+                    onChange={(e) => {
+                        let val = e.target.value;
+                        
+                        // 1. 限制最大长度 30
+                        if (val.length > 30) {
+                            val = val.slice(0, 30);
+                        }
+
+                        // 2. 过滤特殊字符: \ | / ? * < > 、连续的点 .. 以及换行符
+                        val = val.replace(/([\\\|\/\?\*\<\>]|\.\.|[\r\n])/g, '');
+
+                        setCompanyName(val);
+                    }}
+                    maxLength={30}
+                    rows={2}
+                    className="w-full text-[16px] text-slate-800 font-medium outline-none bg-transparent placeholder-gray-300 resize-none"
                     placeholder="请输入企业名称"
                 />
+                 <div className="text-right text-xs text-slate-400 mt-1">
+                    {companyName.length}/30
+                 </div>
             </div>
         </div>
       </div>

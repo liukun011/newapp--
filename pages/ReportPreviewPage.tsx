@@ -94,7 +94,7 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
 
       {/* Action Button (Download or Custom) */}
       {(showDownloadButton || actionButtonText) && (
-        <div className="fixed bottom-0 left-0 right-0 px-4 py-3 z-[60] bg-white border-t border-gray-100 safe-area-bottom">
+        <div className="fixed bottom-0 left-0 right-0 px-4 py-2 z-[60] bg-white border-t border-gray-100 safe-area-bottom">
           {showDownloadButton ? (
             <button
               onClick={handleDownload}
