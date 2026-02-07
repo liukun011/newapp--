@@ -106,7 +106,7 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
 
       {/* Select Button - Fixed at bottom */}
       {onSelect && templateId && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 z-50 safe-area-bottom">
+        <div className="fixed bottom-0 left-0 right-0 px-4 pb-3 z-50 safe-area-bottom">
            <button
              onClick={() => onSelect(templateId)}
              className="w-full py-3 bg-indigo-600 text-white rounded-full font-bold active:scale-95 transition-transform shadow-lg shadow-indigo-200"

@@ -283,7 +283,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
 
       {/* Fixed Bottom Buttons */}
       {/* Fixed Bottom Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30 flex gap-3">
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-3 z-30 flex gap-3">
           <Button
             variant="secondary"
             block

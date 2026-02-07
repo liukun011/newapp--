@@ -130,7 +130,7 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
                 onClick={() => {
                   // Only allow navigation if recordStatus is '2' (Merged/Ready)
                   if (record.recordStatus !== '2') {
-                    Toast.info('录音合并中，请稍后再试！');
+                    Toast.info('录音文件合并中，请稍后再查看！');
                     return;
                   }
                   onRecordClick?.(record);

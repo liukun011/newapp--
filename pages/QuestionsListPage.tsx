@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, FileText, Pencil, ArrowUp, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { Toast } from 'react-vant';
 import { QuestionInfo } from '../types';
 
@@ -182,6 +182,10 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  // Animation controls for floating button
+  const controls = useAnimation();
+  const bubbleRef = useRef<HTMLDivElement>(null);
+
   // 编辑弹框状态
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionInfo | null>(null);
@@ -353,9 +357,9 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   const totalQuestions = localQuestions.length;
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col h-screen bg-[#F7F8FA]">
       {/* NavBar */}
-      <div className="flex items-center justify-center px-4 py-3 relative border-b border-gray-100">
+      <div className="flex items-center justify-center px-4 py-3 relative border-b border-gray-100 bg-white flex-shrink-0">
         <button
           onClick={handleBack}
           className="absolute left-4 p-2 text-slate-700 hover:bg-slate-50 rounded-full active:bg-slate-100 transition-colors"
@@ -367,12 +371,12 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
       {/* Content */}
       <div
-        className="flex-1 overflow-hidden px-4 pb-24"
+        className="flex-1 flex flex-col overflow-hidden px-4"
       >
         {/* Deal Info Card */}
-        <div className="mt-4 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="mt-4 flex-1 flex flex-col min-h-0 bg-white rounded-t-2xl border border-gray-100 shadow-sm overflow-hidden border-b-0">
           {/* Fixed Header */}
-          <div className="p-4 border-b border-gray-100">
+          <div className="p-4 border-b border-gray-100 flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {/* 尽调 Logo */}
@@ -390,8 +394,8 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
           </div>
 
           {/* Scrollable Questions List */}
-          <div ref={scrollContainerRef} className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
-            <div className="divide-y divide-gray-100 px-4 pb-40">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+            <div className="divide-y divide-gray-100 px-4">
               {sortedQuestions.map((question, index) => {
                 const isChecked = question.CHECKED; // 是否命中
                 const isExpanded = expandedQuestionId === question.id;
@@ -487,22 +491,56 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
       </div>
 
       {/* Scroll to Top Button */}
-      {(!isArchived && showScrollTop) && (
-        <button
-          onClick={scrollToTop}
-          className="fixed right-4 bottom-40 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-colors border border-gray-100 z-30"
-        >
-          <ArrowUp size={20} />
-        </button>
-      )}
-
-      {/* Main Action Button: Add Question (Normal) OR Scroll Top (Archived) */}
-      <button
-        onClick={isArchived ? scrollToTop : handleAddQuestionClick}
-        className="fixed right-4 bottom-24 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 z-40 bg-primary-gradient"
+      {/* Floating Action Buttons (Draggable) */}
+      {/* Floating Action Buttons (Draggable) */}
+      <motion.div
+        ref={bubbleRef}
+        animate={controls}
+        drag
+        dragMomentum={false}
+        whileDrag={{ scale: 1.1 }}
+        dragConstraints={{ left: -window.innerWidth + 60, right: 0, top: -window.innerHeight + 100, bottom: 0 }}
+        onDragEnd={(event, info) => {
+          if (!bubbleRef.current) return;
+          const rect = bubbleRef.current.getBoundingClientRect();
+          const screenWidth = window.innerWidth;
+          const centerX = rect.left + rect.width / 2;
+          
+          // Determine if we should snap to left or right
+          if (centerX < screenWidth / 2) {
+             // Snap to Left Edge (with some margin)
+             // Calculate target X relative to initial right-anchored position
+             // Initial Right: 16px (right-4). Target Left 16px. 
+             // Delta X needed is roughly -(screenWidth - 32 - width).
+             // Let's use a simpler calculation:
+             // targetX = - (screenWidth - 32 - rect.width)
+             const targetX = -(screenWidth - 32 - rect.width);
+             controls.start({ x: targetX, transition: { type: "spring", stiffness: 400, damping: 30 } });
+          } else {
+             // Snap to Right Edge (initial position)
+             controls.start({ x: 0, transition: { type: "spring", stiffness: 400, damping: 30 } });
+          }
+        }}
+        className="fixed right-4 bottom-24 z-40 flex flex-col gap-3 items-center"
       >
-        {isArchived ? <ArrowUp size={24} /> : <Plus size={24} />}
-      </button>
+         {/* Scroll to Top Button */}
+        {(!isArchived && showScrollTop) && (
+          <button
+            onClick={(e) => { e.stopPropagation(); scrollToTop(); }}
+            className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:text-indigo-600 transition-colors border border-gray-100"
+          >
+            <ArrowUp size={20} />
+          </button>
+        )}
+
+        {/* Main Action Button */}
+        <button
+          onClick={(e) => { e.stopPropagation(); isArchived ? scrollToTop() : handleAddQuestionClick(); }}
+          className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 bg-primary-gradient"
+        >
+          {isArchived ? <ArrowUp size={24} /> : <Plus size={24} />}
+        </button>
+      </motion.div>
 
       {/* 新增问题弹框 */}
       <AddQuestionModal

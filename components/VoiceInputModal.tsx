@@ -182,7 +182,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
         }
 
         // 开始录音
-        if (nativeBridge) nativeBridge.startRecording();
+        if (nativeBridge) nativeBridge.startRecordingWithParams({ isRealTime: 1 });
         setIsLocalRecording(true);
         Toast.info('开始录音，请说话...');
       }

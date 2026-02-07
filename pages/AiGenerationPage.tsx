@@ -131,7 +131,7 @@ const AiGenerationPage: React.FC<AiGenerationPageProps> = ({ onBack, onConfirm }
       </div>
 
       {/* Bottom Bar */}
-      <div className="p-6 border-t border-gray-100 flex gap-4 bg-white z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+      <div className="px-6 py-3 border-t border-gray-100 flex gap-4 bg-white z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
          <Button 
             variant="secondary" 
             block 

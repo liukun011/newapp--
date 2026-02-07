@@ -291,7 +291,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto pb-40 p-4 scroll-smooth">
+      <div className="flex-1 overflow-y-auto pb-20 p-4 scroll-smooth">
         {activeTab === 'questions' ? (
           <div className="space-y-3">
              <div className="text-xs text-gray-400 mb-2 pl-1">已自动匹配 {questions.filter(q => q.isAnswered).length} / {questions.length} 项</div>
@@ -364,10 +364,11 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
       </div>
 
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 px-6 py-4 pb-8 z-30 flex gap-4 items-center justify-between pointer-events-none">
+      <div className="fixed bottom-0 left-0 right-0 px-4 py-3 z-30 flex gap-4 items-center justify-between bg-white shadow-[0px_4px_4px_0px_rgba(0,0,0,0.04)]">
+        <div className="absolute top-0 left-4 right-4 h-[1px] bg-[#E0E7FF]" />
         <Button 
           disabled
-          className="flex-1 rounded-full border border-gray-200 bg-gray-100 text-gray-400 font-medium shadow-none pointer-events-auto"
+          className="flex-1 rounded-full border border-gray-200 bg-white text-gray-400 font-medium shadow-none"
           variant="secondary"
         >
            已结束

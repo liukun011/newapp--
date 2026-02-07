@@ -549,9 +549,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         </div>
       </div>
 
+
+
       {/* Scrollable Content Container */}
       <div className="flex-1 min-h-0 overflow-y-auto relative z-10 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="px-4 pb-32 space-y-4">
+        <div className="px-4 pb-20 space-y-4">
           {/* Status Bar / Mascot Message */}
           <div className="flex items-end mt-8 mb-4 relative">
             <div className="w-20 h-20 absolute left-6 -bottom-1.5 z-20">
@@ -563,16 +565,20 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             </div>
 
             <div className="w-full bg-white rounded-3xl p-3 pl-28 shadow-sm relative z-10 flex-1">
-              <p className="text-[13px] text-slate-700 font-medium leading-tight">
+              <p className={`text-[13px] font-medium leading-tight ${
+                currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED ? 'text-red-500 font-bold' : 'text-slate-700'
+              }`}>
                 {(currentDeal?.status === '5')
                   ? '访谈归档，内容仅供查阅和下载'
                   : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING
                     ? '小狸全速生成报告中，请稍候'
                     : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED
                       ? '报告已生成! 可以继续完善信息'
-                      : isFinishedInterview
-                        ? '本次访谈已完成，可查看历史记录或生成报告'
-                        : '记录创建成功，赶紧开始访谈吧...'}
+                      : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED
+                        ? '报告生成失败，请重新尝试'
+                        : isFinishedInterview
+                          ? '本次访谈已完成，可查看历史记录或生成报告'
+                          : '记录创建成功，赶紧开始访谈吧...'}
               </p>
             </div>
           </div>
@@ -643,7 +649,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           // 报告已生成 - 新版卡片样式
           <div className="rounded-3xl shadow-lg relative overflow-hidden bg-[#4337F1]">
             {/* Rocket Mascot Image */}
-            <div className="absolute right-0 bottom-[56px] w-28 h-28 z-0">
+            <div className="absolute right-0 bottom-[48px] w-28 h-28 z-0">
                <img
                  src={`${basePath}assets/rocketxiaoli.png`}
                  alt="Rocket Mascot"
@@ -662,7 +668,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 className="px-5 pt-4 pb-0 text-white cursor-pointer"
                 onClick={handleReportPreviewThrottled}
               >
-                <div className="max-w-[60%]">
+                <div className="max-w-[70%]">
                   <h2 className="text-[18px] font-bold mb-2 leading-tight">
                     尽调报告
                   </h2>
@@ -716,7 +722,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           // 其他状态 - 新版卡片样式
           <div className="rounded-3xl shadow-lg relative overflow-hidden bg-[#4337F1]">
             {/* Rocket Mascot Image - Spans across top and bottom, sits behind content */}
-            <div className="absolute right-0 bottom-[56px] w-28 h-28 z-0">
+            <div className="absolute right-0 bottom-[48px] w-28 h-28 z-0">
                <img
                  src={`${basePath}assets/rocketxiaoli.png`}
                  alt="Rocket Mascot"
@@ -732,7 +738,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             <div className="relative z-10 flex flex-col h-full">
               {/* Top Section - Info */}
               <div className="px-5 pt-4 pb-0 text-white">
-                <div className="max-w-[60%]">
+                <div className="max-w-[70%]">
                   <h2 className="text-[18px] font-bold mb-2 leading-tight">
                     尽调报告
                   </h2>
@@ -813,7 +819,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       }}
                       className="px-3.5 py-1.5 bg-white text-[#4337F1] rounded-full text-xs font-bold shadow-sm active:scale-95 transition-transform whitespace-nowrap"
                     >
-                      立即生成
+                      {currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED ? '重新生成' : '立即生成'}
                     </button>
                     <button
                       className="px-3.5 py-1.5 bg-transparent border-[1px] border-white/60 text-white rounded-full text-xs font-medium active:scale-95 transition-transform whitespace-nowrap"
@@ -907,12 +913,12 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         })()}
 
         {/* Bottom Spacer */}
-        <div className="h-40" aria-hidden="true" />
+
       </div>
     </div>
 
       {/* Fixed Archive Button at Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30">
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-3 z-30">
         <button
           disabled={currentDeal?.status === '5'}
           onClick={handleArchiveThrottled}

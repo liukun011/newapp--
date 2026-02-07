@@ -10,6 +10,7 @@ import { templateService, ReportTemplate } from '../services/templateService';
 import { questionService, TemplateInfo } from '../services/questionService';
 import { nativeBridge } from '../services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
+import { motion, useAnimation } from 'framer-motion';
 import config from '../config';
 
 
@@ -72,6 +73,10 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const [newQuestionName, setNewQuestionName] = useState('');
   const [showLimitTips, setShowLimitTips] = useState(false);
   const { currentDealId } = useRecordingStore();
+  
+  // Animation controls for floating add button
+  const controls = useAnimation();
+  const bubbleRef = React.useRef<HTMLDivElement>(null);
 
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
@@ -805,7 +810,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
       {/* Main Content */}
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto bg-[#F7F8FA] pb-24">
+      <div className="flex-1 overflow-y-auto bg-[#F7F8FA] pb-16">
 
         {/* Tab 1: Upload */}
         {activeTab === 'upload' && (
@@ -1014,7 +1019,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 </div>
 
                 {/* Scrollable Questions Content */}
-                <div className="flex-1 overflow-y-auto pb-40">
+                <div className="flex-1 overflow-y-auto">
                   <div className="divide-y divide-gray-100">
                     {questions.map((question) => (
                       <div
@@ -1067,13 +1072,38 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               </div>
             )}
 
-            {/* Add Question Button */}
-            <button
-              onClick={handleQuestionAddThrottled}
-              className="fixed right-6 bottom-24 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 z-40 bg-primary-gradient"
+            {/* Add Question Button (Draggable) */}
+            <motion.div
+              ref={bubbleRef}
+              animate={controls}
+              drag
+              dragMomentum={false}
+              whileDrag={{ scale: 1.1 }}
+              dragConstraints={{ left: -window.innerWidth + 60, right: 0, top: -window.innerHeight + 100, bottom: 0 }}
+              onDragEnd={(event, info) => {
+                if (!bubbleRef.current) return;
+                const rect = bubbleRef.current.getBoundingClientRect();
+                const screenWidth = window.innerWidth;
+                const centerX = rect.left + rect.width / 2;
+                
+                // Determine if we should snap to left or right
+                if (centerX < screenWidth / 2) {
+                   const targetX = -(screenWidth - 32 - rect.width);
+                   controls.start({ x: targetX, transition: { type: "spring", stiffness: 400, damping: 30 } });
+                } else {
+                   // Snap to Right Edge (initial position)
+                   controls.start({ x: 0, transition: { type: "spring", stiffness: 400, damping: 30 } });
+                }
+              }}
+              className="fixed right-6 bottom-24 z-40"
             >
-              <Plus size={24} />
-            </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleQuestionAddThrottled(); }}
+                className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 bg-primary-gradient"
+              >
+                <Plus size={24} />
+              </button>
+            </motion.div>
           </div>
         )}
 
@@ -1081,7 +1111,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
       {/* Fixed Bottom Bar */}
       {/* Fixed Bottom Bar - Matching DueDiligencePage style */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30 flex gap-4">
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-3 z-30 flex gap-4">
         <Button
           variant="secondary"
           block

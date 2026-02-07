@@ -266,8 +266,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     // 立即执行一次
     pollTranscription();
 
-    // 启动定时轮询（每5秒）
-    pollingIntervalRef.current = setInterval(pollTranscription, 5000);
+    // 启动定时轮询（每15秒）
+    pollingIntervalRef.current = setInterval(pollTranscription, 15000);
 
     // 清理
     return () => {
@@ -636,7 +636,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     });
     console.log('[H5] 设置Native上传参数:', { host: uploadUrl, interviewInstId: surveyId });
 
-    nativeBridge.startRecordingWithParams({ surveyId, roleType: 2 });
+    nativeBridge.startRecordingWithParams({ surveyId, roleType: 2, isRealTime: 2 });
     onToggleRecording();
 
     // 更新访谈状态为进行中(2)
@@ -791,7 +791,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
           {/* Question List Tab */}
           <div className={activeTab === 'questions' ? 'block' : 'hidden'}>
-            <div className="space-y-3 pb-32">
+            <div className="space-y-3 pb-20">
               <div className="text-xs text-gray-400 mb-2 pl-1">已自动匹配 {questions.filter(q => q.isAnswered).length} / {questions.length} 项</div>
               {questions.map((q, index) => (
                 <div key={q.id} className="bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-50 transition-all">
@@ -995,7 +995,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
       {/* Sticky Bottom Bar */}
       {countdown === 0 && (
-        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30">
+        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-3 z-30">
           <div className="flex gap-4 items-center justify-between">
             <Button
               variant="primary"
