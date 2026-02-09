@@ -232,19 +232,21 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
             <Edit2 size={10} className="text-white" />
           </button> */}
         </div>
-        <div className="flex items-center gap-2">
-          {/* 占位符，平衡右侧编辑按钮，确保名称水平居中 */}
-          <div className="w-8" /> 
-          <h2 className="text-[18px] font-bold text-slate-800">{userName || '未登录'}</h2>
-          <button
-            onClick={() => {
-              setNewNickName(userName === '未登录' ? '' : userName);
-              setRenameModalVisible(true);
-            }}
-            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-400 active:bg-gray-200 transition-colors"
-          >
-            <Edit2 size={16} />
-          </button>
+        <div className="w-full px-8 flex justify-center">
+          <div className="flex items-center justify-center gap-2 max-w-full">
+            <h2 className="text-[18px] font-bold text-slate-800 text-center break-words leading-snug">
+              {userName || '未登录'}
+            </h2>
+            <button
+              onClick={() => {
+                setNewNickName(userName === '未登录' ? '' : userName);
+                setRenameModalVisible(true);
+              }}
+              className="shrink-0 w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-400 active:bg-gray-200 transition-colors"
+            >
+              <Edit2 size={16} />
+            </button>
+          </div>
         </div>
       </div>
 

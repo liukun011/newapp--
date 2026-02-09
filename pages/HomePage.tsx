@@ -9,7 +9,7 @@ import {
   Plus,
   Clock,
 } from "lucide-react";
-import { SwipeCell, PullRefresh, Toast } from "react-vant";
+import { SwipeCell, PullRefresh, Toast, Swiper } from "react-vant";
 import Mascot from "../components/Mascot";
 
 import { DealRecord } from "../types";
@@ -30,8 +30,6 @@ interface HomePageProps {
 const HomePage: React.FC<HomePageProps> = ({ 
   onNavigateToDetail, 
   onNavigateToRecording,
-  onNavigateToSettings,
-  onNavigateToTemplates,
   initialTab = "ongoing",
   onTabChange,
 }) => {
@@ -58,15 +56,17 @@ const HomePage: React.FC<HomePageProps> = ({
   // SwipeCell 强制刷新 key
   const [swipeCellKey, setSwipeCellKey] = useState(0);
 
+  // Swipe Item State
+  const [swipingItemId, setSwipingItemId] = useState<string | null>(null);
+
   // AI Banner 轮播状态
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const bannerItems = [
     {
-      title: "资料分析",
+      title: "AI资料分析",
       description: "全方位深度挖掘资料细节与潜在规律，提炼高价值关键信息"
     },
     {
-      title: "自动问题生成",
+      title: "智能问题生成",
       description: "基于上传资料自动生成专业访谈问题，提升尽调效率与质量"
     },
     {
@@ -89,15 +89,6 @@ const HomePage: React.FC<HomePageProps> = ({
     // 只有切换Tab或搜索时才重新加载
     fetchDeals(true, true); // 重置分页
   }, [activeTab, searchQuery]);
-
-  // AI Banner 自动轮播
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBannerIndex((prev) => (prev + 1) % bannerItems.length);
-    }, 3000); // 每3秒切换一次
-
-    return () => clearInterval(interval);
-  }, [bannerItems.length]);
 
   // 自动加载更多直到内容可滚动
   useEffect(() => {
@@ -208,16 +199,32 @@ const HomePage: React.FC<HomePageProps> = ({
     }
   };
 
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // 处理输入变化
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
     
-    // 如果清空了输入框，立即搜索
-    if (value === '') {
-      setSearchQuery('');
+    // 清除之前的定时器
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+
+    // 设置新的定时器，500ms后执行搜索
+    searchTimeoutRef.current = setTimeout(() => {
+      setSearchQuery(value);
+    }, 500);
   };
+
+  // 清除搜索定时器
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // 手动触发搜索
   const handleSearch = () => {
@@ -368,44 +375,39 @@ const HomePage: React.FC<HomePageProps> = ({
       >
           {/* Banner inside scroll area */}
           <div className="px-4 mb-[14px] mt-[14px]">
-            <div 
-              className="rounded-2xl p-5 relative shadow-sm overflow-hidden"
-              style={{ background: 'linear-gradient(270deg, #C3D1FD 0%, #CADCF9 0%, #E6F2FF 100%)', minHeight: '150px' }}
-            >
-              <div className="relative z-10 max-w-[60%]">
-                <h2 className="text-[19px] font-black text-[#1A4B8B] mb-2 leading-tight transition-all duration-500">
-                  {bannerItems[currentBannerIndex].title}
-                </h2>
-                <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90 transition-all duration-500 min-h-[54px]">
-                  {bannerItems[currentBannerIndex].description}
-                </p>
-                <div className="mt-3 flex gap-1.5">
-                  {bannerItems.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentBannerIndex(index);
-                      }}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        index === currentBannerIndex 
-                          ? 'w-4 bg-white' 
-                          : 'w-1.5 bg-white/40 hover:bg-white/60'
-                      }`}
-                      aria-label={`切换到第${index + 1}个横幅`}
-                    />
-                  ))}
-                </div>
-              </div>
-              
-              {/* Right Image */}
-              <div className="absolute top-0 right-0 bottom-0 w-[45%] pointer-events-none">
-                <img 
-                  src="/talk-assistant/assets/home.png" 
-                  alt="Analysis" 
-                  className="w-full h-full object-contain object-right-bottom scale-110 -translate-y-5 translate-x-2"
-                />
-              </div>
+            <div className="rounded-2xl shadow-sm overflow-hidden transform transition-transform active:scale-[0.99]">
+              <Swiper 
+                autoplay={3000} 
+                className="h-[150px] w-full"
+                style={{ borderRadius: '16px' }}
+              >
+                {bannerItems.map((item, index) => (
+                  <Swiper.Item key={index}>
+                    <div 
+                      className="h-full w-full relative p-5"
+                      style={{ background: 'linear-gradient(270deg, #C3D1FD 0%, #CADCF9 0%, #E6F2FF 100%)' }}
+                    >
+                      <div className="relative z-10 max-w-[60%] h-full flex flex-col justify-center">
+                        <h2 className="text-[19px] font-black text-[#1A4B8B] mb-2 leading-tight">
+                          {item.title}
+                        </h2>
+                        <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90 min-h-[54px] line-clamp-3">
+                          {item.description}
+                        </p>
+                      </div>
+                      
+                      {/* Right Image */}
+                      <div className="absolute top-0 right-0 bottom-0 w-[45%] pointer-events-none">
+                        <img 
+                          src="/talk-assistant/assets/home.png" 
+                          alt="Analysis" 
+                          className="w-full h-full object-contain object-right-bottom scale-110 -translate-y-5 translate-x-2"
+                        />
+                      </div>
+                    </div>
+                  </Swiper.Item>
+                ))}
+              </Swiper>
             </div>
           </div>
 
@@ -468,80 +470,87 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
             ) : (
               <div className={`flex flex-col ${deals.length <= 2 ? 'pb-4' : 'pb-32'}`}>
-                {deals.map((item) => (
-                <div key={item.id} className="mb-2">
-                  <SwipeCell
-                    key={`${item.id}-${swipeCellKey}`}
-                    rightAction={
-                      <button
-                        className="h-full px-6 bg-red-500 text-white flex items-center justify-center rounded-r-2xl"
-                        onClick={() => handleDeleteThrottled(item.id)}
+                {deals.map((item) => {
+                  const isSwiping = swipingItemId === item.id;
+                  return (
+                    <div key={item.id} className="mb-2">
+                      <SwipeCell
+                        key={`${item.id}-${swipeCellKey}`}
+                        onOpen={() => setSwipingItemId(item.id)}
+                        onClose={() => setSwipingItemId(null)}
+                        rightAction={
+                          <button
+                            className="h-full px-6 bg-red-500 text-white flex items-center justify-center rounded-r-2xl"
+                            onClick={() => handleDeleteThrottled(item.id)}
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        }
                       >
-                        <Trash2 size={20} />
-                      </button>
-                    }
-                  >
-                    <div
-                      onClick={() => handleNavigateThrottled(item)}
-                      className="bg-white rounded-2xl flex flex-col shadow-[0_2px_8px_rgba(0,0,0,0.04)] active:scale-[0.99] transition-transform overflow-hidden"
-                    >
-                      {/* Upper Section: Icon + Title/Summary */}
-                      <div className="flex gap-4 p-4 pb-3">
-                        {/* Icon/Logo */}
-                        <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center shadow-inner bg-indigo-50 text-indigo-500 overflow-hidden">
-                          {item.logo ? (
-                            <img 
-                              src={item.logo} 
-                              alt={item.interviewCust}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <FileText size={24} className="drop-shadow-sm" />
-                          )}
-                        </div>
+                        <div
+                          onClick={() => handleNavigateThrottled(item)}
+                          className={`bg-white flex flex-col shadow-[0_2px_8px_rgba(0,0,0,0.04)] active:scale-[0.99] transition-transform overflow-hidden rounded-l-2xl ${
+                            isSwiping ? 'rounded-r-none' : 'rounded-r-2xl'
+                          }`}
+                        >
+                          {/* Upper Section: Icon + Title/Summary */}
+                          <div className="flex gap-4 p-4 pb-3">
+                            {/* Icon/Logo */}
+                            <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center shadow-inner bg-indigo-50 text-indigo-500 overflow-hidden">
+                              {item.logo ? (
+                                <img
+                                  src={item.logo}
+                                  alt={item.interviewCust}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <FileText size={24} className="drop-shadow-sm" />
+                              )}
+                            </div>
 
-                        {/* Text Content */}
-                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <div className="flex justify-between items-start mb-1">
-                            <h3 className="text-[16px] font-bold text-slate-800 truncate pr-2 flex-1 leading-snug">
-                              {item.interviewCust}
-                            </h3>
-                            {/* 访谈中 标签 */}
-                            {(currentDealId === item.id) && (
-                              <span className="flex-shrink-0 px-2 py-0.5 bg-[#E0F7FA] text-[#00B5B5] text-[10px] font-medium rounded-md transform translate-y-0.5 ml-1">
-                                访谈中
-                              </span>
-                            )}
+                            {/* Text Content */}
+                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                              <div className="flex justify-between items-start mb-1">
+                                <h3 className="text-[16px] font-bold text-slate-800 truncate pr-2 flex-1 leading-snug">
+                                  {item.interviewCust}
+                                </h3>
+                                {/* 访谈中 标签 */}
+                                {(currentDealId === item.id) && (
+                                  <span className="flex-shrink-0 px-2 py-0.5 bg-[#E0F7FA] text-[#00B5B5] text-[10px] font-medium rounded-md transform translate-y-0.5 ml-1">
+                                    访谈中
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[13px] text-gray-400 truncate">
+                                {item.dealSummary || "没有上传资料，请尽快上传您的访谈资料"}
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-[13px] text-gray-400 truncate">
-                             {item.dealSummary || "没有上传资料，请尽快上传您的访谈资料"}
-                          </p>
+
+                          {/* Divider */}
+                          <div className="h-[1px] bg-gray-100 mx-4" />
+
+                          {/* Lower Section: Time + Button */}
+                          <div className="flex justify-between items-center px-4 py-3">
+                            <div className="flex items-center gap-1.5 text-gray-300">
+                              <Clock size={13} />
+                              <span className="text-[12px] font-medium">{formatTime(item.lastModifiedDate, true)}</span>
+                            </div>
+
+                            <button
+                              className={`flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-md active:scale-95 transition-all ${
+                                item.status === '5' ? 'bg-gray-300 shadow-none' : 'bg-[#4337F1]'
+                              }`}
+                              onClick={(e) => handleRecordClickThrottled(e, item)}
+                            >
+                              <Plus size={14} strokeWidth={2.5} /> 访谈录音
+                            </button>
+                          </div>
                         </div>
-                      </div>
-
-                      {/* Divider */}
-                      <div className="h-[1px] bg-gray-100 mx-4" />
-                      
-                      {/* Lower Section: Time + Button */}
-                      <div className="flex justify-between items-center px-4 py-3">
-                         <div className="flex items-center gap-1.5 text-gray-300">
-                           <Clock size={13} />
-                           <span className="text-[12px] font-medium">{formatTime(item.lastModifiedDate, true)}</span>
-                         </div>
-
-                         <button
-                           className={`flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-md active:scale-95 transition-all ${
-                             item.status === '5' ? 'bg-gray-300 shadow-none' : 'bg-[#4337F1]'
-                           }`}
-                           onClick={(e) => handleRecordClickThrottled(e, item)}
-                         >
-                           <Plus size={14} strokeWidth={2.5} /> 访谈录音
-                         </button>
-                      </div>
+                      </SwipeCell>
                     </div>
-                  </SwipeCell>
-                </div>
-              ))}
+                  );
+                })}
 
               {/* 加载更多指示器 */}
               {loadingMore && (

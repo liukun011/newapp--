@@ -745,6 +745,7 @@ const App: React.FC = () => {
         setCurrentDeal(res.data);
         // 必须使用 navigateForward 将新页面压入栈中，保证能从资料页返回首页
         setPreviousView(View.HOME);
+        setMaterialUploadTab('upload');
         navigateForward(View.MATERIAL_UPLOAD);
       } else {
         Toast.fail(res.message || '创建失败');
@@ -1439,6 +1440,41 @@ const App: React.FC = () => {
                        console.error('Failed to change template:', error);
                        Toast.fail('更换失败');
                      }
+                  } : undefined}
+                  onRefresh={currentDeal?.id && previousView === View.DUE_DILIGENCE ? () => {
+                     Dialog.confirm({
+                        title: '确认生成',
+                        message: '重新生成报告将覆盖现有报告，是否继续?',
+                        confirmButtonColor: '#4337F1',
+                        cancelButtonColor: '#969799',
+                     }).then(async () => {
+                        if (!currentDeal?.id) return;
+                        try {
+                           Toast.loading({ message: '正在提交...', duration: 0 });
+                           const res = await dealService.generateInterviewInstReportAsync(currentDeal.id);
+                           Toast.clear();
+                           if (res.success) {
+                              Toast.success('报告生成任务已提交');
+                              // 提交成功后返回详情页，以便用户看到"生成中"的状态
+                              navigateBackward(View.DUE_DILIGENCE);
+                              
+                              // 尝试刷新 currentDeal 状态
+                              try {
+                                  const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+                                  if (detailRes.success && detailRes.data) {
+                                      setCurrentDeal(detailRes.data);
+                                  }
+                              } catch(e) { console.error(e); }
+
+                           } else {
+                              Toast.fail(res.message || '提交失败');
+                           }
+                        } catch (e) {
+                           Toast.clear();
+                           console.error(e);
+                           Toast.fail('提交失败');
+                        }
+                     }).catch(() => {});
                   } : undefined}
                   onBack={() => {
                     console.log('[ReportPreview] Navigating back, previousView:', previousView);

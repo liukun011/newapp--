@@ -9,13 +9,37 @@ import './index.css';
 // Initialize VConsole only in development or test environments
 import VConsole from 'vconsole';
 
-if (
-  import.meta.env.MODE === 'development'
-  // || import.meta.env.MODE === 'test'
-  //  ||  import.meta.env.MODE === 'production'
-  ) {
-  new VConsole();
-}
+// Initialize VConsole logic
+const initVConsole = () => {
+  const mode = import.meta.env.MODE;
+  const isDev = mode === 'development';
+  const isTest = mode === 'test';
+
+  let shouldShow = isDev;
+
+  // 在测试环境下，额外判断特定用户
+  if (isTest) {
+    try {
+      const userInfoStr = localStorage.getItem('zov-user-info');
+      if (userInfoStr) {
+        const userInfo = JSON.parse(userInfoStr);
+        // 假设用户信息中有 mobile 或 phone 字段，根据实际情况调整
+        // 这里匹配 13278852398
+        if (userInfo.mobile === '13278852398' || userInfo.username === '13278852398') {
+          shouldShow = true;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse user info for VConsole check', e);
+    }
+  }
+
+  if (shouldShow) {
+    new VConsole();
+  }
+};
+
+initVConsole();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

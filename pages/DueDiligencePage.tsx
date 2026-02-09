@@ -337,7 +337,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             currentDeal.report.fileName || '尽调报告',
             currentDeal.report.fileUrl,
             res.data,
-            false
+            true
           );
         } else {
           Toast.fail(res.message || '打开报告失败');
@@ -571,7 +571,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 {(currentDeal?.status === '5')
                   ? '访谈归档，内容仅供查阅和下载'
                   : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING
-                    ? '小狸全速生成报告中，请稍候'
+                    ? '小狸AI全速生成报告中，请稍候'
                     : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED
                       ? '报告已生成! 可以继续完善信息'
                       : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED
@@ -591,39 +591,41 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 <div className="flex items-center gap-2">
                   <h3 className="text-[15px] font-black text-slate-800 tracking-tight">访谈小总结</h3>
                   <div className="bg-[#F4F7FF] text-[#86909C] text-[10px] px-2 py-0.5 rounded-md font-medium">
-                    自动提炼，仅供参考
+                    AI自动提炼，仅供参考
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={async () => {
-                      if (!currentDeal?.id) return;
-                      try {
-                        Toast.loading({ message: '正在刷新总结...', duration: 0, forbidClick: true });
-                        const res = await dealService.generateInterviewSummary(currentDeal.id, true);
-                        if (res.success) {
-                          // 刷新详情以获取最新总结
-                          const detailRes = await dealService.getDealInstDetail(currentDeal.id);
-                          if (detailRes.success && detailRes.data) {
-                            setDealDetail(detailRes.data);
-                            onDealDetailLoadedRef.current?.(detailRes.data);
-                            Toast.success('刷新成功');
+                  {currentDeal?.status !== '5' && (
+                    <button
+                      onClick={async () => {
+                        if (!currentDeal?.id) return;
+                        try {
+                          Toast.loading({ message: '正在刷新总结...', duration: 0, forbidClick: true });
+                          const res = await dealService.generateInterviewSummary(currentDeal.id, true);
+                          if (res.success) {
+                            // 刷新详情以获取最新总结
+                            const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+                            if (detailRes.success && detailRes.data) {
+                              setDealDetail(detailRes.data);
+                              onDealDetailLoadedRef.current?.(detailRes.data);
+                              Toast.success('刷新成功');
+                            }
+                          } else {
+                            Toast.fail(res.message || '刷新失败');
                           }
-                        } else {
-                          Toast.fail(res.message || '刷新失败');
+                        } catch (error) {
+                          console.error('Refresh summary failed:', error);
+                          Toast.fail('刷新失败');
+                        } finally {
+                          Toast.clear();
                         }
-                      } catch (error) {
-                        console.error('Refresh summary failed:', error);
-                        Toast.fail('刷新失败');
-                      } finally {
-                        Toast.clear();
-                      }
-                    }}
-                    className="p-1 text-indigo-400 hover:text-indigo-600 transition-colors active:scale-95"
-                  >
-                    <RotateCw size={14} />
-                  </button>
+                      }}
+                      className="p-1 text-indigo-400 hover:text-indigo-600 transition-colors active:scale-95"
+                    >
+                      <RotateCw size={14} />
+                    </button>
+                  )}
                   <button 
                     onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
                     className="flex items-center gap-1 bg-[#F0F2FF] text-indigo-600 px-2.5 py-1 rounded-full text-[12px] font-bold active:scale-95 transition-all"
@@ -698,7 +700,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       onClick={handleGenerateReportThrottled}
                       className="px-3.5 py-1.5 bg-white text-[#4337F1] rounded-full text-xs font-bold shadow-sm active:scale-95 transition-transform whitespace-nowrap"
                     >
-                      立即生成
+                      {currentDeal?.reportStatus === DealReportStatusEnum.REPORT_GENERATED ? '重新生成' : '立即生成'}
                     </button>
                     <button
                       onClick={handleDownloadReportThrottled}
@@ -743,7 +745,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     尽调报告
                   </h2>
                   <p className="text-white/90 text-[14px] font-light leading-relaxed">
-                    访谈即报告，洞察更高效。小狸自动捕捉核心要点。
+                    访谈即报告，洞察更高效。小狸AI智能捕捉核心要点。
                   </p>
                 </div>
               </div>
@@ -757,7 +759,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                    // Loading State
                    <div className="flex items-center gap-2 py-1 mr-auto pl-2">
                      <div className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin"></div>
-                     <span className="text-white/90 text-xs font-medium">小狸全速生成报告中，请稍候...</span>
+                     <span className="text-white/90 text-xs font-medium">小狸AI全速生成报告中，请稍候...</span>
                    </div>
                 ) : (
                    // Action Buttons
@@ -766,7 +768,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       onClick={() => {
                         Dialog.confirm({
                           title: '确认生成报告?',
-                          message: '系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告',
+                          message: '系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告（由AI自动生成）',
                           confirmButtonText: '确认',
                           cancelButtonText: '取消',
                           confirmButtonColor: '#4337F1',
@@ -842,7 +844,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             onClick={handleNavigateMaterialsThrottled}
           >
             <div>
-              <div className="flex items-baseline gap-2">
+              <div className="flex items-center gap-2">
                 <h3 className="font-bold text-slate-800 text-[16px]">尽调资料</h3>
                 {(() => {
                   const resourcesCount = currentDeal?.resources?.length || 0;
@@ -875,7 +877,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           </div>
 
           {/* Recording */}
-          <div className="bg-white rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[140px]">
+          <div
+            className="bg-white rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[140px] cursor-pointer active:scale-[0.98] transition-all"
+            onClick={handleRecordingClickThrottled}
+          >
             <div>
               <h3 className="font-bold text-slate-800 text-[16px]">访谈录音</h3>
               <p className="text-xs text-gray-400 mt-1">语音转写</p>
@@ -883,9 +888,13 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
             <div className="flex items-end justify-between mt-4">
               <button
-                onClick={handleRecordingClickThrottled}
+                // Remove onClick here to let the parent div handle it, or keep stopPropagation if needed
+                // But user request implies clicking anywhere on container works.
+                // Keeping button visual style but removing duplicate click handler or preventing bubbling isn't strictly necessary if parent handles it,
+                // BUT consistent UX usually means buttons inside clickable cards might do specific things.
+                // Here the action is the same.
                 className={`px-3 py-1.5 rounded-full text-xs font-bold border ${currentDeal?.status === '5'
-                  ? 'bg-indigo-50 text-indigo-600 border-indigo-100' // 恢复高亮样式
+                  ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
                   : 'bg-indigo-50 text-indigo-600 border-indigo-100'
                   } whitespace-nowrap`}
               >

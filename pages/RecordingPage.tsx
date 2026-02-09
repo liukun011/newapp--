@@ -727,7 +727,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto relative min-h-0 bg-[#F7F8FA] scroll-smooth"
+        className={`flex-1 relative min-h-0 bg-[#F7F8FA] scroll-smooth ${countdown > 0 ? 'overflow-hidden' : 'overflow-y-auto'}`}
         style={{ WebkitOverflowScrolling: 'touch' }}
         onScroll={handleScroll}
       >
@@ -747,7 +747,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                 className="w-full h-full object-contain"
               />
               <span
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl font-extrabold mt-8 mr-1 transform rotate-[-5deg] text-primary"
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl font-extrabold text-primary mt-8"
               >
                 {countdown}
               </span>

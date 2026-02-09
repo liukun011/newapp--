@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft, Download, RefreshCw } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { nativeBridge } from '../services/nativeBridge';
 
@@ -11,6 +11,7 @@ interface ReportPreviewPageProps {
   actionButtonText?: string;
   onAction?: () => void;
   onBack: () => void;
+  onRefresh?: () => void;
 }
 
 const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
@@ -20,7 +21,8 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
   showDownloadButton = false,
   actionButtonText,
   onAction,
-  onBack
+  onBack,
+  onRefresh
 }) => {
   const handleDownload = () => {
       // 监听下载结果
@@ -74,6 +76,14 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
         <h1 className="text-lg font-bold text-slate-800 truncate flex-1">
           {reportName || '报告预览'}
         </h1>
+        {onRefresh && (
+          <button 
+            onClick={onRefresh}
+            className="p-2 text-slate-700 active:bg-gray-100 rounded-full transition-colors"
+          >
+            <RefreshCw size={20} />
+          </button>
+        )}
       </div>
 
       {/* Preview Content */}

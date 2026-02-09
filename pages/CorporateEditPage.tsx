@@ -228,7 +228,10 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
                     <Plus size={36} strokeWidth={2.5} />
                 )}
             </div>
-            <span className="text-[11px] font-medium mt-1 text-indigo-400">
+            <span 
+                className="text-[11px] font-medium mt-1 text-indigo-400 cursor-pointer"
+                onClick={handlePhotoUploadThrottled}
+            >
                 {logoUrl ? '点击更换图片' : '上传企业照片'}
             </span>
         </div>

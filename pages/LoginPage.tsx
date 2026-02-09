@@ -159,7 +159,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           </button>
           <h1 className="flex-1 text-center text-lg font-bold text-slate-800 pr-8">用户协议</h1>
         </div>
-        <div className="flex-1 overflow-y-auto p-6 text-slate-800 pb-10">
+        <div className="flex-1 overflow-y-auto p-6 text-slate-800 pb-10 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
            <h2 className="text-xl font-bold mb-4">1. 引言</h2>
            <p className="text-[15px] leading-relaxed mb-6 text-justify text-slate-600">
              欢迎使用北京零壹视界科技有限公司提供的服务（以下简称“本服务”）。请在使用前仔细阅读并理解本《用户协议》（以下简称“本协议”）的所有条款。一旦您开始使用本服务，即视为您已充分理解并同意接受本协议所有条款。
@@ -228,7 +228,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           </button>
           <h1 className="flex-1 text-center text-lg font-bold text-slate-800 pr-8">隐私政策</h1>
         </div>
-        <div className="flex-1 overflow-y-auto p-6 text-slate-800 pb-10">
+        <div className="flex-1 overflow-y-auto p-6 text-slate-800 pb-10 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
            <div className="mb-6 text-sm text-gray-500">
              <p>本版本发布日期：2026年1月28日</p>
              <p>生效日期：2026年1月28日</p>

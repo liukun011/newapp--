@@ -430,23 +430,33 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       return;
     }
 
-    try {
-      Toast.loading({ message: '删除中...', duration: 0 });
-      const res = await dealService.deleteDealMaterial(deal.id, resourceId);
-      Toast.clear();
+    Dialog.confirm({
+      title: '确认删除',
+      message: '确定要删除该资料吗？此操作无法撤销。',
+      confirmButtonColor: '#FA5151',
+    })
+      .then(async () => {
+        try {
+          Toast.loading({ message: '删除中...', duration: 0 });
+          const res = await dealService.deleteDealMaterial(deal.id, resourceId);
+          Toast.clear();
 
-      if (res.success) {
-        Toast.success('删除成功');
-        // 刷新资源列表
-        await fetchDealDetail();
-      } else {
-        Toast.fail(res.message || '删除失败');
-      }
-    } catch (error) {
-      Toast.clear();
-      console.error('Delete failed:', error);
-      Toast.fail('删除失败');
-    }
+          if (res.success) {
+            Toast.success('删除成功');
+            // 刷新资源列表
+            await fetchDealDetail();
+          } else {
+            Toast.fail(res.message || '删除失败');
+          }
+        } catch (error) {
+          Toast.clear();
+          console.error('Delete failed:', error);
+          Toast.fail('删除失败');
+        }
+      })
+      .catch(() => {
+        // 取消删除
+      });
   };
 
   // 打开重命名弹框
@@ -1086,7 +1096,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               dragMomentum={false}
               whileDrag={{ scale: 1.1 }}
               dragConstraints={{ left: -window.innerWidth + 60, right: 0, top: -window.innerHeight + 100, bottom: 0 }}
-              onDragEnd={(event, info) => {
+              onDragEnd={() => {
                 if (!bubbleRef.current) return;
                 const rect = bubbleRef.current.getBoundingClientRect();
                 const screenWidth = window.innerWidth;

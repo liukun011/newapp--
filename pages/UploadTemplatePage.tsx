@@ -248,13 +248,21 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
           <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
             模板名称 <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
+          <textarea
             value={templateName}
-            onChange={(e) => setTemplateName(e.target.value)}
-            placeholder="A公司流贷尽调"
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-slate-800 placeholder-gray-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors"
+            onChange={(e) => {
+              let val = e.target.value;
+              if (val.length > 30) val = val.slice(0, 30);
+              setTemplateName(val);
+            }}
+            placeholder="请输入模板名称"
+            maxLength={30}
+            rows={2}
+            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-slate-800 placeholder-gray-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors resize-none"
           />
+          <div className="text-right text-xs text-slate-400 mt-1">
+            {templateName.length}/30
+          </div>
         </div>
 
         {/* Upload Template */}
