@@ -905,12 +905,15 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                         </button>
 
                         {/* Edit Button */}
-                        <button
-                          onClick={() => handleOpenRenameModalThrottled(resource)}
-                          className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
-                        >
-                          <Pencil size={18} strokeWidth={2} />
-                        </button>
+                        {/* Edit Button */}
+                        {resource.type !== '4' && (
+                          <button
+                            onClick={() => handleOpenRenameModalThrottled(resource)}
+                            className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
+                          >
+                            <Pencil size={18} strokeWidth={2} />
+                          </button>
+                        )}
 
                         {/* Delete Button */}
                         <button

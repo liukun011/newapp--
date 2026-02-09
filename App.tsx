@@ -1784,6 +1784,15 @@ const App: React.FC = () => {
                 placeholder="请输入访谈对象"
                 className="w-full h-12 px-4 bg-gray-50 rounded-xl text-slate-800 border-none focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
                 autoFocus
+                onFocus={() => {
+                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                  if (isIOS) {
+                    setTimeout(() => {
+                      window.scrollBy({ top: 20, behavior: 'smooth' });
+                    }, 300);
+                  }
+                }}
               />
             </div>
             

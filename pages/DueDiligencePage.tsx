@@ -48,6 +48,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
   const [voiceModalInitialContent, setVoiceModalInitialContent] = useState('');
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+  const [isRefreshingSummary, setIsRefreshingSummary] = useState(false);
 
   // 上传状态锁，防止重复触发
   const isUploadingRef = React.useRef(false);
@@ -599,9 +600,12 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   {currentDeal?.status !== '5' && (
                     <button
                       onClick={async () => {
-                        if (!currentDeal?.id) return;
+                        if (!currentDeal?.id || isRefreshingSummary) return;
+                        setIsRefreshingSummary(true);
+                        // 提示用户已开始刷新，但不阻塞操作
+                        Toast.info({ message: '正在刷新总结...', duration: 1500 });
+                        
                         try {
-                          Toast.loading({ message: '正在刷新总结...', duration: 0, forbidClick: true });
                           const res = await dealService.generateInterviewSummary(currentDeal.id, true);
                           if (res.success) {
                             // 刷新详情以获取最新总结
@@ -618,10 +622,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                           console.error('Refresh summary failed:', error);
                           Toast.fail('刷新失败');
                         } finally {
-                          Toast.clear();
+                          setIsRefreshingSummary(false);
                         }
                       }}
-                      className="p-1 text-indigo-400 hover:text-indigo-600 transition-colors active:scale-95"
+                      className={`p-1 text-indigo-400 hover:text-indigo-600 transition-colors active:scale-95 ${isRefreshingSummary ? 'animate-spin cursor-not-allowed opacity-70' : ''}`}
                     >
                       <RotateCw size={14} />
                     </button>

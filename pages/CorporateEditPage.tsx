@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
+import { useKeyboardStatus } from '../hooks/useKeyboardStatus';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { Toast } from 'react-vant';
 import Button from '../components/Button';
@@ -19,6 +20,22 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
   const [companyName, setCompanyName] = useState(deal?.interviewCust || '');
   const [logoUrl, setLogoUrl] = useState(deal?.logo || '');
   const [loading, setLoading] = useState(false);
+  
+  // 键盘与滚动处理
+  const isKeyboardOpen = useKeyboardStatus();
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isKeyboardOpen && scrollContainerRef.current) {
+      // 键盘弹出，稍微延迟以等待布局调整
+      setTimeout(() => {
+        scrollContainerRef.current?.scrollTo({
+          top: scrollContainerRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 300);
+    }
+  }, [isKeyboardOpen]);
   
   // 上传状态锁
   const isUploadingRef = React.useRef(false);
@@ -210,7 +227,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
       </div>
 
       {/* Main Content - Scrollable Area */}
-      <div className="flex-1 w-full overflow-y-auto p-6 flex flex-col items-center pb-32">
+      <div ref={scrollContainerRef} className="flex-1 w-full overflow-y-auto p-6 flex flex-col items-center pb-32">
         {/* Photo Uploader Placeholder / Logo Preview */}
         <div className="mt-8 mb-10 flex flex-col items-center justify-center shrink-0">
             <div 

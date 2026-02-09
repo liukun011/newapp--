@@ -218,6 +218,9 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
     console.log('[轮询] 开始轮询转写结果...');
 
+    // 标记是否在本次录音会话中已经收到过数据
+    let hasReceivedData = false;
+
     const pollTranscription = async () => {
       // 双重检查：如果已经暂停，不再发起请求
       if (!isRecordingForPollingRef.current) return;
@@ -244,11 +247,23 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
             }));
           
           if (newRecords.length > 0) {
-            console.log(`[轮询] 收到增量数据：${newRecords.length} 条`);
+            console.log(`[轮询] 收到增量数据：${newRecords.length} 条, hasReceivedData: ${hasReceivedData}`);
             
-            // 直接追加新数据到现有列表末尾
             const currentList = transcriptionListRef.current;
-            const mergedList = [...currentList, ...newRecords];
+            let baseList = currentList;
+
+            // 核心逻辑调整：
+            // 1. 如果是本次轮询第一次收到数据，直接追加 (hasReceivedData = false)
+            // 2. 如果是后续轮询收到数据 (hasReceivedData = true)，说明后端可能返回了上一条的更新版
+            //    因此需要先删掉本地的最后一条，再合并新数据
+            if (hasReceivedData && currentList.length > 0) {
+              baseList = currentList.slice(0, -1);
+            }
+            
+            // 标记已收到过数据
+            hasReceivedData = true;
+
+            const mergedList = [...baseList, ...newRecords];
             
             setTranscriptionList(mergedList);
             setLastFetchedCount(mergedList.length);
@@ -261,8 +276,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
     // 立即执行一次
     pollTranscription();
-
-    // 启动定时轮询（每15秒）
+    // 用户原设定是 15000，虽然有点慢，但我先保持不变，除非用户要求
     pollingIntervalRef.current = setInterval(pollTranscription, 15000);
 
     // 清理

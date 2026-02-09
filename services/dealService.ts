@@ -341,6 +341,7 @@ export const dealService = {
     return request<ApiResponse<any>>('/interview/summary', {
       method: 'POST',
       data: { id, direct },
+      timeout: 15000,
     });
   },
 };

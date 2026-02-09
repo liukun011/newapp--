@@ -8,7 +8,7 @@ import { LOGIN_SLIDES } from '../constants';
 
 import { authService } from '../services/authService';
 import { Toast } from 'react-vant';
-import { nativeBridge } from '../services/nativeBridge';
+
 import { checkVConsoleForTestUser } from '../index';
 
 interface LoginPageProps {
@@ -142,8 +142,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   // Handle native back navigation for sub-views
   useEffect(() => {
-    const handleNativeBack = () => {
+    const handleNativeBack = (e: Event) => {
+      // 密码/验证码页面：拦截并返回到 LANDING
+      if (viewState === 'SMS' || viewState === 'PASSWORD') {
+        e.preventDefault(); // 关键：阻止 App.tsx 的退出逻辑
+        setViewState('LANDING');
+        return;
+      }
+
+      // 协议/隐私页面：拦截并返回到上一页
       if (viewState === 'AGREEMENT' || viewState === 'PRIVACY') {
+        e.preventDefault(); // 关键：阻止 App.tsx 的退出逻辑
         setViewState(previousViewState || 'LANDING');
         if (returnToModal) {
           setShowAgreementModal(true);
@@ -152,9 +161,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       }
     };
 
-    nativeBridge.on('requestNativeBack', handleNativeBack);
+    window.addEventListener('requestNativeBack', handleNativeBack);
     return () => {
-      nativeBridge.off('requestNativeBack', handleNativeBack);
+      window.removeEventListener('requestNativeBack', handleNativeBack);
     };
   }, [viewState, previousViewState, returnToModal]);
 
