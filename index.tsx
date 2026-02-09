@@ -9,37 +9,35 @@ import './index.css';
 // Initialize VConsole only in development or test environments
 import VConsole from 'vconsole';
 
-// Initialize VConsole logic
+// VConsole 实例引用，避免重复创建
+let vConsoleInstance: VConsole | null = null;
+
+// 开发环境直接初始化 VConsole
 const initVConsole = () => {
   const mode = import.meta.env.MODE;
   const isDev = mode === 'development';
-  const isTest = mode === 'test';
 
-  let shouldShow = isDev;
-
-  // 在测试环境下，额外判断特定用户
-  if (isTest) {
-    try {
-      const userInfoStr = localStorage.getItem('zov-user-info');
-      if (userInfoStr) {
-        const userInfo = JSON.parse(userInfoStr);
-        // 假设用户信息中有 mobile 或 phone 字段，根据实际情况调整
-        // 这里匹配 13278852398
-        if (userInfo.mobile === '13278852398' || userInfo.username === '13278852398') {
-          shouldShow = true;
-        }
-      }
-    } catch (e) {
-      console.error('Failed to parse user info for VConsole check', e);
-    }
-  }
-
-  if (shouldShow) {
-    new VConsole();
+  if (isDev && !vConsoleInstance) {
+    vConsoleInstance = new VConsole();
   }
 };
 
 initVConsole();
+
+// 导出：供登录成功后在测试环境检查特定用户
+export const checkVConsoleForTestUser = (phone: string) => {
+  const mode = import.meta.env.MODE;
+  const isTest = mode === 'test';
+  
+  // 仅在测试环境 + 特定手机号 + 尚未创建实例时初始化
+  if (isTest && !vConsoleInstance) {
+    const allowedPhones = ['13278852398'];
+    if (allowedPhones.includes(phone)) {
+      vConsoleInstance = new VConsole();
+      console.log('VConsole initialized for test user:', phone);
+    }
+  }
+};
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

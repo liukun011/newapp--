@@ -900,7 +900,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               >
                 {(currentDeal?.status === '5') ? '历史访谈' : '+访谈录音'}
               </button>
-              <Mic className="text-indigo-200 w-10 h-10" strokeWidth={1.5} />
+              <Mic className="text-indigo-200 w-8 h-8 opacity-50" strokeWidth={1.5} />
             </div>
           </div>
         </div>

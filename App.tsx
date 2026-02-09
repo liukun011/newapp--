@@ -419,12 +419,12 @@ const App: React.FC = () => {
         return;
       }
 
-      // 如果当前在首页、登录页、或者我的设置页，才是真正的退出时机
-      if (currentView === View.HOME || currentView === View.LOGIN || currentView === View.SETTINGS) {
+      // 如果当前在首页、登录页、设置页、报告列表页或管理页，才是真正的退出时机
+      if (currentView === View.HOME || currentView === View.LOGIN || currentView === View.SETTINGS || currentView === View.REPORTS_LIST || currentView === View.MANAGEMENT) {
         // 如果栈里还有东西（异常情况），先清空栈回首页
-        if (viewStack.length > 1 && currentView === View.HOME) {
-          // 已经在首页了，但栈还不空，重置栈
-          setViewStack([View.HOME]);
+        if (viewStack.length > 1 && (currentView === View.HOME || currentView === View.SETTINGS || currentView === View.REPORTS_LIST || currentView === View.MANAGEMENT)) {
+          // 已经在根级页面了，但栈还不空，重置栈
+          setViewStack([currentView]);
           return;
         }
 
@@ -1754,11 +1754,17 @@ const App: React.FC = () => {
 
       {/* 新建尽调弹框 - Global Render */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div 
+          className="fixed left-0 right-0 top-0 z-[100] flex items-center justify-center p-4 overflow-y-auto"
+          style={{ height: 'var(--viewport-height, 100vh)' }}
+        >
           {/* 半透明背景 */}
           <div 
             className="absolute inset-0 bg-black/40"
-            onClick={() => setShowCreateModal(false)}
+            onClick={() => {
+              setShowCreateModal(false);
+              setNewCustomerName(""); 
+            }}
           />
           
           {/* 弹框内容 */}
@@ -1784,7 +1790,10 @@ const App: React.FC = () => {
             {/* 按钮组 */}
             <div className="flex gap-3">
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewCustomerName("");
+                }}
                 className="flex-1 h-11 rounded-full border border-gray-200 text-slate-600 font-medium hover:bg-gray-50 active:scale-95 transition-all"
               >
                 取消

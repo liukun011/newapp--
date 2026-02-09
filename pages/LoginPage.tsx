@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
+import { useKeyboardStatus } from '../hooks/useKeyboardStatus';
 import { ArrowLeft, Edit2 } from 'lucide-react';
 import Input from '../components/Input';
 import Button from '../components/Button';
@@ -7,6 +8,8 @@ import { LOGIN_SLIDES } from '../constants';
 
 import { authService } from '../services/authService';
 import { Toast } from 'react-vant';
+import { nativeBridge } from '../services/nativeBridge';
+import { checkVConsoleForTestUser } from '../index';
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -29,6 +32,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const [previousViewState, setPreviousViewState] = useState<ViewState | null>(null);
   const [returnToModal, setReturnToModal] = useState(false);
+  
+  // 键盘状态检测（用于隐藏底部复选框）
+  const isKeyboardOpen = useKeyboardStatus();
+  console.log('isKeyboardOpen', isKeyboardOpen);
 
   // Helper to enter agreement/privacy view
   const openLegalView = (target: 'AGREEMENT' | 'PRIVACY') => {
@@ -44,6 +51,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         if (res.successful && res.data) {
           localStorage.setItem('zov-user-token', res.data.accessToken);
           localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
+          checkVConsoleForTestUser(phone);
           onLogin();
         } else {
            Toast.fail(res.message || '登录失败');
@@ -57,6 +65,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
          if (res.successful && res.data) {
            localStorage.setItem('zov-user-token', res.data.accessToken);
            localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
+           checkVConsoleForTestUser(phone);
            onLogin();
          } else {
            Toast.fail(res.message || '登录失败');
@@ -131,6 +140,24 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Handle native back navigation for sub-views
+  useEffect(() => {
+    const handleNativeBack = () => {
+      if (viewState === 'AGREEMENT' || viewState === 'PRIVACY') {
+        setViewState(previousViewState || 'LANDING');
+        if (returnToModal) {
+          setShowAgreementModal(true);
+          setReturnToModal(false);
+        }
+      }
+    };
+
+    nativeBridge.on('requestNativeBack', handleNativeBack);
+    return () => {
+      nativeBridge.off('requestNativeBack', handleNativeBack);
+    };
+  }, [viewState, previousViewState, returnToModal]);
+
   if (pageLoading) {
     return (
       <div className="fixed inset-0 bg-white z-[999] flex flex-col items-center justify-center">
@@ -143,8 +170,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   // User Agreement View
   if (viewState === 'AGREEMENT') {
     return (
-      <div className="min-h-screen bg-white flex flex-col relative">
-        <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-10">
+      <div className="fixed inset-0 z-50 bg-white flex flex-col">
+        <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
           <button 
             onClick={() => {
               setViewState(previousViewState || 'LANDING');
@@ -159,7 +186,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           </button>
           <h1 className="flex-1 text-center text-lg font-bold text-slate-800 pr-8">用户协议</h1>
         </div>
-        <div className="flex-1 overflow-y-auto p-6 text-slate-800 pb-10 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto p-6 text-slate-800 pb-10 overscroll-contain touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
            <h2 className="text-xl font-bold mb-4">1. 引言</h2>
            <p className="text-[15px] leading-relaxed mb-6 text-justify text-slate-600">
              欢迎使用北京零壹视界科技有限公司提供的服务（以下简称“本服务”）。请在使用前仔细阅读并理解本《用户协议》（以下简称“本协议”）的所有条款。一旦您开始使用本服务，即视为您已充分理解并同意接受本协议所有条款。
@@ -212,8 +239,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   // Privacy Policy View
   if (viewState === 'PRIVACY') {
     return (
-      <div className="min-h-screen bg-white flex flex-col relative">
-        <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-10">
+      <div className="fixed inset-0 z-50 bg-white flex flex-col">
+        <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
           <button 
             onClick={() => {
               setViewState(previousViewState || 'LANDING');
@@ -228,7 +255,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           </button>
           <h1 className="flex-1 text-center text-lg font-bold text-slate-800 pr-8">隐私政策</h1>
         </div>
-        <div className="flex-1 overflow-y-auto p-6 text-slate-800 pb-10 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto p-6 text-slate-800 pb-10 overscroll-contain touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
            <div className="mb-6 text-sm text-gray-500">
              <p>本版本发布日期：2026年1月28日</p>
              <p>生效日期：2026年1月28日</p>
@@ -416,7 +443,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         </div>
 
         {/* Agreement Checkbox - Fixed at bottom of page */}
-        <div className="fixed bottom-6 left-0 right-0 flex items-center justify-center px-8 z-30">
+        <div className="fixed left-0 right-0 flex items-center justify-center px-8 z-30" style={{ bottom: 'max(24px, env(safe-area-inset-bottom, 24px))' }}>
            <label className="flex items-center space-x-2 text-xs text-gray-400 cursor-pointer">
               <input 
                 type="checkbox" 
@@ -450,7 +477,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const isPasswordMode = viewState === 'PASSWORD';
 
   return (
-    <div className="min-h-screen bg-white flex flex-col p-6">
+    <div className="min-h-screen bg-white flex flex-col p-6 relative">
       {/* Header */}
       <div className="flex items-center py-2 mb-8">
         <button 
@@ -554,9 +581,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         登录
       </Button>
 
-      {/* Bottom Agreement */}
-      <div className="fixed bottom-6 left-0 right-0 flex items-center justify-center z-10">
-         <label className="flex items-center space-x-2 text-xs text-gray-400 cursor-pointer">
+      {/* Bottom Agreement - 键盘弹出时隐藏 */}
+      {!isKeyboardOpen && (
+        <div className="fixed left-0 right-0 flex items-center justify-center z-10" style={{ bottom: 'max(24px, env(safe-area-inset-bottom, 24px))' }}>
+          <label className="flex items-center space-x-2 text-xs text-gray-400 cursor-pointer">
             <input 
               type="checkbox" 
               className="accent-indigo-600 w-3.5 h-3.5 rounded-full"
@@ -565,7 +593,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             />
             <span>
               我已阅读并同意 
-               <span 
+                <span 
                 className="text-indigo-600 mx-1 underline underline-offset-2 active:opacity-70"
                 onClick={(e) => { e.preventDefault(); openLegalView('AGREEMENT'); }}
               >
@@ -579,8 +607,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 隐私政策
               </span>
             </span>
-         </label>
-      </div>
+          </label>
+        </div>
+      )}
 
       {/* Agreement Confirmation Modal */}
       {showAgreementModal && (
