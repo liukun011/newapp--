@@ -64,4 +64,18 @@ html, body {
   min-width: auto !important;
   padding: 8px 16px !important;
   font-size: 13px !important;
+
+  /* 全局背景透明度和不换行 */
+  white-space: nowrap !important;
+  width: max-content !important;
+  background-color: rgba(0, 0, 0, 0.6) !important; /* 稍微加深 */
+  backdrop-filter: blur(8px) !important; /* 背景模糊，提升可读性 */
+  -webkit-backdrop-filter: blur(8px) !important; /* 兼容 iOS */
+  color: #fff !important;
+  font-weight: 500 !important;
 }
+
+.rv-toast__text {
+  white-space: nowrap !important;
+}
+

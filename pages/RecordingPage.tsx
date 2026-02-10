@@ -679,7 +679,9 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
           console.warn('[RecordingPage] Native recording failed to start.');
           // 只有当前状态认为是“录音中”才去切换状态，防止用户已手动暂停导致的误操作
           if (isRecordingRef.current) {
-            Toast.fail('录音开启失败，请点击重试');
+            Toast({
+              message: '录音开启失败，请点击重试',
+            });
             // 使用 ref 调用最新的 onToggleRecording 并强制设为 false
             onToggleRecordingRef.current(false);
           }

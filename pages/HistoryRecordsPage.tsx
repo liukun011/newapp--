@@ -25,25 +25,50 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
   const [currentEditTitle, setCurrentEditTitle] = useState('');
   const [currentEditCustom, setCurrentEditCustom] = useState('');
 
-  const fetchRecords = async () => {
+  // Polling reference
+  const pollingRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const fetchRecords = async (isPolling = false) => {
     if (!dealId) return;
-    setLoading(true);
+    // Only show loading on initial fetch
+    if (!isPolling) setLoading(true);
+    
     try {
       const res = await dealService.queryInterviewInstListByPage({
         interviewDealInstId: dealId
       });
       if (res.success && res.data) {
-        setRecords(res.data.records || []);
+        const list = res.data.records || [];
+        setRecords(list);
+
+        // Polling logic: check if any record is not '2'
+        // Using 'recordStatus' as it matches the blocking logic at line 132. 
+        // If user meant 'reportStatus', please advise, but context suggests recordStatus.
+        const hasPending = list.some((item: any) => item.recordStatus !== '2');
+        
+        if (hasPending) {
+          // Clear existing timer if any to strictly control 5s interval
+          if (pollingRef.current) clearTimeout(pollingRef.current);
+          
+          pollingRef.current = setTimeout(() => {
+            fetchRecords(true);
+          }, 5000);
+        }
       }
     } catch (error) {
       console.error("Fetch history failed", error);
     } finally {
-      setLoading(false);
+      if (!isPolling) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchRecords();
+    return () => {
+      if (pollingRef.current) {
+        clearTimeout(pollingRef.current);
+      }
+    };
     // eslint-disable-next-line
   }, [dealId]);
 

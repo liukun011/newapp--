@@ -291,7 +291,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto pb-20 p-4 scroll-smooth">
+      <div className="flex-1 overflow-y-auto p-4 scroll-smooth">
         {activeTab === 'questions' ? (
           <div className="space-y-3">
              <div className="text-xs text-gray-400 mb-2 pl-1">已自动匹配 {questions.filter(q => q.isAnswered).length} / {questions.length} 项</div>
@@ -332,6 +332,8 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
                  )}
                </div>
              ))}
+             {/* iOS 兼容：使用实际 DOM 元素作为底部占位，确保滚动区域正确 */}
+             <div style={{ height: 120, flexShrink: 0 }} />
           </div>
         ) : (
           <div className="space-y-6">
@@ -359,6 +361,8 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
                  <p className="text-sm">暂无转写记录</p>
                </div>
              )}
+             {/* iOS 兼容：使用实际 DOM 元素作为底部占位，确保滚动区域正确 */}
+             <div style={{ height: 120, flexShrink: 0 }} />
           </div>
         )}
       </div>
