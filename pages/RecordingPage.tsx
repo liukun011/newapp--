@@ -277,7 +277,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     // 立即执行一次
     pollTranscription();
     // 用户原设定是 15000，虽然有点慢，但我先保持不变，除非用户要求
-    pollingIntervalRef.current = setInterval(pollTranscription, 15000);
+    pollingIntervalRef.current = setInterval(pollTranscription, 5000);
 
     // 清理
     return () => {
