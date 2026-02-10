@@ -479,6 +479,8 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                 );
               })}
             </div>
+            {/* iOS 兼容：底部占位，防止悬浮按钮遮挡最后一个问题 */}
+            <div style={{ height: 120, flexShrink: 0 }} />
           </div>
 
           {/* Empty State */}

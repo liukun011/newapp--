@@ -605,6 +605,8 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
               );
             })}
           </div>
+          {/* 底部占位，防止遮挡最后一条 */}
+          <div style={{ height: 120, flexShrink: 0 }} />
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center px-6 pb-24">

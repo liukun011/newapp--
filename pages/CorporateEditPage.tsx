@@ -139,30 +139,6 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
     };
   }, [onBack]);
 
-  // 将网络图片转换为 Base64
-  const imageToBase64 = async (imagePath: string): Promise<string> => {
-    try {
-      // 1. 使用fetch获取图片资源
-      const response = await fetch(imagePath);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      // 2. 将响应转换为Blob对象
-      const blob = await response.blob();
-
-      // 3. 使用FileReader将Blob转换为Base64
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      console.error('图片转换失败:', error);
-      return imagePath; // 如果转换失败，保留原路径
-    }
-  };
 
   // 处理确认按钮点击
   const handleConfirm = async () => {
@@ -179,19 +155,8 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
     try {
       setLoading(true);
       
-      // 确保 logo 是 Base64 格式
+      // 直接使用图片地址保存
       let finalLogo = logoUrl.trim();
-      if (finalLogo && (finalLogo.startsWith('http://') || finalLogo.startsWith('https://'))) {
-         try {
-             // 尝试转 Base64，如果是跨域图片可能会失败，失败则依然传 URL
-             const base64 = await imageToBase64(finalLogo);
-             if (base64.startsWith('data:')) {
-                 finalLogo = base64;
-             }
-         } catch (e) {
-             console.warn('Failed to convert existing URL to Base64, using original URL');
-         }
-      }
 
       await dealService.createOrUpdateDealInst({
         id: deal.id,

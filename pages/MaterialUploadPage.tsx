@@ -937,6 +937,8 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 <p className="text-sm text-slate-500 font-medium">快上传你的资料，体验自动分析</p>
               </div>
             )}
+            {/* 底部占位，防止遮挡最后一条 */}
+            <div style={{ height: 120, flexShrink: 0 }} />
           </div>
         )}
 
@@ -990,6 +992,8 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 暂无模板信息
               </div>
             )}
+            {/* 底部占位，防止遮挡最后一条 */}
+            <div style={{ height: 120, flexShrink: 0 }} />
           </div>
         )}
 
@@ -1082,6 +1086,8 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                       </div>
                     ))}
                   </div>
+                  {/* 底部占位，防止遮挡最后一条 */}
+                  <div style={{ height: 120, flexShrink: 0 }} />
                 </div>
               </div>
             ) : (
