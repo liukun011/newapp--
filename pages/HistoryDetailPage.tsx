@@ -29,6 +29,12 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
+  // 转写分页状态
+  const [transcriptionPage, setTranscriptionPage] = useState(1);
+  const [hasMoreTranscription, setHasMoreTranscription] = useState(true);
+  const [loadingMoreTranscription, setLoadingMoreTranscription] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   // 同步问题清单数据
   useEffect(() => {
     if (deal?.questionInfoList && deal.questionInfoList.length > 0) {
@@ -154,29 +160,63 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // 获取录音转写数据
+  // 获取录音转写数据（支持分页）
+  const fetchTranscription = async (page: number, append = false) => {
+    if (!interviewInstId) return;
+    if (append) setLoadingMoreTranscription(true);
+    try {
+      const res = await dealService.queryInterviewInstContentListByPage({
+        interviewInstId,
+        pageNum: page,
+        pageSize: 100
+      });
+      if (res.success && res.data) {
+        const records = res.data.records || [];
+        // 过滤掉 type=4 (补充资料语音录入) 的内容
+        const filteredRecords = records.filter((item: any) => item.type !== '4');
+        
+        if (append) {
+          setTranscriptionList(prev => [...prev, ...filteredRecords]);
+        } else {
+          setTranscriptionList(filteredRecords);
+        }
+
+        // 判断是否还有更多数据
+        const total = res.data.total || 0;
+        const loaded = append 
+          ? transcriptionList.length + filteredRecords.length 
+          : filteredRecords.length;
+        setHasMoreTranscription(loaded < total && records.length === 100);
+        setTranscriptionPage(page);
+      }
+    } catch (error) {
+      console.error('获取转写记录失败', error);
+    } finally {
+      setLoadingMoreTranscription(false);
+    }
+  };
+
+  // 切换到转写 tab 时加载第一页
   useEffect(() => {
     if (activeTab === 'transcription' && interviewInstId) {
-      const fetchTranscription = async () => {
-        try {
-          const res = await dealService.queryInterviewInstContentListByPage({
-            interviewInstId,
-            pageNum: 1,
-            pageSize: 100
-          });
-          if (res.success && res.data) {
-            const records = res.data.records || [];
-            // 过滤掉 type=4 (补充资料语音录入) 的内容
-            const filteredRecords = records.filter((item: any) => item.type !== '4');
-            setTranscriptionList(filteredRecords);
-          }
-        } catch (error) {
-          console.error('获取转写记录失败', error);
-        }
-      };
-      fetchTranscription();
+      // 重置分页状态
+      setTranscriptionPage(1);
+      setHasMoreTranscription(true);
+      fetchTranscription(1, false);
     }
   }, [activeTab, interviewInstId]);
+
+  // 滚动加载更多
+  const handleContentScroll = () => {
+    if (activeTab !== 'transcription' || !hasMoreTranscription || loadingMoreTranscription) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    // 距离底部 200px 时触发加载
+    const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 200;
+    if (nearBottom) {
+      fetchTranscription(transcriptionPage + 1, true);
+    }
+  };
 
   // Throttled Handlers
   const handleBackThrottled = useThrottleFn(onBack, 1000);
@@ -291,7 +331,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto p-4 scroll-smooth">
+      <div ref={scrollContainerRef} onScroll={handleContentScroll} className="flex-1 overflow-y-auto p-4 scroll-smooth">
         {activeTab === 'questions' ? (
           <div className="space-y-3">
              <div className="text-xs text-gray-400 mb-2 pl-1">已自动匹配 {questions.filter(q => q.isAnswered).length} / {questions.length} 项</div>
@@ -360,6 +400,15 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
                <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                  <p className="text-sm">暂无转写记录</p>
                </div>
+             )}
+             {/* 加载更多提示 */}
+             {loadingMoreTranscription && (
+               <div className="flex justify-center py-4">
+                 <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+               </div>
+             )}
+             {!hasMoreTranscription && transcriptionList.length > 0 && (
+               <div className="text-center text-xs text-gray-400 py-3">没有更多了</div>
              )}
              {/* iOS 兼容：使用实际 DOM 元素作为底部占位，确保滚动区域正确 */}
              <div style={{ height: 120, flexShrink: 0 }} />

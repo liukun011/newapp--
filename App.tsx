@@ -285,16 +285,19 @@ const App: React.FC = () => {
     }
   }, [currentDeal]);
 
-  // 全局计时器
+  // 全局计时器（基于时间戳，避免 setInterval 累积误差）
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (isRecording) {
+      // 记录开始时的时间戳，减去已有秒数（支持暂停恢复）
+      const startTime = Date.now() - recordingSeconds * 1000;
       interval = setInterval(() => {
-        setRecordingSeconds((s: number) => s + 1);
-      }, 1000);
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        setRecordingSeconds(elapsed);
+      }, 500); // 每 500ms 更新一次，确保秒数跳变更及时
     }
     return () => clearInterval(interval);
-  }, [isRecording, setRecordingSeconds]);
+  }, [isRecording]); // 注意：不再依赖 setRecordingSeconds，避免重复触发
 
   // 背景渐变样式
   // Using a fixed background to prevent repaint on scroll
