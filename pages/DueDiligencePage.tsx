@@ -672,7 +672,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 className="px-5 pt-4 pb-0 text-white cursor-pointer"
                 onClick={handleReportPreviewThrottled}
               >
-                <div className="max-w-[70%]">
+                <div className="max-w-[68%]">
                   <h2 className="text-[18px] font-bold mb-2 leading-tight">
                     尽调报告
                   </h2>
@@ -736,7 +736,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             <div className="relative z-10 flex flex-col h-full">
               {/* Top Section - Info */}
               <div className="px-5 pt-4 pb-0 text-white">
-                <div className="max-w-[70%]">
+                <div className="max-w-[68%]">
                   <h2 className="text-[18px] font-bold mb-2 leading-tight">
                     尽调报告
                   </h2>
