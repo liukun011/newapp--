@@ -585,10 +585,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           </div>
 
           {/* 访谈小总结 Card */}
-          {currentDeal?.dealSummary && (
             <div className="bg-white rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden mb-3 border border-indigo-50/50">
               {/* Header */}
-              <div className="flex items-center justify-between mb-3 relative z-10 px-0.5">
+              <div className={`flex items-center justify-between ${currentDeal?.dealSummary ? 'mb-3' : ''} relative z-10 px-0.5`}>
                 <div className="flex items-center gap-2">
                   <h3 className="text-[15px] font-black text-slate-800 tracking-tight">访谈小总结</h3>
                   <div className="bg-[#F4F7FF] text-[#86909C] text-[10px] px-2 py-0.5 rounded-md font-medium">
@@ -602,13 +601,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       onClick={async () => {
                         if (!currentDeal?.id || isRefreshingSummary) return;
                         setIsRefreshingSummary(true);
-                        // 提示用户已开始刷新，但不阻塞操作
                         Toast.info({ message: '正在刷新总结...', duration: 1500 });
                         
                         try {
                           const res = await dealService.generateInterviewSummary(currentDeal.id, true);
                           if (res.success) {
-                            // 刷新详情以获取最新总结
                             const detailRes = await dealService.getDealInstDetail(currentDeal.id);
                             if (detailRes.success && detailRes.data) {
                               setDealDetail(detailRes.data);
@@ -631,8 +628,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     </button>
                   )}
                   <button 
-                    onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
-                    className="flex items-center gap-1 bg-[#F0F2FF] text-indigo-600 px-2.5 py-1 rounded-full text-[12px] font-bold active:scale-95 transition-all"
+                    onClick={() => currentDeal?.dealSummary && setIsSummaryExpanded(!isSummaryExpanded)}
+                    disabled={!currentDeal?.dealSummary}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-bold transition-all ${currentDeal?.dealSummary ? 'bg-[#F0F2FF] text-indigo-600 active:scale-95' : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
                   >
                     {isSummaryExpanded ? '收起' : '展开'}
                     {isSummaryExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -641,13 +639,18 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               </div>
 
               {/* Content */}
-              <div className={`relative z-10 px-0.5 transition-all duration-300`}>
-                <p className={`text-[14px] text-slate-700 leading-snug font-bold text-justify tracking-normal ${!isSummaryExpanded ? 'line-clamp-2' : ''}`}>
-                  {currentDeal.dealSummary}
-                </p>
-              </div>
+              {currentDeal?.dealSummary ? (
+                <div className={`relative z-10 px-0.5 transition-all duration-300`}>
+                  <p className={`text-[14px] text-slate-700 leading-snug font-bold text-justify tracking-normal ${!isSummaryExpanded ? 'line-clamp-2' : ''}`}>
+                    {currentDeal.dealSummary}
+                  </p>
+                </div>
+              ) : (
+                <div className="relative z-10 px-0.5 mt-2">
+                  <p className="text-[13px] text-gray-400">访谈小总结未生成，请刷新生成</p>
+                </div>
+              )}
             </div>
-          )}
 
         {/* Report Card */}
         {currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED ? (
