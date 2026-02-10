@@ -329,6 +329,15 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
             <div className="relative mb-8">
               <textarea
+                ref={(el) => {
+                  if (el) {
+                    setTimeout(() => {
+                      el.focus();
+                      const len = el.value.length;
+                      el.setSelectionRange(len, len);
+                    }, 100);
+                  }
+                }}
                 value={newNickName}
                 onChange={(e) => {
                   let val = e.target.value;
@@ -344,7 +353,6 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                 rows={3}
                 className="w-full px-4 py-3 text-base text-slate-800 border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all resize-none"
                 placeholder="请输入新昵称"
-                autoFocus
               />
               <div className="text-right text-xs text-slate-400 mt-1">
                 {newNickName.length}/50

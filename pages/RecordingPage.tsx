@@ -218,8 +218,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
     console.log('[轮询] 开始轮询转写结果...');
 
-    // 标记是否在本次录音会话中已经收到过数据
-    let hasReceivedData = false;
+
 
     const pollTranscription = async () => {
       // 双重检查：如果已经暂停，不再发起请求
@@ -247,21 +246,17 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
             }));
           
           if (newRecords.length > 0) {
-            console.log(`[轮询] 收到增量数据：${newRecords.length} 条, hasReceivedData: ${hasReceivedData}`);
+            console.log(`[轮询] 收到增量数据：${newRecords.length} 条, cacheCount: ${currentCacheCount}`);
             
             const currentList = transcriptionListRef.current;
             let baseList = currentList;
 
-            // 核心逻辑调整：
-            // 1. 如果是本次轮询第一次收到数据，直接追加 (hasReceivedData = false)
-            // 2. 如果是后续轮询收到数据 (hasReceivedData = true)，说明后端可能返回了上一条的更新版
-            //    因此需要先删掉本地的最后一条，再合并新数据
-            if (hasReceivedData && currentList.length > 0) {
+            // 核心逻辑：
+            // cacheCount !== 0 时，后端返回的第一条是对列表最后一条的更新/替换
+            // 因此需要先删掉本地的最后一条，再合并新数据
+            if (currentCacheCount !== 0 && currentList.length > 0) {
               baseList = currentList.slice(0, -1);
             }
-            
-            // 标记已收到过数据
-            hasReceivedData = true;
 
             const mergedList = [...baseList, ...newRecords];
             

@@ -345,6 +345,7 @@ const HomePage: React.FC<HomePageProps> = ({
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               className="w-full h-[44px] px-5 bg-white rounded-full text-[15px] text-slate-800 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all border border-gray-100"
+              style={{ outline: 'none', WebkitTapHighlightColor: 'transparent', WebkitAppearance: 'none' }}
             />
             <button
               onClick={handleSearch}
