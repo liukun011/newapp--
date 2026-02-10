@@ -1444,7 +1444,7 @@ const App: React.FC = () => {
                        Toast.fail('更换失败');
                      }
                   } : undefined}
-                  onRefresh={currentDeal?.id && previousView === View.DUE_DILIGENCE ? () => {
+                  onRefresh={currentDeal?.id && currentDeal?.status !== '5' && previousView === View.DUE_DILIGENCE ? () => {
                      Dialog.confirm({
                         title: '确认生成',
                         message: '重新生成报告将覆盖现有报告，是否继续?',

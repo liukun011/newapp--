@@ -657,18 +657,13 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           // 报告已生成 - 卡片和按钮合并布局
           // 报告已生成 - 新版卡片样式
           <div className="rounded-3xl shadow-lg relative overflow-hidden bg-[#4337F1]">
-            {/* Rocket Mascot Image */}
-            <div className="absolute right-0 bottom-[48px] w-28 h-28 z-0">
-               <img
-                 src={`${basePath}assets/rocketxiaoli.png`}
-                 alt="Rocket Mascot"
-                 className="w-full h-full object-contain object-bottom block"
-               />
-            </div>
-            
-            {/* Decorative circles */}
-            <div className="absolute top-[-20px] right-[-20px] w-24 h-24 bg-white/10 rounded-full blur-2xl z-0" />
-            <div className="absolute bottom-[20%] left-[10%] w-20 h-20 bg-white/5 rounded-full blur-xl z-0" />
+            {/* Rocket Mascot Image - 底边对齐按钮栏上边框 */}
+            <img
+              src={`${basePath}assets/rocketxiaoli.png`}
+              alt="Rocket Mascot"
+              className="absolute right-1 w-28 h-28 object-contain z-0 pointer-events-none"
+              style={{ bottom: '43px' }}
+            />
 
             {/* Content Container */}
             <div className="relative z-10 flex flex-col h-full">
@@ -730,19 +725,13 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           // 其他状态 - 原来的卡片样式
           // 其他状态 - 新版卡片样式
           <div className="rounded-3xl shadow-lg relative overflow-hidden bg-[#4337F1]">
-            {/* Rocket Mascot Image - Spans across top and bottom, sits behind content */}
-            <div className="absolute right-0 bottom-[48px] w-28 h-28 z-0">
-               <img
-                 src={`${basePath}assets/rocketxiaoli.png`}
-                 alt="Rocket Mascot"
-                 className="w-full h-full object-contain object-bottom block"
-               />
-            </div>
-            
-            {/* Decorative circles - Background */}
-            <div className="absolute top-[-20px] right-[-20px] w-24 h-24 bg-white/10 rounded-full blur-2xl z-0" />
-            <div className="absolute bottom-[20%] left-[10%] w-20 h-20 bg-white/5 rounded-full blur-xl z-0" />
-
+            {/* Rocket Mascot Image - 底边对齐按钮栏上边框 */}
+            <img
+              src={`${basePath}assets/rocketxiaoli.png`}
+              alt="Rocket Mascot"
+              className="absolute right-1 w-28 h-28 object-contain z-0 pointer-events-none"
+              style={{ bottom: '43px' }}
+            />
             {/* Content Container */}
             <div className="relative z-10 flex flex-col h-full">
               {/* Top Section - Info */}
