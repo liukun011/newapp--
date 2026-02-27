@@ -755,7 +755,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                    // Loading State
                    <div className="flex items-center gap-2 py-1 mr-auto pl-2">
                      <div className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin"></div>
-                     <span className="text-white/90 text-xs font-medium">小狸AI全速生成报告中，请稍候...</span>
+                     <span className="text-white/90 text-xs font-medium">报告正在后台生成中，请稍候...</span>
                    </div>
                 ) : (
                    // Action Buttons

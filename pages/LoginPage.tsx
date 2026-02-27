@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
 import { useKeyboardStatus } from '../hooks/useKeyboardStatus';
-import { ArrowLeft, Edit2 } from 'lucide-react';
+import { ArrowLeft, Edit2, Eye, EyeOff } from 'lucide-react';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { LOGIN_SLIDES } from '../constants';
@@ -15,7 +15,7 @@ interface LoginPageProps {
   onLogin: () => void;
 }
 
-type ViewState = 'LANDING' | 'SMS' | 'PASSWORD' | 'AGREEMENT' | 'PRIVACY';
+type ViewState = 'LANDING' | 'SMS' | 'PASSWORD' | 'AGREEMENT' | 'PRIVACY' | 'FORGOT_PASSWORD';
 
 
 
@@ -28,6 +28,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [countdown, setCountdown] = useState(0);
+
+  // 找回密码页面的独立状态（与登录页隔离）
+  const [forgotPhone, setForgotPhone] = useState('');
+  const [forgotCode, setForgotCode] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
+  const [forgotShowPassword, setForgotShowPassword] = useState(false);
+  const [forgotShowConfirmPassword, setForgotShowConfirmPassword] = useState(false);
+  const [forgotCountdown, setForgotCountdown] = useState(0);
   const [pageLoading, setPageLoading] = useState(true);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const [previousViewState, setPreviousViewState] = useState<ViewState | null>(null);
@@ -123,6 +132,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  // Forgot password countdown timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (forgotCountdown > 0) {
+      timer = setTimeout(() => setForgotCountdown((c) => c - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [forgotCountdown]);
+
   // Auto-play carousel
   useEffect(() => {
     if (viewState !== 'LANDING') return;
@@ -143,6 +161,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   // Handle native back navigation for sub-views
   useEffect(() => {
     const handleNativeBack = (e: Event) => {
+      // 忘记密码页面：返回密码页面
+      if (viewState === 'FORGOT_PASSWORD') {
+        e.preventDefault();
+        setViewState('PASSWORD');
+        return;
+      }
+
       // 密码/验证码页面：拦截并返回到 LANDING
       if (viewState === 'SMS' || viewState === 'PASSWORD') {
         e.preventDefault(); // 关键：阻止 App.tsx 的退出逻辑
@@ -482,6 +507,145 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     );
   }
 
+  // Forgot Password View
+  if (viewState === 'FORGOT_PASSWORD') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col p-6 relative">
+        {/* Header (Back button omitted as per design or kept just in case but made transparent, I'll keep the back button to allow users to exit) */}
+        <div className="flex items-center py-2 mb-8">
+          <button 
+            onClick={() => setViewState('PASSWORD')}
+            className="p-2 -ml-2 text-slate-800 hover:bg-slate-50 rounded-full transition-colors"
+          >
+            <ArrowLeft size={24} />
+          </button>
+        </div>
+
+        {/* Title */}
+        <div className="mb-12 flex justify-center">
+          <h1 className="text-[26px] font-bold text-slate-800 tracking-wider">
+            找回密码
+          </h1>
+        </div>
+
+        {/* Inputs */}
+        <div className="space-y-4">
+          <Input 
+            type="tel" 
+            placeholder="请输入手机号" 
+            value={forgotPhone}
+            onChange={(e) => setForgotPhone(e.target.value)}
+          />
+          
+          <Input 
+            type="number" 
+            placeholder="请输入6位验证码" 
+            value={forgotCode}
+            onChange={(e) => setForgotCode(e.target.value)}
+            suffix={
+              <button 
+                disabled={forgotCountdown > 0}
+                onClick={async () => {
+                  if (!forgotPhone) {
+                    Toast.info('请输入手机号');
+                    return;
+                  }
+                  try {
+                    const res = await authService.sendSms(forgotPhone);
+                    if (res.successful) {
+                      setForgotCountdown(60);
+                      Toast.success('验证码已发送');
+                    } else {
+                      Toast.fail(res.message || '发送失败');
+                    }
+                  } catch (error) {
+                    console.error('Send SMS error:', error);
+                  }
+                }}
+                className={`text-[15px] min-w-[5em] ${forgotCountdown > 0 ? 'text-gray-400' : 'text-[#1B6DFB] hover:text-blue-700'}`}
+              >
+                {forgotCountdown > 0 ? `${forgotCountdown}s` : '获取验证码'}
+              </button>
+            }
+          />
+
+          <Input 
+            type={forgotShowPassword ? "text" : "password"} 
+            placeholder="请输入密码" 
+            value={forgotNewPassword}
+            onChange={(e) => setForgotNewPassword(e.target.value)}
+            suffix={
+              <button 
+                type="button"
+                onClick={() => setForgotShowPassword(!forgotShowPassword)}
+                className="text-gray-400 p-1 hover:text-gray-600 focus:outline-none"
+              >
+                {forgotShowPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+              </button>
+            }
+          />
+
+          <Input 
+            type={forgotShowConfirmPassword ? "text" : "password"} 
+            placeholder="请再次输入密码" 
+            value={forgotConfirmPassword}
+            onChange={(e) => setForgotConfirmPassword(e.target.value)}
+            suffix={
+              <button 
+                type="button"
+                onClick={() => setForgotShowConfirmPassword(!forgotShowConfirmPassword)}
+                className="text-gray-400 p-1 hover:text-gray-600 focus:outline-none"
+              >
+                {forgotShowConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+              </button>
+            }
+          />
+        </div>
+
+        {/* Action Button */}
+        <div className="mt-12">
+          <Button 
+            block 
+            size="large" 
+            disabled={!forgotPhone || !forgotCode || !forgotNewPassword || !forgotConfirmPassword}
+            onClick={async () => {
+              if (forgotNewPassword !== forgotConfirmPassword) {
+                Toast.info('两次输入的密码不一致');
+                return;
+              }
+              try {
+                const res = await authService.resetPassword({
+                  mobile: forgotPhone,
+                  captcha: forgotCode,
+                  newPassword: forgotNewPassword,
+                  confirmPassword: forgotConfirmPassword,
+                });
+                if (res.successful) {
+                  Toast.success('密码重置成功');
+                  // 重置找回密码表单
+                  setForgotPhone('');
+                  setForgotCode('');
+                  setForgotNewPassword('');
+                  setForgotConfirmPassword('');
+                  setForgotCountdown(0);
+                  setViewState('PASSWORD');
+                } else {
+                  Toast.fail(res.message || '重置失败');
+                }
+              } catch (error) {
+                // request.ts 拦截器已全局弹出错误 Toast，此处不重复弹出
+                console.error('Reset password error:', error);
+              }
+            }}
+            className="shadow-md"
+          >
+            确定
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Detailed Login Forms (SMS or Password)
   const isPasswordMode = viewState === 'PASSWORD';
 
@@ -572,11 +736,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         >
           {isPasswordMode ? '验证码登录' : '密码登录'}
         </button>
-        {/* {isPasswordMode && (
-           <button className="text-sm text-slate-500 hover:text-indigo-600">
-             忘记密码
-           </button>
-        )} */}
+        <button 
+          onClick={() => setViewState('FORGOT_PASSWORD')}
+          className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors font-medium"
+        >
+          忘记密码
+        </button>
       </div>
 
       {/* Main Action Button */}

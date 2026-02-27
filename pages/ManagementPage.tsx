@@ -1,5 +1,4 @@
 import React from 'react';
-import { FileText, Layers, ChevronRight } from 'lucide-react';
 
 interface ManagementPageProps {
   onNavigateToTemplates: () => void;
@@ -11,78 +10,107 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
   onNavigateToQuestionLibrary,
 }) => {
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-white pb-24">
       {/* Header */}
-      <div className="bg-white px-6 pt-12 pb-8">
-        <h1 className="text-2xl font-bold text-slate-800 mb-2">业务支撑管理</h1>
-        <p className="text-sm text-gray-400 tracking-wider">WORKSPACE SUPPORT</p>
+      <div className="bg-white pt-6 pb-2 px-6 flex items-center justify-center sticky top-0 z-10">
+        <h1 className="text-[18px] font-medium text-slate-800 tracking-wide">
+          基本信息管理
+        </h1>
       </div>
 
       {/* Content */}
-      <div className="px-6 py-6 space-y-4">
-        {/* 模板中心 Card */}
+      <div className="px-5 pt-2 space-y-5">
+        
+        {/* 我的模板 Card */}
         <div 
-          className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+          className="relative bg-gradient-to-r from-[#eaf4ff] to-[#dfedff] rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden min-h-[140px]"
           onClick={onNavigateToTemplates}
         >
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
-              {/* Icon */}
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <FileText size={24} className="text-primary" />
-              </div>
-              
-              {/* Text */}
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-slate-800 mb-1">模板中心</h3>
-                <p className="text-sm text-gray-400">行业报告模板</p>
-              </div>
+          {/* Text Content */}
+          <div className="relative z-10 w-[60%]">
+            <h3 className="text-[17px] font-bold text-[#1b6eed] mb-1">
+              我的模板，高效管理
+            </h3>
+            <p className="text-[12px] text-[#6b778d] mt-2 tracking-wide leading-relaxed">
+              轻松管模，高效开始每一刻
+            </p>
+            
+            {/* Enter Button */}
+            <div className="mt-5 inline-flex items-center justify-center px-4 py-1 rounded-full border border-[#1b6eed] text-[#1b6eed] text-[13px] font-medium bg-transparent hover:bg-blue-50 transition-colors">
+              进入模板
             </div>
           </div>
 
-          {/* Enter Button */}
-          <div className="mt-4 flex items-center gap-1 text-primary font-medium text-sm">
-            <span>进入</span>
-            <ChevronRight size={16} />
+          {/* Right Side Illustration */}
+          {/* Provide a placeholder styling for the 3D illustration, using absolute positioning.
+              The user can replace this div with an <img> tag when assets are available. */}
+          <div className="absolute right-0 bottom-0 pointer-events-none w-[130px] h-[110px]">
+            <img 
+               src="/assets/manage_template_illus.png" 
+               alt="Template Illustration" 
+               className="w-full h-full object-contain object-right-bottom"
+               onError={(e) => {
+                 // Fallback if image doesn't exist
+                 e.currentTarget.style.display = 'none';
+                 e.currentTarget.parentElement!.innerHTML = `
+                  <svg width="100%" height="100%" viewBox="0 0 130 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="20" width="90" height="70" rx="6" fill="#1b6eed" fill-opacity="0.1"/>
+                    <rect x="30" y="30" width="70" height="50" rx="4" fill="#1b6eed" fill-opacity="0.2"/>
+                    <path d="M40 45H90M40 55H70M40 65H80" stroke="#1b6eed" stroke-width="4" stroke-linecap="round"/>
+                  </svg>
+                 `;
+               }}
+            />
           </div>
         </div>
 
         {/* 问题清单 Card */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
-              {/* Icon */}
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                <Layers size={24} className="text-emerald-400" />
-              </div>
-              
-              {/* Text */}
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-white mb-1">问题清单</h3>
-                <p className="text-sm text-gray-400">话术清单解答</p>
-              </div>
+        <div 
+          className="relative bg-gradient-to-r from-[#f0efff] to-[#e6e4ff] rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden min-h-[140px]"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onNavigateToQuestionLibrary) {
+              onNavigateToQuestionLibrary();
+            }
+          }}
+        >
+          {/* Text Content */}
+          <div className="relative z-10 w-[60%]">
+            <h3 className="text-[17px] font-bold text-[#5c52d7] mb-1">
+              问题清单，精准匹配
+            </h3>
+            <p className="text-[12px] text-[#6b778d] mt-2 tracking-wide leading-relaxed">
+              题题相应，让访谈更高效
+            </p>
+            
+            {/* Configure Button */}
+            <div className="mt-5 inline-flex items-center justify-center px-4 py-1 rounded-full border border-[#5c52d7] text-[#5c52d7] text-[13px] font-medium bg-transparent hover:bg-purple-50 transition-colors">
+              进入配置
             </div>
           </div>
 
-          {/* Configure Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onNavigateToQuestionLibrary) {
-                onNavigateToQuestionLibrary();
-              }
-            }}
-            className="mt-4 flex items-center gap-1 text-emerald-400 font-medium text-sm"
-          >
-            <span>配置</span>
-            <ChevronRight size={16} />
-          </button>
+          {/* Right Side Illustration */}
+          <div className="absolute right-0 bottom-0 pointer-events-none w-[130px] h-[120px]">
+            <img 
+               src="/assets/manage_question_illus.png" 
+               alt="Question List Illustration" 
+               className="w-full h-full object-contain object-right-bottom"
+               onError={(e) => {
+                 // Fallback if image doesn't exist
+                 e.currentTarget.style.display = 'none';
+                 e.currentTarget.parentElement!.innerHTML = `
+                  <svg width="100%" height="100%" viewBox="0 0 130 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="30" y="10" width="70" height="90" rx="6" fill="#5c52d7" fill-opacity="0.1"/>
+                    <circle cx="65" cy="40" r="15" stroke="#5c52d7" stroke-width="4"/>
+                    <path d="M75 50L85 60" stroke="#5c52d7" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M45 70H85M45 80H75" stroke="#5c52d7" stroke-width="4" stroke-linecap="round" fill-opacity="0.4"/>
+                  </svg>
+                 `;
+               }}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Decorative Background Icon */}
-      <div className="fixed bottom-32 left-1/2 transform -translate-x-1/2 opacity-5">
-        <Layers size={200} className="text-gray-400" />
       </div>
     </div>
   );

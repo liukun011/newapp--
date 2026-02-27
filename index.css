@@ -62,11 +62,12 @@ html, body {
   
   /* 更小更紧凑 */
   min-width: auto !important;
+  max-width: 75vw !important;
   padding: 8px 16px !important;
   font-size: 13px !important;
 
-  /* 全局背景透明度和不换行 */
-  white-space: nowrap !important;
+  /* 全局背景透明度，允许换行 */
+  white-space: normal !important;
   width: max-content !important;
   background-color: rgba(0, 0, 0, 0.6) !important; /* 稍微加深 */
   backdrop-filter: blur(8px) !important; /* 背景模糊，提升可读性 */
@@ -76,6 +77,9 @@ html, body {
 }
 
 .rv-toast__text {
-  white-space: nowrap !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  text-align: center !important;
+  line-height: 1.5 !important;
 }
 
