@@ -150,7 +150,8 @@ export interface ReportRecord {
   
   // UI 辅助字段 (可能需要前端处理或后续接口补充)
   dealInstName?: string; 
-  status?: string;      
+  status?: string;
+  dealSummary?: string;
 }
 
 export interface ApiResponse<T> {
