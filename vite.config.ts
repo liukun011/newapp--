@@ -6,10 +6,17 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+import svgr from 'vite-plugin-svgr';
+
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/talk-assistant/',
-  plugins: [react()],
+  plugins: [
+    react(),
+    svgr({
+      include: '**/*.svg?react',
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),
