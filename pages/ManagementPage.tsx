@@ -44,11 +44,11 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
           {/* Right Side Illustration */}
           {/* Provide a placeholder styling for the 3D illustration, using absolute positioning.
               The user can replace this div with an <img> tag when assets are available. */}
-          <div className="absolute right-0 bottom-0 pointer-events-none w-[130px] h-[110px]">
+          <div className="absolute right-0 bottom-0 pointer-events-none w-[133px] h-[133px]">
             <img 
-               src="/assets/manage_template_illus.png" 
+               src="/talk-assistant/assets/temp.svg" 
                alt="Template Illustration" 
-               className="w-full h-full object-contain object-right-bottom"
+               className="w-full h-full object-contain object-center scale-[2.2] -translate-x-3 translate-y-5"
                onError={(e) => {
                  // Fallback if image doesn't exist
                  e.currentTarget.style.display = 'none';
@@ -74,7 +74,6 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
             }
           }}
         >
-          {/* Text Content */}
           <div className="relative z-10 w-[60%]">
             <h3 className="text-[17px] font-bold text-[#5c52d7] mb-1">
               问题清单，精准匹配
@@ -82,19 +81,15 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
             <p className="text-[12px] text-[#6b778d] mt-2 tracking-wide leading-relaxed">
               题题相应，让访谈更高效
             </p>
-            
-            {/* Configure Button */}
             <div className="mt-5 inline-flex items-center justify-center px-4 py-1 rounded-full border border-[#5c52d7] text-[#5c52d7] text-[13px] font-medium bg-transparent hover:bg-purple-50 transition-colors">
               进入配置
             </div>
           </div>
-
-          {/* Right Side Illustration */}
-          <div className="absolute right-0 bottom-0 pointer-events-none w-[130px] h-[120px]">
+          <div className="absolute right-0 bottom-0 pointer-events-none w-[133px] h-[133px]">
             <img 
-               src="/assets/manage_question_illus.png" 
+               src="/talk-assistant/assets/question.svg" 
                alt="Question List Illustration" 
-               className="w-full h-full object-contain object-right-bottom"
+               className="w-full h-full object-contain object-center scale-[2.2] -translate-x-3 translate-y-5"
                onError={(e) => {
                  // Fallback if image doesn't exist
                  e.currentTarget.style.display = 'none';
