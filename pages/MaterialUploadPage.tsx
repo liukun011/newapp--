@@ -12,6 +12,7 @@ import { nativeBridge } from '../services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
 import { motion, useAnimation } from 'framer-motion';
 import config from '../config';
+import AudioPlayerModal from '../components/AudioPlayerModal';
 
 
 interface MaterialUploadPageProps {
@@ -72,6 +73,11 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const [questionAddModalVisible, setQuestionAddModalVisible] = useState(false);
   const [newQuestionName, setNewQuestionName] = useState('');
   const [showLimitTips, setShowLimitTips] = useState(false);
+
+  // 音频播放弹窗状态
+  const [audioModalVisible, setAudioModalVisible] = useState(false);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState('');
+  const [currentAudioName, setCurrentAudioName] = useState('');
   const { currentDealId } = useRecordingStore();
   
   // Animation controls for floating add button
@@ -522,6 +528,8 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       return `${basePath}assets/txt.png`;
     } else if (['ppt', 'pptx'].includes(ext)) {
       return `${basePath}assets/ppt.png`;
+    } else if (['mp3', 'wav', 'm4a', 'aac', 'flac', 'amr', '3gp', 'ogg'].includes(ext)) {
+      return `${basePath}assets/wav.png`;
     } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) {
       return `${basePath}assets/image.png`;
     }
@@ -729,10 +737,16 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       return;
     }
 
+    // 检查是否为音频文件
+    const isAudio = ['mp3', 'wav', 'm4a', 'aac', 'flac', 'amr', '3gp', 'ogg'].includes(resource.fileName?.split('.').pop()?.toLowerCase() || '');
+
     // 普通文件预览
     if (resource.fileUrl) {
-      // 使用预览页面打开文件
-      if (onPreviewTemplate) {
+      if (isAudio) {
+        setCurrentAudioUrl(resource.fileUrl);
+        setCurrentAudioName(resource.fileName || '录音');
+        setAudioModalVisible(true);
+      } else if (onPreviewTemplate) {
         onPreviewTemplate(resource.fileName, resource.fileUrl, resource.id, 'file');
       } else {
         // 降级方案：在新窗口打开
@@ -1334,6 +1348,14 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           </div>
         </div>
       )}
+
+      {/* Audio Player Modal */}
+      <AudioPlayerModal
+        visible={audioModalVisible}
+        onClose={() => setAudioModalVisible(false)}
+        audioUrl={currentAudioUrl}
+        fileName={currentAudioName}
+      />
     </div>
   );
 };
