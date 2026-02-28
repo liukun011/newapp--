@@ -3,6 +3,7 @@ import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, Camera, Image as ImageIcon, FileText, Mic, MinusCircle, Pencil, RefreshCw } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import VoiceInputModal from '../components/VoiceInputModal';
+import AudioPlayerModal from '../components/AudioPlayerModal';
 import { dealService } from '../services/dealService';
 import { nativeBridge } from '../services/nativeBridge';
 import config from '../config';
@@ -35,6 +36,11 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
   const [renameTarget, setRenameTarget] = useState<Resource | null>(null);
   const [newFileName, setNewFileName] = useState('');
   const [hasInterviewRecords, setHasInterviewRecords] = useState(false);
+
+  // 音频播放弹框状态
+  const [audioModalVisible, setAudioModalVisible] = useState(false);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState('');
+  const [currentAudioName, setCurrentAudioName] = useState('');
 
   // 监听 props reportStatus 的变化
   useEffect(() => {
@@ -392,6 +398,8 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
       return `${basePath}assets/txt.png`;
     } else if (['ppt', 'pptx'].includes(ext)) {
       return `${basePath}assets/ppt.png`;
+    } else if (['mp3', 'wav', 'm4a', 'aac', 'flac', 'amr', '3gp', 'ogg'].includes(ext)) {
+      return `${basePath}assets/wav.png`;
     } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) {
       return `${basePath}assets/image.png`;
     }
@@ -563,9 +571,16 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                         return;
                       }
                       
+                      // 检查是否为音频文件
+                      const isAudio = ['mp3', 'wav', 'm4a', 'aac', 'flac', 'amr', '3gp', 'ogg'].includes(resource.fileName?.split('.').pop()?.toLowerCase() || '');
+
                       // 普通文件，预览
                       if (resource.fileUrl) {
-                        if (onPreviewFile) {
+                        if (isAudio) {
+                           setCurrentAudioUrl(resource.fileUrl);
+                           setCurrentAudioName(resource.fileName || '录音');
+                           setAudioModalVisible(true);
+                        } else if (onPreviewFile) {
                           onPreviewFile(resource.fileName, resource.fileUrl, resource.id);
                         } else {
                           window.open(resource.fileUrl, '_blank');
@@ -708,6 +723,14 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
           </div>
         </div>
       )}
+
+      {/* Audio Player Modal */}
+      <AudioPlayerModal 
+        visible={audioModalVisible}
+        onClose={() => setAudioModalVisible(false)}
+        audioUrl={currentAudioUrl}
+        fileName={currentAudioName}
+      />
     </div>
   );
 };

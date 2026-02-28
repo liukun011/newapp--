@@ -1773,6 +1773,11 @@ vite@^5.0.8:
   optionalDependencies:
     fsevents "~2.3.3"
 
+wavesurfer.js@^7.12.1:
+  version "7.12.1"
+  resolved "https://registry.npmmirror.com/wavesurfer.js/-/wavesurfer.js-7.12.1.tgz#4b46dc5ee1a0429c7c33ca78397105c4a087f1fb"
+  integrity sha512-NswPjVHxk0Q1F/VMRemCPUzSojjuHHisQrBqQiRXg7MVbe3f5vQ6r0rTTXA/a/neC/4hnOEC4YpXca4LpH0SUg==
+
 yallist@^3.0.2:
   version "3.1.1"
   resolved "https://registry.npmmirror.com/yallist/-/yallist-3.1.1.tgz#dbb7daf9bfd8bac9ab45ebf602b8cbad0d5d08fd"
