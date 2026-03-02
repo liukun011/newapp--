@@ -254,7 +254,10 @@ const HomePage: React.FC<HomePageProps> = ({
     if (!deletingDealId) return;
     
     try {
+      Toast.loading({ message: '正在删除...', duration: 0, forbidClick: true });
       const res = await dealService.deleteDealInst(deletingDealId);
+      Toast.clear();
+      
       if (res.success) {
         Toast.success('删除成功');
 
@@ -271,6 +274,7 @@ const HomePage: React.FC<HomePageProps> = ({
         Toast.fail(res.message || '删除失败');
       }
     } catch (error) {
+      Toast.clear();
       console.error("Failed to delete deal:", error);
       Toast.fail('删除失败');
     } finally {
