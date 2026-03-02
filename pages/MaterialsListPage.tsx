@@ -446,14 +446,14 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
           handleBackWithSummary();
         } else {
           setTimeout(() => {
-            Toast.fail({ message: res.message || '生成请求失败', duration: 3000 });
+            Toast.fail({ message: res.message || '文档解析中，请稍后再生成报告！', duration: 3000 });
           }, 100);
         }
       } catch (error) {
         Toast.clear();
         console.error('Generate report failed:', error);
         setTimeout(() => {
-          Toast.fail({ message: '生成请求失败', duration: 3000 });
+          Toast.fail({ message: '文档解析中，请稍后再生成报告！', duration: 3000 });
         }, 100);
       }
     })

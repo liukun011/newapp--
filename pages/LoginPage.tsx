@@ -571,7 +571,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
           <Input 
             type={forgotShowPassword ? "text" : "password"} 
-            placeholder="请输入密码" 
+            placeholder="请输入新密码" 
             value={forgotNewPassword}
             onChange={(e) => setForgotNewPassword(e.target.value)}
             suffix={
@@ -587,7 +587,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
           <Input 
             type={forgotShowConfirmPassword ? "text" : "password"} 
-            placeholder="请再次输入密码" 
+            placeholder="请再次输入新密码" 
             value={forgotConfirmPassword}
             onChange={(e) => setForgotConfirmPassword(e.target.value)}
             suffix={
