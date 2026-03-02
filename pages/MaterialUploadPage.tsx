@@ -439,7 +439,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     Dialog.confirm({
       title: '确认删除',
       message: '确定要删除该资料吗？此操作无法撤销。',
-      confirmButtonColor: '#FA5151',
+      confirmButtonColor: '#4337F1',
     })
       .then(async () => {
         try {
@@ -932,7 +932,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                         {/* Delete Button */}
                         <button
                           onClick={() => handleDeleteResourceThrottled(resource.id)}
-                          className="p-2 text-indigo-400 hover:text-red-500 transition-colors"
+                          className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
                         >
                           <MinusCircle size={22} strokeWidth={2} />
                         </button>
@@ -1092,7 +1092,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                               setDeletingQuestion(question);
                               setQuestionDeleteModalVisible(true);
                             }}
-                            className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                            className="p-2 text-gray-300 hover:text-indigo-500 transition-colors"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -1286,8 +1286,8 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           />
           <div className="relative bg-white rounded-2xl w-[85%] max-w-[320px] shadow-xl animate-fadeIn overflow-hidden">
             <div className="pt-6 pb-4 px-6 text-center">
-              <div className="w-14 h-14 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
-                <Trash2 size={24} className="text-red-500" />
+              <div className="w-14 h-14 mx-auto mb-4 bg-indigo-50 rounded-full flex items-center justify-center">
+                <Trash2 size={24} className="text-indigo-500" />
               </div>
               <h3 className="text-lg font-semibold text-slate-800 mb-2">删除问题</h3>
               <p className="text-sm text-slate-500 leading-relaxed">
@@ -1303,7 +1303,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               </button>
               <button
                 onClick={handleDeleteQuestionConfirmThrottled}
-                className="flex-1 py-4 text-center text-white font-medium bg-red-500 hover:bg-red-600 transition-colors"
+                className="flex-1 py-4 text-center text-white font-medium bg-indigo-600 hover:bg-indigo-700 transition-colors"
               >
                 确认删除
               </button>

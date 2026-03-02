@@ -299,7 +299,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     Dialog.confirm({
       title: '确认删除',
       message: '确定要删除该资料吗？此操作无法撤销。',
-      confirmButtonColor: '#FA5151',
+      confirmButtonColor: '#4337F1',
     })
       .then(async () => {
         try {
@@ -610,7 +610,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                       {/* Delete Button - Show for all including supplementary */}
                       <button 
                         onClick={() => handleDeleteResourceThrottled(resource.id)}
-                        className="p-2 text-indigo-400 hover:text-red-500 transition-colors"
+                        className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
                       >
                         <MinusCircle size={22} strokeWidth={2} />
                       </button>
@@ -638,19 +638,34 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
       {/* Fixed Bottom Button - Hide if archived */}
       {!isArchived && (
         <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30">
-          <button
-            onClick={handleGenerateClick}
-            className="w-full h-12 rounded-full font-bold text-lg transition-transform flex items-center justify-center gap-2 bg-[#4337F1] text-white shadow-lg active:scale-95"
-          >
-            {localReportStatus === DealReportStatusEnum.REPORT_GENERATED ? (
-              <>
-                <RefreshCw size={18} strokeWidth={2.5} />
-                重新生成报告
-              </>
-            ) : (
-              <>→ 立即生成报告</>
-            )}
-          </button>
+          {(() => {
+            const isGenerating = localReportStatus === DealReportStatusEnum.REPORT_GENERATING;
+            return (
+              <button
+                onClick={handleGenerateClick}
+                disabled={isGenerating}
+                className={`w-full h-12 rounded-full font-bold text-lg transition-transform flex items-center justify-center gap-2 text-white shadow-lg ${
+                  isGenerating 
+                    ? 'bg-gray-400 cursor-not-allowed opacity-70' 
+                    : 'bg-[#4337F1] active:scale-95'
+                }`}
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin"></div>
+                    报告生成中...
+                  </>
+                ) : localReportStatus === DealReportStatusEnum.REPORT_GENERATED ? (
+                  <>
+                    <RefreshCw size={18} strokeWidth={2.5} />
+                    重新生成报告
+                  </>
+                ) : (
+                  <>→ 立即生成报告</>
+                )}
+              </button>
+            );
+          })()}
         </div>
       )}
 

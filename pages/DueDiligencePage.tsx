@@ -52,6 +52,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
   // 上传状态锁，防止重复触发
   const isUploadingRef = React.useRef(false);
+  // 记录最后一次保存的问题列表状态（JSON字符串），用于判断是否有更新
+  const lastSavedQuestionsRef = React.useRef<string>('');
 
   // 进入页面时请求详情（只在 deal.id 变化时请求）
   useEffect(() => {
@@ -62,6 +64,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         const res = await dealService.getDealInstDetail(deal.id);
         if (res.success && res.data) {
           setDealDetail(res.data);
+          // 初始加载或刷新时，记录当前服务器端的问题列表状态
+          if (res.data.questionInfoList) {
+            lastSavedQuestionsRef.current = JSON.stringify(res.data.questionInfoList);
+          }
           // 通知父组件更新数据
           onDealDetailLoadedRef.current?.(res.data);
         }
@@ -284,6 +290,13 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     // 注意：由于 DueDiligencePage 本身不编辑问题，这里主要是保存 App.tsx 同步过来的新模板问题
     if (!currentDeal?.id || !currentDeal.questionInfoList || currentDeal.questionInfoList.length === 0) return;
 
+    // 检查是否有实际更新：对比当前列表与最后一次保存/加载的列表
+    const currentQuestionsStr = JSON.stringify(currentDeal.questionInfoList);
+    if (currentQuestionsStr === lastSavedQuestionsRef.current) {
+        console.log('[DueDiligencePage] No question changes, skipping auto-save');
+        return;
+    }
+
     try {
       await dealService.createOrUpdateDealInst({
         id: currentDeal.id,
@@ -291,6 +304,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         questionInfoList: currentDeal.questionInfoList
       });
       console.log('[DueDiligencePage] Questions auto-saved');
+      // 保存成功后更新本地记录的“最后保存状态”
+      lastSavedQuestionsRef.current = currentQuestionsStr;
     } catch (e) {
       console.error('[DueDiligencePage] Auto-save questions failed', e);
     }
