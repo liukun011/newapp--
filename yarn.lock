@@ -1004,6 +1004,18 @@ baseline-browser-mapping@^2.9.0:
   resolved "https://registry.npmmirror.com/baseline-browser-mapping/-/baseline-browser-mapping-2.9.14.tgz#3b6af0bc032445bca04de58caa9a87cfe921cbb3"
   integrity sha512-B0xUquLkiGLgHhpPBqvl7GWegWBUNuujQ6kXd/r1U38ElPT6Ok8KZ8e+FpUGEc2ZoRQUzq/aUnaKFc/svWUGSg==
 
+benz-amr-recorder@^1.1.5:
+  version "1.1.5"
+  resolved "https://registry.npmmirror.com/benz-amr-recorder/-/benz-amr-recorder-1.1.5.tgz#79fbb1f6e58a51619e5ac3ed1c7029247e93d8d4"
+  integrity sha512-NepctcNTsZHK8NxBb5uKO5p8S+xkbm+vD6GLSkCYdJeEsriexvgumLHpDkanX4QJBcLRMVtg16buWMs+gUPB3g==
+  dependencies:
+    benz-recorderjs "^1.0.5"
+
+benz-recorderjs@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.npmmirror.com/benz-recorderjs/-/benz-recorderjs-1.0.5.tgz#5cb2683413d3d5fcda8c44773ffaca161186619f"
+  integrity sha512-EwedOQo9KLti7HxDi/eZY51PSRbAXnOdEZmLvJ6ro3QQSoF9Y3AXBt57MIllGvVz5vtFYMeikG+GD7qTm3+p9w==
+
 binary-extensions@^2.0.0:
   version "2.3.0"
   resolved "https://registry.npmmirror.com/binary-extensions/-/binary-extensions-2.3.0.tgz#f6e14a97858d327252200242d4ccfe522c445522"

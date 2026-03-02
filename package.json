@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "axios": "^1.13.2",
+    "benz-amr-recorder": "^1.1.5",
     "clsx": "^2.1.0",
     "framer-motion": "^12.26.2",
     "lucide-react": "^0.300.0",
