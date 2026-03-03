@@ -33,12 +33,6 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
     }
   };
 
-  // 页面初始化时自动获取一次邀请码
-  useEffect(() => {
-    generateInviteCode();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // 复制邀请码
   const copyInviteCode = () => {
     if (!inviteCode) {
