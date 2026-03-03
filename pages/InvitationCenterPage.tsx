@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Zap, Copy } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { motion } from 'framer-motion';
@@ -22,7 +22,6 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
       const res = await userService.getInviteCode();
       if (res.success && res.data) {
         setInviteCode(res.data);
-        Toast.success('邀请码获取成功');
       } else {
         Toast.fail(res.message || '获取失败');
       }
@@ -33,6 +32,12 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
       setIsGenerating(false);
     }
   };
+
+  // 页面初始化时自动获取一次邀请码
+  useEffect(() => {
+    generateInviteCode();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 复制邀请码
   const copyInviteCode = () => {
@@ -84,9 +89,11 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
       } else {
         Toast.fail(res.message || '关联失败');
       }
-    } catch (error) {
+    } catch (error: any) {
+      Toast.clear();
+      const msg = error?.message || '关联失败，请稍后再试';
+      Toast.fail(msg);
       console.error('Import invite code failed', error);
-      // axios 拦截器已处理 Toast
     }
   };
 
