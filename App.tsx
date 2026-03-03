@@ -23,6 +23,7 @@ import TemplatePreviewPage from './pages/TemplatePreviewPage';
 import QuestionsListPage from './pages/QuestionsListPage';
 import UserAgreementPage from './pages/UserAgreementPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import InvitationCenterPage from './pages/InvitationCenterPage';
 import SettingsPage from './pages/SettingsPage';
 import MessageCenterPage from './pages/MessageCenterPage';
 import ManagementPage from './pages/ManagementPage';
@@ -1543,6 +1544,10 @@ const App: React.FC = () => {
                       setPreviousView(View.SETTINGS);
                       navigateForward(View.PRIVACY_POLICY);
                   }}
+                  onNavigateToInvitationCenter={() => {
+                      setPreviousView(View.SETTINGS);
+                      navigateForward(View.INVITATION_CENTER);
+                  }}
                 />
               )}
               {currentView === View.MESSAGE_CENTER && (
@@ -1601,6 +1606,11 @@ const App: React.FC = () => {
               )}
               {currentView === View.PRIVACY_POLICY && (
                 <PrivacyPolicyPage
+                   onBack={() => navigateBackward(View.SETTINGS)}
+                />
+              )}
+              {currentView === View.INVITATION_CENTER && (
+                <InvitationCenterPage
                    onBack={() => navigateBackward(View.SETTINGS)}
                 />
               )}
@@ -1778,25 +1788,40 @@ const App: React.FC = () => {
             </h3>
             
             {/* 输入框 */}
-            <div className="mb-6">
+            <div className="mb-6 relative">
               <label className="block text-sm text-slate-500 mb-2 pl-1">访谈对象：</label>
-              <input
-                type="text"
-                value={newCustomerName}
-                onChange={(e) => setNewCustomerName(e.target.value)}
-                placeholder="请输入访谈对象"
-                className="w-full h-12 px-4 bg-gray-50 rounded-xl text-slate-800 border-none focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
-                autoFocus
-                onFocus={() => {
-                  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-                  if (isIOS) {
-                    setTimeout(() => {
-                      window.scrollBy({ top: 20, behavior: 'smooth' });
-                    }, 300);
-                  }
-                }}
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={newCustomerName}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    // 1. 限制最大长度 30
+                    if (val.length > 30) {
+                        val = val.slice(0, 30);
+                    }
+                    // 2. 过滤特殊字符: \ | / ? * < > 、连续的点 .. 以及换行符
+                    val = val.replace(/([\\\|\/\?\*\<\>]|\.\.|[\r\n])/g, '');
+                    setNewCustomerName(val);
+                  }}
+                  maxLength={30}
+                  placeholder="请输入访谈对象"
+                  className="w-full h-12 px-4 bg-gray-50 rounded-xl text-slate-800 border-none focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                  autoFocus
+                  onFocus={() => {
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                    if (isIOS) {
+                      setTimeout(() => {
+                        window.scrollBy({ top: 20, behavior: 'smooth' });
+                      }, 300);
+                    }
+                  }}
+                />
+              </div>
+              <div className="text-right text-[11px] text-slate-400 mt-1.5 pr-1">
+                {newCustomerName.length}/30
+              </div>
             </div>
             
             {/* 按钮组 */}

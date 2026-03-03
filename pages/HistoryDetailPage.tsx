@@ -232,7 +232,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
         <button onClick={handleBackThrottled} className="p-2 -ml-2 text-slate-700">
           <ArrowLeft size={22} />
         </button>
-        <h1 className="text-lg font-bold text-slate-800">
+        <h1 className="text-lg font-bold text-slate-800 flex-1 text-center truncate mx-4">
           {interviewInstTitle || '访谈详情'}
         </h1>
         <div className="w-10" /> 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, LogOut, Edit2, Shield, FileCheck, Trash2 } from 'lucide-react';
+import { ChevronRight, LogOut, Edit2, Shield, FileCheck, Trash2, Users } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { authService } from '../services/authService';
 import { useRecordingStore } from '../store/useRecordingStore';
@@ -12,13 +12,15 @@ interface SettingsPageProps {
   onNavigateToTemplates?: () => void;
   onNavigateToUserAgreement?: () => void;
   onNavigateToPrivacyPolicy?: () => void;
+  onNavigateToInvitationCenter?: () => void;
 }
 
 const SettingsPage: React.FC<SettingsPageProps> = ({
   onLogout,
   // onNavigateToTemplates,
   onNavigateToUserAgreement,
-  onNavigateToPrivacyPolicy
+  onNavigateToPrivacyPolicy,
+  onNavigateToInvitationCenter
 }) => {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
@@ -157,6 +159,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     //     }
     //   }
     // },
+    { 
+        icon: Users, 
+        label: '邀请中心', 
+        color: 'text-purple-500', 
+        bg: 'bg-purple-50', 
+        onClick: () => onNavigateToInvitationCenter ? onNavigateToInvitationCenter() : Toast.info('功能开发中')
+    },
     { 
         icon: FileCheck, 
         label: '用户协议', 

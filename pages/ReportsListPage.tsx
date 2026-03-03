@@ -105,7 +105,7 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
       </div>
 
       {/* Reports List */}
-      <div className="flex-1 overflow-y-auto px-4 pt-1 pb-24 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 pt-1 pb-40 space-y-3">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <Loader2 size={32} className="animate-spin mb-2" />

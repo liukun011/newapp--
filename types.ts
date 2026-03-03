@@ -21,6 +21,7 @@ export enum View {
   REPORT_PREVIEW = 'REPORT_PREVIEW',  // ReportPreviewPage - 报告预览页
   USER_AGREEMENT = 'USER_AGREEMENT',  // UserAgreementPage - 用户协议页
   PRIVACY_POLICY = 'PRIVACY_POLICY',  // PrivacyPolicyPage - 隐私政策页
+  INVITATION_CENTER = 'INVITATION_CENTER', // InvitationCenterPage - 邀请中心页
 }
 
 
