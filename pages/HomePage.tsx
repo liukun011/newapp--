@@ -62,16 +62,16 @@ const HomePage: React.FC<HomePageProps> = ({
   // AI Banner 轮播状态
   const bannerItems = [
     {
-      title: "AI资料分析",
-      description: "全方位深度挖掘资料细节与潜在规律，提炼高价值关键信息"
+      title: "AI 智能资料分析",
+      description: "告别繁琐检索：AI 智能分析，让数万页文档瞬间化为精炼干货。"
     },
     {
-      title: "智能问题生成",
-      description: "基于上传资料自动生成专业访谈问题，提升尽调效率与质量"
+      title: "听见即记录",
+      description: "告别手动速记：AI 高效转写，把您的声音实时转化为精准文档。"
     },
     {
-      title: "实时语音转写",
-      description: "访谈过程实时转写记录，自动匹配问题答案，生成结构化报告"
+      title: "透视数据核心",
+      description: "AI 深度挖掘海量指标，一键生成结构化报告，让复杂决策更科学"
     }
   ];
 
@@ -393,10 +393,35 @@ const HomePage: React.FC<HomePageProps> = ({
                       style={{ background: 'linear-gradient(270deg, #C3D1FD 0%, #CADCF9 0%, #E6F2FF 100%)' }}
                     >
                       <div className="relative z-10 max-w-[60%] h-full flex flex-col justify-center">
-                        <h2 className="text-[19px] font-black text-[#1A4B8B] mb-2 leading-tight">
+                        <h2 
+                          className="mb-2"
+                          style={{
+                            fontFamily: "'Alimama ShuHeiTi', sans-serif",
+                            fontSize: '22px',
+                            fontWeight: 'bold',
+                            lineHeight: 'normal',
+                            letterSpacing: '0em',
+                            fontVariationSettings: '"opsz" auto',
+                            fontFeatureSettings: '"kern" on',
+                            color: '#001D6E'
+                          }}
+                        >
                           {item.title}
                         </h2>
-                        <p className="text-[11px] text-[#486DA5] leading-relaxed opacity-90 min-h-[54px] line-clamp-3">
+                        <p 
+                          className="line-clamp-3"
+                          style={{
+                            fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
+                            fontSize: '12px',
+                            fontWeight: 'normal',
+                            lineHeight: '18px',
+                            letterSpacing: '0em',
+                            fontVariationSettings: '"opsz" auto',
+                            fontFeatureSettings: '"kern" on',
+                            color: 'rgba(0, 0, 0, 0.6)',
+                            minHeight: '54px'
+                          }}
+                        >
                           {item.description}
                         </p>
                       </div>
