@@ -30,7 +30,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
         setIsLoading(false);
       }
     };
-    // fetchExistingCode();
+    fetchExistingCode();
   }, []);
 
   // 生成邀请码
