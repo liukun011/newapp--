@@ -13,6 +13,27 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
   const [isGenerating, setIsGenerating] = useState(false);
   const [friendCode, setFriendCode] = useState('');
 
+  const [isLoading, setIsLoading] = useState(true); // 首次查询 loading
+
+  // 页面初始化：查询已有邀请码
+  useEffect(() => {
+    const fetchExistingCode = async () => {
+      setIsLoading(true);
+      try {
+        const res = await userService.queryInviteCode();
+        if (res.success && res.data) {
+          setInviteCode(res.data);
+        }
+        // 查不到也不报错，让用户手动点生成
+      } catch (error) {
+        console.error('Query invite code failed', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchExistingCode();
+  }, []);
+
   // 生成邀请码
   const generateInviteCode = async () => {
     if (inviteCode) return; // Already generated
@@ -142,7 +163,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
                 </div>
               ) : (
                 <span className="text-2xl font-black italic text-slate-200 uppercase tracking-[0.2em] select-none">
-                  {isGenerating ? '...' : 'WAITING...'}
+                  {(isLoading || isGenerating) ? '...' : 'WAITING...'}
                 </span>
               )}
             </div>
@@ -150,7 +171,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
             {/* Generate Button */}
             <button
               onClick={inviteCode ? copyInviteCode : generateInviteCode}
-              disabled={isGenerating}
+              disabled={isLoading || isGenerating}
               className={`w-full h-[64px] bg-[#4337F1] text-white rounded-[24px] shadow-[0_8px_20px_rgba(67,55,241,0.2)] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-80 disabled:scale-100 disabled:shadow-none`}
             >
               {inviteCode ? (
@@ -161,7 +182,9 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
               ) : (
                 <>
                   <Zap size={22} fill="currentColor" strokeWidth={0} />
-                  <span className="text-[17px] font-bold">{isGenerating ? '正在生成中...' : '生成我的专属邀请码'}</span>
+                  <span className="text-[17px] font-bold">
+                    {isGenerating ? '正在生成中...' : isLoading ? '查询中...' : '生成我的专属邀请码'}
+                  </span>
                 </>
               )}
             </button>

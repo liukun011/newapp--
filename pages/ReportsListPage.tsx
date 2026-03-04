@@ -156,13 +156,17 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handlePreview(report)}
-                        className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-medium hover:bg-indigo-100 transition-colors"
+                        onMouseDown={(e) => e.preventDefault()}
+                        tabIndex={-1}
+                        className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-medium hover:bg-indigo-100 transition-colors outline-none"
                       >
                         预览报告
                       </button>
                       <button
                         onClick={() => handleDetail(report)}
-                        className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-medium hover:bg-indigo-100 transition-colors"
+                        onMouseDown={(e) => e.preventDefault()}
+                        tabIndex={-1}
+                        className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-medium hover:bg-indigo-100 transition-colors outline-none"
                       >
                         查看详情
                       </button>

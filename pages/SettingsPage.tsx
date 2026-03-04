@@ -193,7 +193,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     <button
       key={item.label}
       onClick={item.onClick}
-      className={`w-full flex items-center justify-between px-4 py-4 hover:bg-slate-50 transition-colors ${index !== total - 1 ? 'border-b border-gray-50' : ''
+      onMouseDown={(e) => e.preventDefault()}
+      tabIndex={-1}
+      className={`w-full flex items-center justify-between px-4 py-4 transition-colors outline-none ${index !== total - 1 ? 'border-b border-gray-50' : ''
         }`}
     >
       <div className="flex items-center gap-3">
@@ -205,6 +207,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       <ChevronRight size={18} className="text-gray-300" />
     </button>
   );
+
 
   return (
     <div className="min-h-screen bg-[#F7F8FA] flex flex-col pb-28">
@@ -283,14 +286,18 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       <div className="px-4 mt-8">
         <button
           onClick={() => setShowLogoutDialog(true)}
-          className="w-full bg-white text-slate-500 font-medium py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-gray-50 hover:text-red-500"
+          onMouseDown={(e) => e.preventDefault()}
+          tabIndex={-1}
+          className="w-full bg-white text-slate-500 font-medium py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-gray-50 hover:text-red-500 outline-none"
         >
           <LogOut size={18} /> 退出登录
         </button>
 
         <button
           onClick={() => setShowDeleteAccountDialog(true)}
-          className="w-full mt-4 bg-white text-red-500 font-medium py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-red-50"
+          onMouseDown={(e) => e.preventDefault()}
+          tabIndex={-1}
+          className="w-full mt-4 bg-white text-red-500 font-medium py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-red-50 outline-none"
         >
           <Trash2 size={18} /> 注销账号
         </button>

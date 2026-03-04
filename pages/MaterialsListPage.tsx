@@ -589,10 +589,13 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                         Toast.info('暂无预览链接');
                       }
                     }}
-                    className="flex-1 text-sm text-slate-800 truncate text-left hover:text-indigo-600 transition-colors active:scale-[0.98]"
+                    onMouseDown={(e) => e.preventDefault()}
+                    tabIndex={-1}
+                    className="flex-1 text-sm text-slate-800 truncate text-left transition-colors active:scale-[0.98] outline-none"
                   >
                     {resource.fileName}
                   </button>
+
                   
                   {/* Actions - Hide if archived */}
                   {!isArchived && (
@@ -601,7 +604,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                       {resource.type !== '4' && (
                         <button 
                           onClick={() => handleOpenRenameModal(resource)}
-                          className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
+                          className="p-2 text-indigo-600 transition-colors"
                         >
                           <Pencil size={18} strokeWidth={2} />
                         </button>
@@ -610,7 +613,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                       {/* Delete Button - Show for all including supplementary */}
                       <button 
                         onClick={() => handleDeleteResourceThrottled(resource.id)}
-                        className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
+                        className="p-2 text-indigo-600 transition-colors"
                       >
                         <MinusCircle size={22} strokeWidth={2} />
                       </button>

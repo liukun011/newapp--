@@ -899,7 +899,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                     return (
                       <div
                         key={resource.id}
-                        className="flex items-center py-3 gap-3 group border-b border-transparent last:border-b-0 hover:bg-gray-50 transition-colors rounded-lg px-2 -mx-2 mb-1"
+                        className="flex items-center py-3 gap-3 group border-b border-transparent last:border-b-0 transition-colors rounded-lg px-2 -mx-2 mb-1"
                       >
                         {/* File Icon */}
                         <div className="w-10 h-10 flex-shrink-0">
@@ -913,17 +913,20 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                         {/* File Name - Clickable for Preview */}
                         <button
                           onClick={() => handleGenerateAIPreviewThrottled(resource)}
-                          className="flex-1 text-sm text-slate-800 truncate text-left hover:text-indigo-600 transition-colors active:scale-[0.98]"
+                          onMouseDown={(e) => e.preventDefault()}
+                          tabIndex={-1}
+                          className="flex-1 text-sm text-slate-800 truncate text-left transition-colors active:scale-[0.98] outline-none"
                         >
                           {resource.fileName}
                         </button>
+
 
                         {/* Edit Button */}
                         {/* Edit Button */}
                         {resource.type !== '4' && (
                           <button
                             onClick={() => handleOpenRenameModalThrottled(resource)}
-                            className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
+                            className="p-2 text-indigo-600 transition-colors"
                           >
                             <Pencil size={18} strokeWidth={2} />
                           </button>
@@ -932,7 +935,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                         {/* Delete Button */}
                         <button
                           onClick={() => handleDeleteResourceThrottled(resource.id)}
-                          className="p-2 text-indigo-400 hover:text-indigo-600 transition-colors"
+                          className="p-2 text-indigo-600 transition-colors"
                         >
                           <MinusCircle size={22} strokeWidth={2} />
                         </button>
