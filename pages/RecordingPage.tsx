@@ -17,6 +17,7 @@ import SoundWave from '../components/SoundWave';
 import Button from '../components/Button';
 import { Question, DealRecord } from '../types';
 import { dealService } from '../services/dealService';
+import fixIcon from '../assets/fix.svg';
 
 import { useRecordingStore } from '../store/useRecordingStore';
 import { nativeBridge } from '../services/nativeBridge';
@@ -715,14 +716,18 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         <button onClick={onBack} className="p-2 -ml-2 text-slate-700">
           <ArrowLeft size={22} />
         </button>
-        <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+        <h1 className="text-lg font-bold text-slate-800 flex-1 flex justify-center overflow-hidden">
           {showTimeTitle ? (
-            <>
-              <Clock size={18} className="text-indigo-600" />
-              <span className="text-indigo-600 font-mono text-[17px]">{formatTime(seconds)}</span>
-            </>
+            <div className="bg-[#F2F3F5] px-4 py-1.5 rounded-full flex items-center gap-2 animate-fadeIn">
+              <Clock size={16} className="text-slate-600" />
+              <span className="text-slate-800 font-mono text-[16px] leading-none mb-[1px]">
+                {formatTime(seconds)}
+              </span>
+            </div>
           ) : (
-            interviewInstTitle || deal?.interviewCust || '访谈录音'
+            <div className="truncate px-4">
+              {interviewInstTitle || deal?.interviewCust || '访谈录音'}
+            </div>
           )}
         </h1>
         <button
@@ -853,14 +858,13 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                     {/* 容器头部信息 */}
                     <div className="flex items-center justify-between gap-1 mb-4 pb-2 border-b border-slate-50">
                       {/* 左侧：时间段 */}
-                      <div className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded-full whitespace-nowrap shrink-0">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-[#F2F3F5] px-2.5 py-1 rounded-full whitespace-nowrap shrink-0">
                         <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
                           <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
                           <path d="M7 3.5V7L9.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                         </svg>
-                        <span className="font-medium">
-                           {/* 显示从 00:00:00 到当前的具体录音时间点 */}
-                           00:00:00 - {formatTime(seconds)}
+                        <span className="font-medium font-mono">
+                           00:00 - {formatTime(seconds).substring(3)}
                         </span>
                       </div>
 
@@ -868,10 +872,11 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                       <div className="flex items-center gap-1.5 whitespace-nowrap ml-auto shrink-0">
                         {/* 智能精修标签 */}
                         <div className="flex items-center gap-1 bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded text-[10px] font-medium border border-indigo-100">
-                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                             <circle cx="12" cy="12" r="3"></circle>
-                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.4 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1.4z"></path>
-                           </svg>
+                           <img 
+                             src={fixIcon} 
+                             alt="fix"
+                             className="w-[10px] h-[10px] shrink-0" 
+                           />
                            智能精修
                         </div>
                         
@@ -952,13 +957,13 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                   return (
                     <div className="py-2">
                        {/* 容器的装饰头部（时间显示） */}
-                       <div className="inline-flex items-center gap-2 text-xs text-slate-500 bg-white/80 backdrop-blur border border-slate-100 px-3 py-1.5 rounded-full mb-3 ml-1 shadow-sm">
+                       <div className="inline-flex items-center gap-2 text-xs text-slate-500 bg-[#F2F3F5] border border-transparent px-3 py-1.5 rounded-full mb-3 ml-1">
                         <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="text-slate-400">
                           <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
                           <path d="M7 3.5V7L9.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                         </svg>
                         <span className="font-medium font-mono">
-                          {formatTime(startTime)}-{formatTime(endTime)}
+                          {formatTime(startTime).substring(3)}-{formatTime(endTime).substring(3)}
                         </span>
                       </div>
 

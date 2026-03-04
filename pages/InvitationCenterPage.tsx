@@ -86,14 +86,15 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
   };
 
   const handleConfirmFriendCode = async () => {
-    if (!friendCode.trim()) {
+    const finalCode = friendCode.trim().toUpperCase();
+    if (!finalCode) {
       Toast.info('请输入邀请码');
       return;
     }
 
     try {
       Toast.loading({ message: '提交中...', forbidClick: true });
-      const res = await userService.importInviteCode(friendCode.trim());
+      const res = await userService.importInviteCode(finalCode);
       Toast.clear();
       
       if (res.success) {
@@ -109,6 +110,8 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
       console.error('Import invite code failed', error);
     }
   };
+
+  const isComposing = React.useRef(false);
 
   return (
     <div className="h-screen bg-[#F7F8FA] flex flex-col font-sans relative overflow-hidden">
@@ -196,8 +199,27 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
               <input
                 type="text"
                 value={friendCode}
-                onChange={(e) => setFriendCode(e.target.value.toUpperCase())}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (!isComposing.current) {
+                    const filtered = val.replace(/[^a-zA-Z0-9]/g, '');
+                    setFriendCode(filtered);
+                  } else {
+                    setFriendCode(val);
+                  }
+                }}
+                onCompositionStart={() => {
+                  isComposing.current = true;
+                }}
+                onCompositionEnd={(e) => {
+                  isComposing.current = false;
+                  const val = (e.target as HTMLInputElement).value;
+                  const filtered = val.replace(/[^a-zA-Z0-9]/g, '');
+                  setFriendCode(filtered);
+                }}
                 placeholder="请输入邀请码"
+                inputMode="email"
+                maxLength={10}
                 className="w-full h-12 bg-[#F5F6F8] border-none rounded-xl px-4 text-[15px] text-slate-800 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-100 uppercase"
               />
             </div>
@@ -212,6 +234,8 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
             </button>
           </div>
         </div>
+
+
 
       </div>
     </div>
