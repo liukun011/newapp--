@@ -36,15 +36,15 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         const localUserInfoStr = localStorage.getItem('zov-user-info');
         if (localUserInfoStr) {
           const userInfo = JSON.parse(localUserInfoStr);
-          setUserName(userInfo.nickName || userInfo.username || userInfo.userId || '用户');
-        }
-
+          setUserName(userInfo.nickName || userInfo.username);
+        } 
         // 调用接口获取最新信息
         const res = await authService.getUserInfo();
         if (res.successful && res.data) {
           localStorage.setItem('zov-user-info', JSON.stringify(res.data));
-          setUserName(res.data.nickName || res.data.username || res.data.userId || '用户');
+          setUserName(res.data.nickName || res.data.username);
         }
+
       } catch (e) {
         console.error('Failed to update user info', e);
       }
@@ -127,7 +127,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
           const userInfoRes = await authService.getUserInfo();
           if (userInfoRes.successful && userInfoRes.data) {
             localStorage.setItem('zov-user-info', JSON.stringify(userInfoRes.data));
-            setUserName(userInfoRes.data.nickName || userInfoRes.data.username || userInfoRes.data.userId || '用户');
+            setUserName(userInfoRes.data.nickName || userInfoRes.data.username);
           }
         } else {
           Toast.fail(updateRes.message || '更新信息失败');
