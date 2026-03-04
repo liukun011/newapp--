@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Zap, Copy } from 'lucide-react';
+import { ArrowLeft, Copy, Gift, UserCheck } from 'lucide-react';
 import { Toast } from 'react-vant';
-import { motion } from 'framer-motion';
 import { userService } from '../services/userService';
 
 interface InvitationCenterPageProps {
@@ -13,7 +12,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
   const [isGenerating, setIsGenerating] = useState(false);
   const [friendCode, setFriendCode] = useState('');
 
-  const [isLoading, setIsLoading] = useState(true); // 首次查询 loading
+  const [isLoading, setIsLoading] = useState(false); // 首次查询 loading
 
   // 页面初始化：查询已有邀请码
   useEffect(() => {
@@ -31,7 +30,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
         setIsLoading(false);
       }
     };
-    fetchExistingCode();
+    // fetchExistingCode();
   }, []);
 
   // 生成邀请码
@@ -48,7 +47,6 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
       }
     } catch (error) {
       console.error('Fetch invite code failed', error);
-      // axios 拦截器已经弹出了 Toast
     } finally {
       setIsGenerating(false);
     }
@@ -113,145 +111,107 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
   };
 
   return (
-    <div className="h-screen bg-[#F8FAFC] flex flex-col font-sans overflow-hidden">
+    <div className="h-screen bg-[#F7F8FA] flex flex-col font-sans relative overflow-hidden">
+      {/* Header Background Gradient */}
+      <div className="absolute top-0 left-0 right-0 h-[280px] bg-gradient-to-b from-[#EFEAFF] to-[#F7F8FA] pointer-events-none z-0" />
+
       {/* Header */}
-      <div className="bg-white px-4 py-4 flex items-center sticky top-0 z-50">
+      <div className="px-4 py-3 flex items-center relative z-50">
         <button 
           onClick={onBack} 
-          className="p-2 -ml-2 text-slate-900 transition-colors active:bg-gray-100 rounded-full"
+          className="p-2 -ml-2 text-slate-900 transition-colors active:bg-black/5 rounded-full"
         >
-          <ArrowLeft size={24} strokeWidth={2.5} />
+          <ArrowLeft size={24} strokeWidth={2} />
         </button>
         <div className="flex-1 flex justify-center mr-6">
-          <h1 className="text-xl font-bold text-slate-900">邀请中心</h1>
+          <h1 className="text-[17px] font-bold text-slate-900">邀请中心</h1>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-5 py-6 space-y-8 overflow-y-auto pb-32">
+      <div className="flex-1 px-4 py-2 space-y-4 overflow-y-auto pb-safe relative z-10">
         
-        {/* Top Invitation Card */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[40px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden text-center border border-gray-50 mt-2"
-        >
-          {/* Subtle Background Decorations */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/30 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-50/20 rounded-full -ml-20 -mb-20 blur-3xl pointer-events-none" />
-          
-          <div className="relative z-10 space-y-5">
-            <div className="space-y-1">
-              <span className="text-[12px] font-black text-slate-400 tracking-[0.2em] uppercase">
-                INVITATION PROGRAM
+        {/* Card 1: Share Code */}
+        <div className="bg-white rounded-[20px] p-5 shadow-sm space-y-4">
+          <h2 className="text-[15px] font-bold text-slate-800 tracking-wide">
+            分享邀请码，邀请好友体验小狸报告
+          </h2>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-12 bg-[#F5F6F8] rounded-xl flex items-center px-4 overflow-hidden">
+              <span className={`leading-none select-all truncate uppercase ${inviteCode ? 'text-[20px] text-[#4B40F6] font-medium' : 'text-[14px] text-gray-400 font-normal'}`}>
+                {isGenerating || isLoading ? '...' : (inviteCode || 'WAITING...')}
               </span>
-              <h2 className="text-[17px] font-bold text-slate-600">
-                分享邀请码，邀请好友体验小狸报告
-              </h2>
             </div>
-
-            {/* Code Area */}
-            <div 
-              onClick={copyInviteCode}
-              className={`h-[90px] border border-[#CBDCFE] rounded-[24px] flex items-center justify-center transition-all cursor-pointer ${inviteCode ? 'bg-[#F2F7FF]' : 'bg-transparent'}`}
-            >
-              {inviteCode ? (
-                <div className="flex flex-col items-center">
-                  <span className="text-4xl font-black text-[#4337F1] tracking-[0.1em]">
-                    {inviteCode}
-                  </span>
-                </div>
-              ) : (
-                <span className="text-2xl font-black italic text-slate-200 uppercase tracking-[0.2em] select-none">
-                  {(isLoading || isGenerating) ? '...' : 'WAITING...'}
-                </span>
-              )}
-            </div>
-
-            {/* Generate Button */}
             <button
               onClick={inviteCode ? copyInviteCode : generateInviteCode}
               disabled={isLoading || isGenerating}
-              className={`w-full h-[64px] bg-[#4337F1] text-white rounded-[24px] shadow-[0_8px_20px_rgba(67,55,241,0.2)] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-80 disabled:scale-100 disabled:shadow-none`}
+              className="h-12 px-5 bg-[#4B40F6] text-white text-[14px] font-medium rounded-xl active:scale-95 transition-transform disabled:opacity-80 flex-shrink-0"
             >
-              {inviteCode ? (
-                <>
-                  <Copy size={22} strokeWidth={2} />
-                  <span className="text-[17px] font-bold">复制邀请码</span>
-                </>
-              ) : (
-                <>
-                  <Zap size={22} fill="currentColor" strokeWidth={0} />
-                  <span className="text-[17px] font-bold">
-                    {isGenerating ? '正在生成中...' : isLoading ? '查询中...' : '生成我的专属邀请码'}
-                  </span>
-                </>
-              )}
+              {inviteCode ? '复制邀请码' : (isLoading || isGenerating ? '生成中...' : '生成邀请码')}
             </button>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Association Steps */}
-        <div className="space-y-4 pt-2">
-          <div className="text-[13px] font-bold text-slate-400 px-1">
-            如何使用邀请码建立关联
-          </div>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-[32px] p-7 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-7"
-          >
+        {/* Card 2: Steps */}
+        <div className="bg-white rounded-[20px] p-5 shadow-sm space-y-5">
+          <h2 className="text-[15px] font-bold text-slate-800 tracking-wide">
+            邀请步骤
+          </h2>
+          <div className="pt-1 px-1">
             {[
-              { id: '01', text: '复制您的专属邀请码并发送给好友。' },
-              { id: '02', text: '好友在下方填写您的邀请码并点击确定。' },
-              { id: '03', text: '关联已开启。阅览好友分享，共触 AI 报告新体验。' }
-            ].map((step, idx) => (
-              <div key={idx} className="flex items-start gap-4">
-                <div className="w-[52px] h-[44px] bg-[#EEF6FF] text-[#4337F1] rounded-[16px] flex items-center justify-center text-[17px] font-black flex-shrink-0">
-                  {step.id}
+              { icon: Copy, text: '复制您的专属邀请码并发送给好友' },
+              { icon: Gift, text: '好友在下方填写您的邀请码并点击确定' },
+              { icon: UserCheck, text: '好友分享，同触AI报告新体验' }
+            ].map((step, idx, arr) => (
+              <div key={idx} className="flex gap-4 relative">
+                {/* Dotted Line */}
+                {idx !== arr.length - 1 && (
+                  <div className="absolute left-[5px] top-[20px] bottom-[-10px] w-0 border-l-[1.5px] border-dashed border-[#CCCEFF]" />
+                )}
+                
+                {/* Dot */}
+                <div className="relative z-10 flex-shrink-0 mt-1 w-[11px] h-[11px] rounded-full border-[2.5px] border-[#CBD1FF] bg-white flex items-center justify-center">
+                  <div className="w-[4px] h-[4px] bg-[#4B40F6] rounded-full" />
                 </div>
-                <div className="text-[14px] text-slate-600 font-bold leading-relaxed pt-2">
-                  {step.text}
+                
+                {/* Icon & Text */}
+                <div className={`flex-1 flex gap-3.5 items-center ${idx !== arr.length - 1 ? 'pb-8' : ''}`}>
+                  <step.icon size={20} className="text-slate-700 flex-shrink-0" strokeWidth={1.5} />
+                  <span className="text-[14px] text-slate-600 leading-snug">
+                    {step.text}
+                  </span>
                 </div>
               </div>
             ))}
-          </motion.div>
+          </div>
         </div>
 
-        {/* Fill in Friend's Code */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-[32px] p-7 shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-5"
-        >
-          <div className="text-[17px] font-black text-slate-800">
+        {/* Card 3: Fill Friend Code */}
+        <div className="bg-white rounded-[20px] p-5 shadow-sm space-y-4">
+          <h2 className="text-[15px] font-bold text-slate-800 tracking-wide">
             填写好友邀请码
-          </div>
-          
-          <div className="flex gap-3">
+          </h2>
+          <div className="flex items-center gap-3">
             <div className="flex-1 relative">
               <input
                 type="text"
                 value={friendCode}
                 onChange={(e) => setFriendCode(e.target.value.toUpperCase())}
-                placeholder="输入邀请码"
-                className="w-full h-[60px] bg-[#F8FAFC] border-none rounded-[18px] px-5 text-[16px] font-bold text-slate-800 placeholder:text-slate-300 focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                placeholder="请输入邀请码"
+                className="w-full h-12 bg-[#F5F6F8] border-none rounded-xl px-4 text-[15px] text-slate-800 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-100 uppercase"
               />
             </div>
             <button 
               onClick={handleConfirmFriendCode}
-              className="w-[70px] h-[60px] bg-[#4337F1] text-white rounded-[18px] flex items-center justify-center active:scale-95 transition-all shadow-lg shadow-indigo-100"
+              disabled={!friendCode.trim()}
+              className={`h-12 w-24 text-white text-[15px] font-medium rounded-xl active:scale-95 transition-all flex-shrink-0 ${
+                friendCode.trim() ? 'bg-[#4B40F6]' : 'bg-[#AEA9F8]'
+              }`}
             >
-              <div className="flex flex-col items-center">
-                <span className="text-[15px] font-black leading-tight">确</span>
-                <span className="text-[15px] font-black leading-tight">定</span>
-              </div>
+              确定
             </button>
           </div>
-        </motion.div>
+        </div>
 
       </div>
     </div>
