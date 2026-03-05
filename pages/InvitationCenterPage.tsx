@@ -114,9 +114,16 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
   const isComposing = React.useRef(false);
 
   return (
-    <div className="h-screen bg-[#F7F8FA] flex flex-col font-sans relative overflow-hidden">
-      {/* Header Background Gradient */}
-      <div className="absolute top-0 left-0 right-0 h-[280px] bg-gradient-to-b from-[#EFEAFF] to-[#F7F8FA] pointer-events-none z-0" />
+    <div 
+      className="h-screen flex flex-col font-sans relative overflow-hidden"
+      style={{
+        backgroundImage: 'url(/talk-assistant/assets/invite.png)',
+        backgroundSize: '100% 100%',
+        backgroundPosition: 'top center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#F7F8FA'
+      }}
+    >
 
       {/* Header */}
       <div className="px-4 py-3 flex items-center relative z-50">
@@ -131,8 +138,11 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 px-4 py-2 space-y-4 overflow-y-auto pb-safe relative z-10">
+      {/* Top Spacer */}
+      <div className="h-48 flex-shrink-0" />
+
+      {/* Main Content (Scrollable) */}
+      <div className="flex-1 px-4 pb-2 space-y-4 overflow-y-auto pb-safe relative z-10">
         
         {/* Card 1: Share Code */}
         <div className="bg-white rounded-[20px] p-5 shadow-sm space-y-4">
