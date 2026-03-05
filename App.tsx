@@ -33,7 +33,6 @@ import HistoryRecordsPage from './pages/HistoryRecordsPage';
 import HistoryDetailPage from './pages/HistoryDetailPage';
 import ReportPreviewPage from './pages/ReportPreviewPage';
 import { View, DealRecord } from './types';
-import config from './config';
 
 import RecordingFloatBubble from './components/RecordingFloatBubble';
 import { nativeBridge } from './services/nativeBridge';

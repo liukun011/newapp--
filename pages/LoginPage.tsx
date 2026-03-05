@@ -26,6 +26,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
@@ -686,10 +687,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         
         {isPasswordMode ? (
           <Input 
-            type="password" 
+            type={showPassword ? "text" : "password"} 
             placeholder="请输入密码" 
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            suffix={
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-gray-400 p-1 hover:text-gray-600 focus:outline-none"
+              >
+                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+              </button>
+            }
           />
         ) : (
           <Input 

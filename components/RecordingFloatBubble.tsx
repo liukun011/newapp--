@@ -50,7 +50,6 @@ const RecordingFloatBubble: React.FC<RecordingFloatBubbleProps> = ({
                 if (bubbleRef.current && containerRect) {
                     const rect = bubbleRef.current.getBoundingClientRect();
                     const winW = window.innerWidth;
-                    const currentScale = 1.0; // drag scale
                     const targetScale = 0.85; // target idle scale
                     
                     // Unscaled width (currentScale is 1.0 during drag)
@@ -90,7 +89,7 @@ const RecordingFloatBubble: React.FC<RecordingFloatBubbleProps> = ({
         >
             <button
                 onClick={onClick}
-                className="bg-white rounded-[10px] p-[10px] shadow-lg flex flex-col items-center gap-1.5 border border-teal-50 transition-transform"
+                className="bg-white rounded-[10px] w-[60px] h-[60px] shadow-lg flex flex-col items-center justify-center gap-1 border border-teal-50 transition-transform"
             >
                 <div className={`w-6 h-6 rounded-full border-[3px] flex items-center justify-center relative ${isRecording ? 'border-teal-400' : 'border-red-400'}`}>
                     <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-teal-500' : 'bg-red-500'}`} />
