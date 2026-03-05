@@ -1263,7 +1263,7 @@ const App: React.FC = () => {
                     // 提交成功后不立即返回，等待用户点击"查看列表"
                   }}
                   onViewList={() => {
-                    // 点击"查看列表"后跳转到模板管理页的"审核中" tab
+                    // 点击"查看列表"后跳转到模板管理页的"上传中" tab
                     setTemplateInitialTab('uploading');
                     navigateBackward(View.MY_TEMPLATES);
                   }}

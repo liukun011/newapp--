@@ -208,12 +208,12 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
 
           {/* Title */}
           <h2 className="text-xl font-bold text-slate-800 mb-3">
-            已进入审核队列
+            已进入生成队列
           </h2>
 
           {/* Description */}
           <p className="text-sm text-gray-500 text-center leading-relaxed max-w-sm">
-            您的模板已成功上传，系统将在 1-2 小时内完成合规审核，请在"审核中"分类查看进度
+            您的模板已成功上传，系统将在 1-2 小时内完成生成，请在"上传中"分类查看进度
           </p>
 
           {/* View List Button */}
@@ -309,7 +309,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
               loading ? 'bg-gray-400' : 'bg-confirm-gradient'
             }`}
           >
-            {loading ? '提交中...' : '提交审核'}
+            {loading ? '提交中...' : '提交生成'}
           </Button>
       </div>
     </div>

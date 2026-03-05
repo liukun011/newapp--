@@ -31,7 +31,7 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
           {/* Text Content */}
           <div className="relative z-10 w-[52%] ml-auto flex flex-col items-start text-left">
             <h3 
-              className="mb-1"
+              className="mb-1 whitespace-nowrap"
               style={{
                 fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
                 fontSize: '18px',
@@ -86,7 +86,7 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
           {/* Text Content */}
           <div className="relative z-10 w-[52%] ml-auto flex flex-col items-start text-left">
             <h3 
-              className="mb-1"
+              className="mb-1 whitespace-nowrap"
               style={{
                 fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
                 fontSize: '18px',

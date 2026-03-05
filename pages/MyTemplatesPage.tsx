@@ -25,8 +25,8 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
 
   // 将 tab 映射到对应的状态值
   const getStatusFromTab = (tab: 'success' | 'uploading' | 'failed'): number => {
-    if (tab === 'success') return 2; // 已审核
-    if (tab === 'uploading') return 1; // 审核中
+    if (tab === 'success') return 2; // 上传成功
+    if (tab === 'uploading') return 1; // 上传中
     if (tab === 'failed') return 3;
     return 2;
   };
@@ -142,9 +142,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
       {/* Tabs */}
       <div className="bg-white flex justify-around border-b border-gray-100">
         {[
-          { key: 'success' as const, label: '已审核' },
-          { key: 'uploading' as const, label: '审核中' },
-          { key: 'failed' as const, label: '未通过' },
+          { key: 'success' as const, label: '上传成功' },
+          { key: 'uploading' as const, label: '上传中' },
+          { key: 'failed' as const, label: '上传失败' },
         ].map(tab => {
           const isActive = activeTab === tab.key;
           return (
@@ -173,7 +173,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
         ) : templates.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <FileText size={48} className="mb-4 opacity-20" />
-            <p className="text-sm">暂无{activeTab === 'success' ? '已审核' : activeTab === 'uploading' ? '审核中' : '未通过'}的模板</p>
+            <p className="text-sm">暂无{activeTab === 'success' ? '上传成功' : activeTab === 'uploading' ? '上传中' : '上传失败'}的模板</p>
           </div>
         ) : (
           templates.map(template => (
@@ -201,17 +201,17 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
                     {/* 状态标签 */}
                     {template.approveReportStatus === '2' && (
                       <span className="inline-flex px-2.5 py-0.5 bg-emerald-50 text-emerald-600 text-xs font-medium rounded-md flex-shrink-0">
-                        已审核
+                        上传成功
                       </span>
                     )}
                     {template.approveReportStatus === '1' && (
                       <span className="inline-flex px-2.5 py-0.5 bg-orange-50 text-orange-500 text-xs font-medium rounded-md flex-shrink-0">
-                        审核中
+                        上传中
                       </span>
                     )}
                     {template.approveReportStatus === '3' && (
                       <span className="inline-flex px-2.5 py-0.5 bg-red-50 text-red-600 text-xs font-medium rounded-md flex-shrink-0">
-                        未通过
+                        上传失败
                       </span>
                     )}
                   </div>
@@ -221,7 +221,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
               {/* Template Footer - 时间和操作按钮（下方区域） */}
               <div className="px-4 py-3">
                 {template.approveReportStatus === '1' ? (
-                  // 审核中状态：显示进度条
+                  // 生成中状态：显示进度条
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       {/* 进度条 */}
