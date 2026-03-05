@@ -12,9 +12,9 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
   onNavigateToQuestionLibrary,
 }) => {
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-[#F7F8FA] pb-24">
       {/* Header */}
-      <div className="bg-white pt-6 pb-2 px-6 flex items-center justify-center sticky top-0 z-10">
+      <div className="bg-white py-3 px-6 flex items-center justify-center sticky top-0 z-10">
         <h1 className="text-[18px] font-medium text-slate-800 tracking-wide">
           基本信息管理
         </h1>
@@ -29,11 +29,35 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
           onClick={onNavigateToTemplates}
         >
           {/* Text Content */}
-          <div className="relative z-10 w-[60%]">
-            <h3 className="text-[17px] font-bold text-[#1b6eed] mb-1">
+          <div className="relative z-10 w-[52%] ml-auto flex flex-col items-start text-left">
+            <h3 
+              className="mb-1"
+              style={{
+                fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
+                fontSize: '18px',
+                fontWeight: 600,
+                lineHeight: 'normal',
+                letterSpacing: '0em',
+                fontVariationSettings: '"opsz" auto',
+                fontFeatureSettings: '"kern" on',
+                color: '#0061F3'
+              }}
+            >
               我的模板，高效管理
             </h3>
-            <p className="text-[12px] text-[#6b778d] mt-2 tracking-wide leading-relaxed">
+            <p 
+              className="mt-2 tracking-wide leading-relaxed"
+              style={{
+                fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
+                fontSize: '12px',
+                fontWeight: 'normal',
+                lineHeight: 'normal',
+                letterSpacing: '0em',
+                fontVariationSettings: '"opsz" auto',
+                fontFeatureSettings: '"kern" on',
+                color: 'rgba(0, 0, 0, 0.6)'
+              }}
+            >
               轻松管模，高效开始每一刻
             </p>
 
@@ -43,9 +67,9 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
             </div>
           </div>
 
-          {/* Right Side Illustration */}
-          <div className="absolute right-0 bottom-0 pointer-events-none w-[133px] h-[133px]">
-            <TempIcon className="w-full h-full object-contain object-center scale-[2.2] -translate-x-3 translate-y-5" />
+          {/* Left Side Illustration */}
+          <div className="absolute left-0 bottom-0 pointer-events-none w-[133px] h-[133px]">
+            <TempIcon className="w-full h-full object-contain object-center scale-[2.2] translate-x-3 translate-y-5" />
           </div>
         </div>
 
@@ -59,11 +83,36 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
             }
           }}
         >
-          <div className="relative z-10 w-[60%]">
-            <h3 className="text-[17px] font-bold text-[#5c52d7] mb-1">
+          {/* Text Content */}
+          <div className="relative z-10 w-[52%] ml-auto flex flex-col items-start text-left">
+            <h3 
+              className="mb-1"
+              style={{
+                fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
+                fontSize: '18px',
+                fontWeight: 600,
+                lineHeight: 'normal',
+                letterSpacing: '0em',
+                fontVariationSettings: '"opsz" auto',
+                fontFeatureSettings: '"kern" on',
+                color: '#0061F3'
+              }}
+            >
               问题清单，精准匹配
             </h3>
-            <p className="text-[12px] text-[#6b778d] mt-2 tracking-wide leading-relaxed">
+            <p 
+              className="mt-2 tracking-wide leading-relaxed"
+              style={{
+                fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
+                fontSize: '12px',
+                fontWeight: 'normal',
+                lineHeight: 'normal',
+                letterSpacing: '0em',
+                fontVariationSettings: '"opsz" auto',
+                fontFeatureSettings: '"kern" on',
+                color: 'rgba(0, 0, 0, 0.6)'
+              }}
+            >
               题题相应，让访谈更高效
             </p>
             <div className="mt-5 inline-flex items-center justify-center px-4 py-1 rounded-full border border-[#5c52d7] text-[#5c52d7] text-[13px] font-medium bg-transparent hover:bg-purple-50 transition-colors">
@@ -71,9 +120,9 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
             </div>
           </div>
 
-          {/* Right Side Illustration */}
-          <div className="absolute right-0 bottom-0 pointer-events-none w-[133px] h-[133px]">
-            <QuestionIcon className="w-full h-full object-contain object-center scale-[2.2] -translate-x-3 translate-y-5" />
+          {/* Left Side Illustration */}
+          <div className="absolute left-0 bottom-0 pointer-events-none w-[133px] h-[133px]">
+            <QuestionIcon className="w-full h-full object-contain object-center scale-[2.2] translate-x-3 translate-y-3" />
           </div>
         </div>
 

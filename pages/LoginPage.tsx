@@ -551,7 +551,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     return;
                   }
                   try {
-                    const res = await authService.sendSms(forgotPhone);
+                    const res = await authService.sendResetPwdSms(forgotPhone);
                     if (res.successful) {
                       setForgotCountdown(60);
                       Toast.success('验证码已发送');

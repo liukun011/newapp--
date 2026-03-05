@@ -90,15 +90,27 @@ const RecordingFloatBubble: React.FC<RecordingFloatBubbleProps> = ({
         >
             <button
                 onClick={onClick}
-                className="bg-white rounded-full pl-1.5 pr-2.5 py-1.5 shadow-lg flex items-center gap-1.5 border border-teal-50 transition-transform"
+                className="bg-white rounded-[10px] p-[10px] shadow-lg flex flex-col items-center gap-1.5 border border-teal-50 transition-transform"
             >
-                <div className={`w-5 h-5 rounded-full border-[3px] flex items-center justify-center relative ${isRecording ? 'border-teal-400' : 'border-red-400'}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full ${isRecording ? 'bg-teal-500' : 'bg-red-500'}`} />
+                <div className={`w-6 h-6 rounded-full border-[3px] flex items-center justify-center relative ${isRecording ? 'border-teal-400' : 'border-red-400'}`}>
+                    <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-teal-500' : 'bg-red-500'}`} />
                     {isRecording && (
                         <div className="absolute inset-0 rounded-full border-[3px] border-teal-400 animate-ping opacity-20" />
                     )}
                 </div>
-                <span className={`${isRecording ? 'text-teal-600' : 'text-red-500'} font-mono font-bold text-xs tracking-wide min-w-[40px]`}>
+                <span 
+                    style={{
+                        fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
+                        fontSize: '14px',
+                        fontWeight: 'normal',
+                        lineHeight: 'normal',
+                        letterSpacing: '0em',
+                        fontVariationSettings: '"opsz" auto',
+                        fontFeatureSettings: '"kern" on',
+                        color: isRecording ? '#00A8A8' : '#EF4444'
+                    }}
+                    className="leading-none"
+                >
                     {isRecording ? formatTime(seconds) : '已暂停'}
                 </span>
             </button>

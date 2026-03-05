@@ -546,7 +546,7 @@ const HomePage: React.FC<HomePageProps> = ({
                                 </h3>
                                 {/* 访谈中 标签 */}
                                 {(currentDealId === item.id) && (
-                                  <span className="flex-shrink-0 px-2 py-0.5 bg-[#E0F7FA] text-[#00B5B5] text-[10px] font-medium rounded-md transform translate-y-0.5 ml-1">
+                                  <span className="flex-shrink-0 px-2 py-0.5 bg-[#E8F9F3] text-[#1BC98A] text-[10px] font-medium rounded-md transform translate-y-0.5 ml-1">
                                     访谈中
                                   </span>
                                 )}

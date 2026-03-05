@@ -47,6 +47,16 @@ export const authService = {
     });
   },
 
+  // 发送找回密码验证码
+  sendResetPwdSms: async (mobile: string): Promise<AuthResponse> => {
+    return request<AuthResponse>(`${AUTH_BASE_URL}/api/iam/password_reset/sendSms`, {
+      method: 'POST',
+      data: {
+        mobile,
+      },
+    });
+  },
+
   // 重置密码
   resetPassword: async (data: { mobile: string; captcha: string; newPassword: string; confirmPassword: string }): Promise<AuthResponse> => {
     return request<AuthResponse>(`${AUTH_BASE_URL}/api/iam/password_reset/reset_password`, {
