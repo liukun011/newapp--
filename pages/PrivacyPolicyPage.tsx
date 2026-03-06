@@ -54,7 +54,8 @@ const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onBack }) => {
              我们将基于以下目的使用收集到的个人信息：
            </p>
            <ul className="list-disc pl-5 space-y-2 mb-8 text-[15px] text-slate-600 leading-relaxed text-justify">
-             <li>提供、维护及改进我们的产品和服务；</li>
+             <li>提供、维护及改进我们的产品及服务；</li>
+             <li>包括第三方 AI 智能分析服务：为了向您提供报告生成功能，我们会将您主动上传的录音文件、照片及相关文本文件等资料加密传输至第三方 AI 服务商（阿里巴巴通义千问）进行处理。这些数据仅用于实现上述功能，我们不会将其用于其他商业用途；</li>
              <li>提供客户服务和支持，处理您的问题和反馈；</li>
              <li>安全保障：用于身份验证，防止欺诈行为；</li>
              <li>分析用户行为模式以优化用户体验；</li>
