@@ -398,8 +398,22 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
   const handleGenerateReportThrottled = useThrottleFn(() => {
     Dialog.confirm({
-      title: '确认生成',
-      message: '重新生成报告将覆盖现有报告，是否继续?',
+      title: (
+        <span style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '16px', fontWeight: 500, lineHeight: 'normal', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#242424' }}>
+          确认生成
+        </span>
+      ),
+      message: (
+        <div>
+          <p style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '14px', fontWeight: 'normal', lineHeight: '22px', textAlign: 'center', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#595959', marginBottom: '10px' }}>
+            重新生成报告将覆盖现有报告，是否继续?
+          </p>
+          <p style={{ fontSize: '11px', color: '#9CA3AF', lineHeight: '1.5' }}>
+            小狸报告将使用通义千问 AI 技术为您处理音频图像和文件。点击确认即代表您授权我们将相关素材加密传输至 AI 服务商进行内容识别及报告生成
+          </p>
+        </div>
+      ),
+      confirmButtonColor: '#4337F1',
     }).then(async () => {
       if (!currentDeal?.id) {
         Toast.fail('尽调信息不存在');
@@ -778,8 +792,21 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     <button
                       onClick={() => {
                         Dialog.confirm({
-                          title: '确认生成报告?',
-                          message: '系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告（由AI自动生成）',
+                          title: (
+                            <span style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '16px', fontWeight: 500, lineHeight: 'normal', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#242424' }}>
+                              确认生成报告?
+                            </span>
+                          ),
+                          message: (
+                            <div>
+                              <p style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '14px', fontWeight: 'normal', lineHeight: '22px', textAlign: 'center', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#595959', marginBottom: '10px' }}>
+                                系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告（由AI自动生成）
+                              </p>
+                              <p style={{ fontSize: '11px', color: '#9CA3AF', lineHeight: '1.5' }}>
+                                小狸报告将使用通义千问 AI 技术为您处理音频图像和文件。点击确认即代表您授权我们将相关素材加密传输至 AI 服务商进行内容识别及报告生成
+                              </p>
+                            </div>
+                          ),
                           confirmButtonText: '确认',
                           cancelButtonText: '取消',
                           confirmButtonColor: '#4337F1',

@@ -412,10 +412,23 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     const isRegenerate = localReportStatus === DealReportStatusEnum.REPORT_GENERATED;
     
     Dialog.confirm({
-      title: isRegenerate ? '确认重新生成报告？' : '确认立即生成报告？',
-      message: isRegenerate 
-        ? '是否确认根据当前尽调资料和访谈录音重新生成报告？原有报告内容将被覆盖'
-        : '系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告',
+      title: (
+        <span style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '16px', fontWeight: 500, lineHeight: 'normal', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#242424' }}>
+          {isRegenerate ? '确认重新生成报告？' : '确认立即生成报告？'}
+        </span>
+      ),
+      message: (
+        <div>
+          <p style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '14px', fontWeight: 'normal', lineHeight: '22px', textAlign: 'center', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#595959', marginBottom: '10px' }}>
+            {isRegenerate
+              ? '是否确认根据当前尽调资料和访谈录音重新生成报告？原有报告内容将被覆盖'
+              : '系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告（由AI自动生成）'}
+          </p>
+          <p style={{ fontSize: '11px', color: '#9CA3AF', lineHeight: '1.5' }}>
+            小狸报告将使用通义千问 AI 技术为您处理音频图像和文件。点击确认即代表您授权我们将相关素材加密传输至 AI 服务商进行内容识别及报告生成
+          </p>
+        </div>
+      ),
       confirmButtonText: '确认',
       cancelButtonText: '取消',
       confirmButtonColor: '#4337F1',

@@ -138,11 +138,52 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
         </div>
       </div>
 
-      {/* Top Spacer */}
-      <div className="h-48 flex-shrink-0" />
+      {/* Scrollable Content Wrapper */}
+      <div className="flex-1 w-full overflow-y-auto flex flex-col pt-0">
+        {/* Header - Fixed to top contextually or scrolls with page based on preference. Here making it scroll contextually */}
+      <div 
+        className="pt-14 pb-6 pl-20 pr-8 my-3 flex flex-col items-start relative z-10 w-full whitespace-nowrap"
+        style={{
+          backgroundImage: 'url(/talk-assistant/assets/invitesvg.png)',
+          backgroundSize: '100% 100%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <div 
+          style={{
+            fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
+            fontSize: '34px',
+            fontWeight: 800,
+            lineHeight: 'normal',
+            letterSpacing: '0em',
+            fontVariationSettings: '"opsz" auto',
+            fontFeatureSettings: '"kern" on',
+            color: '#4337F1',
+          }}
+          className="ml-4"
+        >
+          分享邀请码
+        </div>
+        <div 
+          style={{
+            fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
+            fontSize: '34px',
+            fontWeight: 800,
+            lineHeight: 'normal',
+            letterSpacing: '0em',
+            fontVariationSettings: '"opsz" auto',
+            fontFeatureSettings: '"kern" on',
+            color: '#000001',
+          }}
+          className="ml-2"
+        >
+          好友体验小狸报告
+        </div>
+      </div>
 
-      {/* Main Content (Scrollable) */}
-      <div className="flex-1 px-4 pb-2 space-y-4 overflow-y-auto pb-safe relative z-10">
+      {/* Main Content (Scrolls with the rest of the page) */}
+      <div className="px-4 pb-2 space-y-4 pb-safe relative z-10">
         
         {/* Card 1: Share Code */}
         <div className="bg-white rounded-[20px] p-5 shadow-sm space-y-4">
@@ -247,6 +288,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
 
 
 
+      </div>
       </div>
     </div>
   );

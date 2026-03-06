@@ -283,7 +283,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
                   <p className="text-xs text-gray-500">点击重新选择</p>
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">请上传模板附件</p>
+                <p className="text-sm text-gray-400">请上传.doc/.docx格式的模板附件</p>
               )}
             </div>
         </div>

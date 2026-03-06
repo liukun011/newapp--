@@ -20,7 +20,7 @@ const PrivacyPolicyPage: React.FC<PrivacyPolicyPageProps> = ({ onBack }) => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-6 text-slate-800 pb-10">
+      <div className="flex-1 overflow-y-auto px-5 py-6 text-slate-800 pb-[100px] mb-safe">
            <div className="mb-6 text-sm text-gray-500">
              <p>本版本发布日期：2026年1月28日</p>
              <p>生效日期：2026年1月28日</p>

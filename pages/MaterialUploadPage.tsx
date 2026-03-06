@@ -69,10 +69,12 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const [deletingQuestion, setDeletingQuestion] = useState<QuestionInfo | null>(null);
 
   // 新增问题弹框状态
-  // 新增问题弹框状态
   const [questionAddModalVisible, setQuestionAddModalVisible] = useState(false);
   const [newQuestionName, setNewQuestionName] = useState('');
   const [showLimitTips, setShowLimitTips] = useState(false);
+
+  // 分类选择器状态
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
   // 音频播放弹窗状态
   const [audioModalVisible, setAudioModalVisible] = useState(false);
@@ -550,29 +552,6 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     Toast.success('刷新成功');
   }, 1000);
 
-  const handleCategoryChangeThrottled = useThrottleFn((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCategoryId = e.target.value;
-
-    Dialog.confirm({
-      title: '切换确认',
-      message: '切换模板分类将重置之前新增或修改的问题，是否确认切换？',
-    })
-      .then(() => {
-        setSelectedCategoryId(newCategoryId);
-
-        // 查找对应的分类并更新问题列表
-        const category = templateCategories.find(c => c.id === newCategoryId);
-        if (category) {
-          // FRONTEND RE-INDEXING
-          const reindexed = (category.questionList || []).map((q, i) => ({ ...q, questionIndex: i + 1 }));
-          setQuestions(reindexed);
-        }
-      })
-      .catch(() => {
-        // 取消切换
-      });
-  }, 1000);
-
   const handleQuestionAddThrottled = useThrottleFn(() => {
     setNewQuestionName('');
     setQuestionAddModalVisible(true);
@@ -613,6 +592,34 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     }
     setQuestionAddModalVisible(false);
   }, 1000);
+
+  const handleCategorySelect = (categoryId: string) => {
+    if (categoryId === selectedCategoryId) {
+      setShowCategoryPicker(false);
+      return;
+    }
+
+    Dialog.confirm({
+      title: '切换确认',
+      message: '切换模板分类将重置之前新增或修改的问题，是否确认切换？',
+      confirmButtonColor: '#4337F1',
+    })
+      .then(() => {
+        setSelectedCategoryId(categoryId);
+        setShowCategoryPicker(false);
+
+        // 查找对应的分类并更新问题列表
+        const category = templateCategories.find(c => c.id === categoryId);
+        if (category) {
+          // FRONTEND RE-INDEXING
+          const reindexed = (category.questionList || []).map((q, i) => ({ ...q, questionIndex: i + 1 }));
+          setQuestions(reindexed);
+        }
+      })
+      .catch(() => {
+        // 取消切换
+      });
+  };
 
   const handleDeleteQuestionConfirmThrottled = useThrottleFn(async () => {
     if (deletingQuestion) {
@@ -1019,26 +1026,21 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           <div className="flex flex-col h-full p-4 pb-2 overflow-hidden relative">
             {/* Category Selector and Refresh Button */}
             <div className="flex items-center gap-3">
-              {/* Category Dropdown */}
+              {/* Custom Category Picker Trigger */}
               <div className="flex-1 relative">
-                <select
-                  value={selectedCategoryId}
-                  onChange={handleCategoryChangeThrottled}
-                  className="w-full h-12 px-4 pr-10 bg-white text-slate-800 text-sm rounded-xl border border-gray-200 appearance-none focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+                <button
+                  onClick={() => setShowCategoryPicker(true)}
+                  className="w-full h-12 px-4 pr-10 bg-white text-slate-800 text-sm rounded-xl border border-gray-200 flex items-center justify-between active:bg-gray-50 transition-all text-left truncate"
                 >
-                  {templateCategories.length === 0 && <option value="">请选择分类</option>}
-                  {templateCategories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.templateName}
-                    </option>
-                  ))}
-                </select>
-                {/* Dropdown Arrow */}
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+                  <span className="truncate">
+                    {templateCategories.find(c => c.id === selectedCategoryId)?.templateName || '请选择分类'}
+                  </span>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
               </div>
 
               {/* Refresh Button */}
@@ -1347,6 +1349,44 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               >
                 确认
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Picker ActionSheet-like Modal */}
+      {showCategoryPicker && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowCategoryPicker(false)}
+          />
+          <div className="relative bg-white w-full rounded-t-[24px] max-h-[70vh] flex flex-col animate-slide-up overflow-hidden pb-8">
+            <div className="p-5 border-b border-gray-50 flex items-center justify-between sticky top-0 bg-white z-10">
+              <span className="text-gray-400 text-sm" onClick={() => setShowCategoryPicker(false)}>取消</span>
+              <span className="text-base font-bold text-slate-800">选择问题集</span>
+              <span className="text-indigo-600 text-sm font-bold" onClick={() => setShowCategoryPicker(false)}>完成</span>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <div className="px-2">
+                {templateCategories.map((category) => {
+                  const isSelected = category.id === selectedCategoryId;
+                  return (
+                    <div
+                      key={category.id}
+                      onClick={() => handleCategorySelect(category.id)}
+                      className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50 last:border-b-0"
+                    >
+                      <span className={`text-[16px] flex-1 mr-2 truncate ${isSelected ? 'text-indigo-600 font-bold' : 'text-slate-700'}`}>
+                        {category.templateName}
+                      </span>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'}`}>
+                        {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
