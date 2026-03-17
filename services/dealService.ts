@@ -246,6 +246,19 @@ export const dealService = {
   },
 
   /**
+   * 重新解析尽调资料
+   * POST /deal/reparse-file
+   * @param dealId 尽调实例 ID
+   * @param fileId 资料 ID
+   */
+  reparseFile: (dealId: string, fileId: string) => {
+    return request<ApiResponse<any>>('/deal/reparse-file', {
+      method: 'POST',
+      data: { id: dealId, fileId },
+    });
+  },
+
+  /**
    * 重命名尽调资料
    * POST /deal/rename
    * @param fileId 资料 ID

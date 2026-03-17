@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, Camera, Image as ImageIcon, FileText, Mic, MinusCircle, Pencil, RefreshCw } from 'lucide-react';
-import { Toast, Dialog } from 'react-vant';
+import { ArrowLeft, Camera, Image as ImageIcon, FileText, Mic, MinusCircle, Pencil, RefreshCw, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Toast, Dialog, Progress } from 'react-vant';
 import VoiceInputModal from '../components/VoiceInputModal';
 import AudioPlayerModal from '../components/AudioPlayerModal';
 import { dealService } from '../services/dealService';
@@ -30,6 +30,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
   const [voiceModalInitialContent, setVoiceModalInitialContent] = useState('');
   const [localReportStatus, setLocalReportStatus] = useState(reportStatus);
+  const [fileProgressMap, setFileProgressMap] = useState<Record<string, { progress: number; status: string }>>({});
   
   // 重命名弹框状态
   const [renameModalVisible, setRenameModalVisible] = useState(false);
@@ -214,6 +215,102 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
 
       nativeBridge.off('imageSelected', handleImageSelected);
       nativeBridge.off('fileSelected', handleFileSelected);
+    };
+  }, [dealId, fetchDealDetail]);
+
+  // 监听文件解析进度 WebSocket (参考 web-ai-doc)
+  useEffect(() => {
+    if (!dealId) return;
+
+    // 获取登录 Token
+    const token = localStorage.getItem('zov-user-token') || '';
+
+    // 构建 WebSocket URL
+    let wsUrl = '';
+    try {
+      const url = new URL(config.apiBaseUrl);
+      const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+      const pathBase = url.pathname.replace(/\/api\/?$/, '');
+      wsUrl = `${protocol}//${url.host}${pathBase}/ws/connect?dealInstId=${dealId}&token=${token}`;
+    } catch (e) {
+      console.error('[WebSocket] Failed to parse apiBaseUrl:', e);
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${protocol}//${window.location.host}/ws/connect?dealInstId=${dealId}&token=${token}`;
+    }
+
+    console.log('[WebSocket] Connecting for progress in MaterialsList:', wsUrl);
+
+    let ws: WebSocket;
+    let pingInterval: any;
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log('[WebSocket] Connected');
+          pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send('ping');
+            }
+          }, 15000);
+        };
+
+        ws.onmessage = (event) => {
+          if (event.data === 'pong') return;
+          try {
+            const data = JSON.parse(event.data);
+            if (data.event === 'DEAL_FILE_PROGRESS' && data.files) {
+              setFileProgressMap((prev) => {
+                const newMap = { ...prev };
+                let changed = false;
+                let anySuccess = false;
+
+                data.files.forEach((f: any) => {
+                  const statusStr = String(f.status);
+                  if (!newMap[f.id] || newMap[f.id].progress !== f.progress || newMap[f.id].status !== statusStr) {
+                    newMap[f.id] = {
+                      progress: f.progress || 0,
+                      status: statusStr,
+                    };
+                    changed = true;
+                    if (statusStr === '3' && (!prev[f.id] || prev[f.id].status !== '3')) {
+                      anySuccess = true;
+                    }
+                  }
+                });
+
+                if (anySuccess) {
+                  setTimeout(() => fetchDealDetail(), 1000);
+                }
+
+                return changed ? newMap : prev;
+              });
+            }
+          } catch (e) {
+            // 解析失败忽略
+          }
+        };
+
+        ws.onclose = () => {
+          console.log('[WebSocket] Closed');
+          clearInterval(pingInterval);
+        };
+
+        ws.onerror = (err) => {
+          console.error('[WebSocket] Error:', err);
+          clearInterval(pingInterval);
+        };
+      } catch (e) {
+        console.error('[WebSocket] Connection failed:', e);
+      }
+    };
+
+    connect();
+
+    return () => {
+      if (pingInterval) clearInterval(pingInterval);
+      if (ws) ws.close();
     };
   }, [dealId, fetchDealDetail]);
 
@@ -611,27 +708,85 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
 
                   
                   {/* Actions - Hide if archived */}
-                  {!isArchived && (
-                    <div className="flex items-center gap-1">
-                      {/* Edit Button - Hide for supplementary (type=4) */}
-                      {resource.type !== '4' && (
-                        <button 
-                          onClick={() => handleOpenRenameModal(resource)}
-                          className="p-2 text-indigo-600 transition-colors"
-                        >
-                          <Pencil size={18} strokeWidth={2} />
-                        </button>
-                      )}
+                  <div className="flex items-center gap-1">
+                    {/* Progress Indicator */}
+                    {(() => {
+                      const progressInfo = fileProgressMap[resource.id];
+                      if (!progressInfo || progressInfo.status === '1') return null;
+
+                      if (progressInfo.status === '3') {
+                        return <CheckCircle2 size={18} className="text-green-500 flex-shrink-0" />;
+                      }
+                      if (progressInfo.status === '4') {
+                        return (
+                          <div className="flex items-center gap-1">
+                            <AlertCircle size={18} className="text-red-500 flex-shrink-0" />
+                            {!isArchived && (
+                              <button 
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (!dealId) return;
+                                  try {
+                                    Toast.loading({ message: '重新解析中...', duration: 0, forbidClick: true });
+                                    const res = await dealService.reparseFile(dealId, resource.id);
+                                    if (res.success) {
+                                      Toast.success('重新解析已触发');
+                                      fetchDealDetail();
+                                    } else {
+                                      Toast.fail(res.message || '触发失败');
+                                    }
+                                  } catch (error) {
+                                    console.error('Reparse failed:', error);
+                                    Toast.fail('操作失败，请重试');
+                                  }
+                                }}
+                                className="text-[10px] text-indigo-600 underline font-medium"
+                              >
+                                重新解析
+                              </button>
+                            )}
+                          </div>
+                        );
+                      }
                       
-                      {/* Delete Button - Show for all including supplementary */}
-                      <button 
-                        onClick={() => handleDeleteResourceThrottled(resource.id)}
-                        className="p-2 text-indigo-600 transition-colors"
-                      >
-                        <MinusCircle size={22} strokeWidth={2} />
-                      </button>
-                    </div>
-                  )}
+                      // Parsing
+                      return (
+                        <div className="flex items-center gap-2">
+                          <div className="w-8">
+                             <Progress 
+                               percentage={Math.round(progressInfo.progress * 100)} 
+                               strokeWidth={3}
+                               showPivot={false}
+                               color="linear-gradient(to right, #4f46e5, #818cf8)"
+                             />
+                          </div>
+                          <Loader2 size={12} className="text-indigo-500 animate-spin" />
+                        </div>
+                      );
+                    })()}
+
+                    {!isArchived && (
+                      <>
+                        {/* Edit Button - Hide for supplementary (type=4) */}
+                        {resource.type !== '4' && (
+                          <button 
+                            onClick={() => handleOpenRenameModal(resource)}
+                            className="p-1.5 text-indigo-400 hover:text-indigo-600 transition-colors"
+                          >
+                            <Pencil size={18} strokeWidth={2} />
+                          </button>
+                        )}
+                        
+                        {/* Delete Button - Show for all including supplementary */}
+                        <button 
+                          onClick={() => handleDeleteResourceThrottled(resource.id)}
+                          className="p-1.5 text-indigo-400 hover:text-indigo-600 transition-colors"
+                        >
+                          <MinusCircle size={22} strokeWidth={2} />
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               );
             })}
