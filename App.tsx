@@ -32,6 +32,8 @@ import ReportsListPage from './pages/ReportsListPage';
 import HistoryRecordsPage from './pages/HistoryRecordsPage';
 import HistoryDetailPage from './pages/HistoryDetailPage';
 import ReportPreviewPage from './pages/ReportPreviewPage';
+import OrganizationManagementPage from './pages/OrganizationManagementPage';
+import ShareAppPage from './pages/ShareAppPage';
 import { View, DealRecord } from './types';
 
 import RecordingFloatBubble from './components/RecordingFloatBubble';
@@ -1212,7 +1214,7 @@ const App: React.FC = () => {
                     setPreviousView(recordingBackView);
                     navigateBackward(View.RECORDING);
                   }}
-                  onRecordClick={(record) => {
+                  onRecordClick={(record: any) => {
                     setHistoryDetailData({
                       id: record.interviewInstId || record.id,
                       title: record.interviewInstTitle
@@ -1543,10 +1545,24 @@ const App: React.FC = () => {
                       setPreviousView(View.SETTINGS);
                       navigateForward(View.PRIVACY_POLICY);
                   }}
-                  onNavigateToInvitationCenter={() => {
+                  onNavigateToOrganizationManagement={() => {
                       setPreviousView(View.SETTINGS);
-                      navigateForward(View.INVITATION_CENTER);
+                      navigateForward(View.ORGANIZATION_MANAGEMENT);
                   }}
+                  onNavigateToShareApp={() => {
+                      setPreviousView(View.SETTINGS);
+                      navigateForward(View.SHARE_APP);
+                  }}
+                />
+              )}
+              {currentView === View.ORGANIZATION_MANAGEMENT && (
+                <OrganizationManagementPage 
+                  onBack={() => navigateBackward(View.SETTINGS)}
+                />
+              )}
+              {currentView === View.SHARE_APP && (
+                <ShareAppPage 
+                  onBack={() => navigateBackward(View.SETTINGS)}
                 />
               )}
               {currentView === View.MESSAGE_CENTER && (

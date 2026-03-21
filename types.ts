@@ -22,6 +22,8 @@ export enum View {
   USER_AGREEMENT = 'USER_AGREEMENT',  // UserAgreementPage - 用户协议页
   PRIVACY_POLICY = 'PRIVACY_POLICY',  // PrivacyPolicyPage - 隐私政策页
   INVITATION_CENTER = 'INVITATION_CENTER', // InvitationCenterPage - 邀请中心页
+  ORGANIZATION_MANAGEMENT = 'ORGANIZATION_MANAGEMENT', // OrganizationManagementPage - 组织管理页
+  SHARE_APP = 'SHARE_APP',             // ShareAppPage - 分享应用页
 }
 
 

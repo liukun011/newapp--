@@ -34,7 +34,7 @@ const config = {
   isProd: env === 'production',
 
   // 上传地址
-  uploadUrl: `${import.meta.env.VITE_API_BASE_URL || 'http://68.79.42.215/report'}/upload/file`,
+  uploadUrl: `${import.meta.env.VITE_API_BASE_URL || 'http://192.168.8.201:20101/report'}/upload/file`,
 
 };
 

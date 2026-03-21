@@ -39,7 +39,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
     
     setIsGenerating(true);
     try {
-      const res = await userService.getInviteCode();
+      const res = await userService.getInviteCode('app');
       if (res.success && res.data) {
         setInviteCode(res.data);
       } else {

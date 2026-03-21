@@ -3,77 +3,92 @@ import envConfig from './config';
 import { Toast } from 'react-vant';
 import 'react-vant/lib/index.css';
 
-// 创建 axios 实例
+// ── 公共拦截器逻辑 ──────────────────────────────────────────
+function applyInterceptors(inst: ReturnType<typeof axios.create>) {
+  // 请求拦截器：注入 Token、TenantId 并处理 FormData
+  inst.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem('zov-user-token');
+      if (token && config.headers) {
+        config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      }
+
+      // 注入 tenantId（从用户信息中读取）
+      try {
+        const userInfoStr = localStorage.getItem('zov-user-info');
+        if (userInfoStr) {
+          const userInfo = JSON.parse(userInfoStr);
+          config.headers['Tenant'] = userInfo.tenantId || '';
+        }
+      } catch {
+        // ignore parse error
+      }
+
+      // 如果是 FormData，删除 Content-Type，让浏览器自动设置（包含 boundary）
+      if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
+      }
+
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  // 响应拦截器：处理状态码
+  inst.interceptors.response.use(
+    (response) => {
+      const res = response.data;
+      if (res && typeof res === 'object' && res.success === false) {
+        const msg = res.message || '请求失败';
+        return Promise.reject(new Error(msg));
+      }
+      return res;
+    },
+    (error) => {
+      const message = error.response?.data?.message || error.message || '网络错误';
+      Toast.fail({ message, duration: 3000 });
+
+      if (error.response?.status === 401) {
+        localStorage.removeItem('zov-user-token');
+        localStorage.removeItem('zov-user-info');
+        setTimeout(() => {
+          window.dispatchEvent(new Event('unauthorized'));
+        }, 1000);
+      }
+
+      return Promise.reject(new Error(message));
+    }
+  );
+}
+
+// ── 业务接口实例（带 baseURL，走 /report 前缀）─────────────
 const instance = axios.create({
   baseURL: envConfig.apiBaseUrl,
   timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
+applyInterceptors(instance);
 
-// 请求拦截器：注入 Token 并处理 FormData
-instance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('zov-user-token');
-    if (token && config.headers) {
-      config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-    }
-
-    // 如果是 FormData，删除 Content-Type，让浏览器自动设置（包含 boundary）
-    if (config.data instanceof FormData) {
-      delete config.headers['Content-Type'];
-    }
-
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// 响应拦截器：处理状态码
-// 响应拦截器：处理状态码
-instance.interceptors.response.use(
-  (response) => {
-    const res = response.data;
-    // 全局处理业务逻辑错误
-    if (res && typeof res === 'object' && res.success === false) {
-      const msg = res.message || '请求失败';
-      //  Toast.fail(msg);
-      //      Toast({ type: 'fail', message: res.message, duration: 10000 });
-
-      return Promise.reject(new Error(msg));
-    }
-    return res;
-  },
-  (error) => {
-    const message = error.response?.data?.message || error.message || '网络错误';
-    
-    // 抛出错误提示
-    Toast.fail({ message, duration: 3000 });
-
-    if (error.response?.status === 401) {
-      localStorage.removeItem('zov-user-token');
-      localStorage.removeItem('zov-user-info');
-      // 延迟触发跳转事件，让用户能看清提示 (可选，如果不延迟，Toast 可能会因为页面切换闪烁，但 react-vant Toast 默认是单例 portal，应该没问题)
-      setTimeout(() => {
-        window.dispatchEvent(new Event('unauthorized'));
-      }, 1000);
-    }
-
-    return Promise.reject(new Error(message));
-  }
-);
+// ── 用户中心接口实例（无 baseURL，走 Vite proxy / Nginx 代理）─
+const authInstance = axios.create({
+  baseURL: '',   // 不拼接任何前缀，让 /api/iam/* 走相对路径
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
+});
+applyInterceptors(authInstance);
 
 /**
- * 封装的请求函数
+ * 业务接口请求（baseURL = VITE_API_BASE_URL）
  */
 export async function request<T>(url: string, options: AxiosRequestConfig = {}): Promise<T> {
-  return instance.request<any, T>({
-    url,
-    ...options,
-  });
+  return instance.request<any, T>({ url, ...options });
+}
+
+/**
+ * 用户中心接口请求（无 baseURL，走 proxy 转发到 21000 端口）
+ */
+export async function authRequest<T>(url: string, options: AxiosRequestConfig = {}): Promise<T> {
+  return authInstance.request<any, T>({ url, ...options });
 }
 
 export default instance;

@@ -19,10 +19,12 @@ export const userService = {
 
   /**
    * 获取/生成我的邀请码
+   * @param type - 邀请类型: 'tenant' 组织管理, 'app' 分享应用
    */
-  getInviteCode: async (): Promise<InviteCodeResponse> => {
+  getInviteCode: async (type: 'tenant' | 'app'): Promise<InviteCodeResponse> => {
     return request<InviteCodeResponse>('/user/invitation/inviteCode', {
       method: 'GET',
+      params: { type },
     });
   },
 
@@ -33,6 +35,16 @@ export const userService = {
     return request<InviteCodeResponse>('/user/invitation/import', {
       method: 'POST',
       data: { inviteCode },
+    });
+  },
+
+  /**
+   * 获取邀请关联列表
+   */
+  listRelations: async (): Promise<any> => {
+    // 优先尝试走通用的业务前缀 /report/user/invitation/listRelations
+    return request<any>('/user/invitation/listRelations', {
+      method: 'GET',
     });
   },
 };

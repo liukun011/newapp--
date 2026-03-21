@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, LogOut, Edit2, Shield, FileCheck, Trash2, Users } from 'lucide-react';
+import { ChevronRight, LogOut, Edit2, Shield, FileCheck, Trash2, Building2, Gift } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { authService } from '../services/authService';
 import { useRecordingStore } from '../store/useRecordingStore';
@@ -12,7 +12,8 @@ interface SettingsPageProps {
   onNavigateToTemplates?: () => void;
   onNavigateToUserAgreement?: () => void;
   onNavigateToPrivacyPolicy?: () => void;
-  onNavigateToInvitationCenter?: () => void;
+  onNavigateToOrganizationManagement?: () => void;
+  onNavigateToShareApp?: () => void;
 }
 
 const SettingsPage: React.FC<SettingsPageProps> = ({
@@ -20,7 +21,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   // onNavigateToTemplates,
   onNavigateToUserAgreement,
   onNavigateToPrivacyPolicy,
-  onNavigateToInvitationCenter
+  onNavigateToOrganizationManagement,
+  onNavigateToShareApp
 }) => {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
@@ -159,12 +161,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     //     }
     //   }
     // },
-    { 
+    /* { 
         icon: Users, 
         label: '邀请中心', 
         color: 'text-purple-500', 
         bg: 'bg-purple-50', 
         onClick: () => onNavigateToInvitationCenter ? onNavigateToInvitationCenter() : Toast.info('功能开发中')
+    }, */
+    { 
+        icon: Building2, 
+        label: '组织管理', 
+        color: 'text-indigo-500', 
+        bg: 'bg-indigo-50', 
+        onClick: () => onNavigateToOrganizationManagement ? onNavigateToOrganizationManagement() : Toast.info('功能开发中')
     },
     { 
         icon: FileCheck, 
@@ -179,6 +188,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         color: 'text-blue-500', 
         bg: 'bg-blue-50', 
         onClick: () => onNavigateToPrivacyPolicy ? onNavigateToPrivacyPolicy() : Toast.info('暂无')
+    },
+    { 
+        icon: Gift, 
+        label: '分享应用', 
+        color: 'text-blue-500', 
+        bg: 'bg-blue-50', 
+        onClick: () => onNavigateToShareApp ? onNavigateToShareApp() : Toast.info('功能开发中')
     },
     // { icon: Layers, label: '问题清单', color: 'text-green-500', bg: 'bg-green-50', onClick: () => Toast.info('功能开发中，敬请期待！') },
   ];
@@ -210,7 +226,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
 
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] flex flex-col pb-28">
+    <div className="h-full bg-[#F7F8FA] flex flex-col overflow-y-auto pb-32">
       {/* Hidden File Input */}
       <input
         type="file"

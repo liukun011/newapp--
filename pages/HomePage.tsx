@@ -8,12 +8,15 @@ import {
   FileText,
   Plus,
   Clock,
+  ChevronDown,
+  Building2,
 } from "lucide-react";
-import { SwipeCell, PullRefresh, Toast, Swiper } from "react-vant";
+import { SwipeCell, PullRefresh, Toast, Swiper, Popup, Dialog } from "react-vant";
 import Mascot from "../components/Mascot";
 
 import { DealRecord } from "../types";
 import { dealService } from "../services/dealService";
+import { authService } from "../services/authService";
 import { useRecordingStore } from "../store/useRecordingStore";
 import { formatTime } from "../utils/dateUtils";
 
@@ -49,6 +52,79 @@ const HomePage: React.FC<HomePageProps> = ({
   // 删除确认弹框
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingDealId, setDeletingDealId] = useState<string | null>(null);
+
+  // 租户/组织切换相关
+  const [tenantName, setTenantName] = useState(() => {
+    try {
+      const userInfoStr = localStorage.getItem('zov-user-info');
+      const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+      return userInfo?.tenantName || '默认租户';
+    } catch (e) {
+      return '默认租户';
+    }
+  });
+  const [showTenantModal, setShowTenantModal] = useState(false);
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [tenantsLoading, setTenantsLoading] = useState(false);
+
+  const fetchTenants = async () => {
+    setTenantsLoading(true);
+    try {
+      const res = await authService.getTenants();
+      if (res.successful && res.data) {
+        setTenants(res.data);
+      } else {
+        Toast.fail(res.message || '获取组织列表失败');
+      }
+    } catch (error) {
+      console.error("Failed to fetch tenants:", error);
+    } finally {
+      setTenantsLoading(false);
+    }
+  };
+
+  const handleSwitchTenant = async (tenant: any) => {
+    Dialog.confirm({
+      title: '切换租户',
+      message: `确认切换为 ${tenant.name} 吗？`,
+      cancelButtonText: '取 消',
+      confirmButtonText: '确 定',
+      confirmButtonColor: '#3B82F6',
+      onConfirm: async () => {
+        try {
+          Toast.loading({ message: '切换中...', duration: 0 });
+          const res = await authService.switchTenant(tenant.id);
+          if (res.successful && res.data) {
+            // 更新本地用户信息
+            const userInfoStr = localStorage.getItem('zov-user-info');
+            if (userInfoStr) {
+              const userInfo = JSON.parse(userInfoStr);
+              userInfo.tenantName = tenant.name;
+              userInfo.tenantId = tenant.id;
+              localStorage.setItem('zov-user-info', JSON.stringify(userInfo));
+              setTenantName(tenant.name);
+            }
+            // 更新 Token（如果接口返回新 Token）
+            if (res.data.accessToken) {
+              localStorage.setItem('zov-user-token', res.data.accessToken);
+            } else if (res.data.token) {
+              localStorage.setItem('zov-user-token', res.data.token);
+            }
+            
+            Toast.success('切换成功');
+            setShowTenantModal(false);
+            // 刷新尽调列表
+            fetchDeals(true, true);
+          } else {
+            Toast.fail(res.message || '切换失败');
+          }
+        } catch (error) {
+          console.error("Failed to switch tenant:", error);
+          Toast.fail('切换失败，请重试');
+        }
+      }
+    });
+  };
 
   // 新建尽调弹框
 
@@ -326,7 +402,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div className="flex flex-col h-screen relative bg-[#F7F8FA]">
-      {/* Top Fixed Header: Search & Bell */}
+      {/* Top Fixed Header: Tenant Info & Search & Bell */}
       <div className="bg-[#F7F8FA] px-4 pt-4 pb-0 flex-shrink-0 relative z-40">
         {/* Custom Limit Tips Toast */}
         {showLimitTips && (
@@ -339,6 +415,39 @@ const HomePage: React.FC<HomePageProps> = ({
            </div>
         )}
 
+        {/* Header Title & Bell Row (Matches Screenshot 1) */}
+        <div className="flex items-center justify-between mb-4">
+          <div 
+            className="flex flex-col active:opacity-70 transition-opacity cursor-pointer"
+            onClick={() => {
+              setShowTenantModal(true);
+              fetchTenants();
+            }}
+          >
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-[18px] font-[800] text-[#1E293B] tracking-tight truncate max-w-[200px]">
+                {tenantName}
+              </h1>
+              <div className="w-5 h-5 flex items-center justify-center bg-[#F1F5F9] rounded-[6px] text-[#AAB6C6]">
+                <ChevronDown size={12} strokeWidth={3} />
+              </div>
+            </div>
+            <p className="text-[11px] text-[#94A3B8] font-bold tracking-wide mt-0.5">
+              让访谈更简单、更专业
+            </p>
+          </div>
+
+          <button 
+            className="relative w-11 h-11 flex items-center justify-center bg-white rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[#F1F5F9] active:scale-95 transition-transform"
+            onClick={() => Toast.info({ 
+              message: '功能开发中，敬请期待！',
+            })}
+          >
+             <Bell size={22} className="text-[#334155]" strokeWidth={2} />
+             <div className="absolute top-3 right-3 w-2 h-2 bg-[#EF4444] rounded-full border-[1.5px] border-white" />
+          </button>
+        </div>
+
         <div className="flex items-center gap-3">
           {/* Search Box */}
           <div className="flex-1 relative">
@@ -348,26 +457,16 @@ const HomePage: React.FC<HomePageProps> = ({
               value={searchTerm}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              className="w-full h-[44px] px-5 bg-white rounded-full text-[15px] text-slate-800 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all border border-gray-100"
+              className="w-full h-[46px] px-5 bg-white rounded-2xl text-[15px] text-slate-800 placeholder-gray-400 shadow-[0_4px_12px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all border border-[#F1F5F9]"
               style={{ outline: 'none', WebkitTapHighlightColor: 'transparent', WebkitAppearance: 'none' }}
             />
             <button
               onClick={handleSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-indigo-600 active:scale-95 transition-all"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-indigo-600 active:scale-95 transition-all"
             >
-              <Search size={20} />
+              <Search size={18} />
             </button>
           </div>
-          
-          <button 
-            className="relative w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm border border-gray-100 active:scale-95 transition-transform"
-            onClick={() => Toast.info({ 
-              message: '功能开发中，敬请期待！',
-            })}
-          >
-             <Bell size={20} className="text-slate-700" />
-             <div className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
-          </button>
         </div>
       </div>
 
@@ -650,6 +749,71 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       )}
 
+      {/* Tenant/Organization Switcher Modal (Top-aligned Compact Style) */}
+      <Popup
+        visible={showTenantModal}
+        onClose={() => setShowTenantModal(false)}
+        position="center"
+        style={{ top: '25%', transform: 'translate3d(-50%, -25%, 0)' }}
+        className="bg-white rounded-[32px] w-[85%] max-w-[320px] overflow-hidden shadow-2xl"
+      >
+        <div className="flex flex-col max-h-[60vh]">
+          {/* Modal Header */}
+          <div className="p-6 pb-3 flex items-center justify-between flex-shrink-0">
+            <h3 className="text-[18px] font-bold text-[#1E293B]">切换组织</h3>
+          </div>
+
+          {/* List Area */}
+          <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-2.5">
+            {tenantsLoading ? (
+              <div className="flex flex-col items-center justify-center py-10">
+                <div className="w-8 h-8 border-3 border-indigo-100 border-t-indigo-500 rounded-full animate-spin mb-3" />
+                <p className="text-gray-400 text-xs">加载中...</p>
+              </div>
+            ) : tenants.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 grayscale opacity-60">
+                <Building2 size={40} className="text-gray-200 mb-3" />
+                <p className="text-gray-400 text-xs">暂无可选组织</p>
+              </div>
+            ) : (
+              tenants.map((tenant) => {
+                const isActive = tenant.name === tenantName;
+                return (
+                  <div 
+                    key={tenant.id}
+                    onClick={() => handleSwitchTenant(tenant)}
+                    className={`flex items-center gap-3.5 p-3.5 rounded-[20px] border-2 transition-all active:scale-[0.98] ${
+                      isActive 
+                        ? 'bg-[#F0F7FF] border-[#3B82F6]/30 shadow-[0_4px_12px_rgba(59,130,246,0.08)]' 
+                        : 'bg-[#F8FAFC] border-transparent hover:border-gray-200'
+                    }`}
+                  >
+                    {/* Organization Icon */}
+                    <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center flex-shrink-0 ${
+                      isActive ? 'bg-[#3B82F6] text-white shadow-lg shadow-blue-500/15' : 'bg-white text-[#94A3B8] shadow-sm'
+                    }`}>
+                      <Building2 size={20} />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <h4 className={`text-[15px] font-bold truncate ${isActive ? 'text-[#3B82F6]' : 'text-slate-800'}`}>
+                          {tenant.name}
+                        </h4>
+                        {isActive && <Check size={18} className="text-[#3B82F6]" strokeWidth={3} />}
+                      </div>
+                      <p className={`text-[10px] font-bold uppercase tracking-widest ${isActive ? 'text-[#3B82F6]/60' : 'text-[#94A3B8]'}`}>
+                        {tenant.tenantAdmin ? 'ADMIN' : 'MEMBER'}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </Popup>
 
     </div>
   );
