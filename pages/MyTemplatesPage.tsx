@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { ChevronDown, ChevronUp, FileUp } from 'lucide-react';
 import { templateService, TemplateRecord } from '../services/templateService';
 import RenameModal from '../components/RenameModal';
 import ConfirmModal from '../components/ConfirmModal';
 
 interface MyTemplatesPageProps {
-  onBack: () => void;
+  onBack?: () => void;
   onUpload: () => void;
-  initialTab?: 'success' | 'uploading' | 'failed'; // 初始显示的 tab
+  initialTab?: 'success' | 'processing'; // 'processing' now covers both 1 (uploading/reviewing) and 3 (failed)
 }
 
 const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, initialTab = 'success' }) => {
-  const [activeTab, setActiveTab] = useState<'success' | 'uploading' | 'failed'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'success' | 'processing'>(initialTab);
   const [templates, setTemplates] = useState<TemplateRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [expandedFailedId, setExpandedFailedId] = useState<string | null>(null);
 
   // 重命名弹框状态
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
@@ -23,24 +24,31 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(null);
 
-  // 将 tab 映射到对应的状态值
-  const getStatusFromTab = (tab: 'success' | 'uploading' | 'failed'): number => {
-    if (tab === 'success') return 2; // 上传成功
-    if (tab === 'uploading') return 1; // 上传中
-    if (tab === 'failed') return 3;
-    return 2;
-  };
-
   // 获取模板列表 - 根据当前 tab 状态查询
   const fetchTemplates = async () => {
     setLoading(true);
     try {
-      const status = getStatusFromTab(activeTab);
-      const res = await templateService.queryApproveReport(status);
-      if (res.success && res.data) {
-        setTemplates(res.data);
+      if (activeTab === 'success') {
+        const res = await templateService.queryApproveReport(2); // 2 = 成功
+        if (res.success && res.data) {
+          setTemplates(res.data);
+        } else {
+          setTemplates([]);
+        }
       } else {
-        setTemplates([]);
+        // 处理中：查询 1 (审核中/上传中) 和 3 (上传失败/未通过)
+        const [res1, res3] = await Promise.all([
+          templateService.queryApproveReport(1),
+          templateService.queryApproveReport(3),
+        ]);
+        const arr1 = res1.success && res1.data ? res1.data : [];
+        const arr3 = res3.success && res3.data ? res3.data : [];
+        
+        // 合并并按创建时间倒序
+        const combined = [...arr1, ...arr3].sort((a, b) => {
+          return new Date(b.createDate || 0).getTime() - new Date(a.createDate || 0).getTime();
+        });
+        setTemplates(combined);
       }
     } catch (error) {
       console.error('Failed to fetch templates:', error);
@@ -55,19 +63,6 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
     fetchTemplates();
   }, [activeTab]);
 
-  // 监听原生返回键
-  useEffect(() => {
-    const handleNativeBack = (e: Event) => {
-      e.preventDefault();
-      onBack();
-    };
-
-    window.addEventListener('requestNativeBack', handleNativeBack);
-    return () => {
-      window.removeEventListener('requestNativeBack', handleNativeBack);
-    };
-  }, [onBack]);
-
 
 
   const handleDelete = (id: string) => {
@@ -81,7 +76,6 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
     try {
       const res = await templateService.deleteApproveReport(deletingTemplateId);
       if (res.success) {
-        // 删除成功后刷新列表
         fetchTemplates();
         setIsDeleteModalOpen(false);
         setDeletingTemplateId(null);
@@ -91,11 +85,8 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
     }
   };
 
-  const handleRename = (id: string) => {
-    const currentTemplate = templates.find(t => t.id === id);
-    if (!currentTemplate) return;
-
-    setRenamingTemplate(currentTemplate);
+  const handleRename = (template: TemplateRecord) => {
+    setRenamingTemplate(template);
     setIsRenameModalOpen(true);
   };
 
@@ -108,7 +99,6 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
         approveReportName: newName,
       });
       if (res.success) {
-        // 重命名成功后刷新列表
         fetchTemplates();
         setIsRenameModalOpen(false);
         setRenamingTemplate(null);
@@ -118,45 +108,42 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
     }
   };
 
-
+  const toggleFailedExpand = (id: string) => {
+    setExpandedFailedId(prev => (prev === id ? null : id));
+  };
 
   return (
-    <div className="flex flex-col h-screen bg-[#F7F8FA]">
-      {/* Header */}
-      <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100">
-        <button
-          onClick={onBack}
-          className="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-full active:bg-slate-100 transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="text-lg font-semibold text-slate-800">我的模板</h1>
-        <button
+    <div className="flex flex-col h-screen bg-[#F7F8FA] pb-20">
+      {/* Header - 纯标题风格带上传按钮 */}
+      <div className="bg-[#F7F8FA] flex items-center justify-center pt-3 pb-1 sticky top-0 z-20 px-4">
+        <h1 className="text-[17px] font-bold text-[#1E293B] tracking-wide">模板管理</h1>
+        <button 
           onClick={onUpload}
-          className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg active:bg-indigo-100 transition-colors"
+          className="absolute right-4 flex items-center gap-[4px] text-[15px] font-medium text-[#1E293B] active:opacity-60 transition-opacity"
         >
-          上传
+          <FileUp size={18} strokeWidth={2} />
+          <span>上传</span>
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white flex justify-around border-b border-gray-100">
+      <div className="bg-[#F7F8FA] flex border-b border-gray-200">
         {[
-          { key: 'success' as const, label: '上传成功' },
-          { key: 'uploading' as const, label: '上传中' },
-          { key: 'failed' as const, label: '上传失败' },
+          { key: 'success' as const, label: '我的模板' },
+          { key: 'processing' as const, label: '处理中' },
         ].map(tab => {
           const isActive = activeTab === tab.key;
           return (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 py-3 text-sm font-medium relative transition-colors ${isActive ? 'text-slate-900' : 'text-gray-400'
-                }`}
+              className="flex-1 py-3 text-[15px] font-bold relative transition-colors"
             >
-              {tab.label}
+              <span className={isActive ? 'text-[#1E293B]' : 'text-[#64748B] font-medium'}>
+                {tab.label}
+              </span>
               {isActive && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-[3px] bg-indigo-600 rounded-full" />
+                <div className="absolute bottom-[-1px] left-1/2 -translate-x-1/2 w-8 h-[3px] bg-[#4338CA] rounded-full" />
               )}
             </button>
           );
@@ -164,100 +151,133 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
       </div>
 
       {/* Template List */}
-      <div className="flex-1 overflow-y-auto p-4 pb-28 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-            <p className="text-gray-400 text-sm mt-4">加载中...</p>
+            <div className="w-8 h-8 border-3 border-indigo-200 border-t-[#4338CA] rounded-full animate-spin"></div>
+            <p className="text-[#94A3B8] text-sm mt-4">加载中...</p>
           </div>
         ) : templates.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <FileText size={48} className="mb-4 opacity-20" />
-            <p className="text-sm">暂无{activeTab === 'success' ? '上传成功' : activeTab === 'uploading' ? '上传中' : '上传失败'}的模板</p>
+            <p className="text-sm">暂无数据</p>
           </div>
         ) : (
-          templates.map(template => (
-            <div
-              key={template.id}
-              className="bg-white rounded-2xl shadow-sm overflow-hidden"
-            >
-              {/* Template Header - 图标、标题和状态 */}
-              <div className="px-4 py-3 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  {/* 文档图标 */}
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" fill="white" fillOpacity="0.9" />
-                      <path d="M14 2V8H20" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <text x="12" y="16" fontSize="8" fill="#5B4EF8" fontWeight="700" textAnchor="middle" fontFamily="Arial, sans-serif">W</text>
-                    </svg>
+          templates.map(template => {
+            const isProcessing = template.approveReportStatus === '1'; // 审核中
+            const isFailed = template.approveReportStatus === '3'; // 未通过
+            const isSuccess = template.approveReportStatus === '2'; // 已通过
+            const isExpanded = expandedFailedId === template.id;
+
+            return (
+              <div
+                key={template.id}
+                className="bg-white rounded-[16px] overflow-hidden border border-gray-100/50 shadow-[0_2px_12px_rgba(0,0,0,0.02)]"
+              >
+                {/* 顶部：图标、标题和状态 */}
+                <div className="px-4 py-4">
+                  {/* 首行：图标、标题和状态垂直居中对齐 */}
+                  <div className="flex items-center gap-3">
+                    {/* 文档图标 */}
+                    <div className="w-10 h-10 rounded-[12px] bg-gradient-to-b from-[#5c8fff] to-[#3B82F6] flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" fill="white" fillOpacity="0.9" />
+                        <path d="M14 2V8H20" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <text x="12" y="16" fontSize="8" fill="#4B77F6" fontWeight="800" textAnchor="middle" fontFamily="Arial, sans-serif">W</text>
+                      </svg>
+                    </div>
+
+                    {/* 标题和状态 */}
+                    <div className="flex-1 min-w-0 pr-1 flex items-center justify-between gap-2">
+                      <h3 className="text-[15px] font-bold text-[#1E293B] leading-snug line-clamp-2">
+                        {template.approveReportName}
+                      </h3>
+                      {/* 状态标签 */}
+                      {isSuccess && (
+                        <span className="inline-flex px-2 py-[2px] bg-[#E6F8F3] text-[#20C997] text-[11px] font-bold rounded flex-shrink-0">
+                          已通过
+                        </span>
+                      )}
+                      {isProcessing && (
+                        <span className="inline-flex px-2 py-[2px] bg-[#FFF3E0] text-[#FF9800] text-[11px] font-bold rounded flex-shrink-0">
+                          审核中
+                        </span>
+                      )}
+                      {isFailed && (
+                        <span className="inline-flex px-2 py-[2px] bg-[#FEE2E2] text-[#EF4444] text-[11px] font-bold rounded flex-shrink-0">
+                          未通过
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* 标题和状态 - 垂直居中 */}
-                  <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                    <h3 className="text-[15px] font-semibold text-slate-900 leading-snug">
-                      {template.approveReportName}
-                    </h3>
-                    {/* 状态标签 */}
-                    {template.approveReportStatus === '2' && (
-                      <span className="inline-flex px-2.5 py-0.5 bg-emerald-50 text-emerald-600 text-xs font-medium rounded-md flex-shrink-0">
-                        上传成功
-                      </span>
-                    )}
-                    {template.approveReportStatus === '1' && (
-                      <span className="inline-flex px-2.5 py-0.5 bg-orange-50 text-orange-500 text-xs font-medium rounded-md flex-shrink-0">
-                        上传中
-                      </span>
-                    )}
-                    {template.approveReportStatus === '3' && (
-                      <span className="inline-flex px-2.5 py-0.5 bg-red-50 text-red-600 text-xs font-medium rounded-md flex-shrink-0">
-                        上传失败
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Template Footer - 时间和操作按钮（下方区域） */}
-              <div className="px-4 py-3">
-                {template.approveReportStatus === '1' ? (
-                  // 生成中状态：显示进度条
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      {/* 进度条 */}
-                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-300"
-                          style={{ width: '60%' }}
-                        />
+                  {/* 未通过原因区 */}
+                  {isFailed && (
+                    <div className="mt-3 pr-1">
+                      <div 
+                        className="bg-[#FEF2F2] rounded-lg px-3 py-2 flex items-start gap-2 cursor-pointer transition-all active:bg-[#FEE2E2]"
+                        onClick={() => toggleFailedExpand(template.id)}
+                      >
+                         <p className={`text-[12px] text-[#EF4444] leading-relaxed flex-1 ${!isExpanded ? 'line-clamp-1' : ''}`}>
+                           未通过：{template.errorMsg || '模板包含敏感词汇或话术不符合合规要求'}
+                         </p>
+                         <div className="text-[#EF4444] mt-[2px]">
+                           {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                         </div>
                       </div>
-                      {/* 预计完成时间 */}
-                      <span className="text-[13px] text-gray-400 whitespace-nowrap">预计2小时后完成</span>
                     </div>
-                  </div>
-                ) : (
-                  // 其他状态：显示时间和操作按钮
-                  <div className="flex items-center justify-between">
-                    <span className="text-[13px] text-gray-400">{template.createDate}</span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleDelete(template.id)}
-                        className="px-4 py-1.5 bg-gray-100 text-gray-600 text-[13px] font-medium rounded-lg hover:bg-gray-200 active:bg-gray-250 transition-colors"
-                      >
-                        删除
-                      </button>
-                      <button
-                        onClick={() => handleRename(template.id)}
-                        className="px-4 py-1.5 border-2 border-indigo-500 text-indigo-600 text-[13px] font-medium rounded-lg hover:bg-indigo-50 active:bg-indigo-100 transition-colors"
-                      >
-                        重命名
-                      </button>
+                  )}
+                </div>
+
+                {/* 审核中进度条底部栏 */}
+                {isProcessing && (
+                  <div className="px-4 py-4 flex items-center gap-3 border-t border-gray-100/80">
+                    <div className="flex-1 h-[6px] bg-[#EEF2FF] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#4B77F6] rounded-full"
+                        style={{ width: '45%' }}
+                      />
                     </div>
+                    <span className="text-[12px] text-[#64748B] whitespace-nowrap">预计2小时后完成</span>
                   </div>
                 )}
+
+                {/* 底部区：时间+按钮 */}
+                {(!isProcessing) && (
+                   <div className="px-4 py-3 flex items-center border-t border-gray-50/80 justify-between">
+                     <span className="text-[13px] text-[#94A3B8] font-medium tracking-wide">
+                       {template.createDate?.slice(0, 16)}
+                     </span>
+                     <div className="flex gap-[10px]">
+                       <button
+                         onClick={() => handleDelete(template.id)}
+                         className="px-[18px] py-[6px] bg-[#F1F5F9] text-[#94A3B8] text-[13px] font-bold rounded-full hover:bg-gray-200 transition-colors"
+                       >
+                         删除
+                       </button>
+
+                       {isSuccess && (
+                         <button
+                           onClick={() => handleRename(template)}
+                           className="px-[18px] py-[6px] border-[1.5px] border-[#4338CA] text-[#4338CA] text-[13px] font-bold rounded-full bg-white transition-colors"
+                         >
+                           重命名
+                         </button>
+                       )}
+
+                       {isFailed && (
+                         <button
+                           onClick={onUpload}
+                           className="px-[18px] py-[6px] bg-[#4338CA] text-white text-[13px] font-bold rounded-full transition-colors"
+                         >
+                           更换
+                         </button>
+                       )}
+                     </div>
+                   </div>
+                )}
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

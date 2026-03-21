@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, ChevronRight, Edit2, FilePlus, Mic, Archive, ChevronDown, ChevronUp, RotateCw } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Edit2, FilePlus, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
 import { DealRecord, DealReportStatusEnum } from '../types';
@@ -397,22 +397,27 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   }, 1000);
 
   const handleGenerateReportThrottled = useThrottleFn(() => {
+    const isRegenerate = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED;
     Dialog.confirm({
       title: (
         <span style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '16px', fontWeight: 500, lineHeight: 'normal', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#242424' }}>
-          确认生成
+          {isRegenerate ? '确认重新生成报告?' : '确认生成报告?'}
         </span>
       ),
       message: (
         <div>
           <p style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '14px', fontWeight: 'normal', lineHeight: '22px', textAlign: 'center', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#595959', marginBottom: '10px' }}>
-            重新生成报告将覆盖现有报告，是否继续?
+            {isRegenerate 
+              ? '是否确认根据当前尽调资料和访谈录音重新生成报告？原有报告内容将被覆盖'
+              : '系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告（由AI自动生成）'}
           </p>
           <p style={{ fontSize: '11px', color: '#9CA3AF', lineHeight: '1.5' }}>
             小狸报告将使用通义千问 AI 技术为您处理音频图像和文件。点击确认即代表您授权我们将相关素材加密传输至 AI 服务商进行内容识别及报告生成
           </p>
         </div>
       ),
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
       confirmButtonColor: '#4337F1',
     }).then(async () => {
       if (!currentDeal?.id) {
@@ -583,386 +588,311 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
       {/* Scrollable Content Container */}
       <div className="flex-1 min-h-0 overflow-y-auto relative z-10 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="px-4 pb-20 space-y-4">
-          {/* Status Bar / Mascot Message */}
-          <div className="flex items-end mt-8 mb-4 relative">
-            <div className="w-20 h-20 absolute left-6 -bottom-1.5 z-20">
-              <img 
-                src="/talk-assistant/assets/xiaoliye.png" 
-                alt="小狸" 
-                className="w-full h-full object-contain"
-              />
-            </div>
+        <div className="px-4 pb-20 pt-4 space-y-3">
+          {(() => {
+            const hasInterviewRecords = currentDeal?.interviewInstList && currentDeal.interviewInstList.length > 0;
+            const isGenerated = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED;
+            const isGenerating = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING;
+            const isFailed = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED;
+            const isArchived = currentDeal?.status === '5';
+            
+            let headerIcon = 'talkfaild.png';
+            let headerTitle = '访谈未开始';
+            let headerSub = '暂无访谈记录，请先开始访谈';
+            
+            if (isGenerated) {
+              headerIcon = 'talksuccess.png';
+              headerTitle = '报告已生成';
+              headerSub = '访谈即报告，小狸智能捕捉核心洞察';
+            } else if (hasInterviewRecords) {
+              headerIcon = 'talksuccess.png';
+              headerTitle = '访谈已完成';
+              headerSub = '访谈即报告，小狸智能捕捉核心洞察';
+            }
+            
+            if (isGenerating) {
+              headerIcon = 'talksuccess.png';
+              headerTitle = '报告生成中';
+              headerSub = '小狸AI全速生成报告中，请稍候...';
+            } else if (isFailed) {
+              headerIcon = 'talkfaild.png';
+              headerTitle = '报告生成失败';
+              headerSub = '请重试或检查资料内容';
+            }
 
-            <div className="w-full bg-white rounded-3xl p-3 pl-28 shadow-sm relative z-10 flex-1">
-              <p className={`text-[13px] font-medium leading-tight ${
-                currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED ? 'text-red-500 font-bold' : 'text-slate-700'
-              }`}>
-                {(currentDeal?.status === '5')
-                  ? '访谈归档，内容仅供查阅和下载'
-                  : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING
-                    ? '小狸AI全速生成报告中，请稍候'
-                    : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED
-                      ? '报告已生成! 可以继续完善信息'
-                      : currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED
-                        ? '报告生成失败，请重新尝试'
-                        : isFinishedInterview
-                          ? '本次访谈已完成，可查看历史记录或生成报告'
-                          : '记录创建成功，赶紧开始访谈吧...'}
-              </p>
-            </div>
-          </div>
-
-          {/* 访谈小总结 Card */}
-            <div className="bg-white rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden mb-3 border border-indigo-50/50">
-              {/* Header */}
-              <div className={`flex items-center justify-between ${currentDeal?.dealSummary ? 'mb-3' : ''} relative z-10 px-0.5`}>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-[15px] font-black text-slate-800 tracking-tight">访谈小总结</h3>
-                  <div className="bg-[#F4F7FF] text-[#86909C] text-[10px] px-2 py-0.5 rounded-md font-medium">
-                    AI自动提炼，仅供参考
+            return (
+              <div className="bg-white rounded-[24px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-indigo-50/30">
+                <div className="flex items-center gap-0 mb-3 -mt-2">
+                  <div className="w-[100px] h-[100px] flex-shrink-0 relative -ml-3 -my-3">
+                     <img src={`${basePath}assets/${headerIcon}`} alt="status" className="w-full h-full object-contain drop-shadow-sm" />
+                  </div>
+                  <div className="flex flex-col gap-0.5 z-10 -ml-1">
+                     <h2 className="text-[17.5px] font-bold text-slate-800 tracking-tight">{headerTitle}</h2>
+                     <p className="text-[12px] text-gray-500 leading-snug">{headerSub}</p>
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  {currentDeal?.status !== '5' && (
-                    <button
-                      onClick={async () => {
-                        if (!currentDeal?.id || isRefreshingSummary) return;
-                        setIsRefreshingSummary(true);
-                        Toast.info({ message: '正在刷新总结...', duration: 1500 });
-                        
-                        try {
-                          const res = await dealService.generateInterviewSummary(currentDeal.id, true);
-                          if (res.success) {
-                            const detailRes = await dealService.getDealInstDetail(currentDeal.id);
-                            if (detailRes.success && detailRes.data) {
-                              setDealDetail(detailRes.data);
-                              onDealDetailLoadedRef.current?.(detailRes.data);
-                              Toast.success('刷新成功');
-                            }
-                          } else {
-                            Toast.fail(res.message || '刷新失败');
-                          }
-                        } catch (error) {
-                          console.error('Refresh summary failed:', error);
-                          Toast.fail('刷新失败');
-                        } finally {
-                          setIsRefreshingSummary(false);
-                        }
-                      }}
-                      className={`p-1 text-indigo-400 hover:text-indigo-600 transition-colors active:scale-95 ${isRefreshingSummary ? 'animate-spin cursor-not-allowed opacity-70' : ''}`}
-                    >
-                      <RotateCw size={14} />
-                    </button>
-                  )}
+
+                <div className="flex flex-col gap-2.5">
+                  {(!isArchived) && (
                   <button 
-                    onClick={() => currentDeal?.dealSummary && setIsSummaryExpanded(!isSummaryExpanded)}
-                    disabled={!currentDeal?.dealSummary}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-bold transition-all ${currentDeal?.dealSummary ? 'bg-[#F0F2FF] text-indigo-600 active:scale-95' : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
+                    onClick={handleGenerateReportThrottled}
+                    disabled={isGenerating}
+                    className="w-full bg-[#4B42F5] text-white rounded-2xl py-[12px] flex items-center justify-center gap-2 font-medium text-[14px] active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    {isSummaryExpanded ? '收起' : '展开'}
-                    {isSummaryExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    {isGenerating ? (
+                      <div className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <FileText size={16} />
+                    )}
+                    <span>{isGenerating ? '报告生成中...' : (isGenerated ? '重新生成报告' : '立即生成报告')}</span>
                   </button>
+                  )}
+
+                  {isGenerated && !isGenerating ? (
+                    <div className="flex gap-2">
+                      <button onClick={handleReportPreviewThrottled} className="flex-1 bg-white border border-gray-100 rounded-2xl py-2.5 flex flex-col items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                        <Eye size={16} className="text-gray-600" />
+                        <span className="text-[11px] text-gray-700 font-medium">预览报告</span>
+                      </button>
+                      <button onClick={handleDownloadReportThrottled} className="flex-1 bg-white border border-gray-100 rounded-2xl py-2.5 flex flex-col items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                        <Download size={16} className="text-gray-600" />
+                        <span className="text-[11px] text-gray-700 font-medium">立即下载</span>
+                      </button>
+                      {(!isArchived) && (
+                      <button onClick={handleChangeTemplateThrottled} className="flex-1 bg-white border border-gray-100 rounded-2xl py-2.5 flex flex-col items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                        <RefreshCw size={16} className="text-gray-600" />
+                        <span className="text-[11px] text-gray-700 font-medium">更换模板</span>
+                      </button>
+                      )}
+                    </div>
+                  ) : (
+                    (!isArchived) && (
+                    <button onClick={handleChangeTemplateThrottled} className="w-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] rounded-2xl py-[12px] flex items-center justify-center gap-1.5 font-medium text-[14px] text-gray-700 active:scale-[0.98] transition-all">
+                      <RefreshCw size={16} className="text-gray-600" />
+                      <span>更换模板</span>
+                    </button>
+                    )
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* 访谈小总结 Card */}
+          <div className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
+            <div className={`flex items-center justify-between ${currentDeal?.dealSummary ? 'mb-3' : ''} relative z-10 px-0.5`}>
+              <div className="flex items-center gap-2">
+                <h3 className="text-[16px] font-bold text-slate-800 tracking-tight">访谈小总结</h3>
+                <div className="bg-[#F4F7FF] text-[#86909C] text-[10px] px-2 py-0.5 rounded-md font-medium">
+                  自动提炼, 仅供参考
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {currentDeal?.status !== '5' && (
+                  <button
+                    onClick={async () => {
+                      if (!currentDeal?.id || isRefreshingSummary) return;
+                      setIsRefreshingSummary(true);
+                      Toast.info({ message: '正在刷新总结...', duration: 1500 });
+                      
+                      try {
+                        const res = await dealService.generateInterviewSummary(currentDeal.id, true);
+                        if (res.success) {
+                          const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+                          if (detailRes.success && detailRes.data) {
+                            setDealDetail(detailRes.data);
+                            onDealDetailLoadedRef.current?.(detailRes.data);
+                            Toast.success('刷新成功');
+                          }
+                        } else {
+                          Toast.fail(res.message || '刷新失败');
+                        }
+                      } catch (error) {
+                        console.error('Refresh summary failed:', error);
+                        Toast.fail('刷新失败');
+                      } finally {
+                        setIsRefreshingSummary(false);
+                      }
+                    }}
+                    className={`p-1 text-indigo-400 hover:text-indigo-600 transition-colors active:scale-95 ${isRefreshingSummary ? 'animate-spin cursor-not-allowed opacity-70' : ''}`}
+                  >
+                    <RotateCw size={14} />
+                  </button>
+                )}
+                <button 
+                  onClick={() => currentDeal?.dealSummary && setIsSummaryExpanded(!isSummaryExpanded)}
+                  disabled={!currentDeal?.dealSummary}
+                  className={`flex items-center gap-0.5 px-2 py-0.5 rounded-[6px] text-[11px] font-medium transition-all ${currentDeal?.dealSummary ? 'bg-[#F0F2FF] text-[#4B42F5] active:scale-95' : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
+                >
+                  {isSummaryExpanded ? '收起' : '展开'}
+                  {isSummaryExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                </button>
+              </div>
+            </div>
+
+            {currentDeal?.dealSummary ? (
+              <div className={`relative z-10 px-0.5 transition-all duration-300`}>
+                <p className={`text-[13px] text-gray-700 leading-relaxed text-justify tracking-normal ${!isSummaryExpanded ? 'line-clamp-2' : ''}`}>
+                  {currentDeal.dealSummary}
+                </p>
+              </div>
+            ) : (
+              <div className="relative z-10 px-0.5 mt-2">
+                <p className="text-[13px] text-gray-400">访谈小总结未生成，请刷新生成</p>
+              </div>
+            )}
+          </div>
+
+          {/* 尽调资料 */}
+          {(() => {
+            const resourcesCount = currentDeal?.resources?.length || 0;
+            const supplementaryCount = Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary.length : 0;
+            const totalCount = resourcesCount + supplementaryCount;
+            
+            const getFileIconSrc = (fileName: string | undefined): string => {
+              const ext = fileName?.split('.').pop()?.toLowerCase() || '';
+              if (['xlsx', 'xls', 'csv'].includes(ext)) {
+                return `${basePath}assets/excel.png`;
+              } else if (['doc', 'docx'].includes(ext)) {
+                return `${basePath}assets/word.png`;
+              } else if (['pdf'].includes(ext)) {
+                return `${basePath}assets/pdf.png`;
+              } else if (['txt', 'text'].includes(ext)) {
+                return `${basePath}assets/txt.png`;
+              } else if (['ppt', 'pptx'].includes(ext)) {
+                return `${basePath}assets/ppt.png`;
+              } else if (['mp3', 'wav', 'm4a', 'aac', 'flac', 'amr', '3gp', 'ogg'].includes(ext)) {
+                return `${basePath}assets/wav.png`;
+              } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) {
+                return `${basePath}assets/image.png`;
+              }
+              return `${basePath}assets/txt.png`;
+            };
+
+            const displayList = [
+              ...(currentDeal?.resources || []).map((r: any) => ({ name: r.fileName || r.name || '资料', fileName: r.fileName })),
+              ...(Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary : []).map((s: any) => ({ name: s.fileName || s.name || '补充资料', fileName: s.fileName }))
+            ].slice(0, 2);
+
+            return (
+            <div 
+              className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden active:bg-gray-50 transition-colors cursor-pointer"
+              onClick={handleNavigateMaterialsThrottled}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[16px] font-bold text-slate-800 tracking-wider">尽调资料 <span className="font-medium">({totalCount})</span></h3>
+                <div className="flex items-center gap-1">
+                  <button 
+                    className="flex items-center border border-[#4B42F5] text-[#4B42F5] rounded-full px-2.5 py-[2px] text-[11px] active:bg-indigo-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNavigateMaterialsThrottled();
+                    }}
+                  >
+                    {currentDeal?.status !== '5' && <span className="font-bold mr-0.5">+</span>}
+                    {currentDeal?.status === '5' ? '立即查看' : '立即添加'}
+                  </button>
+                  <ChevronRight size={14} className="text-gray-300" />
                 </div>
               </div>
 
-              {/* Content */}
-              {currentDeal?.dealSummary ? (
-                <div className={`relative z-10 px-0.5 transition-all duration-300`}>
-                  <p className={`text-[14px] text-slate-700 leading-snug font-bold text-justify tracking-normal ${!isSummaryExpanded ? 'line-clamp-2' : ''}`}>
-                    {currentDeal.dealSummary}
-                  </p>
+              {totalCount === 0 ? (
+                <div className="border border-dashed border-gray-200 rounded-xl py-4 flex items-center justify-center gap-2">
+                  <FileText size={14} className="text-gray-300" />
+                  <span className="text-[12px] text-gray-400">暂无尽调资料</span>
                 </div>
               ) : (
-                <div className="relative z-10 px-0.5 mt-2">
-                  <p className="text-[13px] text-gray-400">访谈小总结未生成，请刷新生成</p>
+                <div className="space-y-2">
+                  {displayList.map((item: any, idx: number) => {
+                    const iconSrc = getFileIconSrc(item.fileName);
+                    return (
+                    <div key={idx} className="border border-gray-100 rounded-xl px-3 py-2.5 flex items-center gap-2 bg-[#FAFAFA]/50">
+                      <div className="w-[26px] h-[26px] flex-shrink-0">
+                        <img src={iconSrc} alt="file icon" className="w-full h-full object-contain" />
+                      </div>
+                      <span className="text-[13px] text-slate-700 truncate">{item.name}</span>
+                    </div>
+                  )})}
                 </div>
               )}
             </div>
+            )
+          })()}
 
-        {/* Report Card */}
-        {currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED ? (
-          // 报告已生成 - 卡片和按钮合并布局
-          // 报告已生成 - 新版卡片样式
-          <div className="rounded-3xl shadow-lg relative overflow-hidden bg-[#4337F1]">
-            {/* Rocket Mascot Image - 底边对齐按钮栏上边框 */}
-            <img
-              src={`${basePath}assets/rocketxiaoli.png`}
-              alt="Rocket Mascot"
-              className="absolute right-1 w-28 h-28 object-contain z-0 pointer-events-none"
-              style={{ bottom: '43px' }}
-            />
+          {/* 访谈录音 */}
+          {(() => {
+            const records = currentDeal?.interviewInstList || [];
+            const totalCount = records.length;
+            const displayList = records.slice(0, 2);
 
-            {/* Content Container */}
-            <div className="relative z-10 flex flex-col h-full">
-              {/* Top Section - Info (Clickable for preview) */}
-              <div 
-                className="px-5 pt-4 pb-0 text-white cursor-pointer"
-                onClick={handleReportPreviewThrottled}
-              >
-                <div className="max-w-[68%]">
-                  <h2 className="text-[18px] font-bold mb-2 leading-tight">
-                    尽调报告
-                  </h2>
-                  <p className="text-white/90 text-[14px] font-light leading-relaxed">
-                    访谈即报告，洞察更高效。小狸自动捕捉核心要点。
-                  </p>
-                </div>
-              </div>
-
-              {/* Spacer */}
-              <div className="h-1"></div>
-
-              {/* Bottom Section - Actions */}
-              <div className="px-4 py-3 bg-black/10 flex items-center justify-end gap-3 mt-auto backdrop-blur-[2px]">
-                {(currentDeal?.status === '5') ? (
-                  // 已归档状态：仅显示立即下载
-                  <button
-                    onClick={handleDownloadReportThrottled}
-                    className="px-3.5 py-1.5 bg-transparent border border-white/60 text-white rounded-full text-xs font-medium active:scale-95 transition-transform whitespace-nowrap"
+            return (
+            <div 
+              className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden active:bg-gray-50 transition-colors cursor-pointer"
+              onClick={handleRecordingClickThrottled}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[16px] font-bold text-slate-800 tracking-wider">访谈录音 <span className="font-medium">({totalCount})</span></h3>
+                <div className="flex items-center gap-1">
+                  <button 
+                    className="flex items-center border border-[#905CFE] text-[#905CFE] rounded-full px-2.5 py-[2px] text-[11px] active:bg-purple-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRecordingClickThrottled();
+                    }}
                   >
-                    立即下载
+                    {currentDeal?.status !== '5' && <span className="font-bold mr-0.5">+</span>}
+                    {currentDeal?.status === '5' ? '历史访谈' : '访谈录音'}
                   </button>
-                ) : (
-                  // 未归档状态：显示完整功能
-                  <>
-                    <button
-                      onClick={handleGenerateReportThrottled}
-                      className="px-3.5 py-1.5 bg-white text-[#4337F1] rounded-full text-xs font-bold shadow-sm active:scale-95 transition-transform whitespace-nowrap"
-                    >
-                      {currentDeal?.reportStatus === DealReportStatusEnum.REPORT_GENERATED ? '重新生成' : '立即生成'}
-                    </button>
-                    <button
-                      onClick={handleDownloadReportThrottled}
-                      className="px-3.5 py-1.5 bg-transparent border border-white/60 text-white rounded-full text-xs font-medium active:scale-95 transition-transform whitespace-nowrap"
-                    >
-                      立即下载
-                    </button>
-                    <button
-                      className="px-3.5 py-1.5 bg-transparent border border-white/60 text-white rounded-full text-xs font-medium active:scale-95 transition-transform whitespace-nowrap"
-                      onClick={handleChangeTemplateThrottled}
-                    >
-                      更换模板
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          // 其他状态 - 原来的卡片样式
-          // 其他状态 - 新版卡片样式
-          <div className="rounded-3xl shadow-lg relative overflow-hidden bg-[#4337F1]">
-            {/* Rocket Mascot Image - 底边对齐按钮栏上边框 */}
-            <img
-              src={`${basePath}assets/rocketxiaoli.png`}
-              alt="Rocket Mascot"
-              className="absolute right-1 w-28 h-28 object-contain z-0 pointer-events-none"
-              style={{ bottom: '43px' }}
-            />
-            {/* Content Container */}
-            <div className="relative z-10 flex flex-col h-full">
-              {/* Top Section - Info */}
-              <div className="px-5 pt-4 pb-0 text-white">
-                <div className="max-w-[68%]">
-                  <h2 className="text-[18px] font-bold mb-2 leading-tight">
-                    尽调报告
-                  </h2>
-                  <p className="text-white/90 text-[14px] font-light leading-relaxed">
-                    访谈即报告，洞察更高效。小狸AI智能捕捉核心要点。
-                  </p>
+                  <ChevronRight size={14} className="text-gray-300" />
                 </div>
               </div>
 
-              {/* Spacer to push bottom section down if needed, or just padding */}
-              <div className="h-1"></div>
-
-              {/* Bottom Section - Actions */}
-              <div className="px-4 py-3 bg-black/10 flex items-center justify-end gap-3 mt-auto backdrop-blur-[2px]">
-                {currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING ? (
-                   // Loading State
-                   <div className="flex items-center gap-2 py-1 mr-auto pl-2">
-                     <div className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin"></div>
-                     <span className="text-white/90 text-xs font-medium">报告正在后台生成中，请稍候...</span>
-                   </div>
-                ) : (
-                   // Action Buttons
-                   <>
-                    <button
-                      onClick={() => {
-                        Dialog.confirm({
-                          title: (
-                            <span style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '16px', fontWeight: 500, lineHeight: 'normal', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#242424' }}>
-                              确认生成报告?
-                            </span>
-                          ),
-                          message: (
-                            <div>
-                              <p style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '14px', fontWeight: 'normal', lineHeight: '22px', textAlign: 'center', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#595959', marginBottom: '10px' }}>
-                                系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告（由AI自动生成）
-                              </p>
-                              <p style={{ fontSize: '11px', color: '#9CA3AF', lineHeight: '1.5' }}>
-                                小狸报告将使用通义千问 AI 技术为您处理音频图像和文件。点击确认即代表您授权我们将相关素材加密传输至 AI 服务商进行内容识别及报告生成
-                              </p>
-                            </div>
-                          ),
-                          confirmButtonText: '确认',
-                          cancelButtonText: '取消',
-                          confirmButtonColor: '#4337F1',
-                        }).then(async () => {
-                          if (!currentDeal?.id) {
-                            Toast.fail('尽调信息不存在');
-                            return;
-                          }
-
-                          // 检查访谈记录和补充资料是否都为空
-                          const hasInterviewRecords = currentDeal.interviewInstList && currentDeal.interviewInstList.length > 0;
-                          const hasSupplementaryMaterials = currentDeal.resources && currentDeal.resources.length > 0;
-
-                          if (!hasInterviewRecords && !hasSupplementaryMaterials) {
-                            setTimeout(() => {
-                              Toast.fail({ message: '访谈记录和补充资料不能同时为空，请先添加内容', duration: 3000 });
-                            }, 100);
-                            return;
-                          }
-
-                          try {
-                            Toast.loading({ message: '正在生成报告...', duration: 0, forbidClick: true });
-                            const res = await dealService.generateInterviewInstReportAsync(currentDeal.id);
-                            Toast.clear();
-
-                            if (res.success) {
-                              Toast.success('报告生成任务已提交');
-                              try {
-                                const detailRes = await dealService.getDealInstDetail(currentDeal.id);
-                                if (detailRes.success && detailRes.data) {
-                                  setDealDetail(detailRes.data);
-                                  onDealDetailLoadedRef.current?.(detailRes.data);
-                                }
-                              } catch (error) {
-                                console.error('Failed to refresh deal detail:', error);
-                              }
-                            } else {
-                              setTimeout(() => {
-                                Toast({ type: 'fail', message: res.message || '生成报告失败', duration: 3000 });
-                              }, 100);
-                            }
-                          } catch (error) {
-                            Toast.clear();
-                            console.error('Generate report failed:', error);
-                            setTimeout(() => {
-                              Toast({ type: 'fail', message: (error as any).message || '生成报告失败', duration: 3000 });
-                            }, 100);
-                          }
-                        }).catch(() => {});
-                      }}
-                      className="px-3.5 py-1.5 bg-white text-[#4337F1] rounded-full text-xs font-bold shadow-sm active:scale-95 transition-transform whitespace-nowrap"
-                    >
-                      {currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED ? '重新生成' : '立即生成'}
-                    </button>
-                    <button
-                      className="px-3.5 py-1.5 bg-transparent border-[1px] border-white/60 text-white rounded-full text-xs font-medium active:scale-95 transition-transform whitespace-nowrap"
-                      onClick={handleChangeTemplateThrottled}
-                    >
-                      更换模板
-                    </button>
-                   </>
-                )}
-              </div>
+              {totalCount === 0 ? (
+                <div className="border border-dashed border-gray-200 rounded-xl py-4 flex items-center justify-center gap-2">
+                  {/* mockup uses a specific line icon, using general audio icon here */}
+                  <div className="w-3.5 h-3.5 flex items-center justify-center border border-gray-300 rounded-[2px]">
+                     <div className="w-1 h-2 bg-gray-300 rounded-full"></div>
+                  </div>
+                  <span className="text-[12px] text-gray-400">暂无访谈录音</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {displayList.map((item: any, idx: number) => (
+                    <div key={idx} className="border border-gray-100 rounded-xl px-3 py-2.5 flex items-center gap-2 bg-[#FAFAFA]/50">
+                      <div className="w-[26px] h-[26px] bg-[#EAF2FF] rounded flex justify-center items-center text-[#5681F0]">
+                        <Mic size={14} />
+                      </div>
+                      <span className="text-[13px] text-slate-700 truncate">{item.interviewInstName || '访谈录音'}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+            )
+          })()}
 
-        {/* Action Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* Materials */}
-          <div
-            className="bg-white rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[140px] cursor-pointer active:scale-[0.98] transition-all"
-            onClick={handleNavigateMaterialsThrottled}
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-slate-800 text-[16px]">尽调资料</h3>
-                {(() => {
-                  const resourcesCount = currentDeal?.resources?.length || 0;
-                  const supplementaryCount = Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary.length : 0;
-                  const totalCount = resourcesCount + supplementaryCount;
-                  return totalCount > 0 ? (
-                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[11px] font-bold shadow-md shadow-indigo-200">
-                      {totalCount}
-                    </span>
-                  ) : null;
-                })()}
-              </div>
-              <p className="text-xs text-gray-400 mt-1">自动解析</p>
-            </div>
-            
-            <div className="flex items-end justify-between mt-4">
-              <div className="flex flex-wrap gap-1.5 flex-1 mr-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleNavigateMaterialsThrottled();
-                  }}
-                  className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100 whitespace-nowrap"
-                 >
-                   {currentDeal?.status === '5' ? '立即查看' : '立即添加'}
-                 </button>
-               </div>
-               <FilePlus className="text-gray-300 w-8 h-8 opacity-50 flex-shrink-0" strokeWidth={1.5} />
-            </div>
-          </div>
-
-          {/* Recording */}
-          <div
-            className="bg-white rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[140px] cursor-pointer active:scale-[0.98] transition-all"
-            onClick={handleRecordingClickThrottled}
-          >
-            <div>
-              <h3 className="font-bold text-slate-800 text-[16px]">访谈录音</h3>
-              <p className="text-xs text-gray-400 mt-1">语音转写</p>
-            </div>
-
-            <div className="flex items-end justify-between mt-4">
-              <button
-                // Remove onClick here to let the parent div handle it, or keep stopPropagation if needed
-                // But user request implies clicking anywhere on container works.
-                // Keeping button visual style but removing duplicate click handler or preventing bubbling isn't strictly necessary if parent handles it,
-                // BUT consistent UX usually means buttons inside clickable cards might do specific things.
-                // Here the action is the same.
-                className={`px-3 py-1.5 rounded-full text-xs font-bold border ${currentDeal?.status === '5'
-                  ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
-                  : 'bg-indigo-50 text-indigo-600 border-indigo-100'
-                  } whitespace-nowrap`}
-              >
-                {(currentDeal?.status === '5') ? '历史访谈' : '+访谈录音'}
-              </button>
-              <Mic className="text-indigo-200 w-8 h-8 opacity-50" strokeWidth={1.5} />
-            </div>
-          </div>
-        </div>
-
-        {/* Questions Cell */}
-        {(() => {
-          const questionList = currentDeal?.questionInfoList || [];
-          const totalCount = questionList.length;
-          const checkedCount = questionList.filter((q) => q.CHECKED === true).length;
-          return (
-            <div
-              className="bg-white rounded-2xl p-5 shadow-sm flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer"
+          {/* 问题集合 */}
+          {(() => {
+            const questionList = currentDeal?.questionInfoList || [];
+            const totalCount = questionList.length;
+            const checkedCount = questionList.filter((q) => q.CHECKED === true).length;
+            return (
+            <div 
+              className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer"
               onClick={handleNavigateQuestionsThrottled}
             >
-              <span className="font-bold text-slate-800">问题集合 {checkedCount}/{totalCount}</span>
-              <ChevronRight className="text-gray-300" size={20} />
+              <div className="flex items-end gap-0.5">
+                <h3 className="text-[16px] font-bold text-slate-800 tracking-wider">问题集合</h3>
+                <span className="text-[14px] text-slate-800 font-medium ml-1">{checkedCount}</span>
+                <span className="text-[12px] text-gray-300">/{totalCount}</span>
+              </div>
+              <ChevronRight size={14} className="text-gray-300" />
             </div>
-          );
-        })()}
-
-        {/* Bottom Spacer */}
-
+            )
+          })()}
+        </div>
       </div>
-    </div>
 
       {/* Fixed Archive Button at Bottom */}
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-3 z-30">

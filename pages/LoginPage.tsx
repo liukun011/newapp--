@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
 import { useKeyboardStatus } from '../hooks/useKeyboardStatus';
-import { ArrowLeft, Edit2, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { LOGIN_SLIDES } from '../constants';
@@ -21,7 +21,7 @@ type ViewState = 'LANDING' | 'SMS' | 'PASSWORD' | 'AGREEMENT' | 'PRIVACY' | 'FOR
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const basePath = import.meta.env.BASE_URL || '/';
-  const [viewState, setViewState] = useState<ViewState>('LANDING');
+  const [viewState, setViewState] = useState<ViewState>('SMS');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
@@ -29,6 +29,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [smsSent, setSmsSent] = useState(false);
 
   // 找回密码页面的独立状态（与登录页隔离）
   const [forgotPhone, setForgotPhone] = useState('');
@@ -55,9 +56,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   // Perform actual login logic
   const performLogin = async () => {
+    const toast = Toast.loading({
+      message: '登录中...',
+      forbidClick: true,
+      duration: 0,
+    });
+
     if (isPasswordMode) {
       try {
         const res = await authService.login(phone, password);
+        toast.clear();
+
         if (res.successful && res.data) {
           localStorage.setItem('zov-user-token', res.data.accessToken);
           localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
@@ -67,11 +76,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
            Toast.fail(res.message || '登录失败');
         }
       } catch (error) {
+        toast.clear();
         console.error('Login error:', error);
       }
     } else {
        try {
          const res = await authService.loginWithPhoneCode(phone, code);
+         toast.clear();
+
          if (res.successful && res.data) {
            localStorage.setItem('zov-user-token', res.data.accessToken);
            localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
@@ -81,21 +93,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
            Toast.fail(res.message || '登录失败');
          }
        } catch (error) {
+         toast.clear();
          console.error('Login error:', error);
        }
     }
   };
 
   // Moved hooks to top level to comply with Rules of Hooks
-  const handleOneClickLogin = useThrottleFn(async () => {
-    if (!agreed) {
-      setShowAgreementModal(true);
-      return;
-    }
-    Toast.info({ 
-      message: '功能开发中，敬请期待！', 
-    });
-  });
+
 
   const handleMainLogin = useThrottleFn(async () => {
     if (!agreed) {
@@ -117,10 +122,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
        if (phone && (password || code)) {
           performLogin();
        }
-    } else if (viewState === 'LANDING') {
-       // Should match OneClick login but simpler to just set agreed and let user click again or trigger if we tracked the pending action. 
-       // For now, just setting agreed is enough UX improvement, or we can Toast "Please click login again". 
-       // Better: Just set agreed. User clicks button again -> Works.
     }
   };
 
@@ -144,7 +145,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   // Auto-play carousel
   useEffect(() => {
-    if (viewState !== 'LANDING') return;
+    if (viewState !== 'SMS' && viewState !== 'PASSWORD') return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % LOGIN_SLIDES.length);
     }, 4000);
@@ -169,17 +170,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         return;
       }
 
-      // 密码/验证码页面：拦截并返回到 LANDING
+      // 密码/验证码页面：拦截并退出
       if (viewState === 'SMS' || viewState === 'PASSWORD') {
-        e.preventDefault(); // 关键：阻止 App.tsx 的退出逻辑
-        setViewState('LANDING');
         return;
       }
 
       // 协议/隐私页面：拦截并返回到上一页
       if (viewState === 'AGREEMENT' || viewState === 'PRIVACY') {
         e.preventDefault(); // 关键：阻止 App.tsx 的退出逻辑
-        setViewState(previousViewState || 'LANDING');
+        setViewState(previousViewState || 'SMS');
         if (returnToModal) {
           setShowAgreementModal(true);
           setReturnToModal(false);
@@ -209,7 +208,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
           <button 
             onClick={() => {
-              setViewState(previousViewState || 'LANDING');
+              setViewState(previousViewState || 'SMS');
               if (returnToModal) {
                 setShowAgreementModal(true);
                 setReturnToModal(false);
@@ -278,7 +277,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
           <button 
             onClick={() => {
-              setViewState(previousViewState || 'LANDING');
+              setViewState(previousViewState || 'SMS');
               if (returnToModal) {
                 setShowAgreementModal(true);
                 setReturnToModal(false);
@@ -395,119 +394,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     );
   }
 
-  // Landing Page View (Carousel + Bottom Sheet)
-  if (viewState === 'LANDING') {
-    const slide = LOGIN_SLIDES[currentSlide];
-    
-    return (
-      <div className="min-h-screen flex flex-col relative overflow-hidden">
-         {/* Top Carousel Area */}
-         <div className="flex-1 flex flex-col items-center justify-center px-6 pt-8 text-center" style={{ paddingBottom: '26rem' }}>
-           {/* Text Content */}
-           <div className="mb-8 mt-0 min-h-[120px] flex flex-col justify-center">
-              <h2 className="text-2xl font-bold mb-4 leading-snug text-primary">
-                {slide.title}
-              </h2>
-              <p className="text-slate-600 text-sm leading-relaxed px-4">
-                {slide.desc}
-              </p>
-           </div>
-           
-           {/* Slide Image */}
-           <div className="w-96 h-96 flex items-center justify-center" style={{ marginTop: '-66px' }}>
-             <img 
-               src={`${basePath}assets/login${slide.id}.png`} 
-               alt={slide.title}
-               className="w-full h-full object-contain"
-             />
-           </div>
-
-           {/* Carousel Indicators */}
-           <div className="flex gap-2 mt-4">
-             {LOGIN_SLIDES.map((_, idx) => (
-               <div 
-                  key={idx}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    idx === currentSlide
-                      ? 'w-6 bg-primary'
-                      : 'bg-indigo-100'
-                  }`}
-               />
-             ))}
-           </div>
-        </div>
-
-        {/* Bottom Sheet Card */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] px-8 pt-12 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-20"
-          style={{ paddingBottom: '18.4rem' }}
-        >
-          
-          {/* Phone Number Display */}
-          <div className="flex items-center justify-center mb-8 gap-3">
-            <span className="text-2xl font-bold text-slate-900 tracking-wider">用户登录</span>
-            <button 
-              className="text-slate-400 hover:text-indigo-600 transition-colors flex justify-center items-center gap-1"
-              onClick={() => setViewState('PASSWORD')}
-            >
-              <Edit2 size={16} />
-              <span>密码登录</span>
-            </button>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="space-y-6">
-            <Button 
-              block 
-              size="large" 
-              onClick={() => setViewState('SMS')}
-              className="shadow-xl shadow-indigo-500/20 bg-primary text-white"
-            >
-              验证码登录
-            </Button>
-
-            <Button 
-              block 
-              size="large" 
-              variant="secondary"
-              onClick={handleOneClickLogin}
-              className="border-slate-200 text-slate-600 font-normal"
-            >
-              本机号码一键登录
-            </Button>
-          </div>
-        </div>
-
-        {/* Agreement Checkbox - Fixed at bottom of page */}
-        <div className="fixed left-0 right-0 flex items-center justify-center px-8 z-30" style={{ bottom: 'max(24px, env(safe-area-inset-bottom, 24px))' }}>
-           <label className="flex items-center space-x-2 text-xs text-gray-400 cursor-pointer">
-              <input 
-                type="checkbox" 
-                className="accent-indigo-600 w-3.5 h-3.5 rounded-full"
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-              />
-              <span>
-                我已阅读并同意 
-                <span 
-                  className="text-indigo-600 mx-1 underline underline-offset-2 active:opacity-70"
-                  onClick={(e) => { e.preventDefault(); openLegalView('AGREEMENT'); }}
-                >
-                  用户协议
-                </span>
-                和
-                <span 
-                  className="text-indigo-600 mx-1 underline underline-offset-2 active:opacity-70"
-                  onClick={(e) => { e.preventDefault(); openLegalView('PRIVACY'); }}
-                >
-                  隐私政策
-                </span>
-              </span>
-           </label>
-        </div>
-      </div>
-    );
-  }
 
   // Forgot Password View
   if (viewState === 'FORGOT_PASSWORD') {
@@ -648,151 +534,176 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     );
   }
 
-  // Detailed Login Forms (SMS or Password)
+  // Main Login View (SMS or Password)
   const isPasswordMode = viewState === 'PASSWORD';
+  const slide = LOGIN_SLIDES[currentSlide];
 
   return (
-    <div className="min-h-screen bg-white flex flex-col p-6 relative">
-      {/* Header */}
-      <div className="flex items-center py-2 mb-8">
-        <button 
-          onClick={() => setViewState('LANDING')}
-          className="p-2 -ml-2 hover:bg-slate-50 rounded-full transition-colors"
-        >
-          <ArrowLeft size={24} className="text-slate-800" />
-        </button>
-      </div>
-
-      {/* Form Title */}
-      <div className="mb-10">
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">
-          {isPasswordMode ? '密码登录' : '手机验证码登录'}
-        </h1>
-        <p className="text-slate-500 text-sm">
-          {isPasswordMode 
-            ? '请输入您的专属密码，继续访问个人账户' 
-            : '未注册的手机号登录成功后自动注册'}
-        </p>
-      </div>
-
-      {/* Inputs */}
-      <div className="space-y-5">
-        <Input 
-          type="tel" 
-          placeholder="请输入手机号" 
-          label="+86"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          autoFocus
-        />
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-b from-[#E6EAFD] to-[#F1F3FD]">
+      {/* Top Carousel Area */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-start pt-16">
+        {/* Text Content */}
+        <div className="mb-2 min-h-[90px] flex flex-col justify-center items-center px-8 z-20">
+          <h2 className="text-[22px] font-bold mb-3 leading-snug text-[#4338CA] text-center">
+            {slide.title}
+          </h2>
+          <p className="text-[#64748B] text-[14px] leading-relaxed text-center font-medium max-w-[280px]">
+            {slide.desc}
+          </p>
+        </div>
         
-        {isPasswordMode ? (
-          <Input 
-            type={showPassword ? "text" : "password"} 
-            placeholder="请输入密码" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            suffix={
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-gray-400 p-1 hover:text-gray-600 focus:outline-none"
-              >
-                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
-              </button>
-            }
+        {/* Slide Image */}
+        <div className="w-full flex items-center justify-center relative z-10 -mt-14 transition-transform">
+          <img 
+            src={`${basePath}assets/login${slide.id}.png`} 
+            alt={slide.title}
+            className="w-[280px] h-[280px] object-contain"
           />
-        ) : (
-          <Input 
-            type="number" 
-            placeholder="请输入验证码" 
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            suffix={
-              <Button 
-                variant="text" 
-                size="small" 
+        </div>
+      </div>
+
+      {/* Bottom Sheet Card */}
+      <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] px-8 pt-6 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.02)] z-20 flex flex-col h-[400px]">
+        {/* Tabs */}
+        <div className="flex gap-6 mb-6">
+          <button 
+            className={`text-[18px] font-bold relative pb-2 transition-colors ${!isPasswordMode ? 'text-slate-900' : 'text-slate-400'}`}
+            onClick={() => setViewState('SMS')}
+          >
+            手机号登录
+            {!isPasswordMode && (
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[4px] bg-[#4338CA] rounded-full" />
+            )}
+          </button>
+          <button 
+            className={`text-[18px] font-bold relative pb-2 transition-colors ${isPasswordMode ? 'text-slate-900' : 'text-slate-400'}`}
+            onClick={() => setViewState('PASSWORD')}
+          >
+            密码登录
+            {isPasswordMode && (
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[4px] bg-[#4338CA] rounded-full" />
+            )}
+          </button>
+        </div>
+
+        {/* Form Inputs */}
+        <div className="space-y-4">
+          {/* Phone Input */}
+          <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#4338CA] focus-within:ring-1 focus-within:ring-[#4338CA] ${phone ? 'border-[#4338CA] ring-1 ring-[#4338CA]' : 'border-[#BFC6FF]'}`}>
+            <span className="text-slate-800 font-medium mr-4">+86</span>
+            <input 
+              type="tel"
+              placeholder="请输入手机号"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
+            />
+          </div>
+
+          {!isPasswordMode ? (
+            /* SMS Code Input */
+            <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#4338CA] focus-within:ring-1 focus-within:ring-[#4338CA] ${code ? 'border-[#4338CA] ring-1 ring-[#4338CA]' : 'border-[#BFC6FF]'}`}>
+              <input 
+                type="number"
+                placeholder="请输入验证码"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
+              />
+              <button 
                 disabled={countdown > 0}
                 onClick={async () => {
-                  if (!phone) {
-                    Toast.info('请输入手机号');
-                    return;
-                  }
+                  if (!phone) { Toast.info('请输入手机号'); return; }
                   try {
                     const res = await authService.sendSms(phone);
-                    if (res.successful) {
-                      setCountdown(60);
-                      Toast.success('验证码已发送');
-                    } else {
-                      Toast.fail(res.message || '发送失败');
-                    }
-                  } catch (error) {
-                    console.error('Send SMS error:', error);
+                    if (res.successful) { setCountdown(60); setSmsSent(true); Toast.success('验证码已发送'); }
+                    else { Toast.fail(res.message || '发送失败'); }
+                  } catch (e) {
+                    console.error('Send SMS error:', e);
                   }
                 }}
-                className="font-normal min-w-[5em]"
+                className={`text-[14px] font-medium min-w-[5em] ${countdown > 0 ? 'text-slate-400' : 'text-[#4338CA]'}`}
               >
-                {countdown > 0 ? `${countdown}s` : '获取验证码'}
-              </Button>
-            }
-          />
-        )}
+                {countdown > 0 ? `${countdown}s` : (smsSent ? '重新获取验证码' : '获取验证码')}
+              </button>
+            </div>
+          ) : (
+            /* Password Input */
+            <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#4338CA] focus-within:ring-1 focus-within:ring-[#4338CA] ${password ? 'border-[#4338CA] ring-1 ring-[#4338CA]' : 'border-[#BFC6FF]'}`}>
+              <input 
+                type={showPassword ? "text" : "password"}
+                placeholder="请输入密码"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-400 ml-2">
+                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Helper Text */}
+        <div className="flex items-center justify-between mt-3 mb-6 px-1">
+          {!isPasswordMode ? (
+            <span className="text-[12px] text-slate-500">未注册的手机号登录成功后将自动注册</span>
+          ) : (
+            <>
+              <span className="text-[12px] text-slate-500">请输入您的专属密码，继续访问个人账户</span>
+              <button 
+                onClick={() => setViewState('FORGOT_PASSWORD')}
+                className="text-[12px] text-[#4338CA]"
+              >
+                忘记密码
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Login Button */}
+        <Button 
+          block 
+          size="large" 
+          onClick={handleMainLogin}
+          disabled={!phone || (!isPasswordMode ? !code : !password)}
+          className="rounded-full !bg-[#4338CA] active:!bg-[#3730A3] h-12 text-[16px]"
+        >
+          登 录
+        </Button> 
+
       </div>
 
-      {/* Auxiliary Links */}
-      <div className="flex items-center justify-between mt-4 mb-8">
-        <button 
-          onClick={() => setViewState(isPasswordMode ? 'SMS' : 'PASSWORD')}
-          className="text-sm text-slate-500 hover:text-indigo-600 transition-colors"
-        >
-          {isPasswordMode ? '验证码登录' : '密码登录'}
-        </button>
-        <button 
-          onClick={() => setViewState('FORGOT_PASSWORD')}
-          className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors font-medium"
-        >
-          忘记密码
-        </button>
-      </div>
-
-      {/* Main Action Button */}
-      <Button 
-        block 
-        size="large" 
-        onClick={handleMainLogin}
-        disabled={!phone || (isPasswordMode ? !password : !code)}
-        className="shadow-xl shadow-indigo-500/20"
-      >
-        登录
-      </Button>
-
-      {/* Bottom Agreement - 键盘弹出时隐藏 */}
+      {/* Agreement - Fixed at Bottom */}
       {!isKeyboardOpen && (
-        <div className="fixed left-0 right-0 flex items-center justify-center z-10" style={{ bottom: 'max(24px, env(safe-area-inset-bottom, 24px))' }}>
-          <label className="flex items-center space-x-2 text-xs text-gray-400 cursor-pointer">
-            <input 
-              type="checkbox" 
-              className="accent-indigo-600 w-3.5 h-3.5 rounded-full"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-            />
-            <span>
-              我已阅读并同意 
+        <div className="fixed left-0 right-0 flex items-center justify-center z-30" style={{ bottom: 'max(24px, env(safe-area-inset-bottom, 24px))' }}>
+           <label className="flex items-center space-x-2 text-[12px] text-[#8C93A3] cursor-pointer">
+              <div className="relative flex items-center justify-center w-[15px] h-[15px] rounded-full border border-[#4338CA]">
+                <input 
+                  type="checkbox" 
+                  className="appearance-none absolute inset-0 w-full h-full opacity-0 cursor-pointer peer z-10"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                />
+                <div className={`absolute pointer-events-none rounded-full transition-transform ${agreed ? 'w-[9px] h-[9px] bg-[#4338CA] scale-100' : 'w-[9px] h-[9px] bg-transparent scale-0'}`} />
+              </div>
+              <span>
+                我已阅读并同意 
                 <span 
-                className="text-indigo-600 mx-1 underline underline-offset-2 active:opacity-70"
-                onClick={(e) => { e.preventDefault(); openLegalView('AGREEMENT'); }}
-              >
-                用户协议
-              </span> 
-              和 
-              <span 
-                className="text-indigo-600 mx-1 underline underline-offset-2 active:opacity-70"
-                onClick={(e) => { e.preventDefault(); openLegalView('PRIVACY'); }}
-              >
-                隐私政策
+                  className="text-[#4338CA] mx-1 active:opacity-70"
+                  onClick={(e) => { e.preventDefault(); openLegalView('AGREEMENT'); }}
+                >
+                  用户协议
+                </span>
+                和
+                <span 
+                  className="text-[#4338CA] mx-1 active:opacity-70"
+                  onClick={(e) => { e.preventDefault(); openLegalView('PRIVACY'); }}
+                >
+                  隐私政策
+                </span>
               </span>
-            </span>
-          </label>
+           </label>
         </div>
       )}
 

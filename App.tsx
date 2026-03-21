@@ -26,7 +26,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import InvitationCenterPage from './pages/InvitationCenterPage';
 import SettingsPage from './pages/SettingsPage';
 import MessageCenterPage from './pages/MessageCenterPage';
-import ManagementPage from './pages/ManagementPage';
+// Removed ManagementPage as it is replaced by MyTemplatesPage
 import ReportsListPage from './pages/ReportsListPage';
 
 import HistoryRecordsPage from './pages/HistoryRecordsPage';
@@ -90,7 +90,7 @@ const App: React.FC = () => {
 
   // Navigation Stack for handling Native Back
   const [viewStack, setViewStack] = useState<View[]>([View.HOME]);
-  const [templateOrigin, setTemplateOrigin] = useState<View>(View.HOME);
+  const [templateOrigin, setTemplateOrigin] = useState<View>(View.HOME); // 留着以防日后需要，实际目前不再需要纪录
   // Track current selected deal
   const [currentDeal, _setCurrentDeal] = useState<DealRecord | null>(() => {
     try {
@@ -241,7 +241,7 @@ const App: React.FC = () => {
   const [materialUploadTab, setMaterialUploadTab] = useState<string>('upload');
 
   // 记住模板管理页的初始标签页
-  const [templateInitialTab, setTemplateInitialTab] = useState<'success' | 'uploading' | 'failed'>('success');
+  const [templateInitialTab, setTemplateInitialTab] = useState<'success' | 'processing'>('success');
 
   // 记住首页的标签页（进行中/已归档）
   const [homeTab, setHomeTab] = useState<'ongoing' | 'archived'>('ongoing');
@@ -875,7 +875,7 @@ const App: React.FC = () => {
                     }
                   }}
                   onNavigateToTemplates={() => {
-                    navigateForward(View.MY_TEMPLATES);
+                    navigateForward(View.MANAGEMENT);
                   }}
                   onNavigateToSettings={() => {
                     navigateForward(View.SETTINGS);
@@ -1249,24 +1249,17 @@ const App: React.FC = () => {
                   }}
                 />
               )}
-              {currentView === View.MY_TEMPLATES && (
-                <MyTemplatesPage
-                  onBack={() => navigateBackward(templateOrigin || View.HOME)}
-                  onUpload={() => navigateForward(View.UPLOAD_TEMPLATE)}
-                  initialTab={templateInitialTab}
-                />
-              )}
               {currentView === View.UPLOAD_TEMPLATE && (
                 <UploadTemplatePage
-                  onBack={() => navigateBackward(View.MY_TEMPLATES)}
-                  onCancel={() => navigateBackward(View.MY_TEMPLATES)}
+                  onBack={() => navigateBackward(View.MANAGEMENT)}
+                  onCancel={() => navigateBackward(View.MANAGEMENT)}
                   onSubmit={() => {
                     // 提交成功后不立即返回，等待用户点击"查看列表"
                   }}
                   onViewList={() => {
-                    // 点击"查看列表"后跳转到模板管理页的"上传中" tab
-                    setTemplateInitialTab('uploading');
-                    navigateBackward(View.MY_TEMPLATES);
+                    // 点击"查看列表"后跳转到模板管理页的"处理中" tab
+                    setTemplateInitialTab('processing');
+                    navigateBackward(View.MANAGEMENT);
                   }}
                 />
               )}
@@ -1335,7 +1328,7 @@ const App: React.FC = () => {
                   templateName={previewTemplate.name}
                   templateUrl={previewTemplate.url}
                   templateId={previewTemplate.id}
-                  skipIdInPreview={previousView === View.TEMPLATE_SELECTION || previousView === View.MY_TEMPLATES} // 如果是从模板选择页或模板管理页进来的，跳过 ID；如果是资料预览(MATERIALS_LIST)则不跳过
+                  skipIdInPreview={previousView === View.TEMPLATE_SELECTION || previousView === View.MANAGEMENT} // 如果是从模板选择页或模板管理页进来的，跳过 ID；如果是资料预览(MATERIALS_LIST)则不跳过
                   onBack={() => {
                     // 与原生返回保持一致，取栈中倒数第二个页面
                     if (viewStack.length > 1) {
@@ -1535,7 +1528,7 @@ const App: React.FC = () => {
                   onNavigateToTemplates={() => {
                     setPreviousView(View.SETTINGS);
                     setTemplateOrigin(View.SETTINGS);
-                    navigateForward(View.MY_TEMPLATES);
+                    navigateForward(View.MANAGEMENT);
                   }}
                   onNavigateToUserAgreement={() => {
                       setPreviousView(View.SETTINGS);
@@ -1571,15 +1564,9 @@ const App: React.FC = () => {
                 />
               )}
               {currentView === View.MANAGEMENT && (
-                <ManagementPage
-                  onNavigateToTemplates={() => {
-                    setTemplateOrigin(View.MANAGEMENT);
-                    navigateForward(View.MY_TEMPLATES);
-                  }}
-                  onNavigateToQuestionLibrary={() => {
-                    // TODO: Add question library navigation
-                    Toast.info('问题清单功能开发中');
-                  }}
+                <MyTemplatesPage
+                  onUpload={() => navigateForward(View.UPLOAD_TEMPLATE)}
+                  initialTab={templateInitialTab}
                 />
               )}
               {currentView === View.REPORTS_LIST && (
