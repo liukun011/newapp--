@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, UserPlus, Search, Edit2, ChevronDown, Building2, Check, ShieldAlert, Users } from 'lucide-react';
+import { copyWithToast } from '@/utils/copyUtils';
 import { Toast, Popup, Dialog, List, Loading } from 'react-vant';
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';
@@ -551,7 +552,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                 <p className="text-[10px] text-slate-300 font-black mb-2 text-center uppercase tracking-wider">组织邀请链接</p>
                 {inviteUrl ? (
                     <div
-                        className="bg-white border border-slate-100 rounded-[12px] px-2.5 py-2 overflow-y-auto"
+                        className="bg-white border border-slate-100 rounded-[12px] px-2 py-1 overflow-y-auto"
                         style={{ maxHeight: '100px' }}
                     >
                         <span className="text-[12px] text-slate-500 font-medium break-all leading-snug select-all">
@@ -570,11 +571,12 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                 className={`w-full h-10 bg-[#0F172A] text-white rounded-[14px] text-[14px] font-bold active:scale-95 transition-all relative z-10 shadow-lg shadow-slate-100 ${
                     !inviteUrl ? 'opacity-50 pointer-events-none' : ''
                 }`}
-                onClick={() => {
+                onClick={async () => {
                     if (!inviteUrl) return;
-                    navigator.clipboard.writeText(inviteUrl);
-                    Toast.success('邀请链接已复制');
-                    setShowInviteModal(false);
+                    const success = await copyWithToast(inviteUrl, '邀请链接已复制');
+                    if (success) {
+                        setShowInviteModal(false);
+                    }
                 }}
             >
                 复制邀请链接

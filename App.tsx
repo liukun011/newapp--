@@ -65,7 +65,7 @@ const App: React.FC = () => {
       history.pushState({ key: Date.now() }, '', window.location.href);
     };
 
-    const handlePopState = (event: PopStateEvent) => {
+    const handlePopState = (_event: PopStateEvent) => {
       console.log('[App] PopState (Swipe/Back) detected.');
       
       // 2. 拦截后立即补回历史记录，保持栈结构，防止真的退出了 App 或到了空页面

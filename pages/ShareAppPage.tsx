@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Copy, Share2, Users, CheckCircle2, Gift } from 'lucide-react';
-import { Toast, Loading } from 'react-vant';
+import { ChevronLeft, Copy, Users, CheckCircle2, Gift } from 'lucide-react';
+import { Loading } from 'react-vant';
+import { copyWithToast } from '@/utils/copyUtils';
 import { userService } from '../services/userService';
 
 interface InvitedFriend {
@@ -66,8 +67,7 @@ const ShareAppPage: React.FC<ShareAppPageProps> = ({ onBack }) => {
   }, []);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(shareUrl);
-    Toast.success('链接已复制');
+    copyWithToast(shareUrl);
   };
 
   return (
@@ -113,7 +113,7 @@ const ShareAppPage: React.FC<ShareAppPageProps> = ({ onBack }) => {
                     </button>
                 </div>
                 <div
-                    className="bg-white border border-slate-100 rounded-[12px] px-2.5 py-2 overflow-y-auto"
+                    className="bg-white border border-slate-100 rounded-[12px] px-2 py-1 overflow-y-auto"
                     style={{ maxHeight: '95px' }}
                 >
                     <span className="text-[12px] text-slate-600 font-medium break-all leading-snug select-all">
@@ -122,7 +122,7 @@ const ShareAppPage: React.FC<ShareAppPageProps> = ({ onBack }) => {
                 </div>
             </div>
 
-            {/* Share Button */}
+            {/* 立即分享按钮由于暂未接入系统原生分享，先下线处理
             <button
                 className="w-full h-10 bg-[#2563EB] text-white rounded-[16px] flex items-center justify-center gap-2 shadow-[0_6px_16px_rgba(37,99,235,0.2)] active:scale-[0.98] transition-all relative z-10 overflow-hidden group"
                 onClick={() => Toast.info('系统分享组件唤起中...')}
@@ -131,6 +131,7 @@ const ShareAppPage: React.FC<ShareAppPageProps> = ({ onBack }) => {
                 <Share2 size={18} className="relative z-10" />
                 <span className="text-[15px] font-bold relative z-10">立即分享给好友</span>
             </button>
+            */}
         </div>
 
         {/* Invited Friends Header */}

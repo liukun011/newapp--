@@ -539,11 +539,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const slide = LOGIN_SLIDES[currentSlide];
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-b from-[#E6EAFD] to-[#F1F3FD]">
+    <div className="min-h-[100dvh] w-full flex flex-col bg-gradient-to-b from-[#E6EAFD] to-[#F1F3FD] relative overflow-x-hidden overflow-y-auto">
       {/* Top Carousel Area */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-start pt-16">
+      <div className="relative z-10 flex-1 flex flex-col pt-16 min-h-0 w-full">
         {/* Text Content */}
-        <div className="mb-2 min-h-[90px] flex flex-col justify-center items-center px-8 z-20">
+        <div className="mb-2 flex flex-col justify-center items-center px-8 z-20 shrink-0">
           <h2 className="text-[22px] font-bold mb-3 leading-snug text-[#4338CA] text-center">
             {slide.title}
           </h2>
@@ -553,17 +553,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         </div>
         
         {/* Slide Image */}
-        <div className="w-full flex items-center justify-center relative z-10 -mt-14 transition-transform">
+        <div className="w-full flex-1 flex items-end justify-center relative z-10">
           <img 
             src={`${basePath}assets/login${slide.id}.png`} 
             alt={slide.title}
-            className="w-[280px] h-[280px] object-contain"
+            className="w-[280px] sm:w-[320px] h-auto object-contain object-bottom -mb-1"
           />
         </div>
       </div>
 
       {/* Bottom Sheet Card */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-[32px] px-8 pt-6 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.02)] z-20 flex flex-col h-[400px]">
+      <div className="bg-white rounded-t-[32px] px-8 pt-6 pb-24 shadow-[0_-10px_40px_rgba(0,0,0,0.02)] z-20 flex flex-col w-full relative shrink-0">
         {/* Tabs */}
         <div className="flex gap-6 mb-6">
           <button 

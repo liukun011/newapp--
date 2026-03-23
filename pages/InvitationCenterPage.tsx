@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Copy, Gift, UserCheck } from 'lucide-react';
 import { Toast } from 'react-vant';
+import { copyWithToast } from '@/utils/copyUtils';
 import { userService } from '../services/userService';
 
 interface InvitationCenterPageProps {
@@ -58,31 +59,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
       Toast.info('请先生成邀请码');
       return;
     }
-    
-    const textToCopy = inviteCode;
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        Toast.success('已复制到剪贴板');
-      }).catch(() => {
-        fallbackCopy(textToCopy);
-      });
-    } else {
-      fallbackCopy(textToCopy);
-    }
-  };
-
-  const fallbackCopy = (text: string) => {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      Toast.success('已复制到剪贴板');
-    } catch (err) {
-      Toast.fail('复制失败');
-    }
-    document.body.removeChild(textArea);
+    copyWithToast(inviteCode, '已复制到剪贴板');
   };
 
   const handleConfirmFriendCode = async () => {
