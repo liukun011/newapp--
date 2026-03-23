@@ -69,9 +69,10 @@ const instance = axios.create({
 });
 applyInterceptors(instance);
 
-// ── 用户中心接口实例（无 baseURL，走 Vite proxy / Nginx 代理）─
+// ── 用户中心接口实例 ─────────────── v───────────────────────────
+// 为了实现 Nginx 反向代理以及在开发环境走 Vite Proxy，这里全部强制使用相对路径
 const authInstance = axios.create({
-  baseURL: '',   // 不拼接任何前缀，让 /api/iam/* 走相对路径
+  baseURL: '',
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 });

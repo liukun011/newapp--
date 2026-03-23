@@ -13,11 +13,10 @@ import VConsole from 'vconsole';
 let vConsoleInstance: VConsole | null = null;
 
 // 开发环境直接初始化 VConsole
-const initVConsole = () => {
-  const mode = import.meta.env.MODE;
-  const isDev = mode === 'development';
+import envConfig from './config';
 
-  if (isDev && !vConsoleInstance) {
+const initVConsole = () => {
+  if (envConfig.isDev && !vConsoleInstance) {
     vConsoleInstance = new VConsole();
   }
 };
@@ -26,11 +25,8 @@ initVConsole();
 
 // 导出：供登录成功后在测试环境检查特定用户
 export const checkVConsoleForTestUser = (phone: string) => {
-  const mode = import.meta.env.MODE;
-  const isTest = mode === 'test';
-  
   // 仅在测试环境 + 特定手机号 + 尚未创建实例时初始化
-  if (isTest && !vConsoleInstance) {
+  if (envConfig.isTest && !vConsoleInstance) {
     const allowedPhones = ['13278852398'];
     if (allowedPhones.includes(phone)) {
       vConsoleInstance = new VConsole();

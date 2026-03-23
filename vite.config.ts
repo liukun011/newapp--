@@ -1,20 +1,29 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
+import svgr from 'vite-plugin-svgr';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import svgr from 'vite-plugin-svgr';
-
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  const authBaseUrl = env.VITE_AUTH_BASE_URL || 'http://192.168.8.201:21000';
-  const apiBaseUrl = env.VITE_API_BASE_URL || 'http://192.168.8.201:20101/report';
-  // 取 apiBaseUrl 的 origin（去掉路径部分）
-  const apiOrigin = new URL(apiBaseUrl).origin;
+  // 默认基准配置（与 config.ts 保持一致）
+  const authBaseUrl = 'https://user.binarysee.com.cn';
+  const apiBaseUrl = 'http://68.79.42.215/report';
+  
+  // 提取 origin (用于代理)
+  const getOrigin = (url: string) => {
+    try {
+      return new URL(url).origin;
+    } catch {
+      return url;
+    }
+  };
+
+  const apiOrigin = getOrigin(apiBaseUrl);
 
   return {
   base: '/talk-assistant/',
@@ -23,6 +32,38 @@ export default defineConfig(({ mode }) => {
     svgr({
       include: '**/*.svg?react',
     }),
+    // 自动生成 config.js 插件
+    {
+      name: 'generate-config',
+      closeBundle() {
+        // 与 config.ts 保持一致的默认值
+        const defaults: any = {
+          test: {
+            api: 'http://68.79.42.215/report',
+            auth: 'https://user.binarysee.com.cn'
+          },
+          production: {
+            api: 'https://xiaoli.binarysee.com/report',
+            auth: 'https://user.binarysee.com'
+          }
+        };
+
+        const currentConfig = defaults[mode] || defaults.test;
+        
+        const configContent = `window.APP_CONFIG = {
+  VITE_API_BASE_URL: '${currentConfig.api}',
+  VITE_AUTH_BASE_URL: '${currentConfig.auth}',
+  VITE_ENV: '${mode}'
+};`;
+        
+        const outDir = path.resolve(__dirname, 'talk-assistant');
+        if (!fs.existsSync(outDir)) {
+          fs.mkdirSync(outDir, { recursive: true });
+        }
+        fs.writeFileSync(path.resolve(outDir, 'config.js'), configContent);
+        console.log(`\n✅ 已根据模式 [${mode}] 自动生成外部配置文件: config.js`);
+      }
+    }
   ],
   resolve: {
     alias: {
@@ -33,7 +74,8 @@ export default defineConfig(({ mode }) => {
     host: true,
     port: 5173,
     proxy: {
-      // 用户中心接口代理（iam / token 等路径）
+      // 用户中心接口代理
+      // 用户中心接口代理
       '/api/iam': {
         target: authBaseUrl,
         changeOrigin: true,
@@ -78,15 +120,11 @@ export default defineConfig(({ mode }) => {
     sourcemap: false,
     rollupOptions: {
       output: {
-        // 添加时间戳到文件名，确保每次构建都是唯一的文件名，解决缓存问题
         entryFileNames: `assets/[name]-[hash]-${new Date().getTime()}.js`,
         chunkFileNames: `assets/[name]-[hash]-${new Date().getTime()}.js`,
         assetFileNames: `assets/[name]-[hash]-${new Date().getTime()}.[ext]`,
       },
     },
   },
-  // esbuild: {
-  //   drop: ['console', 'debugger'],
-  // },
   };
 });

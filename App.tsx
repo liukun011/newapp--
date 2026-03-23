@@ -90,7 +90,6 @@ const App: React.FC = () => {
 
   // Navigation Stack for handling Native Back
   const [viewStack, setViewStack] = useState<View[]>([View.HOME]);
-  const [templateOrigin, setTemplateOrigin] = useState<View>(View.HOME); // 留着以防日后需要，实际目前不再需要纪录
   // Track current selected deal
   const [currentDeal, _setCurrentDeal] = useState<DealRecord | null>(() => {
     try {
@@ -1527,7 +1526,6 @@ const App: React.FC = () => {
                   }}
                   onNavigateToTemplates={() => {
                     setPreviousView(View.SETTINGS);
-                    setTemplateOrigin(View.SETTINGS);
                     navigateForward(View.MANAGEMENT);
                   }}
                   onNavigateToUserAgreement={() => {
