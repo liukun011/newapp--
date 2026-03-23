@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, FileUp } from 'lucide-react';
-import { templateService, TemplateRecord } from '../services/templateService';
+import { templateService, ReportTemplate } from '../services/templateService';
 import RenameModal from '../components/RenameModal';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -11,14 +11,15 @@ interface MyTemplatesPageProps {
 }
 
 const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, initialTab = 'success' }) => {
+  if (onBack) { /* Silence unused warning if needed, but the header is simplified */ }
   const [activeTab, setActiveTab] = useState<'success' | 'processing'>(initialTab);
-  const [templates, setTemplates] = useState<TemplateRecord[]>([]);
+  const [templates, setTemplates] = useState<ReportTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedFailedId, setExpandedFailedId] = useState<string | null>(null);
 
   // 重命名弹框状态
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
-  const [renamingTemplate, setRenamingTemplate] = useState<TemplateRecord | null>(null);
+  const [renamingTemplate, setRenamingTemplate] = useState<ReportTemplate | null>(null);
 
   // 删除确认弹框状态
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -29,24 +30,34 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
     setLoading(true);
     try {
       if (activeTab === 'success') {
-        const res = await templateService.queryApproveReport(2); // 2 = 成功
+        // 参照 web-ai-doc 使用 /template/list
+        const res = await templateService.getTemplateList();
         if (res.success && res.data) {
           setTemplates(res.data);
         } else {
           setTemplates([]);
         }
       } else {
-        // 处理中：查询 1 (审核中/上传中) 和 3 (上传失败/未通过)
-        const [res1, res3] = await Promise.all([
-          templateService.queryApproveReport(1),
-          templateService.queryApproveReport(3),
-        ]);
-        const arr1 = res1.success && res1.data ? res1.data : [];
-        const arr3 = res3.success && res3.data ? res3.data : [];
+        // 处理中：参照 web-ai-doc，调用一次全量查询并过滤 1(审核中/上传中) 和 3(上传失败/未通过)
+        const res = await templateService.queryApproveReport();
+        const allData = res.success && res.data ? res.data : [];
         
-        // 合并并按创建时间倒序
-        const combined = [...arr1, ...arr3].sort((a, b) => {
-          return new Date(b.createDate || 0).getTime() - new Date(a.createDate || 0).getTime();
+        // 过滤掉已通过(2)的项，只保留 1 和 3
+        const filtered = allData.filter((item: any) => 
+          item.approveReportStatus === '1' || item.approveReportStatus === '3'
+        );
+
+        const mappedArr = filtered.map((item: any) => ({
+          id: item.id,
+          reportTemplateName: item.approveReportName,
+          reportTemplateStatus: item.approveReportStatus,
+          viewTemplateUrl: item.approveTemplateUrl,
+          createDate: item.createDate,
+          errorMsg: item.errorMsg
+        } as unknown as ReportTemplate));
+
+        const combined = mappedArr.sort((a, b) => {
+          return new Date((b as any).createDate || 0).getTime() - new Date((a as any).createDate || 0).getTime();
         });
         setTemplates(combined);
       }
@@ -74,7 +85,10 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
     if (!deletingTemplateId) return;
 
     try {
-      const res = await templateService.deleteApproveReport(deletingTemplateId);
+      const res = activeTab === 'success' ? 
+        await templateService.deleteTemplate(deletingTemplateId) : 
+        await templateService.deleteApproveReport(deletingTemplateId);
+        
       if (res.success) {
         fetchTemplates();
         setIsDeleteModalOpen(false);
@@ -85,7 +99,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
     }
   };
 
-  const handleRename = (template: TemplateRecord) => {
+  const handleRename = (template: ReportTemplate) => {
     setRenamingTemplate(template);
     setIsRenameModalOpen(true);
   };
@@ -163,9 +177,14 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
           </div>
         ) : (
           templates.map(template => {
-            const isProcessing = template.approveReportStatus === '1'; // 审核中
-            const isFailed = template.approveReportStatus === '3'; // 未通过
-            const isSuccess = template.approveReportStatus === '2'; // 已通过
+            const temp = template as any;
+            // 状态逻辑判定：
+            // 如果是处理中 Tab，使用 approveReportStatus (来自映射)
+            // 如果是我的模板 Tab，暂定均为成功状态
+            const isProcessing = activeTab === 'processing' && temp.reportTemplateStatus === '1';
+            const isFailed = activeTab === 'processing' && temp.reportTemplateStatus === '3';
+            const isSuccess = activeTab === 'success';
+
             const isExpanded = expandedFailedId === template.id;
 
             return (
@@ -189,20 +208,20 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
                     {/* 标题和状态 */}
                     <div className="flex-1 min-w-0 pr-1 flex items-center justify-between gap-2">
                       <h3 className="text-[15px] font-bold text-[#1E293B] leading-snug line-clamp-2">
-                        {template.approveReportName}
+                        {template.reportTemplateName}
                       </h3>
                       {/* 状态标签 */}
-                      {isSuccess && (
+                      {activeTab === 'success' && (
                         <span className="inline-flex px-2 py-[2px] bg-[#E6F8F3] text-[#20C997] text-[11px] font-bold rounded flex-shrink-0">
-                          已通过
+                          已就绪
                         </span>
                       )}
-                      {isProcessing && (
+                      {activeTab === 'processing' && template.reportTemplateStatus === '1' && (
                         <span className="inline-flex px-2 py-[2px] bg-[#FFF3E0] text-[#FF9800] text-[11px] font-bold rounded flex-shrink-0">
                           审核中
                         </span>
                       )}
-                      {isFailed && (
+                      {activeTab === 'processing' && template.reportTemplateStatus === '3' && (
                         <span className="inline-flex px-2 py-[2px] bg-[#FEE2E2] text-[#EF4444] text-[11px] font-bold rounded flex-shrink-0">
                           未通过
                         </span>
@@ -218,7 +237,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
                         onClick={() => toggleFailedExpand(template.id)}
                       >
                          <p className={`text-[12px] text-[#EF4444] leading-relaxed flex-1 ${!isExpanded ? 'line-clamp-1' : ''}`}>
-                           未通过：{template.errorMsg || '模板包含敏感词汇或话术不符合合规要求'}
+                           未通过：{(template as any).errorMsg || '模板包含敏感词汇或话术不符合合规要求'}
                          </p>
                          <div className="text-[#EF4444] mt-[2px]">
                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -245,7 +264,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
                 {(!isProcessing) && (
                    <div className="px-4 py-3 flex items-center border-t border-gray-50/80 justify-between">
                      <span className="text-[13px] text-[#94A3B8] font-medium tracking-wide">
-                       {template.createDate?.slice(0, 16)}
+                       {(template as any).createDate?.slice(0, 16) || '刚刚'}
                      </span>
                      <div className="flex gap-[10px]">
                        <button
@@ -284,7 +303,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
       {/* 重命名弹框 */}
       <RenameModal
         isOpen={isRenameModalOpen}
-        initialValue={renamingTemplate?.approveReportName || ''}
+        initialValue={renamingTemplate?.reportTemplateName || ''}
         onClose={() => {
           setIsRenameModalOpen(false);
           setRenamingTemplate(null);
