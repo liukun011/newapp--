@@ -2,14 +2,13 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs';
 import svgr from 'vite-plugin-svgr';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
   // 默认基准配置（与 config.ts 保持一致）
   const authBaseUrl = 'https://user.binarysee.com.cn';
   const apiBaseUrl = 'http://68.79.42.215/report';
@@ -32,38 +31,6 @@ export default defineConfig(({ mode }) => {
     svgr({
       include: '**/*.svg?react',
     }),
-    // 自动生成 config.js 插件
-    {
-      name: 'generate-config',
-      closeBundle() {
-        // 与 config.ts 保持一致的默认值
-        const defaults: any = {
-          test: {
-            api: 'http://68.79.42.215/report',
-            auth: 'https://user.binarysee.com.cn'
-          },
-          production: {
-            api: 'https://xiaoli.binarysee.com/report',
-            auth: 'https://user.binarysee.com'
-          }
-        };
-
-        const currentConfig = defaults[mode] || defaults.test;
-        
-        const configContent = `window.APP_CONFIG = {
-  VITE_API_BASE_URL: '${currentConfig.api}',
-  VITE_AUTH_BASE_URL: '${currentConfig.auth}',
-  VITE_ENV: '${mode}'
-};`;
-        
-        const outDir = path.resolve(__dirname, 'talk-assistant');
-        if (!fs.existsSync(outDir)) {
-          fs.mkdirSync(outDir, { recursive: true });
-        }
-        fs.writeFileSync(path.resolve(outDir, 'config.js'), configContent);
-        console.log(`\n✅ 已根据模式 [${mode}] 自动生成外部配置文件: config.js`);
-      }
-    }
   ],
   resolve: {
     alias: {

@@ -50,17 +50,17 @@ const DEFAULT_CONFIGS: Record<EnvMode, { api: string; auth: string }> = {
   }
 };
 
+// 优先级：外部 window.APP_CONFIG > 内部默认值
+const finalApiUrl = window.APP_CONFIG?.VITE_API_BASE_URL || (isDevInternal ? DEFAULT_CONFIGS.development.api : DEFAULT_CONFIGS[env].api);
+const finalAuthUrl = window.APP_CONFIG?.VITE_AUTH_BASE_URL || (isDevInternal ? DEFAULT_CONFIGS.development.auth : DEFAULT_CONFIGS[env].auth);
+
 // 环境配置集
 const config = {
-  // 接口基础路径 (如果是本地开发，强制锁定开发配置；打包后才读取外部 APP_CONFIG)
-  apiBaseUrl: isDevInternal 
-    ? DEFAULT_CONFIGS.development.api 
-    : (window.APP_CONFIG?.VITE_API_BASE_URL || DEFAULT_CONFIGS[env].api),
+  // 接口基础路径
+  apiBaseUrl: finalApiUrl,
   
   // 认证接口绝对域名
-  authBaseUrl: isDevInternal 
-    ? DEFAULT_CONFIGS.development.auth 
-    : (window.APP_CONFIG?.VITE_AUTH_BASE_URL || DEFAULT_CONFIGS[env].auth),
+  authBaseUrl: finalAuthUrl,
 
   // 环境名称
   env,
@@ -71,18 +71,15 @@ const config = {
   isProd: env === 'production',
 
   // 上传地址
-  uploadUrl: `${isDevInternal ? DEFAULT_CONFIGS.development.api : (window.APP_CONFIG?.VITE_API_BASE_URL || DEFAULT_CONFIGS[env].api)}/upload/file`,
+  uploadUrl: `${finalApiUrl}/upload/file`,
 
 };
 
-// 打印当前环境配置（仅在开发和测试环境）
-if (config.env !== 'production') {
-  console.log('🌟 当前配置(统一配置中心):', {
-    环境: config.env,
-    API地址: config.apiBaseUrl,
-    Auth地址: config.authBaseUrl,
-    配置来源: window.APP_CONFIG ? '外部 JS' : '内部源代码'
-  });
-}
+// 打印当前环境配置及来源
+console.log(`%c🌟 [Config Center] Current Env: ${config.env}`, "color: #4338CA; font-weight: bold; font-size: 14px;");
+console.log(`%c[Config Center] API Base: ${config.apiBaseUrl}`, "color: #1E293B; font-weight: bold;");
+console.log(`%c[Config Center] Auth Base: ${config.authBaseUrl}`, "color: #1E293B; font-weight: bold;");
+console.log(`%c[Config Center] Origin Source: ${window.APP_CONFIG ? 'External config.js' : 'System Internal Source'}`, window.APP_CONFIG ? "color: #20C997; font-weight: bold;" : "color: #EF4444; font-weight: bold;");
+
 
 export default config;

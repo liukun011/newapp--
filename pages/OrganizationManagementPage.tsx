@@ -90,8 +90,8 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
 
           return {
             id: user.id || user.username || Math.random().toString(),
-            name: user.username || user.mobile || '未知用户',
-            phone: formattedTime, // 页面下方渲染部分复用这个字段展示时间
+            name: user.username || '匿名用户',
+            phone: user.mobile || '', 
             avatar: user.avatar || '',
             isAdmin: !!user.isTenantAdmin,
             createdTime: formattedTime
@@ -440,12 +440,14 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[16px] font-bold text-slate-900 truncate tracking-tight">{member.name}</span>
+                                    <span className="text-[16px] font-bold text-slate-900 truncate tracking-tight">{member.isAdmin ? (member.phone || member.name) : member.name}</span>
                                     {member.isAdmin && (
                                         <span className="px-1.5 py-0.5 bg-blue-50 text-[#3B82F6] text-[9px] font-bold rounded-md border border-blue-100/50">管理员</span>
                                     )}
                                 </div>
-                                <span className="text-[12.5px] text-[#A5B3C2] font-bold mt-0.5 block">{member.phone}</span>
+                                <span className="text-[12.5px] text-[#A5B3C2] font-bold mt-0.5 block min-h-[18px]">
+                                    {member.isAdmin ? "" : member.createdTime}
+                                </span>
                             </div>
                         </div>
                       ))}

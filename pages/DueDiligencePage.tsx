@@ -588,7 +588,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
       {/* Scrollable Content Container */}
       <div className="flex-1 min-h-0 overflow-y-auto relative z-10 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="px-4 pb-20 pt-4 space-y-3">
+        <div className="px-4 pb-36 pt-4 space-y-3">
           {(() => {
             const hasInterviewRecords = currentDeal?.interviewInstList && currentDeal.interviewInstList.length > 0;
             const isGenerated = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED;
@@ -878,15 +878,15 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             const totalCount = questionList.length;
             const checkedCount = questionList.filter((q) => q.CHECKED === true).length;
             return (
-            <div 
-              className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer"
-              onClick={handleNavigateQuestionsThrottled}
-            >
-              <div className="flex items-end gap-0.5">
-                <h3 className="text-[16px] font-bold text-slate-800 tracking-wider">问题集合</h3>
-                <span className="text-[14px] text-slate-800 font-medium ml-1">{checkedCount}</span>
-                <span className="text-[12px] text-gray-300">/{totalCount}</span>
-              </div>
+              <div 
+                className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer"
+                onClick={handleNavigateQuestionsThrottled}
+              >
+                <div className="flex items-center gap-1">
+                  <h3 className="text-[16px] font-bold text-slate-800 tracking-wider">问题集合</h3>
+                  <span className="text-[14px] text-slate-800 font-medium">{checkedCount}</span>
+                  <span className="text-[12px] text-gray-300">/{totalCount}</span>
+                </div>
               <ChevronRight size={14} className="text-gray-300" />
             </div>
             )

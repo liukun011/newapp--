@@ -261,7 +261,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
                 )}
 
                 {/* 底部区：时间+按钮 */}
-                {(!isProcessing) && (
+              {(!isProcessing) && (
                    <div className="px-4 py-3 flex items-center border-t border-gray-50/80 justify-between">
                      <span className="text-[13px] text-[#94A3B8] font-medium tracking-wide">
                        {(template as any).createDate?.slice(0, 16) || '刚刚'}

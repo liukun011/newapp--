@@ -69,7 +69,20 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
         if (res.successful && res.data) {
           localStorage.setItem('zov-user-token', res.data.accessToken);
-          localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
+          
+          // 获取完整用户信息并存储
+          try {
+            const infoRes = await authService.getUserInfo();
+            if (infoRes.successful && infoRes.data) {
+              localStorage.setItem('zov-user-info', JSON.stringify(infoRes.data));
+            } else {
+              localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
+            }
+          } catch (e) {
+            console.error('Failed to get full user info:', e);
+            localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
+          }
+
           checkVConsoleForTestUser(phone);
           onLogin();
         } else {
@@ -84,14 +97,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
          const res = await authService.loginWithPhoneCode(phone, code);
          toast.clear();
 
-         if (res.successful && res.data) {
-           localStorage.setItem('zov-user-token', res.data.accessToken);
-           localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
-           checkVConsoleForTestUser(phone);
-           onLogin();
-         } else {
-           Toast.fail(res.message || '登录失败');
-         }
+          if (res.successful && res.data) {
+            localStorage.setItem('zov-user-token', res.data.accessToken);
+
+            // 获取完整用户信息并存储
+            try {
+              const infoRes = await authService.getUserInfo();
+              if (infoRes.successful && infoRes.data) {
+                localStorage.setItem('zov-user-info', JSON.stringify(infoRes.data));
+              } else {
+                localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
+              }
+            } catch (e) {
+              console.error('Failed to get full user info:', e);
+              localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
+            }
+
+            checkVConsoleForTestUser(phone);
+            onLogin();
+          } else {
+            Toast.fail(res.message || '登录失败');
+          }
        } catch (error) {
          toast.clear();
          console.error('Login error:', error);

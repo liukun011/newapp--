@@ -1,5 +1,5 @@
 
-import { authRequest } from '../request';
+import { authRequest, request } from '../request';
 import { LoginResponse } from '../types';
 
 // 开发环境通过 Vite proxy 转发，生产环境需 Nginx 配置反向代理
@@ -108,10 +108,22 @@ export const authService = {
 
   // 切换租户
   switchTenant: async (tenantId: string): Promise<any> => {
-    return authRequest<any>('/api/iam/users/change_tenant', {
+    const res = await authRequest<any>('/api/iam/users/change_tenant', {
       method: 'POST',
       data: { tenantId },
     });
+
+    // 切换成功后，调用业务侧清理缓存接口（不带参）
+    try {
+      await request('/user/sso/cleanCache', {
+        method: 'POST',
+      });
+      console.log('✅ SSO Clean cache success');
+    } catch (err) {
+      console.error('❌ SSO Clean cache failed:', err);
+    }
+
+    return res;
   },
 
   // 修改租户信息
