@@ -49,6 +49,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [voiceModalInitialContent, setVoiceModalInitialContent] = useState('');
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [isRefreshingSummary, setIsRefreshingSummary] = useState(false);
+  const [interviewRecords, setInterviewRecords] = useState<any[]>([]);
+  const [interviewTotalCount, setInterviewTotalCount] = useState(0);
 
   // 上传状态锁，防止重复触发
   const isUploadingRef = React.useRef(false);
@@ -76,7 +78,25 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       }
     };
 
+    const fetchInterviewRecords = async () => {
+      if (!deal?.id) return;
+      try {
+        const res = await dealService.queryInterviewInstListByPage({
+          interviewDealInstId: deal.id,
+          pageNum: 1,
+          pageSize: 100, // 详情页暂时展示较多即可，如有更多需求可分页
+        });
+        if (res.success && res.data) {
+          setInterviewRecords(res.data.records || []);
+          setInterviewTotalCount(res.data.total || 0);
+        }
+      } catch (e) {
+        console.error('Failed to fetch interview records:', e);
+      }
+    };
+
     fetchDealDetail();
+    fetchInterviewRecords();
   }, [deal?.id]);
 
   // Sync dealDetail with deal prop when it changes (critical for back navigation updates from parent)
@@ -822,8 +842,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
           {/* 访谈录音 */}
           {(() => {
-            const records = currentDeal?.interviewInstList || [];
-            const totalCount = records.length;
+            const records = interviewRecords;
+            const totalCount = interviewTotalCount;
             const displayList = records.slice(0, 2);
 
             return (

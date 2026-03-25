@@ -437,6 +437,7 @@ const HomePage: React.FC<HomePageProps> = ({
             </p>
           </div>
 
+          {/* 
           <button 
             className="relative w-11 h-11 flex items-center justify-center bg-white rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[#F1F5F9] active:scale-95 transition-transform"
             onClick={() => Toast.info({ 
@@ -446,6 +447,7 @@ const HomePage: React.FC<HomePageProps> = ({
              <Bell size={22} className="text-[#334155]" strokeWidth={2} />
              <div className="absolute top-3 right-3 w-2 h-2 bg-[#EF4444] rounded-full border-[1.5px] border-white" />
           </button>
+          */}
         </div>
 
         <div className="flex items-center gap-3">

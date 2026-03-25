@@ -18,6 +18,17 @@ interface OrganizationManagementPageProps {
   onBack: () => void;
 }
 
+// 手机号掩码处理：13812345678 -> 138****5678
+const maskPhoneNumber = (val: string) => {
+  if (!val) return val;
+  // 匹配常见的 11 位中国手机号格式
+  const reg = /^(1[3-9]\d)\d{4}(\d{4})$/;
+  if (reg.test(val)) {
+    return val.replace(reg, '$1****$2');
+  }
+  return val;
+};
+
 const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({ onBack }) => {
   const [tenantName, setTenantName] = useState('小狸科技官方');
   const [tenantId, setTenantId] = useState<string>('');
@@ -440,13 +451,15 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[16px] font-bold text-slate-900 truncate tracking-tight">{member.isAdmin ? (member.phone || member.name) : member.name}</span>
+                                    <span className="text-[16px] font-bold text-slate-900 truncate tracking-tight">
+                                        {member.isAdmin ? maskPhoneNumber(member.phone || member.name) : maskPhoneNumber(member.name)}
+                                    </span>
                                     {member.isAdmin && (
                                         <span className="px-1.5 py-0.5 bg-blue-50 text-[#3B82F6] text-[9px] font-bold rounded-md border border-blue-100/50">管理员</span>
                                     )}
                                 </div>
                                 <span className="text-[12.5px] text-[#A5B3C2] font-bold mt-0.5 block min-h-[18px]">
-                                    {member.isAdmin ? "" : member.createdTime}
+                                    {member.isAdmin ? "" : `加入时间：${member.createdTime}`}
                                 </span>
                             </div>
                         </div>
