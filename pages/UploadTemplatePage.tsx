@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, Image as ImageIcon } from 'lucide-react';
-import { Toast } from 'react-vant';
+import { Toast, Dialog } from 'react-vant';
 import Button from '../components/Button';
 import { templateService } from '../services/templateService';
+import { authService } from '../services/authService';
 import { nativeBridge } from '../services/nativeBridge';
 import config from '../config';
 
@@ -24,6 +25,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
   const [selectedFile, setSelectedFile] = useState<{name: string, url: string} | null>(null);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // 上传状态锁
   const isUploadingRef = useRef(false);
@@ -100,7 +102,37 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
   };
 
   useEffect(() => {
-      const handleFileSelected = (res: any) => {
+    // 检查管理员身份
+    const checkAdminStatus = async () => {
+      try {
+        const userInfoStr = localStorage.getItem('zov-user-info');
+        if (userInfoStr) {
+          const userInfo = JSON.parse(userInfoStr);
+          const currentUserId = userInfo.userId;
+
+          // 根据 /api/iam/user_org/page_users 接口返回的 isTenantAdmin 字段判断
+          const res = await authService.getOrganizationUsers({
+            current: 1,
+            size: 9999, // 假设用户量在合理范围内，或者查询自己的状态
+            orgId: "" 
+          });
+          
+          if (res.successful && res.data && res.data.records && Array.isArray(res.data.records)) {
+            // 在返回的用户列表中查找当前登录的用户
+            const currentUser = res.data.records.find((u: any) => String(u.id) === String(currentUserId));
+            if (currentUser) {
+              setIsAdmin(!!currentUser.isTenantAdmin);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to check admin status:', e);
+      }
+    };
+
+    checkAdminStatus();
+
+    const handleFileSelected = (res: any) => {
           if (res.success && res.data && res.data.fileURL) {
                console.log('[模板上传] 收到文件:', res.data.fileURL);
                uploadNativeFile(res.data.fileURL);
@@ -150,8 +182,20 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
       });
 
       if (res.success) {
-        setShowSuccess(true);
-        onSubmit?.();
+        const message = isAdmin 
+          ? '您是组织的管理员，模板通过后会共享给组织成员。' 
+          : '您是组织的成员，模板通过后不会共享。';
+        
+        Dialog.alert({
+          title: '提交成功',
+          message: message,
+          confirmButtonText: '我知道了',
+          confirmButtonColor: '#4337F1',
+          onConfirm: () => {
+            setShowSuccess(true);
+            onSubmit?.();
+          }
+        });
       } else {
         Toast.fail(res.message || '提交失败，请重试');
       }
@@ -211,9 +255,10 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
             已进入生成队列
           </h2>
 
-          {/* Description */}
           <p className="text-sm text-gray-500 text-center leading-relaxed max-w-sm">
-            您的模板已成功上传，系统将在 1-2 小时内完成生成，请在"上传中"分类查看进度
+            {isAdmin 
+              ? '您是组织的管理员，模板通过后会共享给组织成员。' 
+              : '您是组织的成员，模板通过后不会共享。'}
           </p>
 
           {/* View List Button */}

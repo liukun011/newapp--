@@ -4,6 +4,7 @@ import { ArrowLeft, FileText, Pencil, ArrowUp, Plus, Trash2, ChevronDown, Chevro
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { Toast } from 'react-vant';
 import { QuestionInfo } from '../types';
+import { formatTime } from '../utils/dateUtils';
 
 
 interface QuestionsListPageProps {
@@ -468,7 +469,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
                             {question.questionAnswerTime && (
                               <div className="mt-2 text-xs text-gray-400 text-right">
-                                {question.questionAnswerTime}
+                                {formatTime(question.questionAnswerTime)}
                               </div>
                             )}
                           </div>

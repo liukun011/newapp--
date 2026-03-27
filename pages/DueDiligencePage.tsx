@@ -610,7 +610,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       <div className="flex-1 min-h-0 overflow-y-auto relative z-10 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="px-4 pb-36 pt-4 space-y-3">
           {(() => {
-            const hasInterviewRecords = currentDeal?.interviewInstList && currentDeal.interviewInstList.length > 0;
+            const hasInterviewRecords = interviewTotalCount > 0;
             const isGenerated = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED;
             const isGenerating = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING;
             const isFailed = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED;
@@ -679,7 +679,17 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                         <span className="text-[11px] text-gray-700 font-medium">立即下载</span>
                       </button>
                       {(!isArchived) && (
-                      <button onClick={handleChangeTemplateThrottled} className="flex-1 bg-white border border-gray-100 rounded-2xl py-2.5 flex flex-col items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                      <button 
+                        onClick={() => {
+                          if (isGenerating) {
+                            Toast.info('报告正在生成中，暂不支持更换模板');
+                            return;
+                          }
+                          handleChangeTemplateThrottled?.();
+                        }}
+                        disabled={isGenerating}
+                        className={`flex-1 bg-white border border-gray-100 rounded-2xl py-2.5 flex flex-col items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${isGenerating ? 'opacity-50 grayscale select-none' : ''}`}
+                      >
                         <RefreshCw size={16} className="text-gray-600" />
                         <span className="text-[11px] text-gray-700 font-medium">更换模板</span>
                       </button>
@@ -687,7 +697,17 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     </div>
                   ) : (
                     (!isArchived) && (
-                    <button onClick={handleChangeTemplateThrottled} className="w-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] rounded-2xl py-[12px] flex items-center justify-center gap-1.5 font-medium text-[14px] text-gray-700 active:scale-[0.98] transition-all">
+                    <button 
+                      onClick={() => {
+                        if (isGenerating) {
+                          Toast.info('报告正在生成中，暂不支持更换模板');
+                          return;
+                        }
+                        handleChangeTemplateThrottled?.();
+                      }}
+                      disabled={isGenerating}
+                      className={`w-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] rounded-2xl py-[12px] flex items-center justify-center gap-1.5 font-medium text-[14px] text-gray-700 active:scale-[0.98] transition-all ${isGenerating ? 'opacity-50 grayscale select-none' : ''}`}
+                    >
                       <RefreshCw size={16} className="text-gray-600" />
                       <span>更换模板</span>
                     </button>

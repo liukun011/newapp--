@@ -1520,6 +1520,7 @@ const App: React.FC = () => {
                     localStorage.removeItem('zov-user-info');
                     sessionStorage.removeItem('zov-current-view');
                     sessionStorage.removeItem('zov-current-deal');
+                    setHomeTab('ongoing'); // <--- 退出登录时重置首页 Tab
                     setNavDirection('root');
                     setCurrentView(View.LOGIN);
                     setCurrentDeal(null);
@@ -1640,6 +1641,7 @@ const App: React.FC = () => {
                 className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
                 onClick={() => {
                   if (currentView !== View.HOME) {
+                    setHomeTab('ongoing'); // <--- 重置首页 Tab 为“进行中”
                     setNavDirection('backward');
                     setCurrentView(View.HOME);
                     setViewStack([View.HOME]);

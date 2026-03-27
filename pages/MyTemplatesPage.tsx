@@ -4,6 +4,49 @@ import { templateService, ReportTemplate } from '../services/templateService';
 import RenameModal from '../components/RenameModal';
 import ConfirmModal from '../components/ConfirmModal';
 
+const TemplateReason: React.FC<{ 
+  reason: string; 
+  isExpanded: boolean; 
+  onToggle: () => void;
+}> = ({ reason, isExpanded, onToggle }) => {
+  const [isOverflowing, setIsOverflowing] = React.useState(false);
+  const textRef = React.useRef<HTMLParagraphElement>(null);
+
+  React.useLayoutEffect(() => {
+    const checkOverflow = () => {
+      if (textRef.current) {
+        // Create a clone to check height if it wasn't clamped
+        const element = textRef.current;
+        const isOverflow = element.scrollHeight > element.clientHeight;
+        setIsOverflowing(isOverflow);
+      }
+    };
+
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [reason]);
+
+  return (
+    <div 
+      className="bg-[#FEF2F2] rounded-lg px-3 py-2 flex items-start gap-2 cursor-pointer transition-all active:bg-[#FEE2E2]"
+      onClick={() => isOverflowing && onToggle()}
+    >
+       <p 
+        ref={textRef}
+        className={`text-[12px] text-[#EF4444] leading-relaxed flex-1 ${!isExpanded ? 'line-clamp-1' : ''}`}
+       >
+         未通过：{reason}
+       </p>
+       {isOverflowing && (
+         <div className="text-[#EF4444] mt-[2px]">
+           {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+         </div>
+       )}
+    </div>
+  );
+};
+
 interface MyTemplatesPageProps {
   onBack?: () => void;
   onUpload: () => void;
@@ -218,7 +261,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
                       )}
                       {activeTab === 'processing' && template.reportTemplateStatus === '1' && (
                         <span className="inline-flex px-2 py-[2px] bg-[#FFF3E0] text-[#FF9800] text-[11px] font-bold rounded flex-shrink-0">
-                          审核中
+                          上传中
                         </span>
                       )}
                       {activeTab === 'processing' && template.reportTemplateStatus === '3' && (
@@ -232,17 +275,11 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
                   {/* 未通过原因区 */}
                   {isFailed && (
                     <div className="mt-3 pr-1">
-                      <div 
-                        className="bg-[#FEF2F2] rounded-lg px-3 py-2 flex items-start gap-2 cursor-pointer transition-all active:bg-[#FEE2E2]"
-                        onClick={() => toggleFailedExpand(template.id)}
-                      >
-                         <p className={`text-[12px] text-[#EF4444] leading-relaxed flex-1 ${!isExpanded ? 'line-clamp-1' : ''}`}>
-                           未通过：{(template as any).errorMsg || '模板包含敏感词汇或话术不符合合规要求'}
-                         </p>
-                         <div className="text-[#EF4444] mt-[2px]">
-                           {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                         </div>
-                      </div>
+                      <TemplateReason 
+                        reason={(template as any).errorMsg || '模板包含敏感词汇或话术不符合合规要求'}
+                        isExpanded={isExpanded}
+                        onToggle={() => toggleFailedExpand(template.id)}
+                      />
                     </div>
                   )}
                 </div>
@@ -298,6 +335,8 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
             );
           })
         )}
+        {/* 底部占位，防止固定底部导航栏遮挡最后一张卡片 */}
+        <div className="h-20 flex-shrink-0" />
       </div>
 
       {/* 重命名弹框 */}

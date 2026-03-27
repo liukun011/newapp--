@@ -202,7 +202,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
 
   const handleSwitchTenant = async (tenant: any) => {
     Dialog.confirm({
-      title: '切换租户',
+      title: '切换组织',
       message: `确认切换为 ${tenant.name} 吗？`,
       cancelButtonText: '取 消',
       confirmButtonText: '确 定',

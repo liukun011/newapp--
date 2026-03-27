@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowLeft, Download, RefreshCw } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { nativeBridge } from '../services/nativeBridge';
+import { useThrottleFn } from '../hooks/useThrottleFn';
 
 interface ReportPreviewPageProps {
   reportName: string;
@@ -52,6 +53,9 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
           nativeBridge.off('onDownloadResult', handleDownloadResult);
       }, 60000);
   };
+
+  const handleDownloadThrottled = useThrottleFn(handleDownload, 1500);
+  const handleActionThrottled = useThrottleFn(() => onAction?.(), 1500);
 
   // 监听原生返回键
   React.useEffect(() => {
@@ -107,7 +111,7 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
         <div className="fixed bottom-0 left-0 right-0 px-4 py-2 z-[60] bg-white border-t border-gray-100 safe-area-bottom">
           {showDownloadButton ? (
             <button
-              onClick={handleDownload}
+              onClick={handleDownloadThrottled}
               className="w-full py-3 bg-indigo-600 text-white rounded-full font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-indigo-200"
             >
               <Download size={20} />
@@ -115,7 +119,7 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
             </button>
           ) : (
             <button
-              onClick={onAction}
+              onClick={handleActionThrottled}
               className="w-full py-3 bg-[#4337F1] text-white rounded-full font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-indigo-200"
             >
               {actionButtonText}

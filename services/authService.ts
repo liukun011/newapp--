@@ -106,7 +106,7 @@ export const authService = {
     });
   },
 
-  // 切换租户
+  // 切换组织
   switchTenant: async (tenantId: string): Promise<any> => {
     const res = await authRequest<any>('/api/iam/users/change_tenant', {
       method: 'POST',
