@@ -469,7 +469,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
                             {question.questionAnswerTime && (
                               <div className="mt-2 text-xs text-gray-400 text-right">
-                                {formatTime(question.questionAnswerTime)}
+                                {formatTime(question.questionAnswerTime, true)}
                               </div>
                             )}
                           </div>

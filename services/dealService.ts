@@ -285,11 +285,11 @@ export const dealService = {
 
   /**
    * 取消归档尽调实例（恢复到进行中）
-   * POST /deal/unarchive
+   * POST /deal/cancelArchive
    * @param id 尽调实例 ID
    */
-  unarchiveDeal: (id: string) => {
-    return request<ApiResponse<any>>('/deal/unarchive', {
+  cancelArchive: (id: string) => {
+    return request<ApiResponse<any>>('/deal/cancelArchive', {
       method: 'POST',
       data: { id },
     });

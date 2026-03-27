@@ -50,13 +50,20 @@ const TemplateReason: React.FC<{
 interface MyTemplatesPageProps {
   onBack?: () => void;
   onUpload: (templateData?: { id: string; name: string; fileUrl: string; fileName: string }) => void;
-  onPreview?: (name: string, url: string) => void;
+  onPreview?: (name: string, url: string, currentTab: 'success' | 'processing') => void;
   initialTab?: 'success' | 'processing'; // 'processing' now covers both 1 (uploading/reviewing) and 3 (failed)
 }
 
 const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onPreview, initialTab = 'success' }) => {
   if (onBack) { /* Silence unused warning if needed, but the header is simplified */ }
   const [activeTab, setActiveTab] = useState<'success' | 'processing'>(initialTab);
+  
+  // 基准：通知父组件同步 tab 状态，以便返回时恢复
+  // 注意：如果是直接由 initialTab 触发的 setActiveTab，不需要重复通知
+  const handleTabChange = (tab: 'success' | 'processing') => {
+    setActiveTab(tab);
+  };
+
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedFailedId, setExpandedFailedId] = useState<string | null>(null);
@@ -117,6 +124,13 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
   useEffect(() => {
     fetchTemplates();
   }, [activeTab]);
+
+  // 当外部传入的 initialTab 变化时，同步更新内部 activeTab
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
 
 
@@ -194,7 +208,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
           return (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => handleTabChange(tab.key)}
               className="flex-1 py-3 text-[15px] font-bold relative transition-colors"
             >
               <span className={isActive ? 'text-[#1E293B]' : 'text-[#64748B] font-medium'}>
@@ -326,7 +340,8 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                          <button
                            onClick={() => onPreview?.(
                              template.reportTemplateName,
-                             template.viewTemplateUrl || (template as any).approveTemplateUrl || ''
+                             template.viewTemplateUrl || (template as any).approveTemplateUrl || '',
+                             activeTab
                            )}
                            className="px-[18px] py-[6px] border-[1.5px] border-[#4338CA] text-[#4338CA] text-[13px] font-bold rounded-full bg-white transition-colors"
                          >

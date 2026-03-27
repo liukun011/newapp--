@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, ChevronRight, Edit2, FilePlus, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
 import { DealRecord, DealReportStatusEnum } from '../types';
@@ -111,7 +111,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
   // 使用详情数据，如果没有则使用传入的 deal
   const currentDeal = dealDetail || deal;
-  const isFinishedInterview = currentDeal?.status === '4';
 
   // 轮询检查报告生成状态
   useEffect(() => {
@@ -549,6 +548,36 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       // 取消归档
     });
   }, 1000);
+
+  const handleCancelArchiveThrottled = useThrottleFn(() => {
+    if (!currentDeal?.id) return;
+    Dialog.confirm({
+      title: '取消归档',
+      message: '确定要将此记录取消归档并恢复到进行中吗？',
+      onConfirm: async () => {
+        try {
+          Toast.loading({ message: '正在取消归档...', duration: 0, forbidClick: true });
+          const res = await dealService.cancelArchive(currentDeal.id!);
+          if (res.success) {
+            Toast.success('已取消归档');
+            // 刷新详情
+            const detailRes = await dealService.getDealInstDetail(currentDeal.id!);
+            if (detailRes.success && detailRes.data) {
+              setDealDetail(detailRes.data);
+              onDealDetailLoadedRef.current?.(detailRes.data);
+            }
+          } else {
+            Toast.fail(res.message || '操作失败');
+          }
+        } catch (error) {
+          console.error("Failed to cancel archive:", error);
+          Toast.fail('操作失败');
+        } finally {
+          Toast.clear();
+        }
+      }
+    });
+  }, 1000);
   return (
     <div className="absolute inset-0 flex flex-col bg-[#F7F8FA] overflow-hidden">
       {/* 隐藏的文件输入框 */}
@@ -934,20 +963,16 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         </div>
       </div>
 
-      {/* Fixed Archive Button at Bottom */}
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-3 z-30">
         <button
-          disabled={currentDeal?.status === '5'}
-          onClick={handleArchiveThrottled}
-
-
+          onClick={currentDeal?.status === '5' ? handleCancelArchiveThrottled : handleArchiveThrottled}
           className={`w-full h-12 rounded-full font-bold text-lg transition-transform flex items-center justify-center gap-2 ${currentDeal?.status === '5'
-            ? 'bg-gray-300 text-white cursor-not-allowed'
+            ? 'bg-white text-indigo-600 border border-indigo-200 shadow-md active:scale-95'
             : 'bg-[#4337F1] text-white shadow-lg active:scale-95'
             }`}
         >
           {currentDeal?.status === '5' ? (
-            '已归档'
+            '取消归档'
           ) : (
             <>
               <Archive size={20} strokeWidth={2.5} />

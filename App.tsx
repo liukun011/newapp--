@@ -1591,8 +1591,11 @@ const App: React.FC = () => {
                     }
                     navigateForward(View.UPLOAD_TEMPLATE);
                   }}
-                  onPreview={async (name, url) => {
+                  onPreview={async (name, url, currentTab) => {
                     try {
+                      // 记录当前 Tab，确保预览返回时状态一致
+                      setTemplateInitialTab(currentTab);
+                      
                       Toast.loading({ message: '正在加载预览...', duration: 0, forbidClick: true });
                       const res = await dealService.viewReportUrl(undefined, url);
                       Toast.clear();
@@ -1763,6 +1766,7 @@ const App: React.FC = () => {
               <button
                 className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
                 onClick={() => {
+                  setTemplateInitialTab('success'); // <--- 切换到管理页时，默认重置为“我的模板”
                   navigateForward(View.MANAGEMENT);
                 }}
               >

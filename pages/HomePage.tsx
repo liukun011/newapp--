@@ -154,9 +154,36 @@ const HomePage: React.FC<HomePageProps> = ({
 
   // 统一处理所有数据获取
   useEffect(() => {
+    // 检查用户信息同步
+    const checkUserInfoSync = async () => {
+      try {
+        const res = await authService.getUserInfo();
+        if (res.successful && res.data) {
+          const freshUserInfo = res.data;
+          const localUserInfoStr = localStorage.getItem('zov-user-info');
+          const localUserInfo = localUserInfoStr ? JSON.parse(localUserInfoStr) : null;
+
+          if (!localUserInfo || localUserInfo.tenantId !== freshUserInfo.tenantId) {
+            console.log('[HomePage] Tenant ID mismatch or missing, updating full userInfo to local storage...', {
+              local: localUserInfo?.tenantId,
+              fresh: freshUserInfo.tenantId
+            });
+            // 存储完整对象，确保所有字段（tenantName, tenantId 等）同步
+            localStorage.setItem('zov-user-info', JSON.stringify(freshUserInfo));
+            setTenantName(freshUserInfo.tenantName || '默认租户');
+            // 如果租户变了，刷新列表
+            fetchDeals(true, true);
+          }
+        }
+      } catch (error) {
+        console.error("[HomePage] Failed to sync user info:", error);
+      }
+    };
+
     // 首次渲染立即请求
     if (isFirstRender.current) {
       isFirstRender.current = false;
+      checkUserInfoSync();
       fetchDeals(true, true); // 首次加载，重置分页
       return;
     }
@@ -395,6 +422,31 @@ const HomePage: React.FC<HomePageProps> = ({
   const handleDeleteThrottled = useThrottleFn((id: string) => {
     handleDelete(id);
   }, 1000);
+
+  const handleCancelArchive = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    Dialog.confirm({
+      title: '取消归档',
+      message: '确定要将此记录取消归档并恢复到进行中吗？',
+      onConfirm: async () => {
+        try {
+          Toast.loading({ message: '正在取消归档...', duration: 0, forbidClick: true });
+          const res = await dealService.cancelArchive(id);
+          Toast.clear();
+          if (res.success) {
+            Toast.success('已取消归档');
+            fetchDeals(true, true);
+          } else {
+            Toast.fail(res.message || '操作失败');
+          }
+        } catch (error) {
+          Toast.clear();
+          console.error("Failed to cancel archive:", error);
+          Toast.fail('操作失败');
+        }
+      }
+    });
+  };
 
   const handleConfirmDeleteThrottled = useThrottleFn(confirmDelete, 1000);
 
@@ -668,11 +720,9 @@ const HomePage: React.FC<HomePageProps> = ({
                             </div>
 
                             {activeTab === 'archived' ? (
-                              /* 已归档：取消归档按钮（暂时禁用） */
                               <button
-                                disabled
-                                className="flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-gray-400 border border-gray-300 bg-white cursor-not-allowed opacity-60 transition-all"
-                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-indigo-600 border border-indigo-200 bg-indigo-50 active:scale-95 transition-all"
+                                onClick={(e) => handleCancelArchive(e, item.id)}
                               >
                                 取消归档
                               </button>
