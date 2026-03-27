@@ -223,9 +223,9 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
       } else {
         Toast.fail(res.message || '提交失败，请重试');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to submit template:', error);
-      Toast.fail('提交失败，请重试');
+      Toast.fail(error.message ||'提交失败，请重试');
     } finally {
       setLoading(false);
     }

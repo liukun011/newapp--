@@ -14,9 +14,23 @@ export const dealService = {
     dealInstTitle?: string;
     status?: string[];
   }) => {
+    // 显式从本地读取最新的租户ID，确保与 userInfo 接口同步后的逻辑一致
+    let tenantId = '';
+    try {
+      const userInfoStr = localStorage.getItem('zov-user-info');
+      if (userInfoStr) {
+        tenantId = JSON.parse(userInfoStr).tenantId || '';
+      }
+    } catch (e) {
+      console.error('Failed to parse userinfo for tenant header', e);
+    }
+
     return request<ApiResponse<PageData<DealRecord>>>('/deal/queryDealInstListByPage', {
       method: 'POST',
       data: params,
+      headers: {
+        'Tenant': tenantId
+      }
     });
   },
 
