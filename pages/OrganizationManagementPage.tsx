@@ -459,7 +459,8 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                                     )}
                                 </div>
                                 <span className="text-[12.5px] text-[#A5B3C2] font-bold mt-0.5 block min-h-[18px]">
-                                    {member.isAdmin ? "" : `加入时间：${member.createdTime}`}
+                                    {/* 加入时间暂时隐藏 */}
+                                    {/* {member.isAdmin ? "" : `加入时间：${member.createdTime}`} */}
                                 </span>
                             </div>
                         </div>

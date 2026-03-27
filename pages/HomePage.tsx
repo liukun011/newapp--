@@ -667,14 +667,26 @@ const HomePage: React.FC<HomePageProps> = ({
                               <span className="text-[12px] font-medium">{formatTime(item.lastModifiedDate, true)}</span>
                             </div>
 
-                            <button
-                              className={`flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-md active:scale-95 transition-all ${
-                                item.status === '5' ? 'bg-gray-300 shadow-none' : 'bg-[#4337F1]'
-                              }`}
-                              onClick={(e) => handleRecordClickThrottled(e, item)}
-                            >
-                              <Plus size={14} strokeWidth={2.5} /> 访谈录音
-                            </button>
+                            {activeTab === 'archived' ? (
+                              /* 已归档：取消归档按钮（暂时禁用） */
+                              <button
+                                disabled
+                                className="flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-gray-400 border border-gray-300 bg-white cursor-not-allowed opacity-60 transition-all"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                取消归档
+                              </button>
+                            ) : (
+                              /* 进行中：访谈录音按钮 */
+                              <button
+                                className={`flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-md active:scale-95 transition-all ${
+                                  item.status === '5' ? 'bg-gray-300 shadow-none' : 'bg-[#4337F1]'
+                                }`}
+                                onClick={(e) => handleRecordClickThrottled(e, item)}
+                              >
+                                <Plus size={14} strokeWidth={2.5} /> 访谈录音
+                              </button>
+                            )}
                           </div>
                         </div>
                       </SwipeCell>

@@ -503,7 +503,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
         dragMomentum={false}
         whileDrag={{ scale: 1.1 }}
         dragConstraints={{ left: -window.innerWidth + 60, right: 0, top: -window.innerHeight + 100, bottom: 0 }}
-        onDragEnd={(event, info) => {
+        onDragEnd={(_event, _info) => {
           if (!bubbleRef.current) return;
           const rect = bubbleRef.current.getBoundingClientRect();
           const screenWidth = window.innerWidth;

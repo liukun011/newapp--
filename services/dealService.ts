@@ -284,6 +284,19 @@ export const dealService = {
   },
 
   /**
+   * 取消归档尽调实例（恢复到进行中）
+   * POST /deal/unarchive
+   * @param id 尽调实例 ID
+   */
+  unarchiveDeal: (id: string) => {
+    return request<ApiResponse<any>>('/deal/unarchive', {
+      method: 'POST',
+      data: { id },
+    });
+  },
+
+
+  /**
    * 异步生成访谈实例报告
    * POST /interview/generateInterviewInstReportAsync
    * @param interviewDealInstId 尽调实例 ID

@@ -13,13 +13,15 @@ interface UploadTemplatePageProps {
   onCancel: () => void;
   onSubmit?: () => void;
   onViewList?: () => void; // 查看列表回调
+  initialData?: { id: string; name: string; fileUrl: string; fileName: string } | null; // 从"更换"入口传入
 }
 
 const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({ 
   onBack, 
   onCancel,
   onSubmit,
-  onViewList
+  onViewList,
+  initialData,
 }) => {
   const [templateName, setTemplateName] = useState('');
   const [selectedFile, setSelectedFile] = useState<{name: string, url: string} | null>(null);
@@ -29,6 +31,17 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
   
   // 上传状态锁
   const isUploadingRef = useRef(false);
+
+  // 预填充初始数据（更换模式入口）
+  useEffect(() => {
+    if (initialData) {
+      setTemplateName(initialData.name);
+      setSelectedFile({ name: initialData.fileName, url: initialData.fileUrl });
+    } else {
+      setTemplateName('');
+      setSelectedFile(null);
+    }
+  }, [initialData]);
 
   // 处理Native文件上传
   const uploadNativeFile = async (localPath: string) => {
@@ -176,10 +189,21 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
 
     setLoading(true);
     try {
-      const res = await templateService.addApproveReportNew({
-        approveReportName: templateName.trim(),
-        approveTemplateUrl: selectedFile.url,
-      });
+      let res;
+      if (initialData?.id) {
+        // 更换模式：调用更换接口
+        res = await templateService.replaceApproveReport({
+          id: initialData.id,
+          approveReportName: templateName.trim(),
+          approveTemplateUrl: selectedFile.url,
+        });
+      } else {
+        // 新建模式：调用新建接口
+        res = await templateService.addApproveReportNew({
+          approveReportName: templateName.trim(),
+          approveTemplateUrl: selectedFile.url,
+        });
+      }
 
       if (res.success) {
         const message = isAdmin 
@@ -283,7 +307,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-lg font-semibold text-slate-800">上传访谈模板</h1>
+        <h1 className="text-lg font-semibold text-slate-800">{initialData ? '更换访谈模板' : '上传访谈模板'}</h1>
       </div>
 
       {/* Form Content */}

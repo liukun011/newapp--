@@ -242,6 +242,9 @@ const App: React.FC = () => {
   // 记住模板管理页的初始标签页
   const [templateInitialTab, setTemplateInitialTab] = useState<'success' | 'processing'>('success');
 
+  // 上传模板页的预填充数据（从"更换"按钮携带过来）
+  const [uploadTemplateInitialData, setUploadTemplateInitialData] = useState<{ id: string; name: string; fileUrl: string; fileName: string } | null>(null);
+
   // 记住首页的标签页（进行中/已归档）
   const [homeTab, setHomeTab] = useState<'ongoing' | 'archived'>('ongoing');
 
@@ -1250,16 +1253,32 @@ const App: React.FC = () => {
               )}
               {currentView === View.UPLOAD_TEMPLATE && (
                 <UploadTemplatePage
-                  onBack={() => navigateBackward(View.MANAGEMENT)}
-                  onCancel={() => navigateBackward(View.MANAGEMENT)}
+                  onBack={() => {
+                    // 从"更换"入口进来的，返回时还原到"处理中"tab
+                    if (uploadTemplateInitialData) {
+                      setTemplateInitialTab('processing');
+                    }
+                    setUploadTemplateInitialData(null);
+                    navigateBackward(View.MANAGEMENT);
+                  }}
+                  onCancel={() => {
+                    // 从"更换"入口进来的，取消时还原到"处理中"tab
+                    if (uploadTemplateInitialData) {
+                      setTemplateInitialTab('processing');
+                    }
+                    setUploadTemplateInitialData(null);
+                    navigateBackward(View.MANAGEMENT);
+                  }}
                   onSubmit={() => {
                     // 提交成功后不立即返回，等待用户点击"查看列表"
                   }}
                   onViewList={() => {
                     // 点击"查看列表"后跳转到模板管理页的"处理中" tab
+                    setUploadTemplateInitialData(null);
                     setTemplateInitialTab('processing');
                     navigateBackward(View.MANAGEMENT);
                   }}
+                  initialData={uploadTemplateInitialData}
                 />
               )}
               {currentView === View.TEMPLATE_SELECTION && (
@@ -1564,7 +1583,36 @@ const App: React.FC = () => {
               )}
               {currentView === View.MANAGEMENT && (
                 <MyTemplatesPage
-                  onUpload={() => navigateForward(View.UPLOAD_TEMPLATE)}
+                  onUpload={(templateData) => {
+                    if (templateData) {
+                      setUploadTemplateInitialData(templateData);
+                    } else {
+                      setUploadTemplateInitialData(null);
+                    }
+                    navigateForward(View.UPLOAD_TEMPLATE);
+                  }}
+                  onPreview={async (name, url) => {
+                    try {
+                      Toast.loading({ message: '正在加载预览...', duration: 0, forbidClick: true });
+                      const res = await dealService.viewReportUrl(undefined, url);
+                      Toast.clear();
+                      if (res.success && res.data) {
+                        setPreviewReport({
+                          name,
+                          reportUrl: url,
+                          previewUrl: res.data,
+                          showDownloadButton: false,
+                        });
+                        setPreviousView(View.MANAGEMENT);
+                        navigateForward(View.REPORT_PREVIEW);
+                      } else {
+                        Toast.fail('预览加载失败，请重试');
+                      }
+                    } catch (e) {
+                      Toast.clear();
+                      Toast.fail('预览加载失败，请重试');
+                    }
+                  }}
                   initialTab={templateInitialTab}
                 />
               )}

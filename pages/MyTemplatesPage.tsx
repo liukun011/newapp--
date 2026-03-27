@@ -49,11 +49,12 @@ const TemplateReason: React.FC<{
 
 interface MyTemplatesPageProps {
   onBack?: () => void;
-  onUpload: () => void;
+  onUpload: (templateData?: { id: string; name: string; fileUrl: string; fileName: string }) => void;
+  onPreview?: (name: string, url: string) => void;
   initialTab?: 'success' | 'processing'; // 'processing' now covers both 1 (uploading/reviewing) and 3 (failed)
 }
 
-const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, initialTab = 'success' }) => {
+const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onPreview, initialTab = 'success' }) => {
   if (onBack) { /* Silence unused warning if needed, but the header is simplified */ }
   const [activeTab, setActiveTab] = useState<'success' | 'processing'>(initialTab);
   const [templates, setTemplates] = useState<ReportTemplate[]>([]);
@@ -175,7 +176,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
       <div className="bg-[#F7F8FA] flex items-center justify-center pt-3 pb-1 sticky top-0 z-20 px-4">
         <h1 className="text-[17px] font-bold text-[#1E293B] tracking-wide">模板管理</h1>
         <button 
-          onClick={onUpload}
+          onClick={() => onUpload()}
           className="absolute right-4 flex items-center gap-[4px] text-[15px] font-medium text-[#1E293B] active:opacity-60 transition-opacity"
         >
           <FileUp size={18} strokeWidth={2} />
@@ -297,14 +298,15 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
                   </div>
                 )}
 
-                {/* 底部区：时间+按钮 */}
+                {/* 底部区：时间+按鈕 */}
               {(!isProcessing) && (
-                   <div className="px-4 py-3 flex items-center border-t border-gray-50/80 justify-between">
-                     <span className="text-[13px] text-[#94A3B8] font-medium tracking-wide">
+                   <div className="px-4 py-3 flex items-center border-t border-gray-50/80 justify-end">
+                     {/* <span className="text-[13px] text-[#94A3B8] font-medium tracking-wide">
                        {(template as any).createDate?.slice(0, 16) || '刚刚'}
-                     </span>
+                     </span> */}
                      <div className="flex gap-[10px]">
-                       <button
+                       {/* 删除和重命名更换为预览按鈕 */}
+                       {/* <button
                          onClick={() => handleDelete(template.id)}
                          className="px-[18px] py-[6px] bg-[#F1F5F9] text-[#94A3B8] text-[13px] font-bold rounded-full hover:bg-gray-200 transition-colors"
                        >
@@ -318,16 +320,39 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, ini
                          >
                            重命名
                          </button>
-                       )}
+                       )} */}
 
-                       {isFailed && (
+                       {isSuccess && (
                          <button
-                           onClick={onUpload}
-                           className="px-[18px] py-[6px] bg-[#4338CA] text-white text-[13px] font-bold rounded-full transition-colors"
+                           onClick={() => onPreview?.(
+                             template.reportTemplateName,
+                             template.viewTemplateUrl || (template as any).approveTemplateUrl || ''
+                           )}
+                           className="px-[18px] py-[6px] border-[1.5px] border-[#4338CA] text-[#4338CA] text-[13px] font-bold rounded-full bg-white transition-colors"
                          >
-                           更换
+                           预览
                          </button>
                        )}
+
+                        {isFailed && (
+                          <button
+                            onClick={() => {
+                              const fileUrl = template.viewTemplateUrl || '';
+                              const fileName = fileUrl
+                                ? fileUrl.split('/').pop() || '模板文件'
+                                : '模板文件';
+                              onUpload({
+                                id: template.id,
+                                name: template.reportTemplateName || '',
+                                fileUrl,
+                                fileName,
+                              });
+                            }}
+                            className="px-[18px] py-[6px] bg-[#4338CA] text-white text-[13px] font-bold rounded-full transition-colors"
+                          >
+                            更换
+                          </button>
+                        )}
                      </div>
                    </div>
                 )}

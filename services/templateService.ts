@@ -128,6 +128,22 @@ export const templateService = {
   },
 
   /**
+   * 更换审批报告模板（替换未通过的模板）
+   * POST /reportApprove/replaceApproveReport
+   */
+  replaceApproveReport: (params: {
+    id: string;
+    approveReportName: string;
+    approveTemplateUrl: string;
+  }) => {
+    return request<ApiResponse<any>>('/reportApprove/replaceApproveReport', {
+      method: 'POST',
+      data: params,
+    });
+  },
+
+
+  /**
    * 点击发送邮箱审批
    * POST /reportApprove/clickApproveReport
    */
