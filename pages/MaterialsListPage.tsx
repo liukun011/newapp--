@@ -701,9 +701,18 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                     }}
                     onMouseDown={(e) => e.preventDefault()}
                     tabIndex={-1}
-                    className="flex-1 text-sm text-slate-800 truncate text-left transition-colors active:scale-[0.98] outline-none"
+                    className="flex-1 flex flex-col min-w-0 text-left transition-colors active:scale-[0.98] outline-none justify-center"
                   >
-                    {resource.fileName}
+                    <span className="text-[14px] text-slate-800 truncate w-full leading-tight">{resource.fileName}</span>
+                    {resource.fileTags && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {(Array.isArray(resource.fileTags) ? resource.fileTags : String(resource.fileTags).split(',')).map((tag: string, i: number) => tag.trim() && (
+                          <span key={i} className="px-1.5 py-[2px] rounded-[4px] bg-[#EAE8FF] text-[#4B42F5] text-[10px] font-medium truncate max-w-full leading-tight">
+                            {tag.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </button>
 
                   

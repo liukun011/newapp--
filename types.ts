@@ -100,6 +100,7 @@ export interface Resource {
   total?: number;
   finishTime?: string | null;
   fileCreateFinishTime?: string | null;
+  fileTags?: string | string[];
 }
 
 // 问题信息
