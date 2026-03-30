@@ -43,10 +43,26 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const [previousViewState, setPreviousViewState] = useState<ViewState | null>(null);
   const [returnToModal, setReturnToModal] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const isAndroid = /Android/i.test(navigator.userAgent);
   
-  // 键盘状态检测（用于隐藏底部复选框）
-  const isKeyboardOpen = useKeyboardStatus();
-  console.log('isKeyboardOpen', isKeyboardOpen);
+  // 键盘状态检测（用于隐藏底部复选框等）
+  const keyboardStatus = useKeyboardStatus();
+  // 仅在安卓端通过输入框聚焦状态来判定“键盘开启”，iOS 端保持原生行为
+  const isKeyboardOpen = isAndroid ? (keyboardStatus || isInputFocused) : false;
+
+  // 【仅安卓端】监听键盘物理收起动作：当键盘收起但输入框仍保持聚焦时，强制同步状态并失焦
+  useEffect(() => {
+    if (isAndroid && !keyboardStatus && isInputFocused) {
+      setIsInputFocused(false);
+      // 强制触发原生输入框失焦，确保页面能够正确滚回/恢复布局
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }
+  }, [keyboardStatus, isAndroid]);
+
+  console.log('isKeyboardOpen', isKeyboardOpen, 'keyboardStatus', keyboardStatus, 'isInputFocused', isInputFocused, 'isAndroid', isAndroid);
 
   // Helper to enter agreement/privacy view
   const openLegalView = (target: 'AGREEMENT' | 'PRIVACY') => {
@@ -182,7 +198,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setPageLoading(false);
-    }, 2000);
+    }, 500); // 缩短 Loading 时间以优化体验
     return () => clearTimeout(timer);
   }, []);
 
@@ -449,6 +465,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             placeholder="请输入手机号" 
             value={forgotPhone}
             onChange={(e) => setForgotPhone(e.target.value)}
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
           />
           
           <Input 
@@ -456,6 +474,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             placeholder="请输入6位验证码" 
             value={forgotCode}
             onChange={(e) => setForgotCode(e.target.value)}
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
             suffix={
               <button 
                 disabled={forgotCountdown > 0}
@@ -488,6 +508,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             placeholder="请输入新密码" 
             value={forgotNewPassword}
             onChange={(e) => setForgotNewPassword(e.target.value)}
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
             suffix={
               <button 
                 type="button"
@@ -504,6 +526,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             placeholder="请再次输入新密码" 
             value={forgotConfirmPassword}
             onChange={(e) => setForgotConfirmPassword(e.target.value)}
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
             suffix={
               <button 
                 type="button"
@@ -566,27 +590,29 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   return (
     <div className="min-h-[100dvh] w-full flex flex-col bg-gradient-to-b from-[#E6EAFD] to-[#F1F3FD] relative overflow-x-hidden overflow-y-auto">
-      {/* Top Carousel Area */}
-      <div className="relative z-10 flex-1 flex flex-col pt-16 min-h-0 w-full">
-        {/* Text Content */}
-        <div className="mb-2 flex flex-col justify-center items-center px-8 z-20 shrink-0">
-          <h2 className="text-[22px] font-bold mb-3 leading-snug text-[#4338CA] text-center">
-            {slide.title}
-          </h2>
-          <p className="text-[#64748B] text-[14px] leading-relaxed text-center font-medium max-w-[280px]">
-            {slide.desc}
-          </p>
+      {/* Top Carousel Area - Hide when keyboard is open to give more room for inputs on Android */}
+      {!isKeyboardOpen && (
+        <div className="relative z-10 flex-1 flex flex-col pt-16 min-h-0 w-full">
+          {/* Text Content */}
+          <div className="mb-2 flex flex-col justify-center items-center px-8 z-20 shrink-0">
+            <h2 className="text-[22px] font-bold mb-3 leading-snug text-[#4338CA] text-center">
+              {slide.title}
+            </h2>
+            <p className="text-[#64748B] text-[14px] leading-relaxed text-center font-medium max-w-[280px]">
+              {slide.desc}
+            </p>
+          </div>
+          
+          {/* Slide Image */}
+          <div className="w-full flex-1 flex items-end justify-center relative z-10">
+            <img 
+              src={`${basePath}assets/login${slide.id}.png`} 
+              alt={slide.title}
+              className="w-[280px] sm:w-[320px] h-auto object-contain object-bottom -mb-1"
+            />
+          </div>
         </div>
-        
-        {/* Slide Image */}
-        <div className="w-full flex-1 flex items-end justify-center relative z-10">
-          <img 
-            src={`${basePath}assets/login${slide.id}.png`} 
-            alt={slide.title}
-            className="w-[280px] sm:w-[320px] h-auto object-contain object-bottom -mb-1"
-          />
-        </div>
-      </div>
+      )}
 
       {/* Bottom Sheet Card */}
       <div className="bg-white rounded-t-[32px] px-8 pt-6 pb-24 shadow-[0_-10px_40px_rgba(0,0,0,0.02)] z-20 flex flex-col w-full relative shrink-0">
@@ -622,6 +648,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               placeholder="请输入手机号"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
               className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
             />
           </div>
@@ -634,6 +662,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 placeholder="请输入验证码"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
                 className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
               />
               <button 
@@ -661,6 +691,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 placeholder="请输入密码"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
                 className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-400 ml-2">
