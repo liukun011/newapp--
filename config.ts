@@ -28,11 +28,9 @@ declare global {
 // 环境类型定义
 export type EnvMode = 'development' | 'test' | 'production';
 
-// 是否为本地开发环境
-const isDevInternal = import.meta.env.MODE === 'development';
-
-// 当前环境：如果是本地开发，强制走 development；如果是构建后的包，优先取外部 config.js 的 VITE_ENV
-const env = (isDevInternal ? 'development' : (window.APP_CONFIG?.VITE_ENV || import.meta.env.MODE || 'development')) as EnvMode;
+// 当前环境：打包的时候自动匹配对应环境 (development/test/production)
+const env = (import.meta.env.MODE || 'development') as EnvMode;
+const isDevInternal = env === 'development';
 
 // 各环境默认基准配置（.env.xxx 文件的源代码整合）
 const DEFAULT_CONFIGS: Record<EnvMode, { api: string; auth: string }> = {

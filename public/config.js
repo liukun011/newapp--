@@ -7,8 +7,5 @@ window.APP_CONFIG = {
   VITE_API_BASE_URL: 'http://68.79.42.215/report',
   
   // 认证中心基础路径
-  VITE_AUTH_BASE_URL: 'https://user.binarysee.com.cn',
-  
-  // 环境标识 (本地开发期间强制为 development)
-  VITE_ENV: 'development'
+  VITE_AUTH_BASE_URL: 'https://user.binarysee.com.cn'
 };
