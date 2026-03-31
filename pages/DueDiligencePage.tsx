@@ -59,8 +59,14 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
   // 进入页面时请求详情（只在 deal.id 变化时请求）
   useEffect(() => {
+    if (!deal?.id) return;
+
+    // 清除/初始化前一个详情的数据状态，防止数据残留显示错误
+    setDealDetail(null);
+    setInterviewRecords([]);
+    setInterviewTotalCount(0);
+
     const fetchDealDetail = async () => {
-      if (!deal?.id) return;
 
       try {
         const res = await dealService.getDealInstDetail(deal.id);
@@ -112,7 +118,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   // 使用详情数据，如果没有则使用传入的 deal
   const currentDeal = dealDetail || deal;
 
-  // 轮询检查报告生成状态
+  /* 
+  // 轮询检查报告生成状态 (已弃用，改为 WebSocket)
   useEffect(() => {
     // 只有当报告状态为"生成中"时才启动轮询
     if (currentDeal?.reportStatus != DealReportStatusEnum.REPORT_GENERATING || !currentDeal?.id) {
@@ -139,6 +146,66 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     // 清理函数
     return () => {
       clearInterval(pollInterval);
+    };
+  }, [currentDeal?.reportStatus, currentDeal?.id]);
+  */
+
+  // WebSocket 实时检查报告生成状态
+  useEffect(() => {
+    // 只有当报告状态为"生成中"时才启动 WebSocket
+    if (currentDeal?.reportStatus != DealReportStatusEnum.REPORT_GENERATING || !currentDeal?.id) {
+      return;
+    }
+
+    const token = localStorage.getItem('zov-user-token') || '';
+    const wsBaseUrl = config.apiBaseUrl.replace('https', 'wss').replace('http', 'ws');
+    const wsUrl = `${wsBaseUrl}/ws/report-status?dealInstId=${currentDeal.id}&token=${token}`;
+
+    console.log('[WebSocket] Connecting to report status:', wsUrl);
+    
+    let socket: WebSocket | null = new WebSocket(wsUrl);
+
+    socket.onmessage = (event) => {
+      console.log('[WebSocket] Received report status update:', event.data);
+      try {
+        // 尝试解析推送的消息内容
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        // 如果包含 reportStatus，则直接更新本地状态
+        const newStatus = data.reportStatus || (typeof data === 'string' ? data : null);
+        
+        if (newStatus) {
+          setDealDetail(prev => {
+            if (!prev) return null;
+            // 只有当状态确实发生变化时才更新，避免无效渲染
+            if (prev.reportStatus === newStatus) return prev;
+            console.log('[WebSocket] Updating local reportStatus to:', newStatus);
+            return { ...prev, reportStatus: newStatus };
+          });
+        }
+      } catch (e) {
+        // 非 JSON 格式则尝试作为纯字符串状态处理
+        const newStatus = event.data;
+        if (newStatus && typeof newStatus === 'string') {
+          setDealDetail(prev => (prev && prev.reportStatus !== newStatus) ? { ...prev, reportStatus: newStatus } : prev);
+        }
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.error('[WebSocket] Error occurred:', error);
+    };
+
+    socket.onclose = (e) => {
+      console.log('[WebSocket] Connection closed:', e.code, e.reason);
+      socket = null;
+    };
+
+    return () => {
+      if (socket) {
+        console.log('[WebSocket] Cleaning up connection');
+        socket.close();
+        socket = null;
+      }
     };
   }, [currentDeal?.reportStatus, currentDeal?.id]);
 
@@ -639,21 +706,39 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       <div className="flex-1 min-h-0 overflow-y-auto relative z-10 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="px-4 pb-36 pt-4 space-y-3">
           {(() => {
-            const hasInterviewRecords = interviewTotalCount > 0;
+            const isArchived = currentDeal?.status === '5';
+            const hasInterviewRecords = interviewTotalCount > 0 || 
+                                       ['4', '5'].includes(currentDeal?.status || '') || 
+                                       (Array.isArray(currentDeal?.interviewInstList) && currentDeal.interviewInstList.length > 0);
             const isGenerated = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED;
             const isGenerating = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING;
             const isFailed = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED;
-            const isArchived = currentDeal?.status === '5';
             
-            let headerIcon = 'talkfaild.png';
-            let headerTitle = '访谈未开始';
-            let headerSub = '暂无访谈记录，请先开始访谈';
+            let headerIcon = '';
+            let headerTitle = '';
+            let headerSub = '';
             
             if (isGenerated) {
               headerIcon = 'talksuccess.png';
               headerTitle = '报告已生成';
               headerSub = '访谈即报告，小狸智能捕捉核心洞察';
-            } else if (hasInterviewRecords) {
+            } else if (String(currentDeal?.status) === '1') {
+              // 状态 1 明确为“尽调准备阶段”，绝不可能有已完成的真实访谈，屏蔽一切可能的脏数据
+              headerIcon = 'talkfaild.png';
+              headerTitle = '访谈未开始';
+              headerSub = '暂无访谈记录，请先开始访谈';
+            } else if (['2', '3'].includes(String(currentDeal?.status))) {
+              // 状态 2, 3（已创建部分、进行中）且未生成报告时
+              if (hasInterviewRecords) {
+                headerIcon = 'talksuccess.png';
+                headerTitle = '访谈已完成';
+                headerSub = '访谈即报告，小狸智能捕捉核心洞察';
+              } else {
+                headerIcon = 'talkfaild.png';
+                headerTitle = '访谈未开始';
+                headerSub = '暂无访谈记录，请先开始访谈';
+              }
+            } else if (hasInterviewRecords || ['4', '5'].includes(String(currentDeal?.status))) {
               headerIcon = 'talksuccess.png';
               headerTitle = '访谈已完成';
               headerSub = '访谈即报告，小狸智能捕捉核心洞察';
@@ -667,6 +752,15 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               headerIcon = 'talkfaild.png';
               headerTitle = '报告生成失败';
               headerSub = '请重试或检查资料内容';
+            }
+            
+            // 如果连标题都没有（还在加载初始状态），则渲染一个带骨架感的占位容器或保持留白
+            if (!headerTitle && !isGenerating) {
+               return (
+                 <div className="bg-white rounded-[24px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-indigo-50/30 h-[178px] flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-indigo-100 border-t-indigo-500 rounded-full animate-spin"></div>
+                 </div>
+               );
             }
 
             return (
