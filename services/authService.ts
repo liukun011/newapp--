@@ -99,7 +99,7 @@ export const authService = {
     });
   },
 
-  // 获取租户列表
+  // 获取组织列表
   getTenants: async (): Promise<any> => {
     return authRequest<any>('/api/iam/users/tenants', {
       method: 'GET',
@@ -126,7 +126,7 @@ export const authService = {
     return res;
   },
 
-  // 修改租户信息
+  // 修改组织信息
   updateTenant: async (tenantId: string, data: any): Promise<any> => {
     return authRequest<any>(`/api/iam/tenants/${tenantId}/modify`, {
       method: 'PUT',

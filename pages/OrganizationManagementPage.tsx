@@ -35,7 +35,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // 租户切换相关
+  // 组织切换相关
   const [showTenantModal, setShowTenantModal] = useState(false);
   const [tenants, setTenants] = useState<any[]>([]);
   const [tenantsLoading, setTenantsLoading] = useState(false);
@@ -283,7 +283,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
       }
 
       if (!currentTenantId) {
-        Toast.fail('租户信息不完整，无法更新');
+        Toast.fail('组织信息不完整，无法更新');
         setIsEditing(false);
         return;
       }

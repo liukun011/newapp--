@@ -52,14 +52,14 @@ const HomePage: React.FC<HomePageProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingDealId, setDeletingDealId] = useState<string | null>(null);
 
-  // 租户/组织切换相关
+  // 组织/组织切换相关
   const [tenantName, setTenantName] = useState(() => {
     try {
       const userInfoStr = localStorage.getItem('zov-user-info');
       const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
-      return userInfo?.tenantName || '默认租户';
+      return userInfo?.tenantName || '默认组织';
     } catch (e) {
-      return '默认租户';
+      return '默认组织';
     }
   });
   const [showTenantModal, setShowTenantModal] = useState(false);
@@ -170,8 +170,8 @@ const HomePage: React.FC<HomePageProps> = ({
             });
             // 存储完整对象，确保所有字段（tenantName, tenantId 等）同步
             localStorage.setItem('zov-user-info', JSON.stringify(freshUserInfo));
-            setTenantName(freshUserInfo.tenantName || '默认租户');
-            // 如果租户变了，刷新列表
+            setTenantName(freshUserInfo.tenantName || '默认组织');
+            // 如果组织变了，刷新列表
             fetchDeals(true, true);
           }
         }
@@ -180,16 +180,35 @@ const HomePage: React.FC<HomePageProps> = ({
       }
     };
 
-    // 首次渲染立即请求
+    // 监听来自 request.ts 的组织同步成功事件 (例如 402 静默恢复后)
+    const handleTenantSynced = () => {
+      try {
+        const userInfoStr = localStorage.getItem('zov-user-info');
+        if (userInfoStr) {
+          const userInfo = JSON.parse(userInfoStr);
+          setTenantName(userInfo.tenantName || '默认组织');
+        }
+        // 同步后刷新列表
+        fetchDeals(true, true);
+      } catch (e) {
+        console.error('Failed to update tenant name after sync', e);
+      }
+    };
+
+    window.addEventListener('tenant-synced', handleTenantSynced);
+
+    // 初始化：首次进入同步信息并加载，后续仅加载
     if (isFirstRender.current) {
       isFirstRender.current = false;
       checkUserInfoSync();
-      fetchDeals(true, true); // 首次加载，重置分页
-      return;
+      fetchDeals(true, true);
+    } else {
+      fetchDeals(true, true);
     }
 
-    // 只有切换Tab或搜索时才重新加载
-    fetchDeals(true, true); // 重置分页
+    return () => {
+      window.removeEventListener('tenant-synced', handleTenantSynced);
+    };
   }, [activeTab, searchQuery]);
 
   // 自动加载更多直到内容可滚动

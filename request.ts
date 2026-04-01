@@ -3,6 +3,37 @@ import envConfig from './config';
 import { Toast } from 'react-vant';
 import 'react-vant/lib/index.css';
 
+// ── 处理 402 组织切换静默恢复逻辑 ──────────────────────────────
+let recoveryPromise: Promise<void> | null = null;
+const recoverFrom402 = async () => {
+  if (recoveryPromise) return recoveryPromise;
+
+  recoveryPromise = (async () => {
+    try {
+      console.log('[Request] 402 detected, starting silent recovery...');
+      // 1. 清理业务侧 SSO 缓存 (不传参)
+      await instance.post('/user/sso/cleanCache').catch(err => console.warn('Clean cache fail', err));
+      // 2. 拉取最新用户信息 (包含最新的 tenantId)
+      const resUser: any = await authInstance.post('/api/iam/users/userinfo');
+      
+      if (resUser.successful && resUser.data) {
+        localStorage.setItem('zov-user-info', JSON.stringify(resUser.data));
+        console.log('✅ [Request] User info synced after 402. New tenant:', resUser.data.tenantName);
+        
+        // 3. 全局广播同步事件，供组件（如 HomePage）捕获并刷新列表
+        window.dispatchEvent(new Event('tenant-synced'));
+        Toast.info({ message: `发现组织变更为 [${resUser.data.tenantName}]，正在自动切换`, duration: 2000 });
+      }
+    } catch (e) {
+      console.error('❌ [Request] 402 recovery failed:', e);
+    } finally {
+      recoveryPromise = null;
+    }
+  })();
+
+  return recoveryPromise;
+};
+
 // ── 公共拦截器逻辑 ──────────────────────────────────────────
 function applyInterceptors(inst: ReturnType<typeof axios.create>) {
   // 请求拦截器：注入 Token、TenantId 并处理 FormData
@@ -45,6 +76,12 @@ function applyInterceptors(inst: ReturnType<typeof axios.create>) {
       return res;
     },
     (error) => {
+      // ── 402：组织已在其他端切换，静默恢复，不弹报错 ──
+      if (error.response?.status === 402) {
+        recoverFrom402();
+        return Promise.reject(new Error('TENANT_SWITCH_SILENT'));
+      }
+
       const message = error.response?.data?.message || error.message || '网络错误';
       Toast.fail({ message, duration: 3000 });
 

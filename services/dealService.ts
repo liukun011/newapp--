@@ -14,7 +14,7 @@ export const dealService = {
     dealInstTitle?: string;
     status?: string[];
   }) => {
-    // 显式从本地读取最新的租户ID，确保与 userInfo 接口同步后的逻辑一致
+    // 显式从本地读取最新的组织ID，确保与 userInfo 接口同步后的逻辑一致
     let tenantId = '';
     try {
       const userInfoStr = localStorage.getItem('zov-user-info');
