@@ -90,11 +90,17 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         const res = await dealService.queryInterviewInstListByPage({
           interviewDealInstId: deal.id,
           pageNum: 1,
-          pageSize: 100, // 详情页暂时展示较多即可，如有更多需求可分页
+          pageSize: 100,
         });
         if (res.success && res.data) {
-          setInterviewRecords(res.data.records || []);
-          setInterviewTotalCount(res.data.total || 0);
+          const allRecords = res.data.records || [];
+          setInterviewRecords(allRecords);
+          // 只统计已真正录过音的实例（interviewInstStatus 不是 '1'）
+          // 状态 '1' 表示刚创建还未开始录音，不能算作"访谈已完成"
+          const completedRecords = allRecords.filter(
+            (r: any) => r.interviewInstStatus && String(r.interviewInstStatus) !== '1'
+          );
+          setInterviewTotalCount(completedRecords.length);
         }
       } catch (e) {
         console.error('Failed to fetch interview records:', e);
@@ -707,9 +713,15 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         <div className="px-4 pb-36 pt-4 space-y-3">
           {(() => {
             const isArchived = currentDeal?.status === '5';
+            // 判断是否有真正完成了录音的访谈记录
+            // interviewTotalCount 已在 fetchInterviewRecords 中过滤掉了仅创建未录音的实例
+            // interviewInstList 也需要过滤：只有 interviewInstStatus !== '1' 的才算有效
+            const completedInstList = Array.isArray(currentDeal?.interviewInstList)
+              ? currentDeal.interviewInstList.filter((r: any) => r.interviewInstStatus && String(r.interviewInstStatus) !== '1')
+              : [];
             const hasInterviewRecords = interviewTotalCount > 0 || 
                                        ['4', '5'].includes(currentDeal?.status || '') || 
-                                       (Array.isArray(currentDeal?.interviewInstList) && currentDeal.interviewInstList.length > 0);
+                                       completedInstList.length > 0;
             const isGenerated = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED;
             const isGenerating = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING;
             const isFailed = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED;
