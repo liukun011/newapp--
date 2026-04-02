@@ -22,6 +22,7 @@ export const authService = {
         account,
         password,
         autoRegister: true,
+        registerChannel: 'XIAO_LI_REPORT',
       },
     });
   },
@@ -33,6 +34,7 @@ export const authService = {
         mobile,
         captcha,
         autoRegister: true,
+        registerChannel: 'XIAO_LI_REPORT',
       },
     });
   },
