@@ -27,6 +27,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
   const [userName, setUserName] = useState('');
+  const [userAvatar, setUserAvatar] = useState('');
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [newNickName, setNewNickName] = useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -39,12 +40,14 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         if (localUserInfoStr) {
           const userInfo = JSON.parse(localUserInfoStr);
           setUserName(userInfo.nickName || userInfo.username);
+          setUserAvatar(userInfo.avatar || '');
         } 
         // 调用接口获取最新信息
         const res = await authService.getUserInfo();
         if (res.successful && res.data) {
           localStorage.setItem('zov-user-info', JSON.stringify(res.data));
           setUserName(res.data.nickName || res.data.username);
+          setUserAvatar(res.data.avatar || '');
         }
 
       } catch (e) {
@@ -130,6 +133,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
           if (userInfoRes.successful && userInfoRes.data) {
             localStorage.setItem('zov-user-info', JSON.stringify(userInfoRes.data));
             setUserName(userInfoRes.data.nickName || userInfoRes.data.username);
+            setUserAvatar(userInfoRes.data.avatar || '');
           }
         } else {
           Toast.fail(updateRes.message || '更新信息失败');
@@ -247,7 +251,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         <div className="relative mb-3">
           <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-100">
             <img
-              src={"/talk-assistant/assets/xiaoliavatar.png"}
+              src={userAvatar || "/talk-assistant/assets/xiaoliavatar.png"}
               alt="User Avatar"
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -423,6 +427,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                       if (userInfoRes.successful && userInfoRes.data) {
                         localStorage.setItem('zov-user-info', JSON.stringify(userInfoRes.data));
                         setUserName(userInfoRes.data.nickName || userInfoRes.data.username || '');
+                        setUserAvatar(userInfoRes.data.avatar || '');
                       }
                     } else {
                       Toast.fail(updateRes.message || '修改失败');
