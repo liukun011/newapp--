@@ -137,15 +137,19 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   // 同步问题清单数据
   useEffect(() => {
     if (deal?.questionInfoList && deal.questionInfoList.length > 0) {
+      // 这里的逻辑：如果秒数为0且转写列表为空（即尚未真正开始或没有任何内容的全新会话），则强制所有问题为未命中状态
+      // 这样可以确保从详情页点击“+访谈录音”进来时，即使后端返回了项目级的全局命中，本地也会显示为全新的清单
+      const isFreshSession = (seconds === 0 && transcriptionList.length === 0);
+      
       const backendQuestions: Question[] = deal.questionInfoList.map((item, index) => ({
         id: item.id || String(index),
         text: item.questionName,
-        isAnswered: !!item.CHECKED,
-        details: item.questionAnswer || undefined
+        isAnswered: isFreshSession ? false : !!item.CHECKED,
+        details: isFreshSession ? undefined : (item.questionAnswer || undefined)
       }));
       setQuestions(backendQuestions);
     }
-  }, [deal]);
+  }, [deal, seconds, transcriptionList.length]);
 
 
   // ========== 离线转写：轮询转写结果 ==========

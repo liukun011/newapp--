@@ -391,6 +391,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
                        {item.contentType || `访谈对象${item.roleId || item.id || ''}`}
                      </div>
                      <div 
+                        /* 暂时注释掉点击跳转录音功能
                         onClick={() => {
                           if (audioRef.current && item.audioStartTime !== undefined) {
                             const seekTime = item.audioStartTime / 1000;
@@ -402,7 +403,8 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
                             Toast.info(`已跳转至 ${formatTime(seekTime).substring(3)}`);
                           }
                         }}
-                        className="bg-[#F0F5FF] p-3.5 rounded-2xl rounded-tl-sm text-[15px] text-slate-700 leading-relaxed shadow-[0_2px_8px_rgba(0,0,0,0.02)] cursor-pointer active:bg-blue-100 transition-colors"
+                        */
+                        className="bg-[#F0F5FF] p-3.5 rounded-2xl rounded-tl-sm text-[15px] text-slate-700 leading-relaxed shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-colors"
                       >
                        {item.content || '暂无内容'}
                      </div>

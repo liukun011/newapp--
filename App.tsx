@@ -840,14 +840,21 @@ const App: React.FC = () => {
                       });
 
                       if (createRes.success && createRes.data) {
-                        // 假设返回的数据直接是 ID，或者包含 interviewInstId 字段的对象
                         const instId = typeof createRes.data === 'string' ? createRes.data : createRes.data?.interviewInstId;
                         const instTitle = typeof createRes.data === 'string' ? '' : createRes.data?.interviewInstTitle;
 
-                        // 如果切换了访谈对象（ID不一致），则重置录音状态（初始化页面）
                         const currentStore = useRecordingStore.getState();
-                        if (currentStore.currentInterviewInstId && currentStore.currentInterviewInstId !== instId) {
+                        // 如果没有当前访谈 ID，或者切换了访谈对象（ID不一致），则重置录音状态（初始化页面）
+                        if (currentStore.currentInterviewInstId !== instId) {
                           currentStore.reset();
+                          
+                          // 同时清理当前 Deal 的命中状态 (仅限本地展示，直到下次从后端刷最新数据)
+                          const clearedQuestions = (deal.questionInfoList || []).map(q => ({
+                            ...q,
+                            CHECKED: false,
+                            questionAnswer: ''
+                          }));
+                          setCurrentDeal({ ...deal, questionInfoList: clearedQuestions });
                         }
 
                         // 更新 Zustand Store (不设置 dealId，等真正开始录音时再设置)
@@ -855,14 +862,6 @@ const App: React.FC = () => {
                           interviewInstId: instId,
                           title: instTitle || ''
                         });
-                      }
-
-                      // 获取最新的尽调详情（包含问题清单）
-                      const detailRes = await dealService.getDealInstDetail(deal.id);
-                      if (detailRes.success && detailRes.data) {
-                        setCurrentDeal(detailRes.data);
-                      } else {
-                        setCurrentDeal(deal);
                       }
 
                       Toast.clear();
@@ -900,18 +899,6 @@ const App: React.FC = () => {
                     try {
                       // 改为使用本地 Store 校验，与 DueDiligencePage 保持一致
                       const store = useRecordingStore.getState();
-                      // 注意：store 中保存的是 dealId (之前代码里用的属性名是 dealId 还是 currentDealId 需要确认，根据之前的 context 是 currentDealId 或 dealId)
-                      // 查看 store 定义，setData({ dealId: ... })。 
-                      // 假设 store properties 是 { dealId, ... } 或者 { currentDealId ... }
-                      // 让我们看一下 useRecordingStore 的定义。
-                      // 根据 Step 1345 line 62: currentInterviewInstId, currentInterviewInstTitle... 
-                      // Wait, did I see dealId?
-                      // Step 1345 line 697: // dealId: deal.id, // Move to active start
-                      // 看来 store 里可能没有直接存 dealId？
-                      // 但是 HomePage 和 DueDiligencePage 都用了 currentDealId。
-                      // 说明 useRecordingStore 返回了 currentDealId。
-                      // 让我们假定 store.getState().currentDealId 存在。
-
                       const activeDealId = store.currentDealId;
 
                       if (activeDealId && activeDealId !== currentDeal.id) {
@@ -930,25 +917,41 @@ const App: React.FC = () => {
                       });
 
                       if (createRes.success && createRes.data) {
-                        // 假设返回的数据直接是 ID，或者包含 interviewInstId 字段的对象
                         const instId = typeof createRes.data === 'string' ? createRes.data : createRes.data?.interviewInstId;
                         const instTitle = typeof createRes.data === 'string' ? '' : createRes.data?.interviewInstTitle;
 
-                        // 如果切换了访谈对象（ID不一致），则重置录音状态（初始化页面）
+                        // 如果没有当前访谈 ID，或者切换了访谈对象（ID不一致），则重置录音状态（初始化页面）
                         const currentStore = useRecordingStore.getState();
-                        if (currentStore.currentInterviewInstId && currentStore.currentInterviewInstId !== instId) {
+                        if (currentStore.currentInterviewInstId !== instId) {
                           currentStore.reset();
+                          
+                          // 同时清理当前 Deal 的命中状态 (仅限本地展示，直到下次从后端刷最新数据)
+                          if (currentDeal) {
+                            const clearedQuestions = (currentDeal.questionInfoList || []).map(q => ({
+                              ...q,
+                              CHECKED: false,
+                              questionAnswer: ''
+                            }));
+                            setCurrentDeal({ ...currentDeal, questionInfoList: clearedQuestions });
+                          }
                         }
 
-                        // 更新 Zustand Store (不设置 dealId，等真正开始录音时再设置)
+                        // 更新 Store (不设置 dealId，等真正开始录音时再设置)
                         setData({
                           interviewInstId: instId,
                           title: instTitle || '',
                         });
 
                         Toast.clear();
+
+                        // 现在统一重构路由栈为：HOME -> DUE_DILIGENCE -> RECORDING
                         setRecordingBackView(View.DUE_DILIGENCE);
                         setPreviousView(View.DUE_DILIGENCE);
+                        
+                        // 先重置栈为 [HOME, DUE_DILIGENCE]，模拟是从详情页跳进来的
+                        setViewStack([View.HOME, View.DUE_DILIGENCE]);
+                        
+                        // 然后使用 navigateForward 导航到录音页，这会自动把 RECORDING 压入栈并处理动画
                         navigateForward(View.RECORDING);
                       } else {
                         Toast.clear();
@@ -1041,9 +1044,20 @@ const App: React.FC = () => {
                         const instTitle = typeof createRes.data === 'string' ? '' : createRes.data?.interviewInstTitle;
 
                         const currentStore = useRecordingStore.getState();
-                        // 如果切换了访谈实例，重置
-                        if (currentStore.currentInterviewInstId && currentStore.currentInterviewInstId !== instId) {
+                        // 如果没有当前访谈 ID，或者切换了访谈实例，重置
+                        if (currentStore.currentInterviewInstId !== instId) {
                           currentStore.reset();
+
+                          // 同时清理当前 Deal 的命中状态
+                          if (currentDeal) {
+                            const clearedQuestions = (currentDeal.questionInfoList || []).map(q => ({
+                              ...q,
+                              CHECKED: false,
+                              questionAnswer: ''
+                            }));
+                            // 暂时更新本地状态，不再调用 detailRes 覆盖它，直到录音真正开始
+                            setCurrentDeal({ ...currentDeal, questionInfoList: clearedQuestions });
+                          }
                         }
 
                         // 更新 Store (不设置 dealId，等真正开始录音时再设置)
@@ -1053,37 +1067,11 @@ const App: React.FC = () => {
                         });
                       }
 
-                      // 获取最新详情
-                      const detailRes = await dealService.getDealInstDetail(currentDeal.id);
-                      if (detailRes.success && detailRes.data) {
-                        setCurrentDeal(detailRes.data);
-                      }
-
+                      // 统一在进入录音页前，只有在非“新访谈”场景下才全量刷新（防止覆盖刚清理的状态）
+                      // 实际上 RecordingPage 内部也会 fetch，所以这里可以简化
                       Toast.clear();
-
-                      // 这里的回退逻辑，通常从新建流程过来，我们希望它回退到哪里？
-                      // 既然是“去掉多余的页面”，可能用户希望回退到详情页，或者首页？
-                      // 暂时保持回退到 DUE_DILIGENCE，因为这是逻辑上的上一级
-                      // setRecordingBackView(View.DUE_DILIGENCE);
-                      // setPreviousView(View.MATERIAL_UPLOAD);
-                      // navigateForward(View.RECORDING);
-
-                      // 现在统一重构路由栈为：HOME -> DUE_DILIGENCE -> RECORDING
                       setRecordingBackView(View.DUE_DILIGENCE);
                       setPreviousView(View.DUE_DILIGENCE);
-
-                      // 重构路由栈，确保原生返回能回到详情页：HOME -> DUE_DILIGENCE -> RECORDING
-                      // setViewStack([View.HOME, View.DUE_DILIGENCE, View.RECORDING]);
-                      // setNavDirection('forward');
-                      // setCurrentView(View.RECORDING);
-                      // setTimeout(() => {
-                      //   window.scrollTo(0, 0);
-                      // }, 400);
-                      
-                      // 先重置栈为 [HOME, DUE_DILIGENCE]，模拟是从详情页跳进来的
-                      setViewStack([View.HOME, View.DUE_DILIGENCE]);
-                      
-                      // 然后使用 navigateForward 导航到录音页，这会自动把 RECORDING 压入栈并处理动画
                       navigateForward(View.RECORDING);
                     } catch (error) {
                       Toast.clear();
