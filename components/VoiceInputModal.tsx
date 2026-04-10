@@ -126,10 +126,16 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
        Toast.info('录音已中断');
     };
 
+    const handleResume = () => {
+       setIsLocalRecording(true);
+       Toast.info('录音已恢复');
+    };
+
     try {
       if (nativeBridge) {
         nativeBridge.on('transcriptionResult', handleTranscription);
         nativeBridge.on('recordingInterrupted', handleInterrupt);
+        nativeBridge.on('recordingResumed', handleResume);
       } else {
         console.error('nativeBridge is undefined');
       }
@@ -142,6 +148,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
         if (nativeBridge) {
           nativeBridge.off('transcriptionResult', handleTranscription);
           nativeBridge.off('recordingInterrupted', handleInterrupt);
+          nativeBridge.off('recordingResumed', handleResume);
         }
       } catch (e) {
         console.error('Error removing native listeners:', e);

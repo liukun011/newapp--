@@ -255,6 +255,9 @@ const App: React.FC = () => {
   // 访谈限制提示显示状态
   const [showLimitTips, setShowLimitTips] = useState(false);
 
+  // 录音中断弹窗显示状态
+  const [showInterruptDialog, setShowInterruptDialog] = useState(false);
+
   // 页面滚动位置缓存
   const [scrollPositions, setScrollPositions] = useState<Record<View, number>>({} as Record<View, number>);
 
@@ -628,13 +631,8 @@ const App: React.FC = () => {
             } finally {
               // store.reset(); // 不要重置状态，否则会退出访谈
               
-              // 弹窗提示暂停
-              Dialog.alert({
-                title: '录音已暂停',
-                message: '录音因外部原因（如来电、后台运行）中断，请点击“继续录音”恢复。',
-                confirmButtonText: '我知道了',
-                confirmButtonColor: '#4337F1',
-              });
+              // 弹窗提示暂停（使用状态驱动，以便恢复时可自动关闭）
+              setShowInterruptDialog(true);
             }
         } else {
           console.log('无论是录音状态与否，都收到了中断信号');
@@ -647,6 +645,31 @@ const App: React.FC = () => {
     nativeBridge.on('recordingInterrupted', handleInterruption);
     return () => nativeBridge.off('recordingInterrupted', handleInterruption);
   }, []);
+
+  // 监听录音恢复
+  useEffect(() => {
+    const handleResume = (response: any) => {
+      console.log('App.tsx: 收到录音恢复回调', JSON.stringify(response));
+
+      if (response.action === 'recordingResumed') {
+        const store = useRecordingStore.getState();
+        console.log('当前录音状态:', store.isRecording, '中断弹窗状态:', showInterruptDialog);
+
+        // 前提条件：必须是当前已经标记为中断（弹窗显示中）且录音未开启
+        if (showInterruptDialog && !store.isRecording) {
+          console.log('正在执行录音恢复流程...');
+          setShowInterruptDialog(false);
+          store.setIsRecording(true);
+          Toast.success('录音已恢复');
+        } else {
+          console.log('不符合恢复条件（可能未中断或已在录音）：忽略恢复信号');
+        }
+      }
+    };
+
+    nativeBridge.on('recordingResumed', handleResume);
+    return () => nativeBridge.off('recordingResumed', handleResume);
+  }, [showInterruptDialog]); // 需要依赖 showInterruptDialog 才能拿到最新值
 
   // ========== 注释：改为使用离线转写轮询，不再监听实时转写结果 ==========
   // 监听实时转写结果
@@ -1889,6 +1912,17 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+      {/* 录音中断提醒弹窗（受控模式，恢复时可自动关闭） */}
+      <Dialog
+        visible={showInterruptDialog}
+        title="录音已暂停"
+        message={'录音因外部原因（如来电、后台运行）中断，请点击\u201c继续录音\u201d恢复。'}
+        showCancelButton={false}
+        confirmButtonText="我知道了"
+        confirmButtonColor="#4337F1"
+        onConfirm={() => setShowInterruptDialog(false)}
+        onClose={() => setShowInterruptDialog(false)}
+      />
     </>
   );
 };
