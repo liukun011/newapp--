@@ -34,6 +34,7 @@ import HistoryDetailPage from './pages/HistoryDetailPage';
 import ReportPreviewPage from './pages/ReportPreviewPage';
 import OrganizationManagementPage from './pages/OrganizationManagementPage';
 import ShareAppPage from './pages/ShareAppPage';
+import EnterpriseDetailPage from './pages/EnterpriseDetailPage';
 import { View, DealRecord } from './types';
 
 import RecordingFloatBubble from './components/RecordingFloatBubble';
@@ -144,7 +145,7 @@ const App: React.FC = () => {
           const updatedList = [...transcriptionList];
           updatedList[updatedList.length - 1] = {
             ...lastItem,
-            content: lastItem.content + text,
+            content: lastItem.content + (text || ""),
             timestamp: Date.now(),
           };
           setTranscriptionList(updatedList);
@@ -281,10 +282,51 @@ const App: React.FC = () => {
     }
   }, [currentView]);
 
+  // 企查查资料详情数据
+  const [enterpriseDetailData, setEnterpriseDetailData] = useState<any>(null);
+
+  // AI 洞察结果数据 (全局同步)
+  const [aiInsightList, setAiInsightList] = useState<any[]>([]);
+
   // 新建尽调弹框状态
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState("");
+  const [creditCode, setCreditCode] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [enterpriseOptions, setEnterpriseOptions] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
   const [creating, setCreating] = useState(false);
+
+  // 企业搜索防抖
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (companyName && showCreateModal && !creditCode) {
+      timer = setTimeout(() => {
+        handleEnterpriseSearch(companyName);
+      }, 500);
+    } else {
+      setEnterpriseOptions([]);
+    }
+    return () => clearTimeout(timer);
+  }, [companyName, showCreateModal]);
+
+  const handleEnterpriseSearch = async (val: string) => {
+    if (!val || val.length < 2) {
+      setEnterpriseOptions([]);
+      return;
+    }
+    setSearching(true);
+    try {
+      const res = await dealService.searchEnterprise(val);
+      if (res.success && res.data) {
+        setEnterpriseOptions(res.data || []);
+      }
+    } catch (e) {
+      console.error('Search enterprise failed:', e);
+    } finally {
+      setSearching(false);
+    }
+  };
 
   useEffect(() => {
     if (currentDeal) {
@@ -765,14 +807,25 @@ const App: React.FC = () => {
       setCreating(true);
       const res = await dealService.createOrUpdateDealInst({
         interviewCust: newCustomerName.trim(),
+        companyName: companyName || undefined,
+        creditCode: creditCode || undefined,
       });
 
       if (res.success && res.data) {
+        // 更新当前尽调数据，确保后续页面（如上传资料页）显示正确的项目名称
+        setCurrentDeal(res.data);
+        
+        // 如果提供了企业信息，触发异步同步任务
+        if (creditCode || companyName) {
+           dealService.syncEnterprise(res.data.id).catch(e => console.error('Auto sync failed:', e));
+        }
+
         Toast.success('创建成功');
         setShowCreateModal(false);
         setNewCustomerName("");
-        
-        setCurrentDeal(res.data);
+        setCreditCode("");
+        setCompanyName("");
+        setEnterpriseOptions([]);
         // 必须使用 navigateForward 将新页面压入栈中，保证能从资料页返回首页
         setPreviousView(View.HOME);
         setMaterialUploadTab('upload');
@@ -912,6 +965,7 @@ const App: React.FC = () => {
               {currentView === View.DUE_DILIGENCE && (
                 <DueDiligencePage
                   deal={currentDeal}
+                  setAiInsightList={setAiInsightList}
                   onBack={() => navigateBackward(previousView === View.REPORTS_LIST ? View.REPORTS_LIST : View.HOME)}
                   onNavigateToRecording={async () => {
                     if (!currentDeal?.id) {
@@ -1007,6 +1061,11 @@ const App: React.FC = () => {
                     navigateForward(View.REPORT_PREVIEW);
                   }}
                   onDealDetailLoaded={(detail) => setCurrentDeal(detail)}
+                  onNavigateToEnterpriseDetail={(data) => {
+                    setEnterpriseDetailData(data);
+                    setPreviousView(View.DUE_DILIGENCE);
+                    navigateForward(View.ENTERPRISE_DETAIL);
+                  }}
                 />
               )}
               {currentView === View.MATERIALS_LIST && (
@@ -1178,6 +1237,12 @@ const App: React.FC = () => {
                     setNavDirection('forward');
                     setCurrentView(View.DUE_DILIGENCE);
                   }}
+                />
+              )}
+              {currentView === View.ENTERPRISE_DETAIL && (
+                <EnterpriseDetailPage
+                    data={enterpriseDetailData}
+                    onBack={() => navigateBackward(View.DUE_DILIGENCE)}
                 />
               )}
               {currentView === View.RECORDING && (
@@ -1513,9 +1578,11 @@ const App: React.FC = () => {
               )}
               {currentView === View.QUESTIONS_LIST && (
                 <QuestionsListPage
-                  dealName={currentDeal?.interviewCust}
+                  dealId={currentDeal?.id}
+                  dealName={currentDeal?.enterpriseName || (currentDeal as any)?.interviewCust}
                   dealLogo={currentDeal?.logo}
                   questionInfoList={currentDeal?.questionInfoList || []}
+                  aiInsightList={aiInsightList}
                   isArchived={currentDeal?.status === '5'}
                   onBack={() => navigateBackward(View.DUE_DILIGENCE)}
                   onUpdateQuestion={undefined}
@@ -1842,6 +1909,9 @@ const App: React.FC = () => {
             onClick={() => {
               setShowCreateModal(false);
               setNewCustomerName(""); 
+              setCreditCode("");
+              setCompanyName("");
+              setEnterpriseOptions([]);
             }}
           />
           
@@ -1852,49 +1922,98 @@ const App: React.FC = () => {
               新建访谈
             </h3>
             
-            {/* 输入框 */}
+            {/* 访谈对象名 (必填) */}
+            <div className="mb-4 relative">
+              <div className="flex justify-between items-end mb-2 pl-1">
+                <span className="text-sm text-slate-500 font-medium">访谈对象 <span className="text-red-500">*</span></span>
+                <span className="text-[11px] text-slate-400">
+                  {newCustomerName.length}/30
+                </span>
+              </div>
+              <input
+                type="text"
+                value={newCustomerName}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  if (val.length > 30) val = val.slice(0, 30);
+                  val = val.replace(/([\\\|\/\?\*\<\>]|\.\.|[\r\n])/g, '');
+                  setNewCustomerName(val);
+                }}
+                maxLength={30}
+                placeholder="请输入访谈对象名称"
+                className="w-full h-12 px-4 bg-gray-50 rounded-xl text-slate-800 border-none focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                autoFocus
+              />
+            </div>
+
+            {/* 企业关联搜索 (选填) */}
             <div className="mb-6 relative">
-              <label className="block text-sm text-slate-500 mb-2 pl-1">访谈对象：</label>
+              <div className="flex justify-between items-end mb-2 pl-1">
+                <div className="flex flex-col items-start">
+                  <span className="text-sm text-slate-500 font-medium">关联企业</span>
+                  <span className="text-[10px] text-slate-400 font-medium leading-none mt-0.5">/ 信用代码(选填)</span>
+                </div>
+              </div>
+              
               <div className="relative">
                 <input
                   type="text"
-                  value={newCustomerName}
+                  value={companyName || ""}
                   onChange={(e) => {
                     let val = e.target.value;
-                    // 1. 限制最大长度 30
-                    if (val.length > 30) {
-                        val = val.slice(0, 30);
-                    }
-                    // 2. 过滤特殊字符: \ | / ? * < > 、连续的点 .. 以及换行符
-                    val = val.replace(/([\\\|\/\?\*\<\>]|\.\.|[\r\n])/g, '');
-                    setNewCustomerName(val);
+                    if (val.length > 50) val = val.slice(0, 50);
+                    setCompanyName(val);
+                    setCreditCode(""); // 手动输入时清除代码
                   }}
-                  maxLength={30}
-                  placeholder="请输入访谈对象"
+                  placeholder="搜索或输入企业全称"
                   className="w-full h-12 px-4 bg-gray-50 rounded-xl text-slate-800 border-none focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
-                  autoFocus
-                  onFocus={() => {
-                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-                    if (isIOS) {
-                      setTimeout(() => {
-                        window.scrollBy({ top: 20, behavior: 'smooth' });
-                      }, 300);
-                    }
-                  }}
                 />
-              </div>
-              <div className="text-right text-[11px] text-slate-400 mt-1.5 pr-1">
-                {newCustomerName.length}/30
+                
+                {/* 搜索结果下拉列表 */}
+                {enterpriseOptions.length > 0 && (
+                  <div className="absolute top-13 left-0 right-0 bg-white rounded-2xl shadow-xl border border-gray-100 max-h-48 overflow-y-auto z-[110] py-1 animate-in fade-in slide-in-from-top-2">
+                    {enterpriseOptions.map((item, index) => (
+                      <div
+                        key={index}
+                        className="px-4 py-3 hover:bg-indigo-50 active:bg-indigo-100 transition-colors cursor-pointer border-b border-gray-50 last:border-none"
+                        onClick={() => {
+                          setCompanyName(item.name || "");
+                          setCreditCode(item.creditCode || "");
+                          // 自动回填访谈对象
+                          if (!newCustomerName.trim()) {
+                            setNewCustomerName(item.name || "");
+                          }
+                          setEnterpriseOptions([]);
+                        }}
+                      >
+                        <div className="text-[14px] font-bold text-slate-800 truncate mb-0.5">{item.name}</div>
+                        <div className="text-[11px] text-slate-400 font-medium">{item.creditCode}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {searching && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                  </div>
+                )}
               </div>
             </div>
             
+            {/* 隐藏字段提交 */}
+            <input type="hidden" value={creditCode} />
+            <input type="hidden" value={companyName} />
+
             {/* 按钮组 */}
             <div className="flex gap-3">
               <button
                 onClick={() => {
                   setShowCreateModal(false);
                   setNewCustomerName("");
+                  setCreditCode("");
+                  setCompanyName("");
+                  setEnterpriseOptions([]);
                 }}
                 className="flex-1 h-11 rounded-full border border-gray-200 text-slate-600 font-medium hover:bg-gray-50 active:scale-95 transition-all"
               >

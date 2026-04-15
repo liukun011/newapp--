@@ -16,7 +16,8 @@ let vConsoleInstance: VConsole | null = null;
 import envConfig from './config';
 
 const initVConsole = () => {
-  if (envConfig.isDev && !vConsoleInstance) {
+  // 开发环境或测试环境均初始化 VConsole
+  if ((envConfig.isDev || envConfig.isTest) && !vConsoleInstance) {
     vConsoleInstance = new VConsole();
   }
 };

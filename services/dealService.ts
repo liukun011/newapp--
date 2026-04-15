@@ -95,7 +95,7 @@ export const dealService = {
     const formData = new FormData();
     formData.append('interviewInstId', interviewInstId);
     formData.append('file', file);
-    
+
     return request<ApiResponse<any>>('/interview/uploadInterviewInstRecordFile', {
       method: 'POST',
       data: formData,
@@ -220,7 +220,7 @@ export const dealService = {
     const formData = new FormData();
     formData.append('id', dealId);
     formData.append('file', file);
-    
+
     return request<ApiResponse<any>>('/deal/upload', {
       method: 'POST',
       data: formData,
@@ -382,6 +382,92 @@ export const dealService = {
       method: 'POST',
       data: { id, direct },
       timeout: 15000,
+    });
+  },
+
+  /**
+   * 根据关键词搜索企业（天眼查接口）
+   * GET /api/deal/tyc/search
+   */
+  searchEnterprise: (word: string) => {
+    return request<ApiResponse<any[]>>('/deal/tyc/search', {
+      method: 'GET',
+      params: { word },
+    });
+  },
+
+  /**
+   * 启动天眼查企业数据异步同步任务
+   * GET /api/deal/tyc/sync
+   */
+  syncEnterprise: (dealId: string) => {
+    return request<ApiResponse<any>>('/deal/tyc/sync', {
+      method: 'GET',
+      params: { dealId },
+    });
+  },
+
+  /**
+   * 获取抓取后的企业基础信息
+   * GET /api/deal/tyc/basicInfo
+   */
+  getEnterpriseBasicInfo: (dealId: string) => {
+    return request<ApiResponse<any>>('/deal/tyc/basicInfo', {
+      method: 'GET',
+      params: { dealId },
+    });
+  },
+
+  /**
+   * 获取 AI 洞察结果
+   * GET /api/deal/aiInsight
+   */
+  aiInsight: (dealId: string, regenerate: boolean = false) => {
+    return request<ApiResponse<any[]>>('/deal/aiInsight', {
+      method: 'GET',
+      params: { dealId, regenerate },
+    });
+  },
+  /**
+   * 清除 AI 洞察结果
+   * POST /api/deal/clearAiInsight
+   */
+  clearAiInsight: (dealId: string) => {
+    return request<ApiResponse<any>>('/deal/clearAiInsight', {
+      method: 'POST',
+      data: { dealId },
+    });
+  },
+  /**
+   * 获取模板列表
+   * GET /api/templateInfo/getTemplateList
+   */
+  getTemplateList: (interviewDealInstId: string) => {
+    return request<ApiResponse<any[]>>('/templateInfo/getTemplateList', {
+      method: 'GET',
+      params: { interviewDealInstId },
+    });
+  },
+
+  /**
+   * 获取 AI 洞察结果
+   * GET /api/deal/aiInsight
+   */
+  getAiInsight: (dealId: string, regenerate: boolean = false) => {
+    return request<ApiResponse<any>>('/deal/aiInsight', {
+      method: 'GET',
+      params: { dealId, regenerate },
+    });
+  },
+
+  /**
+   * 接纳 AI 洞察建议
+   * POST /api/deal/acceptAiInsight
+   */
+  acceptAiInsight: (dealId: string, aiInsightsList: any[]) => {
+    return request<ApiResponse<any>>('/deal/acceptAiInsight', {
+      method: 'POST',
+      data: { dealId, aiInsights: aiInsightsList, saveToQuestionInfo: true },
     });
   },
 };

@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
 import { useKeyboardStatus } from '../hooks/useKeyboardStatus';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Loader2 } from 'lucide-react';
 import { Toast } from 'react-vant';
 import Button from '../components/Button';
 import { DealRecord } from '../types';
 import { dealService } from '../services/dealService';
-
 import { nativeBridge } from '../services/nativeBridge';
 import config from '../config';
 
@@ -17,17 +16,27 @@ interface CorporateEditPageProps {
 }
 
 const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onConfirm }) => {
-  const [companyName, setCompanyName] = useState(deal?.interviewCust || '');
+  // 访谈对象名 (对应后端的 interviewCust)
+  const [interviewCust, setInterviewCust] = useState(deal?.interviewCust || '');
+  // 关联企业信息 - 直接从 deal 根字段读取
+  const [companyName, setCompanyName] = useState(deal?.companyName || '');
+  const [creditCode, setCreditCode] = useState(deal?.creditCode || '');
   const [logoUrl, setLogoUrl] = useState(deal?.logo || '');
+
+  // 搜索相关状态
+  const [enterpriseOptions, setEnterpriseOptions] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+  const searchTimerRef = useRef<any>(null);
+
   const [loading, setLoading] = useState(false);
-  
+
   // 键盘与滚动处理
   const isKeyboardOpen = useKeyboardStatus();
-  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isKeyboardOpen && scrollContainerRef.current) {
-      // 键盘弹出，稍微延迟以等待布局调整
       setTimeout(() => {
         scrollContainerRef.current?.scrollTo({
           top: scrollContainerRef.current.scrollHeight,
@@ -36,135 +45,150 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
       }, 300);
     }
   }, [isKeyboardOpen]);
-  
-  // 上传状态锁
-  const isUploadingRef = React.useRef(false);
 
-  // 监听 deal 变化，更新 logo 和 companyName
+  const isUploadingRef = useRef(false);
+
+  // 初始化
   useEffect(() => {
     if (deal) {
-      setCompanyName(deal.interviewCust || '');
+      setInterviewCust(deal.interviewCust || '');
       setLogoUrl(deal.logo || '');
+      // 直接从根字段获取
+      setCompanyName(deal.companyName || '');
+      setCreditCode(deal.creditCode || '');
     }
   }, [deal]);
 
-  // 通用 Native 上传方法
+  // 企业搜索逻辑
+  const handleEnterpriseSearch = async (val: string) => {
+    if (!val || val.length < 2) {
+      setEnterpriseOptions([]);
+      setShowOptions(false);
+      return;
+    }
+    setSearching(true);
+    try {
+      const res = await dealService.searchEnterprise(val);
+      if (res.success && res.data) {
+        setEnterpriseOptions(res.data || []);
+        setShowOptions(true);
+      }
+    } catch (e) {
+      console.error('Search enterprise failed:', e);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const onSearchInputChange = (val: string) => {
+    setCompanyName(val);
+    if (!val.trim()) {
+      setCreditCode('');
+      setEnterpriseOptions([]);
+      setShowOptions(false);
+    }
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (val.trim()) {
+      searchTimerRef.current = setTimeout(() => {
+        handleEnterpriseSearch(val);
+      }, 500);
+    }
+  };
+
+  const selectEnterprise = (ent: any) => {
+    setCompanyName(ent.name);
+    setCreditCode(ent.creditCode);
+    setShowOptions(false);
+    // 如果访谈对象名为空，自动填入
+    if (!interviewCust) {
+        setInterviewCust(ent.name);
+    }
+    // 如果有 Logo，可以尝试同步 (TBD: TYC 搜索结果不一定带 Logo)
+  };
+
+  // 图片上传逻辑 (保持原样)
   const uploadNativeFile = async (localPath: string) => {
       if (isUploadingRef.current) return;
       isUploadingRef.current = true;
-      
       try {
           Toast.loading({ message: '图片处理中...', duration: 0, forbidClick: true });
-          
           const token = localStorage.getItem('zov-user-token') || '';
-          const uploadHost = config.uploadUrl; // 环境配置
-
-          const params = {
-              host: uploadHost,
-              authorization: token,
-              filePath: localPath,
-          };
-          
-          console.log('[企业资料] 开始上传图片:', localPath);
-
+          const params = { host: config.uploadUrl, authorization: token, filePath: localPath };
           const serverUrl = await new Promise<string>((resolve, reject) => {
                const resultHandler = (res: any) => {
                    const resultData = res.data?.result || (res.data?.success !== undefined ? res.data : null);
-                   const isSuccess = res.success && (resultData?.success === true || resultData?.errno === 0);
-
-                   if (isSuccess) {
+                   if (res.success && (resultData?.success === true || resultData?.errno === 0)) {
                        const url = resultData.data?.url || resultData.url || (typeof resultData.data === 'string' ? resultData.data : "");
-                       if (url) {
-                           nativeBridge.off('onUploadResult', resultHandler);
-                           resolve(url);
-                       }
-                   } else if (res.success && res.data?.percent !== undefined) {
-                       // 忽略进度
-                   } else {
-                       if (res.success === false || (resultData && resultData.success === false)) {
-                           nativeBridge.off('onUploadResult', resultHandler);
-                           reject(new Error(resultData?.message || res.message || '上传失败'));
-                       }
+                       if (url) { nativeBridge.off('onUploadResult', resultHandler); resolve(url); }
+                   } else if (res.success === false) {
+                       nativeBridge.off('onUploadResult', resultHandler);
+                       reject(new Error(resultData?.message || res.message || '上传失败'));
                    }
                };
-               
                nativeBridge.on('onUploadResult', resultHandler);
                nativeBridge.uploadInterviewFile(params);
-               
-               setTimeout(() => {
-                   nativeBridge.off('onUploadResult', resultHandler);
-                   reject(new Error('上传超时'));
-               }, 30000);
+               setTimeout(() => { nativeBridge.off('onUploadResult', resultHandler); reject(new Error('上传超时')); }, 30000);
           });
-
-          console.log('[企业资料] 图片上传成功:', serverUrl);
           setLogoUrl(serverUrl);
           Toast.clear();
           Toast.success('图片已更新');
-
       } catch (error: any) {
-          console.error('Native upload failed:', error);
           Toast.clear();
           Toast.fail(error.message || '图片上传失败');
-      } finally {
-          isUploadingRef.current = false;
-      }
+      } finally { isUploadingRef.current = false; }
   };
 
-  // 监听 Native 图片选择回调
   useEffect(() => {
-      const handleImageSelected = (res: any) => {
-          if (res.success && res.data && res.data.imageURL) {
-              uploadNativeFile(res.data.imageURL);
-          }
-      };
-      
+      const handleImageSelected = (res: any) => { if (res.success && res.data && res.data.imageURL) uploadNativeFile(res.data.imageURL); };
       nativeBridge.on('imageSelected', handleImageSelected);
-      
-      return () => {
-          nativeBridge.off('imageSelected', handleImageSelected);
-      };
+      return () => { nativeBridge.off('imageSelected', handleImageSelected); };
   }, []);
 
-  // 监听原生返回键
   useEffect(() => {
-    const handleNativeBack = (e: Event) => {
-      e.preventDefault();
-      onBack();
-    };
-
+    const handleNativeBack = (e: Event) => { e.preventDefault(); onBack(); };
     window.addEventListener('requestNativeBack', handleNativeBack);
-    return () => {
-      window.removeEventListener('requestNativeBack', handleNativeBack);
-    };
+    return () => { window.removeEventListener('requestNativeBack', handleNativeBack); };
   }, [onBack]);
 
-
-  // 处理确认按钮点击
   const handleConfirm = async () => {
-    if (!companyName.trim()) {
-      Toast.info('请输入企业名称');
+    if (!interviewCust.trim()) {
+      Toast.info('请输入访谈对象名称');
       return;
     }
-
     if (!deal?.id) {
       Toast.fail('未找到尽调信息');
       return;
     }
-
     try {
       setLoading(true);
       
-      // 直接使用图片地址保存
-      let finalLogo = logoUrl.trim();
+      // 判断企业信息是否发生变化
+      const isCompanyChanged = (companyName.trim() !== (deal.companyName || '')) || (creditCode.trim() !== (deal.creditCode || ''));
+
+      // 如果企业信息变了，清除旧的 AI 洞察结果
+      if (isCompanyChanged) {
+        try {
+          await dealService.clearAiInsight(deal.id);
+          console.log('[CorporateEdit] AI Insights cleared due to company change');
+        } catch (e) {
+          console.error('Failed to clear AI insights:', e);
+        }
+      }
 
       await dealService.createOrUpdateDealInst({
         id: deal.id,
-        interviewCust: companyName.trim(),
-        logo: finalLogo,
+        interviewCust: interviewCust.trim(),
+        companyName: companyName.trim() || undefined,
+        creditCode: creditCode.trim() || undefined,
+        logo: logoUrl.trim(),
       });
+
+      // 如果企业信息变了，触发同步更新
+      if (isCompanyChanged && (companyName || creditCode)) {
+          dealService.syncEnterprise(deal.id).catch(e => console.error('Sync failed:', e));
+      }
       Toast.success('更新成功');
-      onConfirm(companyName.trim(), finalLogo);
+      onConfirm(interviewCust.trim(), logoUrl.trim());
     } catch (error: any) {
       Toast.fail(error.message || '更新失败');
     } finally {
@@ -172,32 +196,31 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
     }
   };
 
-  // Throttled Handlers
   const handleSaveThrottled = useThrottleFn(handleConfirm, 1000);
   const handleBackThrottled = useThrottleFn(onBack, 1000);
-  const handlePhotoUploadThrottled = useThrottleFn(() => {
-    nativeBridge?.openPhotoLibrary?.();
-  }, 1000);
 
   return (
     <div className="fixed inset-0 h-full w-full overflow-hidden flex flex-col bg-[#F7F8FA]">
-
       {/* NavBar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white sticky top-0 z-10">
+      <div className="flex items-center justify-between px-4 py-3 bg-white sticky top-0 z-10 border-b border-gray-100">
         <button onClick={handleBackThrottled} className="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-full transition-colors">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-lg font-bold text-slate-800">企业资料</h1>
-        <div className="w-8"></div> {/* Spacer for alignment */}
+        <h1 className="text-lg font-bold text-slate-800">编辑访谈资料</h1>
+        <div className="w-8"></div>
       </div>
 
-      {/* Main Content - Scrollable Area */}
-      <div ref={scrollContainerRef} className="flex-1 w-full overflow-y-auto p-6 flex flex-col items-center pb-32">
-        {/* Photo Uploader Placeholder / Logo Preview */}
-        <div className="mt-8 mb-10 flex flex-col items-center justify-center shrink-0">
-            <div 
-                className="w-28 h-28 rounded-full bg-indigo-50 flex flex-col items-center justify-center text-indigo-500 mb-2 shadow-sm border border-indigo-100 active:scale-95 transition-transform overflow-hidden cursor-pointer relative group"
-                onClick={handlePhotoUploadThrottled}
+      {/* Main Content */}
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 w-full overflow-y-auto p-6 flex flex-col items-center pb-32"
+        onClick={() => setShowOptions(false)}
+      >
+        {/* Logo Preview */}
+        <div className="mt-4 mb-8 flex flex-col items-center justify-center shrink-0">
+            <div
+                className="w-24 h-24 rounded-full bg-white flex flex-col items-center justify-center text-indigo-500 mb-2 shadow-md border-4 border-white active:scale-95 transition-transform overflow-hidden cursor-pointer relative group"
+                onClick={() => nativeBridge?.openPhotoLibrary?.()}
             >
                 {logoUrl ? (
                     <>
@@ -207,74 +230,110 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
                         </div>
                     </>
                 ) : (
-                    <Plus size={36} strokeWidth={2.5} />
+                    <div className="bg-indigo-50 w-full h-full flex flex-col items-center justify-center">
+                        <Plus size={32} strokeWidth={2.5} />
+                    </div>
                 )}
             </div>
-            <span 
-                className="text-[11px] font-medium mt-1 text-indigo-400 cursor-pointer"
-                onClick={handlePhotoUploadThrottled}
-            >
-                {logoUrl ? '点击更换图片' : '上传企业照片'}
-            </span>
+            <span className="text-[11px] font-bold mt-1 text-slate-400">点击上传企业/访谈照片</span>
         </div>
 
-        {/* Name Input */}
-        <div className="w-full">
-            <label className="block text-sm text-slate-500 mb-3 pl-1">被访企业名称</label>
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-transparent focus-within:border-indigo-200 transition-colors">
-                <textarea 
-                    value={companyName}
-                    onChange={(e) => {
-                        let val = e.target.value;
-                        
-                        // 1. 限制最大长度 30
-                        if (val.length > 30) {
-                            val = val.slice(0, 30);
-                        }
+        {/* Form Fields */}
+        <div className="w-full space-y-6">
+            {/* Interview Cust */}
+            <div className="w-full">
+                <div className="flex justify-between items-end mb-2 pl-1">
+                    <span className="text-sm text-slate-500 font-bold">访谈对象 <span className="text-red-500">*</span></span>
+                    <span className="text-[11px] text-slate-400 font-bold">{interviewCust.length}/30</span>
+                </div>
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-transparent focus-within:border-indigo-200 transition-all">
+                    <input
+                        type="text"
+                        value={interviewCust}
+                        onChange={(e) => {
+                            let val = e.target.value;
+                            if (val.length > 30) val = val.slice(0, 30);
+                            val = val.replace(/([\\\|\/\?\*\<\>]|\.\.|[\r\n])/g, '');
+                            setInterviewCust(val);
+                        }}
+                        className="w-full text-[16px] text-slate-800 font-[800] outline-none bg-transparent placeholder-gray-300"
+                        placeholder="请输入人员名称/访谈单位"
+                    />
+                </div>
+            </div>
 
-                        // 2. 过滤特殊字符: \ | / ? * < > 、连续的点 .. 以及换行符
-                        val = val.replace(/([\\\|\/\?\*\<\>]|\.\.|[\r\n])/g, '');
+            {/* Enterprise Search Section */}
+            <div className="w-full">
+                <div className="flex items-center gap-1.5 mb-2 pl-1">
+                    <span className="text-sm text-slate-500 font-bold">关联企业资料</span>
+                </div>
 
-                        setCompanyName(val);
-                    }}
-                    maxLength={30}
-                    rows={2}
-                    className="w-full text-[16px] text-slate-800 font-medium outline-none bg-transparent placeholder-gray-300 resize-none"
-                    placeholder="请输入企业名称"
-                />
-                 <div className="text-right text-xs text-slate-400 mt-1">
-                    {companyName.length}/30
-                 </div>
+                <div className="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-gray-100 overflow-hidden">
+                    {/* Search Input Part */}
+                    <div className="p-4 flex items-center gap-3 active:bg-slate-50 transition-colors">
+                        <Search size={18} className="text-slate-300 shrink-0" />
+                        <input
+                            type="text"
+                            value={companyName}
+                            onChange={(e) => onSearchInputChange(e.target.value)}
+                            onFocus={() => { if (enterpriseOptions.length > 0) setShowOptions(true); }}
+                            className="flex-1 text-[15px] text-slate-800 font-[800] outline-none bg-transparent placeholder-slate-300"
+                            placeholder="搜索企业全称或信用代码"
+                        />
+                        {searching && <Loader2 size={16} className="animate-spin text-indigo-400 shrink-0" />}
+                    </div>
+
+                    {/* Credit Code Result (Only shows if search results are not open) */}
+                    {creditCode && !showOptions && (
+                        <div className="px-4 pb-4 animate-fadeIn">
+                             <div className="bg-indigo-50/40 rounded-xl p-2.5 flex items-center justify-between border border-indigo-100/30">
+                                <div className="flex flex-col">
+                                    <span className="text-[9px] text-indigo-300 font-bold uppercase tracking-widest leading-none mb-1">信用代码(CREDIT CODE)</span>
+                                    <span className="text-[13px] text-indigo-600 font-mono font-bold tracking-tight leading-none">{creditCode}</span>
+                                </div>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setCreditCode(''); setCompanyName(''); }}
+                                    className="text-[11px] text-indigo-400 font-bold px-2 py-1.5 rounded-lg active:bg-indigo-100 transition-colors"
+                                >
+                                    清除
+                                </button>
+                             </div>
+                        </div>
+                    )}
+
+                    {/* Dropdown Options (Inside the card or floating) */}
+                    {showOptions && enterpriseOptions.length > 0 && (
+                        <div
+                            className="border-t border-gray-50 max-h-52 overflow-y-auto bg-slate-50/30"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {enterpriseOptions.map((ent, idx) => (
+                                <div
+                                    key={idx}
+                                    className="px-4 py-3 hover:bg-white active:bg-indigo-50 transition-colors cursor-pointer border-b border-gray-50 last:border-none"
+                                    onClick={() => selectEnterprise(ent)}
+                                >
+                                    <div className="text-[13px] font-bold text-slate-700 line-clamp-1">{ent.name}</div>
+                                    <div className="text-[10px] text-slate-400 font-medium mt-0.5">代码: {ent.creditCode || '无'}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
       </div>
 
-      <div 
+      {/* Buttons */}
+      <div
         className="absolute bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30 flex gap-4"
-        style={{
-          paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
-          transform: 'translateZ(0)',
-          WebkitTransform: 'translateZ(0)' 
-        }}
+        style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
       >
-         <Button 
-            variant="secondary" 
-            block 
-            className="flex-1 !rounded-full !bg-white !border-indigo-100 !text-indigo-600 !h-12 !text-[16px] shadow-lg shadow-indigo-100/50"
-            onClick={handleBackThrottled}
-         >
-         取消
+         <Button variant="secondary" block className="flex-1 !rounded-full !bg-white !border-gray-200 !text-slate-400 !h-12 !text-[16px]" onClick={handleBackThrottled}>
+            取消
          </Button>
-         
-         <Button 
-            variant="primary" 
-            block 
-            className="flex-1 !rounded-full !h-12 !text-[16px] shadow-lg shadow-indigo-500/30"
-            onClick={handleSaveThrottled}
-            loading={loading}
-            disabled={loading}
-         >
-         确认
+         <Button variant="primary" block className="flex-1 !rounded-full !h-12 !text-[16px] shadow-lg shadow-indigo-500/30" onClick={handleSaveThrottled} loading={loading} disabled={loading}>
+            保存
          </Button>
       </div>
     </div>

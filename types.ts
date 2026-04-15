@@ -24,6 +24,7 @@ export enum View {
   INVITATION_CENTER = 'INVITATION_CENTER', // InvitationCenterPage - 邀请中心页
   ORGANIZATION_MANAGEMENT = 'ORGANIZATION_MANAGEMENT', // OrganizationManagementPage - 组织管理页
   SHARE_APP = 'SHARE_APP',             // ShareAppPage - 分享应用页
+  ENTERPRISE_DETAIL = 'ENTERPRISE_DETAIL', // EnterpriseDetailPage - 企查查资料详情页
 }
 
 
@@ -112,9 +113,23 @@ export interface QuestionInfo {
   questionAnswerTime: string | null;
   questionStatus: string;
   templateId: string;
-  agencyId: string;
+  agencyId?: string | null;
   recStatus: string;
   CHECKED?: boolean;
+}
+
+// 模板信息
+export interface TemplateInfo {
+  id: string;
+  templateName: string;
+  templateType: string;
+  businessId: string;
+  templateDesc: string;
+  templateStatus: string;
+  recStatus: string;
+  questionList: QuestionInfo[];
+  // 额外计算字段（可能由前端计算或可选）
+  questionNum?: number;
 }
 
 export interface DealRecord {
@@ -136,6 +151,8 @@ export interface DealRecord {
   templateId: any;
   dealSummary?: string;
   lastModifiedDate?: string;
+  companyName?: string;
+  creditCode?: string;
 }
 
 export interface ReportRecord {

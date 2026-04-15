@@ -3,11 +3,12 @@ import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
-import { DealRecord, DealReportStatusEnum } from '../types';
+import { DealRecord, DealReportStatusEnum, QuestionInfo, TemplateInfo } from '../types';
 import { dealService } from '../services/dealService';
 import { nativeBridge } from '@/services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
 import VoiceInputModal from '../components/VoiceInputModal';
+import TemplateSwitchModal from '../components/TemplateSwitchModal';
 import config from '../config';
 
 interface DueDiligencePageProps {
@@ -21,6 +22,7 @@ interface DueDiligencePageProps {
   onPreviewReport?: (name: string, reportUrl: string, previewUrl: string, showDownloadButton?: boolean) => void;
   onNavigateToHistory?: (dealId: string) => void;
   onDealDetailLoaded?: (detail: DealRecord) => void;
+  onNavigateToEnterpriseDetail?: (data: any) => void;
 }
 
 const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
@@ -33,7 +35,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   onChangeTemplate,
   onPreviewReport,
   onNavigateToHistory,
-  onDealDetailLoaded
+  onDealDetailLoaded,
+  onNavigateToEnterpriseDetail
 }) => {
   const basePath = import.meta.env.BASE_URL || '/';
   // 详情数据
@@ -46,6 +49,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const { currentDealId } = useRecordingStore();
   const [showLimitTips, setShowLimitTips] = useState(false);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
+  const [templateModalVisible, setTemplateModalVisible] = useState(false);
+  const [templates, setTemplates] = useState<TemplateInfo[]>([]);
+  const [isAnalyzingAi, setIsAnalyzingAi] = useState(false);
+  const [aiInsightList, setAiInsightList] = useState<any[]>([]);
   const [voiceModalInitialContent, setVoiceModalInitialContent] = useState('');
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const [isRefreshingSummary, setIsRefreshingSummary] = useState(false);
@@ -57,58 +64,89 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   // 记录最后一次保存的问题列表状态（JSON字符串），用于判断是否有更新
   const lastSavedQuestionsRef = React.useRef<string>('');
 
+  // 企查查/天眼查数据状态
+  const [enterpriseInfo, setEnterpriseInfo] = useState<any>(null);
+  const [aiInsights, setAiInsights] = useState<any[]>([]);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [loadingEnterprise, setLoadingEnterprise] = useState(false);
+
+  const fetchTemplates = async (dealId: string) => {
+    try {
+      const res = await dealService.getTemplateList(dealId);
+      if (res.success && res.data) {
+        setTemplates(res.data);
+      }
+    } catch (e) {
+      console.error('Failed to fetch templates:', e);
+    }
+  };
+
+  const fetchDealDetail = async () => {
+    if (!deal?.id) return;
+    try {
+      const res = await dealService.getDealInstDetail(deal.id);
+      if (res.success && res.data) {
+        setDealDetail(res.data);
+        // 初始加载或刷新时，记录当前服务器端的问题列表状态
+        if (res.data.questionInfoList) {
+          lastSavedQuestionsRef.current = JSON.stringify(res.data.questionInfoList);
+        }
+        // 通知父组件更新数据
+        onDealDetailLoadedRef.current?.(res.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch deal detail:', error);
+    }
+  };
+
+  const fetchInterviewRecords = async () => {
+    if (!deal?.id) return;
+    try {
+      const res = await dealService.queryInterviewInstListByPage({
+        interviewDealInstId: deal.id,
+        pageNum: 1,
+        pageSize: 100,
+      });
+      if (res.success && res.data) {
+        const allRecords = res.data.records || [];
+        setInterviewRecords(allRecords);
+        // 只统计已真正录过音的实例
+        const completedRecords = allRecords.filter(
+          (r: any) => r.interviewInstStatus && String(r.interviewInstStatus) !== '1'
+        );
+        setInterviewTotalCount(completedRecords.length);
+      }
+    } catch (e) {
+      console.error('Failed to fetch interview records:', e);
+    }
+  };
+
+  const fetchEnterpriseData = async () => {
+    if (!deal?.id) return;
+    setLoadingEnterprise(true);
+    try {
+      const basicRes = await dealService.getEnterpriseBasicInfo(deal.id);
+      if (basicRes.success) setEnterpriseInfo(basicRes.data);
+    } catch (e) {
+      console.error('Failed to fetch enterprise data:', e);
+    } finally {
+      setLoadingEnterprise(false);
+    }
+  };
+
   // 进入页面时请求详情（只在 deal.id 变化时请求）
   useEffect(() => {
     if (!deal?.id) return;
 
-    // 清除/初始化前一个详情的数据状态，防止数据残留显示错误
+    // 清除/初始化前一个详情的数据状态
     setDealDetail(null);
     setInterviewRecords([]);
     setInterviewTotalCount(0);
-
-    const fetchDealDetail = async () => {
-
-      try {
-        const res = await dealService.getDealInstDetail(deal.id);
-        if (res.success && res.data) {
-          setDealDetail(res.data);
-          // 初始加载或刷新时，记录当前服务器端的问题列表状态
-          if (res.data.questionInfoList) {
-            lastSavedQuestionsRef.current = JSON.stringify(res.data.questionInfoList);
-          }
-          // 通知父组件更新数据
-          onDealDetailLoadedRef.current?.(res.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch deal detail:', error);
-      }
-    };
-
-    const fetchInterviewRecords = async () => {
-      if (!deal?.id) return;
-      try {
-        const res = await dealService.queryInterviewInstListByPage({
-          interviewDealInstId: deal.id,
-          pageNum: 1,
-          pageSize: 100,
-        });
-        if (res.success && res.data) {
-          const allRecords = res.data.records || [];
-          setInterviewRecords(allRecords);
-          // 只统计已真正录过音的实例（interviewInstStatus 不是 '1'）
-          // 状态 '1' 表示刚创建还未开始录音，不能算作"访谈已完成"
-          const completedRecords = allRecords.filter(
-            (r: any) => r.interviewInstStatus && String(r.interviewInstStatus) !== '1'
-          );
-          setInterviewTotalCount(completedRecords.length);
-        }
-      } catch (e) {
-        console.error('Failed to fetch interview records:', e);
-      }
-    };
+    fetchTemplates(deal.id);
 
     fetchDealDetail();
     fetchInterviewRecords();
+    fetchEnterpriseData();
   }, [deal?.id]);
 
   // Sync dealDetail with deal prop when it changes (critical for back navigation updates from parent)
@@ -582,6 +620,54 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     onNavigateToRecording();
   }, 1000);
 
+  const handleSwitchTemplate = async (questionId: string) => {
+    if (!currentDeal?.id) return;
+    try {
+      Toast.loading({ message: '切换中...', duration: 0 });
+      const res = await dealService.createOrUpdateDealInst({
+        id: currentDeal.id,
+        questionId: questionId
+      });
+      if (res.success) {
+        // 成功后全量拉取最新详情和模板列表，触发 UI 同步更新
+        await Promise.all([
+          fetchDealDetail(),
+          fetchTemplates(currentDeal.id)
+        ]);
+        Toast.success('清单已更新');
+      } else {
+        Toast.fail(res.message || '切换失败');
+        throw new Error(res.message);
+      }
+    } catch (e: any) {
+      console.error('Switch template failed:', e);
+      Toast.fail(e.message || '网络错误');
+      throw e;
+    }
+  };
+
+  const handleAiInsight = async () => {
+    if (!currentDeal?.id || isAnalyzingAi) return;
+    try {
+      setIsAnalyzingAi(true);
+      const res = await dealService.getAiInsight(currentDeal.id, false);
+      if (res.success) {
+        if (res.data) {
+          setAiInsightList(res.data);
+        }
+        await fetchDealDetail();
+        Toast.success('AI 洞察生成成功');
+      } else {
+        Toast.fail(res.message || '生成失败');
+      }
+    } catch (e: any) {
+      console.error('AI Insight failed:', e);
+      Toast.fail('接口请求失败');
+    } finally {
+      setIsAnalyzingAi(false);
+    }
+  };
+
   const handleArchiveThrottled = useThrottleFn(() => {
     Dialog.confirm({
       title: '提示',
@@ -1010,7 +1096,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 <h3 className="text-[16px] font-bold text-slate-800 tracking-wider">访谈录音 <span className="font-medium">({totalCount})</span></h3>
                 <div className="flex items-center gap-1">
                   <button 
-                    className="flex items-center border border-[#905CFE] text-[#905CFE] rounded-full px-2.5 py-[2px] text-[11px] active:bg-purple-50"
+                    className="flex items-center border border-[#4B42F5] text-[#4B42F5] rounded-full px-2.5 py-[2px] text-[11px] active:bg-indigo-50"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRecordingClickThrottled();
@@ -1047,24 +1133,250 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             )
           })()}
 
+          {/* 企查查资料 */}
+          {(() => {
+            const handleSync = async () => {
+                if (!currentDeal?.id || isSyncing) return;
+                try {
+                    setIsSyncing(true);
+                    Toast.loading({ message: '同步中...', duration: 0 });
+                    const res = await dealService.syncEnterprise(currentDeal.id);
+                    if (res.success) {
+                        Toast.success('同步指令已下发，后台处理中');
+                        // 稍微延迟后刷新数据
+                        setTimeout(async () => {
+                            const basicRes = await dealService.getEnterpriseBasicInfo(currentDeal.id!);
+                            if (basicRes.success) setEnterpriseInfo(basicRes.data);
+                        }, 2000);
+                    } else {
+                        Toast.fail(res.message || '同步失败');
+                    }
+                } catch (e) {
+                    console.error('Sync failed:', e);
+                    Toast.fail('网络错误');
+                } finally {
+                    setIsSyncing(false);
+                }
+            };
+
+            const getInsightStatus = () => {
+                if (isSyncing) return { text: '洞察中', color: 'text-amber-500' };
+                return { text: '待洞察', color: 'text-gray-400' };
+            };
+
+            const insightStatus = getInsightStatus();
+            const basicInfo = enterpriseInfo || {};
+            
+            return (
+                <div className="bg-white rounded-[24px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-indigo-50/30">
+                    <div className="flex items-center justify-between mb-4 px-1">
+                        <div className="flex items-center gap-1.5">
+                            <h3 className="text-[16px] font-bold text-slate-800">企查查资料</h3>
+                            <span className="text-[14px] text-slate-300 font-medium">(7项)</span>
+                        </div>
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleSync();
+                            }}
+                            disabled={isSyncing}
+                            className="flex items-center border border-[#4B42F5] text-[#4B42F5] rounded-full px-2.5 py-[2px] text-[11px] active:bg-indigo-50 transition-all disabled:opacity-50"
+                        >
+                            {isSyncing ? '同步中...' : '更新资料'}
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                        {/* 企业名称 */}
+                        <div className="bg-[#F8FAFE] rounded-2xl p-3 border border-indigo-50/30">
+                            <p className="text-[11px] text-[#94A3B8] font-bold mb-2">企业名称</p>
+                            <div className="flex items-center justify-between gap-1">
+                                <span className="text-[14px] font-[800] text-slate-800 truncate">
+                                    {basicInfo.name || currentDeal?.companyName || '待补充'}
+                                </span>
+                                <div className="bg-[#EEF2FF] text-[#6366F1] text-[9px] px-1.5 py-0.5 rounded-md flex-shrink-0 font-bold">线索</div>
+                            </div>
+                        </div>
+
+                        {/* 统一代码 */}
+                        <div className="bg-[#F8FAFE] rounded-2xl p-3 border border-indigo-50/30">
+                            <p className="text-[11px] text-[#94A3B8] font-bold mb-2">统一代码</p>
+                            <div className="flex items-center justify-between gap-1">
+                                <span className="text-[14px] font-[800] text-slate-800 truncate">
+                                    {basicInfo.creditCode || currentDeal?.creditCode || '待补充'}
+                                </span>
+                                <div className="bg-[#EEF2FF] text-[#6366F1] text-[9px] px-1.5 py-0.5 rounded-md flex-shrink-0 font-bold">线索</div>
+                            </div>
+                        </div>
+
+                        {/* 企查查状态 */}
+                        <div className="bg-[#F8FAFE] rounded-2xl p-3 border border-indigo-50/30">
+                            <p className="text-[11px] text-[#94A3B8] font-bold mb-2">企查查状态</p>
+                            <div className="flex items-center justify-between gap-1">
+                                <span className={`text-[14px] font-[800] ${basicInfo.regStatus ? 'text-slate-800' : 'text-gray-400'}`}>
+                                    {basicInfo.regStatus || (isSyncing ? '同步中' : '待同步')}
+                                </span>
+                                <div className="bg-[#EEF2FF] text-[#6366F1] text-[9px] px-1.5 py-0.5 rounded-md flex-shrink-0 font-bold">线索</div>
+                            </div>
+                        </div>
+
+                        {/* 股权变更 */}
+                        <div className="bg-[#F8FAFE] rounded-2xl p-3 border border-indigo-50/30">
+                            <p className="text-[11px] text-[#94A3B8] font-bold mb-2">股权变更</p>
+                            <div className="flex items-center justify-between gap-1">
+                                <span className={`text-[14px] font-[800] ${insightStatus.color} truncate`}>
+                                    {insightStatus.text}
+                                </span>
+                                <div className="bg-[#EEF2FF] text-[#6366F1] text-[9px] px-1.5 py-0.5 rounded-md flex-shrink-0 font-bold">线索</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button 
+                         className="w-full h-12 rounded-2xl border border-gray-100 flex items-center justify-between px-5 active:bg-gray-50 transition-colors"
+                         onClick={(e) => {
+                            e.stopPropagation();
+                            console.log('[DueDiligence] Button Clicked - Navigating to Enterprise Detail', { basicInfo, aiInsights });
+                            onNavigateToEnterpriseDetail?.({
+                                enterpriseInfo: basicInfo,
+                                aiInsights: aiInsights
+                            });
+                         }}
+                    >
+                        <span className="text-[14px] font-[800] text-slate-700">查看完整企查查资料</span>
+                        <ChevronRight size={18} className="text-gray-300" />
+                    </button>
+                </div>
+            );
+          })()}
+
           {/* 问题集合 */}
           {(() => {
             const questionList = currentDeal?.questionInfoList || [];
             const totalCount = questionList.length;
             const checkedCount = questionList.filter((q) => q.CHECKED === true).length;
+            const qId = (currentDeal as any)?.questionId || currentDeal?.reportTemplate?.id;
+            const matchedTemplate = templates.find(t => String(t.id) === String(qId));
+            const templateName = matchedTemplate?.templateName || currentDeal?.reportTemplate?.templateName || '默认访谈模板';
+            
+            console.log('[DueDiligence] Template Selection:', {
+                qId,
+                found: !!matchedTemplate,
+                name: templateName
+            });
+            
+            // 数据源直接取最开始的两条
+            const displayQuestions = questionList.slice(0, 2);
+
             return (
-              <div 
-                className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer"
-                onClick={handleNavigateQuestionsThrottled}
-              >
-                <div className="flex items-center gap-1">
-                  <h3 className="text-[16px] font-bold text-slate-800 tracking-wider">问题集合</h3>
-                  <span className="text-[14px] text-slate-800 font-medium">{checkedCount}</span>
-                  <span className="text-[12px] text-gray-300">/{totalCount}</span>
+              <div className="bg-white rounded-[32px] p-5 shadow-[0_2px_24px_rgba(0,0,0,0.06)] border border-indigo-50/20">
+                {/* Header */}
+                <div className="mb-3">
+                  <div className="flex items-center gap-1 mb-1">
+                    <h3 className="text-[16px] font-bold text-slate-800">问题清单</h3>
+                    <div className="flex items-baseline">
+                      <span className="text-[14px] font-bold text-slate-800 ml-0.5">{checkedCount}</span>
+                      <span className="text-[12px] font-medium text-slate-200">/{totalCount}</span>
+                    </div>
+                  </div>
+                  <p className="text-[13px] text-slate-400 font-medium leading-none">
+                    当前问题清单：<span className="text-slate-500">{templateName}</span>
+                  </p>
                 </div>
-              <ChevronRight size={14} className="text-gray-300" />
-            </div>
-            )
+
+                {/* Actions Inline - Medium Size */}
+                <div className="flex items-center gap-2.5 mb-3.5">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTemplateModalVisible(true);
+                    }}
+                    className="flex items-center border border-[#EBEBF5] text-slate-700 rounded-full px-5 py-1.5 text-[12px] font-[800] active:bg-gray-50 transition-all shadow-sm"
+                  >
+                    切换清单
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAiInsight();
+                    }}
+                    disabled={isAnalyzingAi}
+                    className={`
+                      flex items-center gap-1.5 rounded-full px-5 py-1.5 text-[12px] font-[800] transition-all
+                      ${isAnalyzingAi 
+                        ? 'bg-[#EEF2FF] text-[#4B42F5]' 
+                        : 'bg-[#4B42F5] text-white shadow-[0_4px_10px_rgba(75,66,245,0.25)] active:scale-95'}
+                    `}
+                  >
+                    {isAnalyzingAi ? (
+                       <>
+                         <div className="w-3.5 h-3.5 border-2 border-indigo-500 border-t-transparent animate-spin rounded-full" />
+                         <span>生成中</span>
+                       </>
+                    ) : (
+                       <span>{questionList.length > 0 ? '再次洞察' : 'AI洞察'}</span>
+                    )}
+                  </button>
+                </div>
+
+                {/* Progress Bar Area - Detailed Animation */}
+                {isAnalyzingAi && (
+                  <div className="bg-[#F2F7FF] rounded-[24px] p-4 mb-4 border border-white shadow-sm overflow-hidden relative">
+                    <div className="flex items-center gap-3 mb-3">
+                       <div className="w-5 h-5 border-[2.5px] border-indigo-500 border-t-transparent animate-spin rounded-full shrink-0" />
+                       <span className="text-[14px] font-bold text-slate-700">问题清单生成中</span>
+                    </div>
+                    {/* Progress Track */}
+                    <div className="h-1.5 w-full bg-white/60 rounded-full overflow-hidden">
+                       <div 
+                         className="h-full bg-[#4B42F5] rounded-full animate-[progress_5s_ease-in-out_infinite]"
+                         style={{ width: '60%' }}
+                       />
+                    </div>
+                    {/* Inline Animation definition */}
+                    <style>{`
+                       @keyframes progress {
+                         0% { transform: translateX(-100%); }
+                         50% { transform: translateX(0); }
+                         100% { transform: translateX(100%); }
+                       }
+                    `}</style>
+                  </div>
+                )}
+
+                {/* Question Preview List */}
+                <div className="space-y-2 mb-3">
+                  {displayQuestions.map((q, idx) => (
+                    <div key={idx} className="bg-[#F8FAFC] rounded-[18px] p-3 border border-white">
+                      <p className="text-[13px] text-slate-700 font-medium leading-[1.5] line-clamp-2">
+                        {q.questionName}
+                      </p>
+                    </div>
+                  ))}
+                  {displayQuestions.length === 0 && (
+                    <div className="bg-[#F8FAFC] rounded-[18px] p-4 text-center border border-dashed border-slate-200">
+                      <span className="text-[12px] text-slate-400">暂无问题条目</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom Entry - Compact Premium */}
+                <button 
+                  onClick={handleNavigateQuestionsThrottled}
+                  className="group w-full h-[48px] rounded-[16px] border border-indigo-100/40 bg-gradient-to-r from-white to-[#F8FAFF] flex items-center justify-between px-3.5 active:scale-[0.98] transition-all shadow-sm"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-7.5 h-7.5 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 group-active:scale-90 transition-transform">
+                      <FileText size={16} strokeWidth={2.5} />
+                    </div>
+                    <span className="text-[13px] font-bold text-slate-700 tracking-tight">点击查看AI洞察生成的问题清单</span>
+                  </div>
+                  <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:text-indigo-400 transition-colors">
+                    <ChevronRight size={14} strokeWidth={3} />
+                  </div>
+                </button>
+              </div>
+            );
           })()}
         </div>
       </div>
@@ -1109,6 +1421,15 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             }
           }
         }}
+      />
+      {/* Template Switch Modal */}
+      <TemplateSwitchModal
+        visible={templateModalVisible}
+        onClose={() => setTemplateModalVisible(false)}
+        dealId={currentDeal?.id || ''}
+        templates={templates}
+        currentQuestionId={(currentDeal as any)?.questionId || currentDeal?.reportTemplate?.id}
+        onSelect={handleSwitchTemplate}
       />
     </div>
   );

@@ -46,7 +46,7 @@ const config = {
   },
 
   get uploadUrl() {
-    return `${this.apiBaseUrl}/interview/uploadInterviewInstRecordFileNew`;
+    return `${this.apiBaseUrl}/upload/file`;
   },
   
   get isDev() { return this.env === 'development'; },
