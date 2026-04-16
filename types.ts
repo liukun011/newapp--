@@ -118,6 +118,35 @@ export interface QuestionInfo {
   CHECKED?: boolean;
 }
 
+/**
+ * 模板类型枚举
+ */
+export enum TemplateTypeEnum {
+  /** 模板预设 */
+  PRESET = '1',
+  /** 个人 */
+  PERSONAL = '2',
+  /** 尽调 */
+  DUE_DILIGENCE = '3',
+}
+
+/**
+ * 模板类型映射文字
+ */
+export const TemplateTypeMap = {
+  [TemplateTypeEnum.PRESET]: '模板',
+  [TemplateTypeEnum.PERSONAL]: '个人',
+  [TemplateTypeEnum.DUE_DILIGENCE]: '尽调',
+};
+
+/**
+ * 模板类型选项列表 (常用于 Select 组件)
+ */
+export const TemplateTypeOptions = Object.entries(TemplateTypeMap).map(([value, label]) => ({
+  label,
+  value,
+}));
+
 // 模板信息
 export interface TemplateInfo {
   id: string;
@@ -127,6 +156,7 @@ export interface TemplateInfo {
   templateDesc: string;
   templateStatus: string;
   recStatus: string;
+  createUser?: string;
   questionList: QuestionInfo[];
   // 额外计算字段（可能由前端计算或可选）
   questionNum?: number;

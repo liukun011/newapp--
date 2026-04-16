@@ -91,32 +91,34 @@ const TemplateSwitchModal: React.FC<TemplateSwitchModalProps> = ({
                 <div 
                   key={tpl.id}
                   ref={isSelected ? activeItemRef : null}
-                  onClick={() => handleSelect(tpl.id)}
+                  onClick={() => !isSelected && handleSelect(tpl.id)}
                   className={`
                     flex items-center justify-between
-                    relative rounded-[16px] px-4 py-3 transition-all active:scale-[0.98] border
+                    relative rounded-[16px] px-4 py-4 transition-all border
                     ${isSelected 
-                      ? 'bg-[#F2F7FF] border-[#4B85EE]/60' 
-                      : 'bg-white border-slate-100'}
+                      ? 'bg-[#F5F9FF] border-[#ADC8FF] cursor-default' 
+                      : 'bg-white border-slate-100 active:scale-[0.98] active:bg-slate-50 cursor-pointer'}
                   `}
                 >
                   <div className="flex-1 pr-2">
-                    <h3 className={`text-[15px] font-bold mb-0.5 leading-tight ${isSelected ? 'text-[#3E73F2]' : 'text-slate-800'}`}>{tpl.templateName}</h3>
-                    <p className="text-[12px] text-slate-400 font-medium">
-                      {questionCount}个预制问题
+                    <h3 className={`text-[15px] font-bold mb-1 leading-tight ${isSelected ? 'text-gray-400/80' : 'text-slate-800'}`}>
+                      {tpl.templateName}
+                    </h3>
+                    <p className={`text-[12px] font-medium ${isSelected ? 'text-gray-300' : 'text-slate-400'}`}>
+                      {questionCount} 个预制问题
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {isSelected && (
-                      <div className="bg-[#2B6EFB] text-white text-[11px] px-2 py-0.5 rounded-md font-bold shadow-sm">
-                        当前
+                    {isSelected ? (
+                      <div className="bg-[#8DB1F8] text-white text-[12px] px-3 py-1.5 rounded-[12px] font-bold shadow-sm whitespace-nowrap">
+                        当前使用
                       </div>
-                    )}
-                    {isSwitching && (
+                    ) : isSwitching ? (
                        <div className="w-5 h-5 border-2 border-[#2B6EFB] border-t-transparent animate-spin rounded-full" />
+                    ) : (
+                      <ChevronRight size={18} className="text-slate-200 ml-0.5" />
                     )}
-                    <ChevronRight size={16} className="text-slate-200 ml-0.5" />
                   </div>
                 </div>
               );

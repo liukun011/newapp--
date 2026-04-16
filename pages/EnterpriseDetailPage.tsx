@@ -53,7 +53,16 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
     { label: '注册号', value: parsedBasic.regNumber || '-' },
     { label: '组织机构代码', value: parsedBasic.orgNumber || '-' },
     { label: '核准日期', value: formatDate(parsedBasic.approvedTime) },
-    { label: '曾用名', value: (parsedBasic.historyNames || parsedBasic.historyNameList || []).join('; ') || '暂无' },
+    { 
+      label: '曾用名', 
+      value: (() => {
+        const rawNames = parsedBasic.historyNames || parsedBasic.historyNameList;
+        if (Array.isArray(rawNames)) {
+          return rawNames.map((n: any) => typeof n === 'string' ? n : (n.Name || n.name || '')).filter(Boolean).join('; ') || '暂无';
+        }
+        return typeof rawNames === 'string' ? rawNames : '暂无';
+      })()
+    },
   ];
 
   const renderSection = (title: string, icon: React.ReactNode, items: { label: string, value: string }[]) => (

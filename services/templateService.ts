@@ -201,4 +201,47 @@ export const templateService = {
       data: { id },
     });
   },
+
+  /**
+   * 查询问题清单模板列表
+   * GET /templateInfo/getTemplateList
+   */
+  getQuestionTemplateList: () => {
+    return request<ApiResponse<ReportTemplate[]>>('/templateInfo/getTemplateList', {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * 更新问题清单模板信息
+   * POST /templateInfo/update
+   */
+  updateQuestionTemplate: (data: { id: string; templateName: string; templateDesc: string }) => {
+    return request<ApiResponse<any>>('/templateInfo/update', {
+      method: 'POST',
+      data,
+    });
+  },
+
+  /**
+   * 删除问题清单模板
+   * POST /templateInfo/delete
+   */
+  deleteQuestionTemplate: (id: string) => {
+    return request<ApiResponse<any>>('/templateInfo/delete', {
+      method: 'POST',
+      data: { id },
+    });
+  },
+
+  /**
+   * 新增问题清单模板
+   * POST /templateInfo/add
+   */
+  addQuestionTemplate: (data: { templateName: string; templateDesc: string }) => {
+    return request<ApiResponse<any>>('/templateInfo/add', {
+      method: 'POST',
+      data,
+    });
+  },
 };

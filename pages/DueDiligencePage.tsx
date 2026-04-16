@@ -69,6 +69,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [loadingEnterprise, setLoadingEnterprise] = useState(false);
+  const [lastEnterpriseKey, setLastEnterpriseKey] = useState<string>(''); // 用于记录上次抓取时的企业标识
 
   const fetchTemplates = async (dealId: string) => {
     try {
@@ -122,7 +123,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   };
 
   const fetchEnterpriseData = async () => {
-    if (!deal?.id) return;
+    // 逻辑优化：如果没有填写公司名称/信用代码，不自动调用接口抓取
+    const hasEnterpriseInfo = currentDeal?.companyName?.trim() || currentDeal?.creditCode?.trim();
+    if (!deal?.id || !hasEnterpriseInfo) return;
+    
     setLoadingEnterprise(true);
     try {
       const basicRes = await dealService.getEnterpriseBasicInfo(deal.id);
@@ -153,14 +157,35 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   useEffect(() => {
     if (deal) {
       setDealDetail((prev) => {
-        // Only update if IDs match to avoid race conditions, or just trust the parent
-        return deal.id === prev?.id ? { ...prev, ...deal } : deal;
+        const nextDetail = deal.id === prev?.id ? { ...prev, ...deal } : deal;
+        
+        // 逻辑优化：如果从编辑返回，且企业信息从无到有，自动触发一次抓取
+        const currentKey = `${nextDetail.companyName || ''}-${nextDetail.creditCode || ''}`;
+        const prevKey = `${prev?.companyName || ''}-${prev?.creditCode || ''}`;
+        
+        // 如果当前有信息，且与上次不一样（通常是从无到有），且没有正在加载
+        if (currentKey !== '-' && currentKey !== prevKey && !loadingEnterprise) {
+            // 设置一个标记让接下来的 useEffect 触发抓取，或者直接在这里检查
+            console.log('[DueDiligence] Company info updated, triggering auto-fetch');
+        }
+        
+        return nextDetail;
       });
     }
   }, [deal]);
 
   // 使用详情数据，如果没有则使用传入的 deal
   const currentDeal = dealDetail || deal;
+
+  // 监听企业核心信息变化，触发自动抓取
+  useEffect(() => {
+    const currentKey = `${currentDeal?.companyName || ''}-${currentDeal?.creditCode || ''}`;
+    // 如果核心 key 发生了实质性变化（且不为空），则触发抓取
+    if (currentKey !== '-' && currentKey !== lastEnterpriseKey) {
+        setLastEnterpriseKey(currentKey);
+        fetchEnterpriseData();
+    }
+  }, [currentDeal?.companyName, currentDeal?.creditCode]);
 
   /* 
   // 轮询检查报告生成状态 (已弃用，改为 WebSocket)
@@ -658,11 +683,13 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         await fetchDealDetail();
         Toast.success('AI 洞察生成成功');
       } else {
-        Toast.fail(res.message || '生成失败');
+        // 关键修复：展示后端返回的具体错误消息，不带错误图标
+        Toast.info(res.message || '查询异常：该尽调无企业信息，无法生成AI洞察');
       }
     } catch (e: any) {
       console.error('AI Insight failed:', e);
-      Toast.fail('接口请求失败');
+      // 关键修复：透传捕获到的异常消息，不带错误图标
+      Toast.info(e.message || '查询异常：该尽调无企业信息，无法生成AI洞察');
     } finally {
       setIsAnalyzingAi(false);
     }
@@ -1149,11 +1176,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                             if (basicRes.success) setEnterpriseInfo(basicRes.data);
                         }, 2000);
                     } else {
-                        Toast.fail(res.message || '同步失败');
+                        Toast.info(res.message || '请先填写企业名称，再抓取数据');
                     }
-                } catch (e) {
+                } catch (e: any) {
                     console.error('Sync failed:', e);
-                    Toast.fail('网络错误');
+                    Toast.info(e.message || '请先填写企业名称，再抓取数据');
                 } finally {
                     setIsSyncing(false);
                 }
@@ -1166,6 +1193,13 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
             const insightStatus = getInsightStatus();
             const basicInfo = enterpriseInfo || {};
+            
+            // 判定是否填写了公司名称或信用代码
+            const hasEnterpriseName = !!(
+                currentDeal?.companyName?.trim() || 
+                currentDeal?.creditCode?.trim() ||
+                basicInfo.name?.trim()
+            );
             
             return (
                 <div className="bg-white rounded-[24px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-indigo-50/30">
@@ -1182,7 +1216,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                             disabled={isSyncing}
                             className="flex items-center border border-[#4B42F5] text-[#4B42F5] rounded-full px-2.5 py-[2px] text-[11px] active:bg-indigo-50 transition-all disabled:opacity-50"
                         >
-                            {isSyncing ? '同步中...' : '更新资料'}
+                            {isSyncing ? '抓取中...' : '抓取资料'}
                         </button>
                     </div>
 
@@ -1233,18 +1267,23 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     </div>
 
                     <button 
-                         className="w-full h-12 rounded-2xl border border-gray-100 flex items-center justify-between px-5 active:bg-gray-50 transition-colors"
+                         disabled={!hasEnterpriseName || isSyncing}
+                         className={`w-full mt-4 flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200 transition-all ${
+                            (!hasEnterpriseName || isSyncing) 
+                            ? 'opacity-40 grayscale select-none pointer-events-none' 
+                            : 'active:scale-[0.98] active:bg-slate-100 cursor-pointer'
+                         }`}
                          onClick={(e) => {
                             e.stopPropagation();
-                            console.log('[DueDiligence] Button Clicked - Navigating to Enterprise Detail', { basicInfo, aiInsights });
+                            if (!hasEnterpriseName || isSyncing) return;
                             onNavigateToEnterpriseDetail?.({
                                 enterpriseInfo: basicInfo,
                                 aiInsights: aiInsights
                             });
                          }}
                     >
-                        <span className="text-[14px] font-[800] text-slate-700">查看完整企查查资料</span>
-                        <ChevronRight size={18} className="text-gray-300" />
+                        <span className={`text-[14px] font-[800] ${!hasEnterpriseName ? 'text-slate-400' : 'text-slate-700'}`}>查看完整企查查资料</span>
+                        <ChevronRight size={18} className={!hasEnterpriseName ? 'text-gray-200' : 'text-gray-300'} />
                     </button>
                 </div>
             );
@@ -1314,7 +1353,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                          <span>生成中</span>
                        </>
                     ) : (
-                       <span>{questionList.length > 0 ? '再次洞察' : 'AI洞察'}</span>
+                       <span>{aiInsightList.length > 0 ? '再次洞察' : 'AI 洞察'}</span>
                     )}
                   </button>
                 </div>

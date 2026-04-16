@@ -88,6 +88,39 @@ export const questionService = {
       data: [],
     };
   },
+
+  /**
+   * 新增问题内容
+   * POST /questionInfo/add
+   */
+  addQuestion: (data: { templateId: string; questionName: string }) => {
+    return request<ApiResponse<any>>('/questionInfo/add', {
+      method: 'POST',
+      data,
+    });
+  },
+
+  /**
+   * 删除问题内容
+   * POST /questionInfo/delete
+   */
+  deleteQuestion: (id: string) => {
+    return request<ApiResponse<any>>('/questionInfo/delete', {
+      method: 'POST',
+      data: { id },
+    });
+  },
+
+  /**
+   * 更新问题内容
+   * POST /questionInfo/update
+   */
+  updateQuestion: (data: { id: string; questionName: string }) => {
+    return request<ApiResponse<any>>('/questionInfo/update', {
+      method: 'POST',
+      data,
+    });
+  },
 };
 
 export type { TemplateInfo, UserPropertiesResponse };

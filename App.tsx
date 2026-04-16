@@ -241,7 +241,7 @@ const App: React.FC = () => {
   const [materialUploadTab, setMaterialUploadTab] = useState<string>('upload');
 
   // 记住模板管理页的初始标签页
-  const [templateInitialTab, setTemplateInitialTab] = useState<'success' | 'processing'>('success');
+  const [templateInitialTab, setTemplateInitialTab] = useState<'templates' | 'questions'>('templates');
 
   // 上传模板页的预填充数据（从"更换"按钮携带过来）
   const [uploadTemplateInitialData, setUploadTemplateInitialData] = useState<{ id: string; name: string; fileUrl: string; fileName: string } | null>(null);
@@ -1844,7 +1844,7 @@ const App: React.FC = () => {
               <button
                 className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
                 onClick={() => {
-                  setTemplateInitialTab('success'); // <--- 切换到管理页时，默认重置为“我的模板”
+                  setTemplateInitialTab('templates'); // <--- 切换到管理页时，默认重置为“我的模板”
                   navigateForward(View.MANAGEMENT);
                 }}
               >
