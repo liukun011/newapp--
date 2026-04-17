@@ -13,9 +13,10 @@ interface CorporateEditPageProps {
   deal: DealRecord | null;
   onBack: () => void;
   onConfirm: (updatedName: string, updatedLogo: string) => void;
+  setIsEnterpriseSyncing?: (syncing: boolean) => void;
 }
 
-const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onConfirm }) => {
+const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onConfirm, setIsEnterpriseSyncing }) => {
   // 访谈对象名 (对应后端的 interviewCust)
   const [interviewCust, setInterviewCust] = useState(deal?.interviewCust || '');
   // 关联企业信息 - 直接从 deal 根字段读取
@@ -185,7 +186,18 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
 
       // 如果企业信息变了，触发同步更新
       if (isCompanyChanged && (companyName || creditCode)) {
-          dealService.syncEnterprise(deal.id).catch(e => console.error('Sync failed:', e));
+          try {
+              setIsEnterpriseSyncing?.(true);
+              console.log('[CorporateEdit] Starting enterprise sync...');
+              const syncRes = await dealService.syncEnterprise(deal.id);
+              if (!syncRes.success) {
+                  console.warn('Sync enterprise returned failure:', syncRes.message);
+              }
+          } catch (e) {
+              console.error('Sync failed:', e);
+          } finally {
+              setIsEnterpriseSyncing?.(false);
+          }
       }
       Toast.success('更新成功');
       onConfirm(interviewCust.trim(), logoUrl.trim());

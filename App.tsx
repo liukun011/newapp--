@@ -287,6 +287,7 @@ const App: React.FC = () => {
 
   // AI 洞察结果数据 (全局同步)
   const [aiInsightList, setAiInsightList] = useState<any[]>([]);
+  const [isEnterpriseSyncing, setIsEnterpriseSyncing] = useState(false);
 
   // 新建尽调弹框状态
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -966,6 +967,8 @@ const App: React.FC = () => {
                 <DueDiligencePage
                   deal={currentDeal}
                   setAiInsightList={setAiInsightList}
+                  isEnterpriseSyncing={isEnterpriseSyncing}
+                  setIsEnterpriseSyncing={setIsEnterpriseSyncing}
                   onBack={() => navigateBackward(previousView === View.REPORTS_LIST ? View.REPORTS_LIST : View.HOME)}
                   onNavigateToRecording={async () => {
                     if (!currentDeal?.id) {
@@ -1313,6 +1316,7 @@ const App: React.FC = () => {
               {currentView === View.CORPORATE_EDIT && (
                 <CorporateEditPage
                   deal={currentDeal}
+                  setIsEnterpriseSyncing={setIsEnterpriseSyncing}
                   onBack={() => navigateBackward(previousView)}
                   onConfirm={(updatedName, updatedLogo) => {
                     // 更新 currentDeal 的企业名称和 logo

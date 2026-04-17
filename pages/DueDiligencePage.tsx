@@ -24,6 +24,8 @@ interface DueDiligencePageProps {
   onDealDetailLoaded?: (detail: DealRecord) => void;
   onNavigateToEnterpriseDetail?: (data: any) => void;
   setAiInsightList?: (list: any[]) => void;
+  isEnterpriseSyncing?: boolean;
+  setIsEnterpriseSyncing?: (syncing: boolean) => void;
 }
 
 const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
@@ -1254,7 +1256,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                             </div>
                         </div>
 
-                        {/* 企查查状态 */}
+                        {/* 企查查状态 
                         <div className="bg-[#F8FAFE] rounded-2xl p-3 border border-indigo-50/30">
                             <p className="text-[11px] text-[#94A3B8] font-bold mb-2">企查查状态</p>
                             <div className="flex items-center justify-between gap-1">
@@ -1264,8 +1266,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                                 <div className="bg-[#EEF2FF] text-[#6366F1] text-[9px] px-1.5 py-0.5 rounded-md flex-shrink-0 font-bold">线索</div>
                             </div>
                         </div>
+                        */}
 
-                        {/* 股权变更 */}
+                        {/* 股权变更 
                         <div className="bg-[#F8FAFE] rounded-2xl p-3 border border-indigo-50/30">
                             <p className="text-[11px] text-[#94A3B8] font-bold mb-2">股权变更</p>
                             <div className="flex items-center justify-between gap-1">
@@ -1275,6 +1278,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                                 <div className="bg-[#EEF2FF] text-[#6366F1] text-[9px] px-1.5 py-0.5 rounded-md flex-shrink-0 font-bold">线索</div>
                             </div>
                         </div>
+                        */}
                     </div>
 
                     <button 
@@ -1413,7 +1417,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     <div className="w-7.5 h-7.5 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 group-active:scale-90 transition-transform">
                       <FileText size={16} strokeWidth={2.5} />
                     </div>
-                    <span className="text-[13px] font-bold text-slate-700 tracking-tight">点击查看AI洞察生成的问题清单</span>
+                    <span className="text-[13px] font-bold text-slate-700 tracking-tight">
+                        {aiInsightList.length > 0 ? '点击查看AI洞察生成的问题清单' : '点击查看完整问题清单'}
+                    </span>
                   </div>
                   <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:text-indigo-400 transition-colors">
                     <ChevronRight size={14} strokeWidth={3} />
