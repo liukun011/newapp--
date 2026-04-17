@@ -26,7 +26,21 @@ interface QuestionsListPageProps {
   isArchived?: boolean;
 }
 
-type TabType = 'ALL' | 'PENDING' | 'ADDED';
+type TabType = 'ALL' | 'PENDING';
+
+/**
+ * 格式化 ISO 时间字符串为 YYYY-MM-DD HH:mm:ss
+ */
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  } catch (e) {
+    return dateStr;
+  }
+};
 
 const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   dealId,
@@ -55,13 +69,8 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
   useEffect(() => { if (!isDirtyRef.current) setLocalQuestions(questionInfoList); }, [questionInfoList]);
 
-  useEffect(() => {
-    if (dealId) {
-        dealService.getAiInsight(dealId, false).then(res => {
-            if (res.success && res.data) setInternalAiInsightList(res.data);
-        });
-    }
-  }, [dealId]);
+  // 移除初始化时自动获取 AI 洞察的逻辑，数据应由父组件通过 props (aiInsightList) 传入
+  // 避免点击“查看AI洞察的问题清单”时产生重复冗余请求
 
   useEffect(() => {
     if (aiInsightList?.length) setInternalAiInsightList(aiInsightList);
@@ -102,7 +111,6 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
     if (activeTab === 'ALL') return localQuestions;
     const aiList = internalAiInsightList || [];
     if (activeTab === 'PENDING') return aiList.filter(aiQ => !localQuestions.some(lq => lq.questionName === aiQ.questionContent));
-    if (activeTab === 'ADDED') return aiList.filter(aiQ => localQuestions.some(lq => lq.questionName === aiQ.questionContent));
     return [];
   }, [activeTab, localQuestions, internalAiInsightList]);
 
@@ -120,6 +128,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
         questionAnswer: null, 
         questionAnswerTime: null, 
         questionStatus: '0', 
+        questionType: '2',
         templateId: '', 
         agencyId: '', 
         CHECKED: false 
@@ -142,13 +151,12 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
       {/* Modern Tabs */}
       <div className="px-4 py-3 flex items-center gap-2 shrink-0 overflow-x-auto scrollbar-hide">
-        {(['ALL', 'PENDING', 'ADDED'] as const).map((tab) => {
+        {(['ALL', 'PENDING'] as const).map((tab) => {
             const isActive = activeTab === tab;
-            const labels = { ALL: '全部', PENDING: 'AI 建议', ADDED: '已采纳' };
+            const labels = { ALL: '全部', PENDING: 'AI 建议' };
             const counts = { 
                 ALL: localQuestions.length, 
                 PENDING: internalAiInsightList.length - internalAiInsightList.filter(ai => localQuestions.some(lq => lq.questionName === ai.questionContent)).length,
-                ADDED: internalAiInsightList.filter(ai => localQuestions.some(lq => lq.questionName === ai.questionContent)).length
             };
             return (
                 <button 
@@ -168,10 +176,10 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 pb-28">
         <div className="space-y-2">
           {filteredQuestions.map((item: any, index) => {
-            const isAiRaw = activeTab === 'PENDING' || activeTab === 'ADDED';
+            const isAiRaw = activeTab === 'PENDING';
             const qName = isAiRaw ? item.questionContent : item.questionName;
             const isChecked = !isAiRaw && item.CHECKED;
-            const isAiSource = isAiRaw || internalAiInsightList.some(ai => ai.questionContent === qName);
+            const isAiSource = isAiRaw || String(item.questionType) === '2' || internalAiInsightList.some(ai => ai.questionContent === qName);
             
             return (
               <div 
@@ -186,7 +194,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                     <div className="flex-1">
                        <div className="flex items-center gap-1.5 mb-1">
                          <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${isAiSource ? 'bg-indigo-50 text-indigo-500' : 'bg-blue-50 text-blue-500'}`}>
-                           {isAiSource ? 'AI 洞察' : '基础问题'}
+                           {isAiSource ? 'AI 洞察问题' : '模板预设问题'}
                          </span>
                          {!isAiRaw && isChecked && <span className="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded">已访谈</span>}
                        </div>
@@ -213,21 +221,32 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                        </button>
                     ) : (
                        <div className="flex flex-col gap-1 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity">
-                         <button onClick={(e) => { e.stopPropagation(); setEditingQuestion(item); setEditModalVisible(true);}} className="p-1.5 bg-slate-50 text-slate-400 rounded-lg hover:bg-indigo-50 hover:text-indigo-500 transition-colors"><Pencil size={12} /></button>
-                         <button onClick={(e) => { e.stopPropagation(); setDeletingQuestion(item); setDeleteModalVisible(true);}} className="p-1.5 bg-slate-50 text-slate-400 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 size={12} /></button>
+                         {!isChecked && (
+                           <>
+                             <button onClick={(e) => { e.stopPropagation(); setEditingQuestion(item); setEditModalVisible(true);}} className="p-1.5 bg-slate-50 text-slate-400 rounded-lg hover:bg-indigo-50 hover:text-indigo-500 transition-colors"><Pencil size={12} /></button>
+                             <button onClick={(e) => { e.stopPropagation(); setDeletingQuestion(item); setDeleteModalVisible(true);}} className="p-1.5 bg-slate-50 text-slate-400 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 size={12} /></button>
+                           </>
+                         )}
                        </div>
                     )}
                   </div>
 
                   {/* 展示答复内容 - 更加紧凑 */}
                   {!isAiRaw && item.questionAnswer && expandedIds[item.id] && (
-                    <div className="mt-1.5 p-3 bg-[#F5F7FF] rounded-[12px] border-none animate-scaleIn">
+                    <div className="mt-1.5 p-3 bg-[#F5F7FF] rounded-[12px] border-none animate-scaleIn relative">
                        <div className="text-[14px] font-bold text-slate-800 mb-1 flex items-center gap-1.5">
                           <div className="w-1 h-3.5 bg-[#5C66FF] rounded-full" /> 参考回答：
                        </div>
-                       <p className="text-[13px] text-slate-600 leading-normal">
+                       <p className="text-[13px] text-slate-600 leading-normal mb-1">
                           {item.questionAnswer}
                        </p>
+                       {item.questionAnswerTime && (
+                         <div className="flex justify-end mt-1">
+                           <span className="text-[10px] text-slate-400 font-medium bg-white/50 px-2 py-0.5 rounded-full">
+                             {formatDate(item.questionAnswerTime)}
+                           </span>
+                         </div>
+                       )}
                     </div>
                   )}
                 </div>

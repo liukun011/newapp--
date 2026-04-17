@@ -116,6 +116,7 @@ export interface QuestionInfo {
   agencyId?: string | null;
   recStatus: string;
   CHECKED?: boolean;
+  questionType?: string;
 }
 
 /**

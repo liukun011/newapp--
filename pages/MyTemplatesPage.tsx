@@ -83,6 +83,14 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [renamingTemplate, setRenamingTemplate] = useState<ReportTemplate | null>(null);
 
+  // 新建清单弹窗状态
+  const [isNewDialogVisible, setIsNewDialogVisible] = useState(false);
+  const [newModalName, setNewModalName] = useState('');
+  const [newModalDesc, setNewModalDesc] = useState('');
+
+  // 修改清单信息弹窗状态
+  const [isEditInfoModalVisible, setIsEditInfoModalVisible] = useState(false);
+  
   // 删除确认弹框状态
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(null);
@@ -148,8 +156,16 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
           // 移除默认选中第一项的逻辑，用户需手动点击进入详情
           if (activeQuestion) {
             // 如果已有选中项（比如操作完刷新），才同步详情
-            const latest = res.data.find((q: any) => q.id === activeQuestion.id);
-            if (latest) setEditingQuestion(latest);
+              let latest = res.data.find((q: any) => q.id && q.id === activeQuestion.id);
+              if (!latest && activeQuestion.templateName) {
+                latest = res.data.find((q: any) => q.templateName === activeQuestion.templateName);
+              }
+              if (latest) {
+                setEditingQuestion(latest);
+                setActiveQuestion(latest);
+              }
+
+
           }
         }
       }
@@ -491,8 +507,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                      </span>
                      <button 
                        onClick={() => {
-                         setIsCreatingNew(true);
-                         setEditingQuestion({} as any); // 设置一个空对象触发视图切换
+                         setIsNewDialogVisible(true);
                        }}
                        className="flex items-center gap-1 px-3 py-1 bg-[#4B77F6] text-white text-[12px] font-bold rounded-full shadow-md active:scale-95 transition-all"
                      >
@@ -543,7 +558,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                             <div className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${
                               isActive ? 'bg-white text-[#4B77F6]' : 'bg-[#F8FAFF] text-[#94A3B8]'
                             }`}>
-                              {q.questionList?.length || 0} 题
+                              {q.questionList?.length || 0} 个问题
                             </div>
                           </div>
 
@@ -591,53 +606,34 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                   </button>
                 </div>
 
-                {/* Detail Information Card - Ultra compact */}
-                <div className="bg-white rounded-[20px] p-3 shadow-sm border border-gray-50/50 mb-2">
-                   <div className="flex items-center gap-2 mb-3">
-                      <div className="w-8 h-8 bg-[#F0F5FF] rounded-lg flex items-center justify-center text-[#4B77F6]">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                      </div>
-                      <span className="text-[15px] font-bold text-[#1E293B]">清单信息</span>
-                   </div>
-                   
-                   <div>
-                      <div className="mb-2">
-                        <label className="text-[11px] font-bold text-[#CBD5E1] block mb-0.5 px-0.5">清单名称</label>
-                        <input 
-                          type="text"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          readOnly={!isCreatingNew && !canModify(editingQuestion)}
-                          className="w-full bg-[#F8F9FB] rounded-lg px-3 py-2 text-[13px] font-bold text-[#1E293B] border-none outline-none focus:ring-1 focus:ring-blue-100 placeholder:text-gray-300 read-only:focus:ring-0"
-                          placeholder="请输入清单名称"
-                        />
+                {/* Detail Information Card - Ultra Refined & Compact */}
+                <div className="bg-white rounded-[24px] p-4 shadow-sm border border-gray-100/50 mb-3">
+                   <div className="flex justify-between items-start gap-2.5">
+                      <div className="flex-1 min-w-0">
+                         <div className="flex items-center gap-1.5 mb-1 flex-wrap text-wrap">
+                            <h3 className="text-[16px] font-black text-slate-800 tracking-tight leading-tight">
+                               {editingQuestion?.templateName || '未命名清单'}
+                            </h3>
+                            <div className="px-1.5 py-0.5 bg-indigo-50 text-[#4B77F6] text-[9px] font-extrabold rounded-md flex items-center justify-center shrink-0 origin-left scale-95">
+                               {editingQuestion?.questionList?.length || 0} 个问题
+                            </div>
+                         </div>
+                         <p className="text-[11px] leading-relaxed text-slate-400 font-medium line-clamp-2 pr-2">
+                            {editingQuestion?.templateDesc || "暂无场景描述"}
+                         </p>
                       </div>
                       
-                      <div className={(isCreatingNew || canModify(editingQuestion)) ? "mb-2" : ""}>
-                        <label className="text-[11px] font-bold text-[#CBD5E1] block mb-0.5 px-0.5">场景描述</label>
-                        <textarea 
-                          value={editDesc}
-                          onChange={(e) => setEditDesc(e.target.value)}
-                          readOnly={!isCreatingNew && !canModify(editingQuestion)}
-                          className="w-full bg-[#F8F9FB] rounded-lg px-3 py-2 text-[13px] leading-relaxed text-[#475569] min-h-[50px] border-none outline-none focus:ring-1 focus:ring-blue-100 resize-none placeholder:text-gray-300 read-only:focus:ring-0"
-                          placeholder="请输入场景描述..."
-                        />
-                      </div>
-                      
-                      {(isCreatingNew || canModify(editingQuestion)) && (
-                        <div className="flex justify-end">
-                          <button 
-                            onClick={handleUpdateTemplate}
-                            disabled={isUpdating || !editName.trim()}
-                            className={`px-5 py-1.5 font-extrabold rounded-full text-[12px] shadow-sm transition-all relative z-10 ${
-                              isUpdating || !editName.trim() 
-                                ? 'bg-gray-100 text-gray-300' 
-                                : 'bg-[#4B77F6] text-white active:scale-95'
-                            }`}
-                          >
-                            {isCreatingNew ? '立即创建' : (isUpdating ? '保存中...' : '确认')}
-                          </button>
-                        </div>
+                      {canModify(editingQuestion) && (
+                        <button 
+                          onClick={() => {
+                            setEditName(editingQuestion?.templateName || '');
+                            setEditDesc(editingQuestion?.templateDesc || '');
+                            setIsEditInfoModalVisible(true);
+                          }}
+                          className="flex-shrink-0 px-2.5 py-1 border border-slate-100 text-slate-400 font-bold text-[10px] rounded-full active:bg-slate-50 transition-all mt-0.5"
+                        >
+                           编辑信息
+                        </button>
                       )}
                    </div>
                 </div>
@@ -731,6 +727,111 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
         onConfirm={handleConfirmDelete}
       />
 
+      {/* 新建问题清单弹窗 - 移动端紧凑风格 */}
+      {isNewDialogVisible && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-6">
+          <div 
+             className="bg-white rounded-[28px] w-full max-w-[300px] overflow-hidden shadow-2xl relative animate-scaleIn"
+             style={{ transform: 'translateY(-10%)' }}
+          >
+            {/* Modal Header - Tighter */}
+            <div className="pt-5 px-5 pb-2 flex items-center justify-between">
+              <h3 className="text-[16px] font-bold text-[#1E293B]">新建问题清单</h3>
+              <button 
+                onClick={() => setIsNewDialogVisible(false)}
+                className="w-7 h-7 flex items-center justify-center text-[#94A3B8] active:scale-90 transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Form Area - Compact */}
+            <div className="px-5 pb-5 space-y-3">
+              <div className="space-y-1.5">
+                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">清单名称</label>
+                <div className="relative">
+                   <input 
+                      type="text"
+                      className="w-full h-[44px] bg-[#F8FAFC] border-none rounded-[16px] px-4 text-[14px] font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all placeholder:text-[#CBD5E1]"
+                      placeholder="核心业务尽调清单"
+                      value={newModalName}
+                      onChange={(e) => setNewModalName(e.target.value)}
+                   />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">适用场景</label>
+                <div className="relative">
+                   <textarea 
+                      className="w-full h-[90px] bg-[#F8FAFC] border-none rounded-[16px] p-4 text-[14px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all resize-none placeholder:text-[#CBD5E1] leading-relaxed"
+                      placeholder="例如：初次沟通..."
+                      value={newModalDesc}
+                      onChange={(e) => setNewModalDesc(e.target.value)}
+                   />
+                </div>
+              </div>
+
+              {/* Action Buttons - Smaller height */}
+              <div className="flex gap-2.5 pt-1.5">
+                <button 
+                  onClick={() => setIsNewDialogVisible(false)}
+                  className="flex-1 h-[44px] bg-[#F1F5F9] text-[#64748B] font-bold text-[14px] rounded-full active:scale-95 transition-all"
+                >
+                  取消
+                </button>
+                <button 
+                  disabled={!newModalName.trim() || !newModalDesc.trim() || isUpdating}
+                  onClick={async () => {
+                     try {
+                       setIsUpdating(true);
+                       Toast.loading({ message: '创建中...', duration: 0 });
+                       const res = await templateService.addQuestionTemplate({
+                         templateName: newModalName.trim(),
+                         templateDesc: newModalDesc.trim()
+                       });
+                        if (res.success) {
+                          Toast.success('创建成功');
+                          setIsNewDialogVisible(false);
+                          const savedName = newModalName.trim();
+                          const savedDesc = newModalDesc.trim();
+                           setNewModalName('');
+                           setNewModalDesc('');
+                          setIsCreatingNew(false);
+                          
+                          // 直接调用列表接口获取含真实 ID 的新模板
+                          const freshRes = await templateService.getQuestionTemplateList();
+                          if (freshRes.success && freshRes.data) {
+                            setQuestions(freshRes.data);
+                            const created = freshRes.data.find((q: any) => q.templateName === savedName);
+                            if (created) {
+                              setEditingQuestion(created);
+                              setActiveQuestion(created);
+                            }
+                          }
+                       } else {
+                         Toast.fail(res.message || '创建失败');
+                       }
+                     } catch (e: any) {
+                       Toast.fail(e.message || '网络错误');
+                     } finally {
+                       setIsUpdating(false);
+                     }
+                  }}
+                  className={`flex-1 h-[44px] font-bold text-[14px] rounded-full shadow-lg active:scale-95 transition-all ${
+                     (!newModalName.trim() || !newModalDesc.trim() || isUpdating)
+                     ? 'bg-[#CBD5E1] text-white shadow-none cursor-not-allowed'
+                     : 'bg-[#3B82F6] text-white shadow-blue-500/10 active:bg-[#2563EB]'
+                  }`}
+                >
+                  新建清单
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 修改问题内容弹窗 */}
       <Dialog
         visible={isEditItemModalOpen}
@@ -752,6 +853,59 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
           </div>
         </div>
       </Dialog>
+      {/* 编辑清单信息弹窗 - 尺寸对齐新建弹窗 */}
+      {isEditInfoModalVisible && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-6">
+          <div className="bg-white rounded-[28px] w-full max-w-[300px] overflow-hidden shadow-2xl relative animate-scaleIn" style={{ transform: 'translateY(-10%)' }}>
+            <div className="pt-5 px-5 pb-2 flex items-center justify-between">
+              <h3 className="text-[16px] font-bold text-[#1E293B]">编辑清单信息</h3>
+              <button 
+                onClick={() => setIsEditInfoModalVisible(false)} 
+                className="w-7 h-7 flex items-center justify-center text-[#94A3B8] active:scale-90 transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="px-5 pb-5 space-y-3">
+              <div className="space-y-1.5">
+                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">清单名称</label>
+                <input 
+                   type="text" 
+                   className="w-full h-[44px] bg-[#F8FAFC] border-none rounded-[16px] px-4 text-[14px] font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all placeholder:text-[#CBD5E1]" 
+                   value={editName} 
+                   onChange={(e) => setEditName(e.target.value)} 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">适用场景</label>
+                <textarea 
+                   className="w-full h-[90px] bg-[#F8FAFC] border-none rounded-[16px] p-4 text-[14px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all resize-none placeholder:text-[#CBD5E1] leading-relaxed" 
+                   value={editDesc} 
+                   onChange={(e) => setEditDesc(e.target.value)} 
+                />
+              </div>
+              <div className="flex gap-2.5 pt-1.5">
+                <button 
+                   onClick={() => setIsEditInfoModalVisible(false)} 
+                   className="flex-1 h-[44px] bg-[#F1F5F9] text-[#64748B] font-bold text-[14px] rounded-full active:scale-95 transition-all"
+                >
+                   取消
+                </button>
+                <button 
+                  disabled={isUpdating || !editName.trim()} 
+                  onClick={async () => {
+                    await handleUpdateTemplate();
+                    setIsEditInfoModalVisible(false);
+                  }} 
+                  className={`flex-1 h-[44px] font-bold text-[14px] rounded-full shadow-lg active:scale-95 transition-all ${isUpdating || !editName.trim() ? 'bg-gray-200 text-white shadow-none' : 'bg-[#3B82F6] text-white shadow-blue-500/10'}`}
+                >
+                  保存
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -23,6 +23,7 @@ interface DueDiligencePageProps {
   onNavigateToHistory?: (dealId: string) => void;
   onDealDetailLoaded?: (detail: DealRecord) => void;
   onNavigateToEnterpriseDetail?: (data: any) => void;
+  setAiInsightList?: (list: any[]) => void;
 }
 
 const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
@@ -36,7 +37,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   onPreviewReport,
   onNavigateToHistory,
   onDealDetailLoaded,
-  onNavigateToEnterpriseDetail
+  onNavigateToEnterpriseDetail,
+  setAiInsightList: setGlobalAiInsight  // 重命名避免与本地 state 冲突
 }) => {
   const basePath = import.meta.env.BASE_URL || '/';
   // 详情数据
@@ -176,6 +178,15 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
   // 使用详情数据，如果没有则使用传入的 deal
   const currentDeal = dealDetail || deal;
+
+  const basicInfo = enterpriseInfo || {};
+
+  // 判定是否填写了公司名称或信用代码
+  const hasEnterpriseName = !!(
+    currentDeal?.companyName?.trim() || 
+    currentDeal?.creditCode?.trim() ||
+    basicInfo.name?.trim()
+  );
 
   // 监听企业核心信息变化，触发自动抓取
   useEffect(() => {
@@ -677,18 +688,17 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       setIsAnalyzingAi(true);
       const res = await dealService.getAiInsight(currentDeal.id, false);
       if (res.success) {
-        if (res.data) {
-          setAiInsightList(res.data);
+        if (Array.isArray(res.data)) {
+          setAiInsightList(res.data); // 更新本地展示区
+          setGlobalAiInsight?.(res.data); // 同步到全局应用状态
         }
         await fetchDealDetail();
         Toast.success('AI 洞察生成成功');
       } else {
-        // 关键修复：展示后端返回的具体错误消息，不带错误图标
         Toast.info(res.message || '查询异常：该尽调无企业信息，无法生成AI洞察');
       }
     } catch (e: any) {
       console.error('AI Insight failed:', e);
-      // 关键修复：透传捕获到的异常消息，不带错误图标
       Toast.info(e.message || '查询异常：该尽调无企业信息，无法生成AI洞察');
     } finally {
       setIsAnalyzingAi(false);
@@ -1163,6 +1173,15 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           {/* 企查查资料 */}
           {(() => {
             const handleSync = async () => {
+                const name = currentDeal?.companyName?.trim() || basicInfo.name?.trim();
+                const code = currentDeal?.creditCode?.trim();
+                
+                if (!name && !code) {
+                    Toast.info('请先填写企业名称，再抓取数据');
+                    onEditInfo?.();
+                    return;
+                }
+
                 if (!currentDeal?.id || isSyncing) return;
                 try {
                     setIsSyncing(true);
@@ -1192,14 +1211,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             };
 
             const insightStatus = getInsightStatus();
-            const basicInfo = enterpriseInfo || {};
-            
-            // 判定是否填写了公司名称或信用代码
-            const hasEnterpriseName = !!(
-                currentDeal?.companyName?.trim() || 
-                currentDeal?.creditCode?.trim() ||
-                basicInfo.name?.trim()
-            );
             
             return (
                 <div className="bg-white rounded-[24px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-indigo-50/30">
@@ -1216,7 +1227,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                             disabled={isSyncing}
                             className="flex items-center border border-[#4B42F5] text-[#4B42F5] rounded-full px-2.5 py-[2px] text-[11px] active:bg-indigo-50 transition-all disabled:opacity-50"
                         >
-                            {isSyncing ? '抓取中...' : '抓取资料'}
+                            {isSyncing ? '抓取中...' : (basicInfo.name ? '更新资料' : '抓取资料')}
                         </button>
                     </div>
 
@@ -1337,24 +1348,18 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!hasEnterpriseName || isAnalyzingAi) return;
                       handleAiInsight();
                     }}
-                    disabled={isAnalyzingAi}
+                    disabled={!hasEnterpriseName || isAnalyzingAi}
                     className={`
                       flex items-center gap-1.5 rounded-full px-5 py-1.5 text-[12px] font-[800] transition-all
-                      ${isAnalyzingAi 
-                        ? 'bg-[#EEF2FF] text-[#4B42F5]' 
+                      ${(!hasEnterpriseName || isAnalyzingAi) 
+                        ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none border border-slate-50' 
                         : 'bg-[#4B42F5] text-white shadow-[0_4px_10px_rgba(75,66,245,0.25)] active:scale-95'}
                     `}
                   >
-                    {isAnalyzingAi ? (
-                       <>
-                         <div className="w-3.5 h-3.5 border-2 border-indigo-500 border-t-transparent animate-spin rounded-full" />
-                         <span>生成中</span>
-                       </>
-                    ) : (
-                       <span>{aiInsightList.length > 0 ? '再次洞察' : 'AI 洞察'}</span>
-                    )}
+                    <span>{aiInsightList.length > 0 ? '再次洞察' : 'AI 洞察'}</span>
                   </button>
                 </div>
 
