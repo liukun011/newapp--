@@ -66,6 +66,10 @@ const HomePage: React.FC<HomePageProps> = ({
   const [tenants, setTenants] = useState<any[]>([]);
   const [tenantsLoading, setTenantsLoading] = useState(false);
 
+  const userInfoStr = localStorage.getItem('zov-user-info');
+  const currentUserObj = userInfoStr ? JSON.parse(userInfoStr) : null;
+  const currentUserId = currentUserObj?.userId;
+
   const fetchTenants = async () => {
     setTenantsLoading(true);
     try {
@@ -886,7 +890,7 @@ const HomePage: React.FC<HomePageProps> = ({
                         {isActive && <Check size={18} className="text-[#3B82F6]" strokeWidth={3} />}
                       </div>
                       <p className={`text-[10px] font-bold uppercase tracking-widest ${isActive ? 'text-[#3B82F6]/60' : 'text-[#94A3B8]'}`}>
-                        {tenant.tenantAdmin ? 'ADMIN' : 'MEMBER'}
+                        {(tenant.tenantAdmin || (currentUserId && String(tenant.createdBy) === String(currentUserId))) ? 'ADMIN' : 'MEMBER'}
                       </p>
                     </div>
                   </div>

@@ -34,6 +34,10 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
   const [tenantId, setTenantId] = useState<string>('');
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const userInfoStr = localStorage.getItem('zov-user-info');
+  const currentUserObj = userInfoStr ? JSON.parse(userInfoStr) : null;
+  const currentUserId = currentUserObj?.userId;
   
   // 组织切换相关
   const [showTenantModal, setShowTenantModal] = useState(false);
@@ -146,20 +150,17 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
   useEffect(() => {
     const fetchInfo = async () => {
       try {
-        const userInfoStr = localStorage.getItem('zov-user-info');
         let currentId = '';
-        if (userInfoStr) {
-          const userInfo = JSON.parse(userInfoStr);
-          if (userInfo.tenantName) {
-            setTenantName(userInfo.tenantName);
-            setEditValue(userInfo.tenantName);
+        if (currentUserObj) {
+          if (currentUserObj.tenantName) {
+            setTenantName(currentUserObj.tenantName);
+            setEditValue(currentUserObj.tenantName);
           }
-          if (userInfo.tenantId) {
-            setTenantId(userInfo.tenantId);
-            currentId = userInfo.tenantId;
+          if (currentUserObj.tenantId) {
+            setTenantId(currentUserObj.tenantId);
+            currentId = currentUserObj.tenantId;
           }
           
-          const currentUserId = userInfo.userId;
           if (currentId) {
             // Initial load
             setCurrentPage(1);
@@ -527,7 +528,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                                     {item.name}
                                 </h3>
                                 <p className="text-[11px] text-slate-400 font-medium leading-none mt-1">
-                                    {item.tenantAdmin ? '管理员' : '成员'}
+                                    {(item.tenantAdmin || (currentUserId && String(item.createdBy) === String(currentUserId))) ? '管理员' : '成员'}
                                 </p>
                             </div>
                             
