@@ -158,22 +158,23 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
             setTenantId(userInfo.tenantId);
             currentId = userInfo.tenantId;
           }
-        }
+          
+          const currentUserId = userInfo.userId;
+          if (currentId) {
+            // Initial load
+            setCurrentPage(1);
+            setFinished(false);
+            fetchMembers(1, true);
+          }
 
-        if (currentId) {
-          // Initial load
-          setCurrentPage(1);
-          setFinished(false);
-          fetchMembers(1, true);
-        }
-
-        // Fetch tenants list to check admin status
-        const fetchTenantsRes = await authService.getTenants();
-        if (fetchTenantsRes.successful && fetchTenantsRes.data && Array.isArray(fetchTenantsRes.data)) {
-          setTenants(fetchTenantsRes.data);
-          const currentTenant = fetchTenantsRes.data.find((t: any) => String(t.id) === String(currentId));
-          if (currentTenant) {
-            setIsAdmin(!!currentTenant.tenantAdmin);
+          // Fetch tenants list to check admin status
+          const fetchTenantsRes = await authService.getTenants();
+          if (fetchTenantsRes.successful && fetchTenantsRes.data && Array.isArray(fetchTenantsRes.data)) {
+            setTenants(fetchTenantsRes.data);
+            const currentTenant = fetchTenantsRes.data.find((t: any) => String(t.id) === String(currentId));
+            if (currentTenant) {
+              setIsAdmin(!!currentTenant.tenantAdmin || (currentUserId && String(currentTenant.createdBy) === String(currentUserId)));
+            }
           }
         }
       } catch (e) {
@@ -223,7 +224,10 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
               // 刷新当前页面状态
               setTenantName(tenant.name);
               setTenantId(tenant.id);
-              setIsAdmin(!!tenant.tenantAdmin);
+              
+              const userId = userInfo.userId;
+              setIsAdmin(!!tenant.tenantAdmin || (userId && String(tenant.createdBy) === String(userId)));
+              
               setEditValue(tenant.name);
               
               // Reset pagination and re-fetch members for the new tenant

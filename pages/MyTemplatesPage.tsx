@@ -199,6 +199,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
     if (editingQuestion) {
       setEditingQuestion(null);
     }
+    setActiveQuestion(null);
     setIsCreatingNew(false);
   };
 

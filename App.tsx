@@ -1848,8 +1848,11 @@ const App: React.FC = () => {
               <button
                 className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
                 onClick={() => {
-                  setTemplateInitialTab('templates'); // <--- 切换到管理页时，默认重置为“我的模板”
-                  navigateForward(View.MANAGEMENT);
+                  setPreviewReport(null);
+                  setTemplateInitialTab('templates'); 
+                  setViewStack([View.HOME, View.MANAGEMENT]);
+                  setNavDirection('root'); // 使用 root 或 forward 视情况，但 root 更符合"重定位"的语义
+                  setCurrentView(View.MANAGEMENT);
                 }}
               >
                 <div 
