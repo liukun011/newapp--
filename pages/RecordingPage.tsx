@@ -137,19 +137,16 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   // 同步问题清单数据
   useEffect(() => {
     if (deal?.questionInfoList && deal.questionInfoList.length > 0) {
-      // 这里的逻辑：如果秒数为0且转写列表为空（即尚未真正开始或没有任何内容的全新会话），则强制所有问题为未命中状态
-      // 这样可以确保从详情页点击“+访谈录音”进来时，即使后端返回了项目级的全局命中，本地也会显示为全新的清单
-      const isFreshSession = (seconds === 0 && transcriptionList.length === 0);
-      
       const backendQuestions: Question[] = deal.questionInfoList.map((item, index) => ({
         id: item.id || String(index),
         text: item.questionName,
-        isAnswered: isFreshSession ? false : !!item.CHECKED,
-        details: isFreshSession ? undefined : (item.questionAnswer || undefined)
+        isAnswered: !!item.CHECKED,
+        details: item.questionAnswer || undefined,
+        answerTime: item.questionAnswerTime || undefined
       }));
       setQuestions(backendQuestions);
     }
-  }, [deal, seconds, transcriptionList.length]);
+  }, [deal]);
 
 
   // ========== 离线转写：轮询转写结果 ==========
@@ -839,9 +836,29 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                   </div>
 
                   {expandedQuestion === q.id && q.details && (
-                    <div className="mt-3 text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 flex gap-2">
-                      <span className="text-indigo-500 font-bold shrink-0">A:</span>
-                      <span>{q.details}</span>
+                    <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-100 relative">
+                        <div className="text-sm text-slate-600 leading-relaxed flex gap-2 mb-4">
+                            <span className="text-indigo-500 font-bold shrink-0">A:</span>
+                            <span>{q.details}</span>
+                        </div>
+                        {q.answerTime && (
+                           <div className="absolute bottom-1.5 right-2 px-1 text-[10px] text-slate-400 font-medium scale-90 origin-right">
+                              {(() => {
+                                 try {
+                                    const date = new Date(q.answerTime);
+                                    const Y = date.getFullYear();
+                                    const M = String(date.getMonth() + 1).padStart(2, '0');
+                                    const D = String(date.getDate()).padStart(2, '0');
+                                    const h = String(date.getHours()).padStart(2, '0');
+                                    const m = String(date.getMinutes()).padStart(2, '0');
+                                    const s = String(date.getSeconds()).padStart(2, '0');
+                                    return `${Y}-${M}-${D} ${h}:${m}:${s}`;
+                                 } catch(e) {
+                                    return q.answerTime;
+                                 }
+                              })()}
+                           </div>
+                        )}
                     </div>
                   )}
                 </div>

@@ -67,6 +67,7 @@ export interface Question {
   text: string;
   isAnswered: boolean;
   details?: string;
+  answerTime?: string;
 }
 
 export interface ChatMessage {
