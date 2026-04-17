@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Popup, Toast } from 'react-vant';
-import { X, Check, ChevronRight } from 'lucide-react';
+import { Popup, Dialog } from 'react-vant';
+import { X, ChevronRight } from 'lucide-react';
 import { TemplateInfo } from '../types';
 
 interface TemplateSwitchModalProps {
@@ -42,6 +42,13 @@ const TemplateSwitchModal: React.FC<TemplateSwitchModalProps> = ({
   const handleSelect = async (id: string) => {
     if (id === currentQuestionId) return;
     try {
+      const nextTemplate = templates.find((tpl) => String(tpl.id) === String(id));
+      await Dialog.confirm({
+        title: '确认切换',
+        message: `确定切换到“${nextTemplate?.templateName || 'test'}”问题清单吗？`,
+        confirmButtonText: '确认切换',
+        cancelButtonText: '取消',
+      });
       setSwitchingId(id);
       await onSelect(id);
       onClose();
