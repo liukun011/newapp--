@@ -5,7 +5,7 @@ import { templateService, ReportTemplate } from '../services/templateService';
 import { questionService } from '../services/questionService';
 import RenameModal from '../components/RenameModal';
 import ConfirmModal from '../components/ConfirmModal';
-import { TemplateTypeMap, TemplateTypeEnum, TemplateInfo } from '../types';
+import { TemplateTypeEnum, TemplateInfo } from '../types';
 
 const TemplateReason: React.FC<{ 
   reason: string; 
@@ -100,6 +100,22 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
   const userInfoStr = localStorage.getItem('zov-user-info');
   const currentUserObj = userInfoStr ? JSON.parse(userInfoStr) : null;
   const currentUserId = currentUserObj?.userId;
+
+  const getQuestionTemplateTagLabel = (q: any) => {
+    if (q.templateType === TemplateTypeEnum.PRESET) {
+      return '内置';
+    }
+
+    if (q.templateType === TemplateTypeEnum.PERSONAL) {
+      return String(q.createUser) === String(currentUserId) ? '个人' : '组织';
+    }
+
+    if (q.templateType === TemplateTypeEnum.DUE_DILIGENCE) {
+      return '尽调';
+    }
+
+    return '';
+  };
 
   // 权限检查
   const canModify = (q: any) => {
@@ -540,9 +556,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                             <div className="flex items-center gap-2 mb-1">
                               <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-hidden">
                                 <h3 className="text-[15px] font-bold text-[#1E293B] truncate">{q.templateName}</h3>
-                                {q.templateType && TemplateTypeMap[q.templateType as TemplateTypeEnum] && (
+                                {getQuestionTemplateTagLabel(q) && (
                                   <span className="px-1.5 py-[1px] bg-indigo-50 border border-indigo-100/50 text-indigo-500 text-[9px] font-bold rounded-md shrink-0 whitespace-nowrap">
-                                    {TemplateTypeMap[q.templateType as TemplateTypeEnum]}
+                                    {getQuestionTemplateTagLabel(q)}
                                   </span>
                                 )}
                                 {isActive && (
