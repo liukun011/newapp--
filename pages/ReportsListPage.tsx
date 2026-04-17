@@ -132,7 +132,7 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
                         {formatTitle(report.fileName)}
                       </h3>
                       <p className="text-[13px] text-gray-400 truncate">
-                        {report.dealSummary || "访谈小总结未生成，请刷新生成"}
+                        {report.dealSummary || "尽调小总结未生成，请刷新生成"}
                       </p>
                     </div>
                   </div>

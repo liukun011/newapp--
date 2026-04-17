@@ -978,11 +978,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             );
           })()}
 
-          {/* 访谈小总结 Card */}
+          {/* 尽调小总结 Card */}
           <div className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
             <div className={`flex items-center justify-between ${currentDeal?.dealSummary ? 'mb-3' : ''} relative z-10 px-0.5`}>
               <div className="flex items-center gap-2">
-                <h3 className="text-[16px] font-bold text-slate-800 tracking-tight">访谈小总结</h3>
+                <h3 className="text-[16px] font-bold text-slate-800 tracking-tight">尽调小总结</h3>
                 <div className="bg-[#F4F7FF] text-[#86909C] text-[10px] px-2 py-0.5 rounded-md font-medium">
                   自动提炼, 仅供参考
                 </div>
@@ -1039,7 +1039,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               </div>
             ) : (
               <div className="relative z-10 px-0.5 mt-2">
-                <p className="text-[13px] text-gray-400">访谈小总结未生成，请刷新生成</p>
+                <p className="text-[13px] text-gray-400">尽调小总结未生成，请刷新生成</p>
               </div>
             )}
           </div>

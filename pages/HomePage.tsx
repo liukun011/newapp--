@@ -727,7 +727,7 @@ const HomePage: React.FC<HomePageProps> = ({
                                 )}
                               </div>
                               <p className="text-[13px] text-gray-400 truncate">
-                                {item.dealSummary || "访谈小总结未生成，请刷新生成"}
+                                {item.dealSummary || "尽调小总结未生成，请刷新生成"}
                               </p>
                             </div>
                           </div>
