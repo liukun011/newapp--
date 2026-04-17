@@ -748,7 +748,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
             {/* Form Area - Compact */}
             <div className="px-5 pb-5 space-y-3">
               <div className="space-y-1.5">
-                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">清单名称</label>
+                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">
+                  清单名称<span className="text-[#EF4444] ml-0.5">*</span>
+                </label>
                 <div className="relative">
                    <input 
                       type="text"
@@ -761,11 +763,11 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">适用场景</label>
+                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">描述</label>
                 <div className="relative">
                    <textarea 
                       className="w-full h-[90px] bg-[#F8FAFC] border-none rounded-[16px] p-4 text-[14px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all resize-none placeholder:text-[#CBD5E1] leading-relaxed"
-                      placeholder="例如：初次沟通..."
+                      placeholder="请输入描述"
                       value={newModalDesc}
                       onChange={(e) => setNewModalDesc(e.target.value)}
                    />
@@ -781,7 +783,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                   取消
                 </button>
                 <button 
-                  disabled={!newModalName.trim() || !newModalDesc.trim() || isUpdating}
+                  disabled={!newModalName.trim() || isUpdating}
                   onClick={async () => {
                      try {
                        setIsUpdating(true);
@@ -819,7 +821,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                      }
                   }}
                   className={`flex-1 h-[44px] font-bold text-[14px] rounded-full shadow-lg active:scale-95 transition-all ${
-                     (!newModalName.trim() || !newModalDesc.trim() || isUpdating)
+                     (!newModalName.trim() || isUpdating)
                      ? 'bg-[#CBD5E1] text-white shadow-none cursor-not-allowed'
                      : 'bg-[#3B82F6] text-white shadow-blue-500/10 active:bg-[#2563EB]'
                   }`}
@@ -868,7 +870,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
             </div>
             <div className="px-5 pb-5 space-y-3">
               <div className="space-y-1.5">
-                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">清单名称</label>
+                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">
+                  清单名称<span className="text-[#EF4444] ml-0.5">*</span>
+                </label>
                 <input 
                    type="text" 
                    className="w-full h-[44px] bg-[#F8FAFC] border-none rounded-[16px] px-4 text-[14px] font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all placeholder:text-[#CBD5E1]" 
@@ -877,9 +881,10 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">适用场景</label>
+                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">描述</label>
                 <textarea 
-                   className="w-full h-[90px] bg-[#F8FAFC] border-none rounded-[16px] p-4 text-[14px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all resize-none placeholder:text-[#CBD5E1] leading-relaxed" 
+                   className="w-full h-[90px] bg-[#F8FAFC] border-none rounded-[16px] p-4 text-[14px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all resize-none placeholder:text-[#CBD5E1] leading-relaxed"
+                   placeholder="请输入描述"
                    value={editDesc} 
                    onChange={(e) => setEditDesc(e.target.value)} 
                 />
