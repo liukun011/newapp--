@@ -537,7 +537,6 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                 <div className="space-y-2">
                   {questions.map(item => {
                     const q = item as TemplateInfo; // 强制断言为问题清单类型数据
-                    const isActive = activeQuestion?.id === q.id;
                     return (
                       <div 
                         key={q.id} 
@@ -546,11 +545,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                           setIsCreatingNew(false);
                           setEditingQuestion(q); // 点击进入编辑模式或查看模式
                         }} 
-                        className={`relative rounded-[20px] p-3.5 transition-all cursor-pointer active:scale-[0.98] ${
-                          isActive 
-                            ? 'bg-[#EEF4FF] border border-[#CAD9FF] shadow-[0_4px_15px_rgba(75,119,246,0.06)]' 
-                            : 'bg-white border border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-gray-100'
-                        }`}
+                        className="relative rounded-[20px] p-3.5 transition-all cursor-pointer active:scale-[0.98] bg-white border border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-gray-100"
                       >
                         <div className="flex justify-between items-start gap-3">
                           <div className="flex-1 min-w-0 pr-2">
@@ -562,19 +557,12 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                                     {getQuestionTemplateTagLabel(q)}
                                   </span>
                                 )}
-                                {isActive && (
-                                  <span className="px-1.5 py-0.5 bg-[#4B77F6]/10 text-[#4B77F6] text-[9px] font-extrabold rounded-md shrink-0 whitespace-nowrap">
-                                    当前编辑
-                                  </span>
-                                )}
                               </div>
                             </div>
                             <p className="text-[12px] text-[#64748B] leading-snug mb-2 line-clamp-1">
                               {q.templateDesc || "针对该场景的问卷建议，包含核心问题与风险排查。"}
                             </p>
-                            <div className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                              isActive ? 'bg-white text-[#4B77F6]' : 'bg-[#F8FAFF] text-[#94A3B8]'
-                            }`}>
+                            <div className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#F8FAFF] text-[#94A3B8]">
                               {q.questionList?.length || 0} 个问题
                             </div>
                           </div>
@@ -593,13 +581,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                                 <Trash2 size={14} />
                               </button>
                             )}
-                            {isActive ? (
-                              <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-[#4B77F6] shadow-sm">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                              </div>
-                            ) : (
-                              <ChevronRight size={18} className="text-[#CBD5E1]" />
-                            )}
+                            <ChevronRight size={18} className="text-[#CBD5E1]" />
                           </div>
                         </div>
                       </div>
