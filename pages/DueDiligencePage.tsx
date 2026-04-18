@@ -23,7 +23,7 @@ interface DueDiligencePageProps {
   onNavigateToHistory?: (dealId: string) => void;
   onDealDetailLoaded?: (detail: DealRecord) => void;
   onNavigateToEnterpriseDetail?: (data: any) => void;
-  setAiInsightList?: (list: any[]) => void;
+  onBack: () => void;
   isEnterpriseSyncing?: boolean;
   setIsEnterpriseSyncing?: (syncing: boolean) => void;
 }
@@ -40,7 +40,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   onNavigateToHistory,
   onDealDetailLoaded,
   onNavigateToEnterpriseDetail,
-  setAiInsightList: setGlobalAiInsight  // 重命名避免与本地 state 冲突
 }) => {
   const basePath = import.meta.env.BASE_URL || '/';
   // 详情数据
@@ -688,11 +687,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     if (!currentDeal?.id || isAnalyzingAi) return;
     try {
       setIsAnalyzingAi(true);
-      const res = await dealService.getAiInsight(currentDeal.id, false);
+      const res = await dealService.getAiInsight(currentDeal.id, true);
       if (res.success) {
-        if (Array.isArray(res.data)) {
+        if (res.success && Array.isArray(res.data)) {
           setAiInsightList(res.data); // 更新本地展示区
-          setGlobalAiInsight?.(res.data); // 同步到全局应用状态
         }
         await fetchDealDetail();
         Toast.success('AI 洞察生成成功');
@@ -1292,7 +1290,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                             e.stopPropagation();
                             if (!hasEnterpriseName || isSyncing) return;
                             onNavigateToEnterpriseDetail?.({
-                                enterpriseInfo: basicInfo,
+                                ...enterpriseInfo,
                                 aiInsights: aiInsights
                             });
                          }}

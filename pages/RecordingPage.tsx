@@ -838,8 +838,11 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                   {expandedQuestion === q.id && q.details && (
                     <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-100 relative">
                         <div className="text-sm text-slate-600 leading-relaxed flex gap-2 mb-4">
-                            <span className="text-indigo-500 font-bold shrink-0">A:</span>
-                            <span>{q.details}</span>
+                            <span className="text-[10px] text-indigo-500/80 font-bold shrink-0 flex flex-col leading-tight mt-1 items-start">
+                              <span>参考</span>
+                              <span>答案：</span>
+                            </span>
+                            <span className="pt-0.5">{q.details}</span>
                         </div>
                         {q.answerTime && (
                            <div className="absolute bottom-1.5 right-2 px-1 text-[10px] text-slate-400 font-medium scale-90 origin-right">

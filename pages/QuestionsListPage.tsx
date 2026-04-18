@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { ArrowLeft, FileText, Pencil, Plus, Trash2, Cpu, MessageSquareMore, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Cpu, ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { QuestionInfo } from '../types';
 import { dealService } from '../services/dealService';
@@ -17,113 +17,149 @@ interface QuestionsListPageProps {
   dealName?: string;
   dealLogo?: string;
   questionInfoList?: QuestionInfo[];
-  aiInsightList?: AiInsightQuestion[];
   onBack: () => void;
-  onUpdateQuestion?: (question: QuestionInfo) => void;
-  onDeleteQuestion?: (questionId: string) => void;
-  onAddQuestion?: (questionName: string) => void;
   onSave?: (questions: QuestionInfo[]) => Promise<void>;
   isArchived?: boolean;
 }
 
 type TabType = 'ALL' | 'PENDING';
 
-/**
- * 格式化 ISO 时间字符串为 YYYY-MM-DD HH:mm:ss
- */
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '';
-  try {
-    const d = new Date(dateStr);
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  } catch (e) {
-    return dateStr;
-  }
-};
-
 const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   dealId,
   dealName = '尽调详情',
   dealLogo,
   questionInfoList = [],
-  aiInsightList = [],
   onBack,
   onSave,
   isArchived = false,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<QuestionInfo | null>(null);
-  const [addModalVisible, setAddModalVisible] = useState(false);
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [deletingQuestion, setDeletingQuestion] = useState<QuestionInfo | null>(null);
-  
-  const [localQuestions, setLocalQuestions] = useState<QuestionInfo[]>(questionInfoList);
-  const [internalAiInsightList, setInternalAiInsightList] = useState<AiInsightQuestion[]>(aiInsightList);
-  const [acceptedAiQuestions, setAcceptedAiQuestions] = useState<AiInsightQuestion[]>([]);
+  const [localAiInsights, setLocalAiInsights] = useState<AiInsightQuestion[]>([]);
+  const [loadingAi, setLoadingAi] = useState(false);
+  const [localQuestions, _setLocalQuestions] = useState<QuestionInfo[]>(questionInfoList);
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
-  const pendingAiQuestionsRef = useRef<AiInsightQuestion[]>([]);
+  
+  // 使用 Ref 实时记录最新数据，解决闭包导致的保存数据不完整问题
+  const questionsRef = useRef<QuestionInfo[]>(questionInfoList);
   const isDirtyRef = useRef(false);
+  const hasCalledSaveRef = useRef(false);
 
-  useEffect(() => { if (!isDirtyRef.current) setLocalQuestions(questionInfoList); }, [questionInfoList]);
+  // 统一的状态更新方法
+  const setLocalQuestions = (val: QuestionInfo[] | ((p: QuestionInfo[]) => QuestionInfo[])) => {
+    if (typeof val === 'function') {
+      const newVal = val(questionsRef.current);
+      questionsRef.current = newVal;
+      _setLocalQuestions(newVal);
+    } else {
+      questionsRef.current = val;
+      _setLocalQuestions(val);
+    }
+  };
 
-  // 移除初始化时自动获取 AI 洞察的逻辑，数据应由父组件通过 props (aiInsightList) 传入
-  // 避免点击“查看AI洞察的问题清单”时产生重复冗余请求
+  useEffect(() => { 
+    if (!isDirtyRef.current) setLocalQuestions(questionInfoList); 
+  }, [questionInfoList]);
 
+  // 内部保存逻辑封装
+  const performSave = async (showToast = true) => {
+    // 每次执行前读取 Ref，确保拿到的是最新点击“加入”后的列表
+    const currentQuestions = questionsRef.current;
+    
+    // 获取本次新增的 AI 问题 (id 以 temp_ai_ 开头)
+    const addedAiQuestions = currentQuestions.filter(q => q.id && String(q.id).startsWith('temp_ai_'));
+    const isDirty = isDirtyRef.current || addedAiQuestions.length > 0;
+
+    console.log('[QuestionsList] performSave check:', { isDirty, questionsCount: currentQuestions.length, addedAi: addedAiQuestions.length });
+
+    if (!isDirty || !onSave || hasCalledSaveRef.current) return;
+
+    hasCalledSaveRef.current = true;
+    if (showToast) Toast.loading({ message: '保存中...', duration: 0 });
+    
+    try { 
+        // 1. 同步采纳 AI 问题到后端
+        if (dealId && addedAiQuestions.length > 0) {
+          const aiInsightsToAccept = addedAiQuestions.map(q => ({
+            questionContent: q.questionName
+          }));
+          await dealService.acceptAiInsight(dealId, aiInsightsToAccept);
+        }
+
+        // 2. 清洗数据并保存全量清单
+        const cleanedQuestions = currentQuestions.map(q => {
+           if (q.id && String(q.id).startsWith('temp_')) {
+               const { id, ...rest } = q;
+               return rest as QuestionInfo;
+           }
+           return q;
+         });
+         
+        await onSave(cleanedQuestions); 
+        isDirtyRef.current = false;
+        if (showToast) Toast.clear(); 
+    } catch(e) { 
+        console.error('[QuestionsList] Save error:', e);
+        if (showToast) Toast.clear(); 
+        hasCalledSaveRef.current = false; 
+    }
+  };
+
+  // 页面加载时拉取 AI 洞察结果
   useEffect(() => {
-    if (aiInsightList?.length) setInternalAiInsightList(aiInsightList);
-  }, [aiInsightList]);
+    if (dealId) {
+      setLoadingAi(true);
+      dealService.aiInsight(dealId, false)
+        .then(res => {
+          if (Array.isArray(res)) {
+            setLocalAiInsights(res);
+          } else if ((res as any)?.success && Array.isArray((res as any)?.data)) {
+            setLocalAiInsights((res as any).data);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch AI insights:', err);
+        })
+        .finally(() => {
+          setLoadingAi(false);
+        });
+    }
+  }, [dealId]);
+
+  // 监听组件卸载（包含原生手势返回）
+  useEffect(() => {
+    return () => {
+      // 卸载时由于 Toast 挂载受限，使用静默保存
+      performSave(false);
+    };
+  }, []); // 仅在销毁时触发
 
   const handleBack = async () => {
-    const questionsToAccept = pendingAiQuestionsRef.current;
-    console.log('[QuestionsList] handleBack triggered', { isDirty: isDirtyRef.current, accepted: questionsToAccept.length });
-    
-    if ((isDirtyRef.current || questionsToAccept.length > 0) && onSave) {
-        Toast.loading({ message: '保存中...', duration: 0 });
-        try { 
-            // 采纳 AI 问题同步到后端
-            if (dealId && questionsToAccept.length > 0) {
-              console.log('[QuestionsList] Syncing accepted AI questions:', questionsToAccept);
-              await dealService.acceptAiInsight(dealId, questionsToAccept);
-            }
-
-            // 清洗数据：剔除临时生成的 ID (temp_...)，否则后端可能会因找不到对应实例而报错
-            const cleanedQuestions = localQuestions.map(q => {
-               if (q.id && String(q.id).startsWith('temp_')) {
-                   const { id, ...rest } = q;
-                   return rest as QuestionInfo;
-               }
-               return q;
-            });
-            await onSave(cleanedQuestions); 
-            Toast.clear(); 
-        } catch(e) { 
-            console.error('[QuestionsList] Save error:', e);
-            Toast.clear(); 
-        }
-    }
+    await performSave(true);
     onBack();
   };
 
   const filteredQuestions = useMemo(() => {
     if (activeTab === 'ALL') return localQuestions;
-    const aiList = internalAiInsightList || [];
-    if (activeTab === 'PENDING') return aiList.filter(aiQ => !localQuestions.some(lq => lq.questionName === aiQ.questionContent));
+    if (activeTab === 'PENDING') return localAiInsights.filter(aiQ => !aiQ.isAdded && !localQuestions.some(lq => lq.questionName === aiQ.questionContent));
     return [];
-  }, [activeTab, localQuestions, internalAiInsightList]);
+  }, [activeTab, localQuestions, localAiInsights]);
 
   const toggleExpand = (id: string) => {
     setExpandedIds(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleAddAiQuestion = (aiItem: AiInsightQuestion) => {
-    const name = aiItem.questionContent;
+  const handleAddAiQuestion = (aiQ: AiInsightQuestion) => {
+    const isAlreadyInList = questionsRef.current.some(q => q.questionName === aiQ.questionContent);
+    if (isAlreadyInList) {
+      Toast.info('该问题已在清单中');
+      return;
+    }
+
     const newQ: QuestionInfo = { 
-        id: `temp_ai_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-        questionName: name.trim(), 
-        questionIndex: localQuestions.length + 1, 
+        id: `temp_ai_${Date.now()}`,
+        questionName: aiQ.questionContent.trim(), 
+        questionIndex: questionsRef.current.length + 1, 
         recStatus: '1', 
         questionAnswer: null, 
         questionAnswerTime: null, 
@@ -133,9 +169,12 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
         agencyId: '', 
         CHECKED: false 
     };
+
+    // 立即更新 Ref 和 State
     setLocalQuestions(p => [...p, newQ]);
-    setAcceptedAiQuestions(p => [...p, aiItem]); // 记录接纳的原始内容
-    pendingAiQuestionsRef.current.push(aiItem); // 同时存入 Ref 确保 handleBack 能即时拿到
+    setLocalAiInsights(p => p.map(item => item.id === aiQ.id ? { ...item, isAdded: true } : item));
+    
+    // 明确标记为已脏
     isDirtyRef.current = true;
     Toast.success('已加入清单');
   };
@@ -153,10 +192,10 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
       <div className="px-4 py-3 flex items-center gap-2 shrink-0 overflow-x-auto scrollbar-hide">
         {(['ALL', 'PENDING'] as const).map((tab) => {
             const isActive = activeTab === tab;
-            const labels = { ALL: '全部', PENDING: 'AI 建议' };
+            const labels = { ALL: '全部问题', PENDING: 'AI 建议' };
             const counts = { 
                 ALL: localQuestions.length, 
-                PENDING: internalAiInsightList.length - internalAiInsightList.filter(ai => localQuestions.some(lq => lq.questionName === ai.questionContent)).length,
+                PENDING: localAiInsights.filter(ai => !ai.isAdded && !localQuestions.some(lq => lq.questionName === ai.questionContent)).length,
             };
             return (
                 <button 
@@ -174,189 +213,83 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
       {/* List Content */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 pb-28">
-        <div className="space-y-2">
-          {filteredQuestions.map((item: any, index) => {
-            const isAiRaw = activeTab === 'PENDING';
-            const qName = isAiRaw ? item.questionContent : item.questionName;
-            const isChecked = !isAiRaw && item.CHECKED;
-            const isAiSource = isAiRaw || String(item.questionType) === '2' || internalAiInsightList.some(ai => ai.questionContent === qName);
-            
-            return (
-              <div 
-                key={item.id || index}
-                className="bg-white rounded-[14px] shadow-[0_2px_8px_rgba(0,0,0,0.015)] border border-slate-50 relative group transition-all overflow-hidden"
-              >
+        {loadingAi && activeTab === 'PENDING' ? (
+          <div className="py-10 text-center text-slate-400 text-[13px]">加载 AI 建议中...</div>
+        ) : filteredQuestions.length === 0 ? (
+          <div className="py-10 text-center text-slate-400 text-[13px]">暂无问题数据</div>
+        ) : (
+          <div className="space-y-2">
+            {filteredQuestions.map((item: any, index) => {
+              const isAiRaw = activeTab === 'PENDING';
+              const qName = isAiRaw ? item.questionContent : item.questionName;
+              const isChecked = !isAiRaw && item.CHECKED;
+              const isAiSource = isAiRaw || String(item.questionType) === '2' || localAiInsights.some(ai => ai.questionContent === qName);
+              
+              return (
                 <div 
-                  className="flex-1 p-3 flex flex-col gap-1.5 cursor-pointer active:bg-slate-50/50"
-                  onClick={() => !isAiRaw && item.questionAnswer && toggleExpand(item.id)}
+                  key={item.id || index}
+                  className="bg-white rounded-[14px] shadow-[0_2px_8px_rgba(0,0,0,0.015)] border border-slate-50 relative group transition-all overflow-hidden"
                 >
-                  <div className="flex items-start justify-between gap-2.5">
-                    <div className="flex-1">
-                       <div className="flex items-center gap-1.5 mb-1">
-                         <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${isAiSource ? 'bg-indigo-50 text-indigo-500' : 'bg-blue-50 text-blue-500'}`}>
-                           {isAiSource ? 'AI 洞察问题' : '模板预设问题'}
-                         </span>
-                         {!isAiRaw && isChecked && <span className="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded">已访谈</span>}
-                       </div>
-                       
-                       <div className="flex items-start gap-1.5">
-                         {activeTab === 'ALL' && <span className="text-[14px] font-bold text-indigo-500 mt-[1px]">{index + 1}.</span>}
-                         <p className={`flex-1 text-[14px] font-bold leading-[1.5] ${isChecked ? 'text-indigo-600' : 'text-slate-700'}`}>
-                           {qName}
-                         </p>
-                         {!isAiRaw && item.questionAnswer && (
-                            <div className="shrink-0 text-indigo-400 mt-0.5">
-                              {expandedIds[item.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            </div>
-                         )}
-                       </div>
+                  <div 
+                    className="flex-1 p-3 flex flex-col gap-1.5 cursor-pointer active:bg-slate-50/50"
+                    onClick={() => !isAiRaw && item.questionAnswer && toggleExpand(item.id)}
+                  >
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          {String(item.questionType) === '3' ? (
+                            <span className="text-[9px] font-bold text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded">
+                              手动添加问题
+                            </span>
+                          ) : (
+                            <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${isAiSource ? 'bg-indigo-50 text-indigo-500' : 'bg-blue-50 text-blue-500'}`}>
+                              {isAiSource ? 'AI 洞察问题' : '模板预设问题'}
+                            </span>
+                          )}
+                          {!isAiRaw && isChecked && <span className="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded">已访谈</span>}
+                        </div>
+                        
+                        <div className="flex items-start gap-1.5">
+                          {activeTab === 'ALL' && <span className="text-[14px] font-bold text-indigo-500 mt-[1px]">{index + 1}.</span>}
+                          <p className={`flex-1 text-[14px] font-bold leading-[1.5] ${isChecked ? 'text-indigo-600' : 'text-slate-700'}`}>
+                            {qName}
+                          </p>
+                          {!isAiRaw && item.questionAnswer && (
+                              <div className="shrink-0 text-indigo-400 mt-0.5">
+                                {expandedIds[item.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                              </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {activeTab === 'PENDING' && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleAddAiQuestion(item); }}
+                          className="shrink-0 bg-[#4B42F5] text-white px-3 py-1.5 rounded-lg text-[11px] font-bold active:scale-95 transition-all"
+                        >
+                          加入
+                        </button>
+                      )}
                     </div>
-                    
-                    {activeTab === 'PENDING' ? (
-                       <button 
-                         onClick={(e) => { e.stopPropagation(); handleAddAiQuestion(item); }}
-                         className="shrink-0 bg-[#4B42F5] text-white px-3 py-1.5 rounded-lg text-[11px] font-bold active:scale-95 transition-all"
-                       >
-                         加入
-                       </button>
-                    ) : (
-                       <div className="flex flex-col gap-1 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity">
-                         {!isChecked && (
-                           <>
-                             <button onClick={(e) => { e.stopPropagation(); setEditingQuestion(item); setEditModalVisible(true);}} className="p-1.5 bg-slate-50 text-slate-400 rounded-lg hover:bg-indigo-50 hover:text-indigo-500 transition-colors"><Pencil size={12} /></button>
-                             <button onClick={(e) => { e.stopPropagation(); setDeletingQuestion(item); setDeleteModalVisible(true);}} className="p-1.5 bg-slate-50 text-slate-400 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 size={12} /></button>
-                           </>
-                         )}
-                       </div>
+
+                    {!isAiRaw && expandedIds[item.id] && item.questionAnswer && (
+                      <div className="mt-2.5 pt-2.5 border-t border-slate-50 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">访谈回答</span>
+                        </div>
+                        <p className="text-[13px] text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-xl border border-white">
+                          {item.questionAnswer}
+                        </p>
+                      </div>
                     )}
                   </div>
-
-                  {/* 展示答复内容 - 更加紧凑 */}
-                  {!isAiRaw && item.questionAnswer && expandedIds[item.id] && (
-                    <div className="mt-1.5 p-3 bg-[#F5F7FF] rounded-[12px] border-none animate-scaleIn relative">
-                       <div className="text-[14px] font-bold text-slate-800 mb-1 flex items-center gap-1.5">
-                          <div className="w-1 h-3.5 bg-[#5C66FF] rounded-full" /> 参考回答：
-                       </div>
-                       <p className="text-[13px] text-slate-600 leading-normal mb-1">
-                          {item.questionAnswer}
-                       </p>
-                       {item.questionAnswerTime && (
-                         <div className="flex justify-end mt-1">
-                           <span className="text-[10px] text-slate-400 font-medium bg-white/50 px-2 py-0.5 rounded-full">
-                             {formatDate(item.questionAnswerTime)}
-                           </span>
-                         </div>
-                       )}
-                    </div>
-                  )}
                 </div>
-              </div>
-            );
-          })}
-          
-          {filteredQuestions.length === 0 && (
-            <div className="py-20 flex flex-col items-center justify-center gap-4 grayscale opacity-40">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-inner">
-                <FileText size={40} className="text-slate-300" />
-              </div>
-              <span className="text-[14px] font-bold text-slate-300">空空如也...</span>
-            </div>
-          )}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
-
-      {/* Floating Action */}
-      {!isArchived && activeTab === 'ALL' && (
-        <button 
-          onClick={() => setAddModalVisible(true)}
-          className="fixed right-4 bottom-10 w-12 h-12 bg-gradient-to-br from-[#4B42F5] to-[#6366F1] text-white rounded-[16px] shadow-[0_8px_20px_rgba(75,66,245,0.3)] flex items-center justify-center active:scale-90 transition-all z-50 group overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <Plus size={24} strokeWidth={2.5} />
-        </button>
-      )}
-
-      {/* Modals with Premium Styling */}
-      {addModalVisible && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/40">
-            <div className="bg-white rounded-[16px] w-[320px] overflow-hidden animate-scaleIn shadow-2xl">
-               <div className="pt-6 pb-4 text-center text-[18px] font-bold text-[#333333]">
-                  新增问题
-               </div>
-               <div className="px-5 pb-6">
-                 <textarea
-                    autoFocus
-                    className="w-full h-[130px] p-4 text-[15px] text-[#333333] bg-[#F8FAFF] rounded-[12px] border border-[#E5E7EB] outline-none focus:border-[#4B42F5] transition-all resize-none placeholder:text-[#9CA3AF]"
-                    placeholder="请输入问题内容"
-                    onChange={(e) => (window as any)._tmpQ = e.target.value}
-                 />
-               </div>
-               <div className="flex border-t border-[#F3F4F6] h-[55px]">
-                  <button onClick={() => setAddModalVisible(false)} className="flex-1 text-[#4B5563] font-medium text-[16px] bg-white active:bg-[#F9FAFB] transition-colors border-r border-[#F3F4F6]">取消</button>
-                  <button onClick={() => {
-                    const name = (window as any)._tmpQ;
-                    if (name) {
-                        const newQ: QuestionInfo = { 
-                          id: `temp_m_${Date.now()}`, questionName: name.trim(), questionIndex: localQuestions.length + 1, recStatus: '1', questionAnswer: null, questionAnswerTime: null, questionStatus: '0', templateId: '', agencyId: '', CHECKED: false 
-                        };
-                        setLocalQuestions(p => [...p, newQ]);
-                        isDirtyRef.current = true;
-                        setAddModalVisible(false);
-                        (window as any)._tmpQ = '';
-                    }
-                  }} className="flex-1 bg-[#5C66FF] text-white font-medium text-[16px] active:bg-[#4B52F5] transition-colors">确认</button>
-               </div>
-            </div>
-        </div>
-      )}
-
-      {editModalVisible && editingQuestion && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/40">
-            <div className="bg-white rounded-[16px] w-[320px] overflow-hidden animate-scaleIn shadow-2xl">
-               <div className="pt-6 pb-4 text-center text-[18px] font-bold text-[#333333]">
-                  编辑问题
-               </div>
-               <div className="px-5 pb-6">
-                 <textarea
-                    defaultValue={editingQuestion.questionName}
-                    className="w-full h-[130px] p-4 text-[15px] text-[#333333] bg-[#F8FAFF] rounded-[12px] border border-[#E5E7EB] outline-none focus:border-[#4B42F5] transition-all resize-none placeholder:text-[#9CA3AF]"
-                    onChange={(e) => (window as any)._tmpEditQ = e.target.value}
-                 />
-               </div>
-               <div className="flex border-t border-[#F3F4F6] h-[55px]">
-                  <button onClick={() => setEditModalVisible(false)} className="flex-1 text-[#4B5563] font-medium text-[16px] bg-white active:bg-[#F9FAFB] transition-colors border-r border-[#F3F4F6]">取消</button>
-                  <button onClick={() => {
-                    const name = (window as any)._tmpEditQ || editingQuestion.questionName;
-                    setLocalQuestions(p => p.map(q => q.id === editingQuestion.id ? { ...q, questionName: name } : q));
-                    isDirtyRef.current = true;
-                    setEditModalVisible(false);
-                    (window as any)._tmpEditQ = '';
-                  }} className="flex-1 bg-[#5C66FF] text-white font-medium text-[16px] active:bg-[#4B52F5] transition-colors">确认</button>
-               </div>
-            </div>
-        </div>
-      )}
-
-      {deleteModalVisible && deletingQuestion && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/40">
-            <div className="bg-white rounded-[16px] w-[290px] overflow-hidden animate-scaleIn shadow-2xl pt-6">
-               <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Trash2 size={22} />
-               </div>
-               <h3 className="text-[17px] font-bold text-center text-[#333333] mb-1">确认移除？</h3>
-               <p className="text-[13px] text-slate-400 mb-5 px-6 text-center leading-relaxed">确定要从清单中删除此问题吗？此操作不可撤销。</p>
-               
-               <div className="flex border-t border-[#F3F4F6] h-[50px]">
-                  <button onClick={() => setDeleteModalVisible(false)} className="flex-1 text-[#4B5563] font-medium text-[15px] bg-white active:bg-[#F9FAFB] transition-colors border-r border-[#F3F4F6]">取消</button>
-                  <button onClick={() => {
-                    setLocalQuestions(p => p.filter(q => q.id !== deletingQuestion.id));
-                    isDirtyRef.current = true;
-                    setDeleteModalVisible(false);
-                  }} className="flex-1 bg-red-500 text-white font-medium text-[15px] active:bg-red-600 transition-colors">确认删除</button>
-               </div>
-            </div>
-        </div>
-      )}
     </div>
   );
 };

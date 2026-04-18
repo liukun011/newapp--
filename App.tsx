@@ -285,8 +285,6 @@ const App: React.FC = () => {
   // 企查查资料详情数据
   const [enterpriseDetailData, setEnterpriseDetailData] = useState<any>(null);
 
-  // AI 洞察结果数据 (全局同步)
-  const [aiInsightList, setAiInsightList] = useState<any[]>([]);
   const [isEnterpriseSyncing, setIsEnterpriseSyncing] = useState(false);
 
   // 新建尽调弹框状态
@@ -966,7 +964,6 @@ const App: React.FC = () => {
               {currentView === View.DUE_DILIGENCE && (
                 <DueDiligencePage
                   deal={currentDeal}
-                  setAiInsightList={setAiInsightList}
                   isEnterpriseSyncing={isEnterpriseSyncing}
                   setIsEnterpriseSyncing={setIsEnterpriseSyncing}
                   onBack={() => navigateBackward(previousView === View.REPORTS_LIST ? View.REPORTS_LIST : View.HOME)}
@@ -1334,17 +1331,17 @@ const App: React.FC = () => {
               {currentView === View.UPLOAD_TEMPLATE && (
                 <UploadTemplatePage
                   onBack={() => {
-                    // 从"更换"入口进来的，返回时还原到"处理中"tab
+                    // 从"更换"入口进来的，返回时还原到模板列表 tab
                     if (uploadTemplateInitialData) {
-                      setTemplateInitialTab('processing');
+                      setTemplateInitialTab('templates');
                     }
                     setUploadTemplateInitialData(null);
                     navigateBackward(View.MANAGEMENT);
                   }}
                   onCancel={() => {
-                    // 从"更换"入口进来的，取消时还原到"处理中"tab
+                    // 从"更换"入口进来的，取消时还原到模板列表 tab
                     if (uploadTemplateInitialData) {
-                      setTemplateInitialTab('processing');
+                      setTemplateInitialTab('templates');
                     }
                     setUploadTemplateInitialData(null);
                     navigateBackward(View.MANAGEMENT);
@@ -1353,9 +1350,9 @@ const App: React.FC = () => {
                     // 提交成功后不立即返回，等待用户点击"查看列表"
                   }}
                   onViewList={() => {
-                    // 点击"查看列表"后跳转到模板管理页的"处理中" tab
+                    // 点击"查看列表"后跳转到模板管理页
                     setUploadTemplateInitialData(null);
-                    setTemplateInitialTab('processing');
+                    setTemplateInitialTab('templates');
                     navigateBackward(View.MANAGEMENT);
                   }}
                   initialData={uploadTemplateInitialData}
@@ -1586,7 +1583,6 @@ const App: React.FC = () => {
                   dealName={currentDeal?.enterpriseName || (currentDeal as any)?.interviewCust}
                   dealLogo={currentDeal?.logo}
                   questionInfoList={currentDeal?.questionInfoList || []}
-                  aiInsightList={aiInsightList}
                   isArchived={currentDeal?.status === '5'}
                   onBack={() => navigateBackward(View.DUE_DILIGENCE)}
                   onUpdateQuestion={undefined}
