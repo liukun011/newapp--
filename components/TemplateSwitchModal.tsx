@@ -44,8 +44,8 @@ const TemplateSwitchModal: React.FC<TemplateSwitchModalProps> = ({
     try {
       const nextTemplate = templates.find((tpl) => String(tpl.id) === String(id));
       await Dialog.confirm({
-        title: '确认切换',
-        message: `确定切换到“${nextTemplate?.templateName || 'test'}”问题清单吗？`,
+        title: '确认切换问题清单',
+        message: `切换后将使用“${nextTemplate?.templateName || '该问题清单'}”作为当前访谈问题清单，且会清空当前已生成的问题与相关数据，是否继续？`,
         confirmButtonText: '确认切换',
         cancelButtonText: '取消',
       });
