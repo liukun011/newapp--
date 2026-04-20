@@ -13,7 +13,6 @@ import config from '../config';
 
 interface DueDiligencePageProps {
   deal: DealRecord | null;
-  onBack: () => void;
   onNavigateToRecording: () => void;
   onNavigateToMaterials: () => void;
   onNavigateToQuestions?: () => void;

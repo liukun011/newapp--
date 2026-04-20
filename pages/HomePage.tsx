@@ -863,7 +863,7 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
             ) : (
               tenants.map((tenant) => {
-                const isActive = tenant.name === tenantName;
+                const isActive = String(tenant.id) === String(currentUserObj?.tenantId);
                 return (
                   <div 
                     key={tenant.id}

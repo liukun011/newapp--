@@ -24,18 +24,6 @@ const initVConsole = () => {
 
 initVConsole();
 
-// 导出：供登录成功后在测试环境检查特定用户
-export const checkVConsoleForTestUser = (phone: string) => {
-  // 仅在测试环境 + 特定手机号 + 尚未创建实例时初始化
-  if (envConfig.isTest && !vConsoleInstance) {
-    const allowedPhones = ['13278852398'];
-    if (allowedPhones.includes(phone)) {
-      vConsoleInstance = new VConsole();
-      console.log('VConsole initialized for test user:', phone);
-    }
-  }
-};
-
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Could not find root element to mount to");

@@ -9,7 +9,6 @@ import { LOGIN_SLIDES } from '../constants';
 import { authService } from '../services/authService';
 import { Toast } from 'react-vant';
 
-import { checkVConsoleForTestUser } from '../index';
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -99,7 +98,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
           }
 
-          checkVConsoleForTestUser(phone);
           onLogin();
         } else {
            Toast.fail(res.message || '登录失败');
@@ -129,7 +127,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               localStorage.setItem('zov-user-info', JSON.stringify({ userId: res.data.userId }));
             }
 
-            checkVConsoleForTestUser(phone);
             onLogin();
           } else {
             Toast.fail(res.message || '登录失败');
