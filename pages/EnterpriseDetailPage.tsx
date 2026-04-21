@@ -130,14 +130,14 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
         {renderSection('企业概况', <Building2 size={16} />, overviewItems)}
 
         {/* 股权变更明细 */}
-        {parsedEquityChanges.length > 0 && (
-          <div className="bg-white rounded-[16px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-gray-100/50 mb-3">
-            <div className="flex items-center gap-1.5 mb-4 px-1">
-              <div className="text-orange-500 scale-90"><History size={16} /></div>
-              <h2 className="text-[13px] font-bold text-slate-800">股权变更明细</h2>
-            </div>
-            <div className="flex flex-col gap-3">
-              {parsedEquityChanges.map((change, idx) => (
+        <div className="bg-white rounded-[16px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-gray-100/50 mb-3">
+          <div className="flex items-center gap-1.5 mb-4 px-1">
+            <div className="text-orange-500 scale-90"><History size={16} /></div>
+            <h2 className="text-[13px] font-bold text-slate-800">股权变更明细</h2>
+          </div>
+          <div className="flex flex-col gap-3">
+            {parsedEquityChanges.length > 0 ? (
+              parsedEquityChanges.map((change, idx) => (
                 <div key={idx} className="bg-[#F8FAFC] rounded-[10px] p-3 border border-white flex flex-col gap-2">
                    {/* 第一行：投资人 + 日期 */}
                    <div className="flex justify-between items-start">
@@ -156,10 +156,14 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
                      </div>
                    </div>
                 </div>
-              ))}
-            </div>
+              ))
+            ) : (
+              <div className="bg-[#F8FAFC] rounded-[10px] p-6 border border-dashed border-gray-200 flex flex-col items-center justify-center text-slate-400">
+                <div className="text-[12px] font-medium">暂无股权变更数据</div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {renderSection('抓取结果明细', <ShieldCheck size={16} />, detailItems)}
       </div>
