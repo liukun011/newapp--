@@ -26,9 +26,7 @@ yarn dev
 
 | 环境 | 构建命令 | 备注 |
 | :--- | :--- | :--- |
-| **开发环境** | `yarn build` | 默认构建（一般用于本地验证） |
-| **测试环境** | `yarn build:test` | 使用 `.env.test` 配置，输出至测试网关 |
-| **生产环境** | `yarn build:prod` | 使用 `.env.production` 配置，全量优化构建 |
+| **构建** | `yarn build` | 默认构建（一般用于本地验证） |
 
 ---
 

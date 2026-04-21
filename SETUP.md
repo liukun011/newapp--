@@ -14,10 +14,7 @@
 | 脚本 | 说明 | 环境 |
 |------|------|------|
 | `yarn dev` | 启动开发服务器 | development |
-| `yarn dev:test` | 启动测试环境服务器 | test |
-| `yarn build` | 构建开发版本 | development |
-| `yarn build:test` | 构建测试版本 | test |
-| `yarn build:prod` | 构建生产版本 | production |
+| `yarn build` | 构建版本
 
 ### 3. 配置文件更新
 - ✅ `config.ts` - 增强环境配置管理
@@ -62,7 +59,7 @@ yarn dev
 
 ```bash
 # 启动测试环境
-yarn dev:test
+yarn dev
 
 # 应用会连接到: http://test.example.com/api
 # 访问地址: http://localhost:5173
@@ -71,11 +68,8 @@ yarn dev:test
 ### 构建部署
 
 ```bash
-# 构建测试环境版本
-yarn build:test
-
 # 构建生产环境版本
-yarn build:prod
+yarn build
 
 # 预览构建产物
 yarn preview
@@ -165,7 +159,7 @@ talk-assistant/
 ## ❓ 常见问题
 
 **Q: 如何切换环境？**
-A: 使用对应的 npm 脚本，如 `yarn dev` (开发) 或 `yarn dev:test` (测试)
+A: 使用对应的 npm 脚本，如 `yarn dev` (开发)
 
 **Q: 修改环境变量后不生效？**
 A: 需要重启 dev server，环境变量在构建时确定
