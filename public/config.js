@@ -4,15 +4,9 @@
  */
 window.APP_CONFIG = {
   // 认证中心基础路径
-  /**
-   * https://user.binarysee.com.cn
-   * http://192.168.8.201:21000/
-   */
-  VITE_AUTH_BASE_URL: 'http://192.168.8.201:21000/auth/',
+  // VITE_AUTH_BASE_URL: 'http://user.binarysee.com/auth/', // 正式环境
+  VITE_AUTH_BASE_URL: 'http://192.168.8.201:21000/auth/', // 测试环境
   // 业务接口基础路径
-  /**
-   * http://68.79.42.215/report
-   * http://192.168.8.201:20101/report/
-   */
   VITE_API_BASE_URL: 'http://192.168.8.201:20101/report/',
+  // VITE_API_BASE_URL: '/report/', // 正式环境
 };
