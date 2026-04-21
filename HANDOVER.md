@@ -208,6 +208,8 @@ function callNative(action, parameters = {}) {
 - 生产地址
     VITE_AUTH_BASE_URL: 'http://user.binarysee.com/auth/',
     VITE_API_BASE_URL: '/report/', 
+- 测试补充：重要
+    在201环境测试真机测试必须连接公司内网，否则无法访问❗️
 
 ## 9. 部署上环境
 
