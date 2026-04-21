@@ -17,9 +17,10 @@ const getExternalConfig = () => {
     const configPath = path.resolve(__dirname, 'public/config.js');
     if (fs.existsSync(configPath)) {
       const content = fs.readFileSync(configPath, 'utf-8');
-      // 简单的正则匹配提取
-      const apiMatch = content.match(/VITE_API_BASE_URL\s*:\s*['"](.*?)['"]/);
-      const authMatch = content.match(/VITE_AUTH_BASE_URL\s*:\s*['"](.*?)['"]/);
+      console.log(content, 'config.js')
+      // 使用多行匹配且排除以 // 开头的注释行
+      const apiMatch = content.match(/^\s*(?!\/\/)\s*VITE_API_BASE_URL\s*:\s*['"](.*?)['"]/m);
+      const authMatch = content.match(/^\s*(?!\/\/)\s*VITE_AUTH_BASE_URL\s*:\s*['"](.*?)['"]/m);
       return {
         VITE_API_BASE_URL: apiMatch ? apiMatch[1] : '',
         VITE_AUTH_BASE_URL: authMatch ? authMatch[1] : ''
