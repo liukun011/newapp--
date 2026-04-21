@@ -45,8 +45,6 @@
 | 命令 | 环境/模式 | 详细业务作用与产物说明 |
 | :--- | :--- | :--- |
 | `yarn dev` | 本地开发环境 | 启动 Vite 开发服务器。支持路径别名 (@) 解析、热重载以及 Server Proxy 接口请求反向代理 |
-| `yarn build:test` | 测试服务器预览 | 调用 `vite build --mode test`。读取 `.env.test` 网关配置。构建产物输出至根目录 `/talk-assistant` |
-| `yarn build:prod` | 生产环境构建 | 调用 `vite build --mode production`。执行全量混淆、产物压缩、CSS 提取混淆。输出至 `/talk-assistant` |
 | `yarn preview` | 产物本地回验 | 启动静态 Web 服务器以验证 `/dist` (或 /talk-assistant) 文件夹中的 Chunk 分离与路由是否正常 |
 
 ---
