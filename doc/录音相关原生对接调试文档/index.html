@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>实时音频转码处理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 30px;
+            margin-top: 50px;
+            color: #000;
+        }
+
+        /* 按钮组 */
+        .button-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #ffffff;
+            border: 1px solid #333333;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #000000;
+            cursor: pointer;
+            min-width: 80px;
+            transition: all 0.2s;
+        }
+
+        .btn:active {
+            background: #f0f0f0;
+        }
+
+        .btn.recording {
+            background: #ffe0e0;
+            border-color: #f5576c;
+            color: #f5576c;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 状态显示区域 */
+        .status-area {
+            width: 100%;
+            height: 60px;
+            border: 1px solid #333333;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #000000;
+        }
+
+        /* 日志显示区域 */
+        .log-area {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #333333;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #000000;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        .log-item {
+            margin-bottom: 4px;
+            word-wrap: break-word;
+        }
+
+        .log-item .time {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .log-item.result {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .param-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .param-option.selected {
+            border-color: #007AFF;
+            background: #f0f8ff;
+        }
+
+        .param-option input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .param-option-label {
+            font-size: 13px;
+            color: #333;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .modal-btn.confirm {
+            background: #007AFF;
+            color: #fff;
+        }
+
+        .modal-btn.cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        /* 音频列表样式 */
+        .audio-list-container {
+            display: none;
+        }
+
+        .audio-list-container.show {
+            display: block;
+        }
+
+        .audio-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .audio-list-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .audio-list-close {
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .audio-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .audio-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .audio-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .audio-item-name {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .audio-item-meta {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .audio-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .audio-item-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            min-width: auto;
+        }
+
+        .btn-danger {
+            background: #fff;
+            border-color: #f5576c;
+            color: #f5576c;
+        }
+
+        .btn-danger:active {
+            background: #ffe0e0;
+        }
+
+        .btn-primary {
+            background: #007aff;
+            border-color: #007aff;
+            color: #fff;
+        }
+
+        .btn-primary:active {
+            background: #0051d5;
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="title">实时音频转码处理</div>
+
+        <!-- 第一行按钮 -->
+        <div class="button-row">
+            <button class="btn" id="startBtn" onclick="startRecording()">开启录音</button>
+            <button class="btn" onclick="showParamModal()">设置录音参数</button>
+            <button class="btn" id="stopBtn" onclick="stopRecording()">关闭录音</button>
+            <button class="btn" onclick="clearLog()">清空日志</button>
+        </div>
+
+        <!-- 第二行按钮 -->
+        <div class="button-row">
+            <button class="btn" onclick="showAudioList()">录音列表</button>
+            <button class="btn" onclick="openPhotoLibrary()">相册</button>
+            <button class="btn" onclick="openCamera()">相机</button>
+            <button class="btn" onclick="closeApp()">关闭</button>
+        </div>
+
+        <!-- 第三行按钮 -->
+        <div class="button-row">
+            <button class="btn" onclick="chooseFile()">文件</button>
+        </div>
+
+        <!-- 录音状态显示 -->
+        <div class="status-area" id="status">未在录音</div>
+
+        <!-- log日志显示 -->nnnnnnnnn
+        <div class="log-area" id="logArea">
+            <div class="log-item"><span class="time">[系统]</span> 等待开始录音...</div>
+        </div>
+    </div>
+
+    <!-- 参数设置弹窗 -->
+    <div class="modal-overlay" id="paramModal">
+        <div class="modal-content">
+            <div class="modal-title">设置录音参数</div>
+            <div class="param-option" id="option1" onclick="selectOption(1)">
+                <input type="radio" name="paramOption" value="1" id="radio1">
+                <span class="param-option-label">{"surveyId": "140380658077696"}</span>
+            </div>
+            <div class="param-option" id="option2" onclick="selectOption(2)">
+                <input type="radio" name="paramOption" value="2" id="radio2">
+                <span class="param-option-label">{}</span>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeParamModal()">取消</button>
+                <button class="modal-btn confirm" onclick="confirmParamModal()">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 音频列表弹窗 -->
+    <div class="modal-overlay" id="audioListModal">
+        <div class="modal-content" style="width: 400px; max-height: 80vh;">
+            <div class="audio-list-header">
+                <div class="audio-list-title">录音列表</div>
+                <div class="audio-list-close" onclick="closeAudioList()">&times;</div>
+            </div>
+            <div class="audio-list" id="audioList"></div>
+            <div class="pagination" id="pagination"></div>
+            <!-- 音频播放器 -->
+            <audio id="audioPlayer" style="width: 100%; margin-top: 15px; display: none;" controls></audio>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+
+
+    <script>
+        
+        // VConsole will be exported to `window.VConsole` by default.
+        var vConsole = new window.VConsole();
+        
+        // ============================================
+        // 安卓桥接库
+        // ============================================
+        var dsbridge=dsbridge||function(){var s={call:function(s,t,i){var d="";if("function"==typeof t&&(i=t,t={}),t={data:void 0===t?null:t},"function"==typeof i){var n="dscb"+window.dscb++;window[n]=i,t._dscbstub=n}t=JSON.stringify(t),window._dsbridge?d=_dsbridge.call(s,t):(window._dswk||-1!=navigator.userAgent.indexOf("_dsbridge"))&&(d=prompt("_dsbridge="+s,t));try{return JSON.parse(d||"{}").data}catch(s){return null}},register:function(t,i,d){d=d?window._dsaf:window._dsf,window._dsInit||(window._dsInit=!0,setTimeout(function(){s.call("_dsb.dsinit")},0)),"object"==typeof i?d._obs[t]=i:d[t]=i},registerAsyn:function(s,t){this.register(s,t,!0)}};if(!window._dsf){var t,i={_dsf:{_obs:{}},_dsaf:{_obs:{}},dscb:0,dsBridge:s,close:function(){s.call("_dsb.closePage")},_handleMessageFromNative:function(t){var i=JSON.parse(t.data),d={id:t.callbackId,complete:!0},n=this._dsf[t.method],e=this._dsaf[t.method],o=function(t,n){d.data=t.apply(n,i),s.call("_dsb.returnValue",d)},a=function(t,n){i.push(function(t,i){d.data=t,d.complete=!1!==i,s.call("_dsb.returnValue",d)}),t.apply(n,i)};if(n)o(n,this._dsf);else if(e)a(e,this._dsaf);else if(!(2>(n=t.method.split(".")).length)){t=n.pop();n=n.join(".");var r=(e=(e=this._dsf._obs)[n]||{})[t];r&&"function"==typeof r?o(r,e):(r=(e=(e=this._dsaf._obs)[n]||{})[t])&&"function"==typeof r&&a(r,e)}}};for(t in i)window[t]=i[t];s.register("_hasJavascriptMethod",function(s,t){return 2>(t=s.split(".")).length?!(!_dsf[t]&&!_dsaf[t]):(s=t.pop(),t=t.join("."),(t=_dsf._obs[t]||_dsaf._obs[t])&&!!t[s])})}return s}();
+        
+        let isRecording = false;
+        let fullText = '';
+
+        // 音频列表状态
+        let audioListState = {
+            currentPage: 0,
+            pageSize: 20,
+            total: 0,
+            surveyId: null
+        };
+
+        // 添加日志
+        function addLog(text, isResult = false) {
+            const logArea = document.getElementById('logArea');
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' +
+                           now.getMinutes().toString().padStart(2, '0') + ':' +
+                           now.getSeconds().toString().padStart(2, '0');
+
+            const logItem = document.createElement('div');
+            logItem.className = 'log-item' + (isResult ? ' result' : '');
+            logItem.innerHTML = `<span class="time">[${timeStr}]</span> ${text}`;
+            logArea.appendChild(logItem);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // 清空日志
+        function clearLog() {
+            const logArea = document.getElementById('logArea');
+            logArea.innerHTML = '<div class="log-item"><span class="time">[系统]</span> 日志已清空</div>';
+            fullText = '';
+        }
+
+        // 显示提示
+        function showToast(message) {
+            addLog('[提示] ' + message);
+        }
+
+        // 原生回调函数（对象方式）
+        window.nativeCallback = function(response) {
+            console.log('nativeCallback:', response);
+            addLog('[nativeCallback 响应] ' + JSON.stringify(response));
+
+            const { action, success, message, data } = response;
+
+            const statusEl = document.getElementById('status');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+
+            if (action === 'startRecording') {
+                if (success) {
+                    isRecording = true;
+                    statusEl.textContent = '录音中...';
+                    stopBtn.classList.add('recording');
+                    startBtn.disabled = true;
+                    addLog('录音已开始');
+                } else {
+                    statusEl.textContent = '启动失败: ' + message;
+                    addLog('[错误] ' + message);
+                }
+            } else if (action === 'stopRecording') {
+                if (success) {
+                    isRecording = false;
+                    statusEl.textContent = '录音已停止';
+                    stopBtn.classList.remove('recording');
+                    startBtn.disabled = false;
+                    addLog('录音已停止');
+                    if (fullText) {
+                        addLog('完整文本: ' + fullText, true);
+                    }
+                } else {
+                    addLog('[错误] ' + message);
+                }
+            } else if (action === 'getRecordingStatus') {
+                isRecording = success;
+                if (isRecording) {
+                    statusEl.textContent = '录音中...';
+                    stopBtn.classList.add('recording');
+                    startBtn.disabled = true;
+                }
+            } else if (action === 'transcriptionResult') {
+                // 处理转写结果
+                handleTranscriptionResult(data);
+            } else if (action === 'getAudioList') {
+                // 处理音频列表
+                if (success && data) {
+                    renderAudioList(data);
+                } else {
+                    addLog('[错误] ' + message);
+                }
+            } else if (action === 'deleteAudioFile') {
+                // 处理删除结果
+                addLog(message);
+                if (success) {
+                    // 刷新当前页
+                    loadAudioList(audioListState.currentPage);
+                }
+            }  else if (action === 'imageSelected') {
+                // 处理图片选择结果
+                if (success && data && data.imageURL) {
+                    addLog('图片已保存: ' + data.imageURL);
+                    // 可以在这里显示图片
+                    showSelectedImage(data.imageURL);
+                } else {
+                    addLog('[错误] ' + message);
+                }
+            } else if (action === 'fileSelected') {
+                // 处理文件选择结果
+                if (success && data && data.fileURL) {
+                    addLog('文件已选择: ' + data.fileURL);
+                    showSelectedFile(data.fileURL, data.fileName);
+                } else {
+                    addLog('[错误] ' + message);
+                }
+            } else if (action === 'onUploadResult') {
+                // 处理上传结果（包含进度和最终结果）
+                onUploadResult(response);
+            } else if (action === 'recordingInterrupted') {
+                // 处理录音被中断（如来电）
+                onRecordingInterrupted(response);
+            }
+        };
+
+        // 显示选择的图片
+        function showSelectedImage(imageURL) {
+            // 在日志区域显示图片
+            const logArea = document.getElementById('logArea');
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'log-item';
+            imgContainer.style.marginTop = '10px';
+            imgContainer.innerHTML = `
+                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">选择的图片:</div>
+                <img src="${imageURL}" style="max-width: 100%; max-height: 200px; border-radius: 4px;" />
+                <button id="uploadBtn" onclick="uploadSelectedImage('${imageURL}')" style="margin-top: 8px; padding: 6px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer;">上传图片</button>
+            `;
+            logArea.appendChild(imgContainer);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // 上传选中的图片 - 调用原生方法
+        function uploadSelectedImage(imageURL) {
+            const uploadBtn = document.getElementById('uploadBtn');
+            if (uploadBtn) {
+                uploadBtn.textContent = '上传中...';
+                uploadBtn.disabled = true;
+            }
+
+            // 记录开始时间
+            window.uploadStartTime = Date.now();
+
+            // 调用原生上传方法，直接传递 imageURL
+            callNative('uploadInterviewFile', {
+                host: 'http://68.79.42.215/report/upload/file', // 'http://68.79.42.215/report/interview/uploadInterviewInstRecordFile',
+                authorization: 'af179270-17d9-4e51-a64a-0fda3e8a8408',
+                filePath: imageURL
+            });
+        }
+
+        // 上传回调（包含进度和最终结果）
+        function onUploadResult(response) {
+            const uploadBtn = document.getElementById('uploadBtn');
+
+                    
+            // 有进度数据时，更新按钮显示进度
+            if (response.data && response.data.percent !== undefined) {
+                const percent = response.data.percent;
+                if (uploadBtn) {
+                    uploadBtn.textContent = '上传中 ' + percent + '%';
+                }
+                return;
+            }
+
+            // 最终结果
+            const endTime = Date.now();
+            const duration = ((endTime - window.uploadStartTime) / 1000).toFixed(3);
+
+            if (response.success) {
+                addLog('[上传成功] 耗时: ' + duration + ' 秒');
+                if (response.data) {
+                    addLog('[onUploadResult 响应] ' + JSON.stringify(response.data));
+                }
+            } else {
+                addLog('[上传失败] ' + response.message);
+            }
+
+            if (uploadBtn) {
+                uploadBtn.textContent = response.success ? '上传成功' : '上传失败';
+                uploadBtn.disabled = false;
+            }
+        }
+
+        // 处理录音被中断（如来电）
+        function onRecordingInterrupted(response) {
+            addLog('[录音中断] ' + response.message);
+
+            // 更新按钮状态
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            if (startBtn) startBtn.disabled = false;
+            if (stopBtn) stopBtn.disabled = true;
+
+            // 显示提示信息
+            addLog('[提示] 录音文件已自动保存，如需继续请重新开始录音');
+        }
+
+        // 处理转写结果
+        function handleTranscriptionResult(jsonString) {
+            try {
+                const result = JSON.parse(jsonString);
+
+                // 解析讯飞返回的格式: { "cn": { "st": { "rt": [...] }, "type": 0|1 } }
+                if (result.cn && result.cn.st && result.cn.st.rt) {
+                    let text = '';
+                    const rt = result.cn.st.rt;
+
+                    for (const item of rt) {
+                        if (item.ws) {
+                            for (const w of item.ws) {
+                                if (w.cw && w.cw[0] && w.cw[0].w) {
+                                    text += w.cw[0].w;
+                                }
+                            }
+                        }
+                    }
+
+                    // type: 0 表示最终结果，1 表示中间结果
+                    const isEnd = result.cn.type === 0;
+
+                    if (text) {
+                        if (isEnd) {
+                            fullText += text;
+                            addLog('转写: ' + text, true);
+                        } else {
+                            addLog('识别中: ' + text);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('解析转写结果失败:', e);
+                addLog('[错误] 解析转写结果失败: ' + jsonString);
+            }
+        }
+
+        // 接收错误信息
+        window.onError = function(message) {
+            addLog('[错误] ' + message);
+            // 显示错误在状态栏
+            const statusEl = document.getElementById('status');
+            if (statusEl) {
+                statusEl.textContent = '错误: ' + message;
+                statusEl.style.color = '#f5576c';
+            }
+            // 重置录音状态
+            isRecording = false;
+            document.getElementById('stopBtn').classList.remove('recording');
+            document.getElementById('startBtn').disabled = false;
+        };
+
+        // 调用原生方法
+        function callNative(action, parameters = {}) {
+            // iOS 环境 (WKWebView) - 保持原逻辑不变
+            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.NativeBridge) {
+                window.webkit.messageHandlers.NativeBridge.postMessage({
+                    action: action,
+                    parameters: parameters
+                });
+
+                   addLog('[iOS 测试] 调用: ' + action + ', 参数: ' + JSON.stringify(parameters));
+            }
+            // Android 环境 (DSBridge)
+            else if (window._dsbridge || window._dswk || -1 != navigator.userAgent.indexOf("_dsbridge")) {
+                dsbridge.call(action, parameters);
+
+                   addLog('[Android 测试] 调用: ' + action + ', 参数: ' + JSON.stringify(parameters));
+            }
+            // 测试环境
+            else {
+                console.log('不在 WebView 环境');
+                // 模拟测试
+                addLog('[other 测试] 调用: ' + action + ', 参数: ' + JSON.stringify(parameters));
+            }
+        }
+        
+        // 开启录音
+        function startRecording() {
+            if (isRecording) {
+                return;
+            }
+            fullText = '';
+            addLog('正在启动录音...');
+            callNative('startRecording');
+        }
+
+        // 关闭录音
+        function stopRecording() {
+            addLog('正在停止录音...');
+            callNative('stopRecording');
+        }
+
+        // 显示参数设置弹窗
+        function showParamModal() {
+            document.getElementById('paramModal').classList.add('show');
+            // 默认选中第一个
+            selectOption(1);
+        }
+
+        // 关闭参数设置弹窗
+        function closeParamModal() {
+            document.getElementById('paramModal').classList.remove('show');
+        }
+
+        // 选中选项
+        function selectOption(optionNum) {
+            // 更新 radio 选中状态
+            document.getElementById('radio' + optionNum).checked = true;
+
+            // 更新样式
+            document.getElementById('option1').classList.remove('selected');
+            document.getElementById('option2').classList.remove('selected');
+            document.getElementById('option' + optionNum).classList.add('selected');
+        }
+
+        // 确认参数设置
+        function confirmParamModal() {
+            const selected = document.querySelector('input[name="paramOption"]:checked').value;
+            let params = {};
+
+            if (selected === '1') {
+                params = { "roleType": 2, "surveyId": "140380658077696"};
+            } else {
+                params = {};
+            }
+
+            addLog('设置参数: ' + JSON.stringify(params));
+            callNative('startRecordingSetParams', params);
+            closeParamModal();
+        }
+
+        // ==================== 相册和相机相关函数 ====================
+
+        // 打开相册
+        function openPhotoLibrary() {
+            callNative('openPhotoLibrary');
+            addLog('正在打开相册...');
+        }
+
+        // 打开相机
+        function openCamera() {
+            callNative('openCamera');
+            addLog('正在打开相机...');
+        }
+
+        // 打开文件选择器
+        function chooseFile() {
+            callNative('chooseFile');
+            addLog('正在打开文件选择器...');
+        }
+
+        // 显示选择的文件
+        function showSelectedFile(fileURL, fileName) {
+            const logArea = document.getElementById('logArea');
+            const displayName = fileName || fileURL.split('/').pop();
+            const fileExt = fileURL.split('.').pop().toLowerCase();
+
+            let previewHTML = '';
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+                previewHTML = `<img src="${fileURL}" style="max-width: 100%; max-height: 200px; border-radius: 4px;" />`;
+            } else {
+                previewHTML = `<div style="padding: 20px; background: #f5f5f5; border-radius: 4px; text-align: center;">📄 ${displayName}</div>`;
+            }
+
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'log-item';
+            imgContainer.style.marginTop = '10px';
+            imgContainer.innerHTML = `
+                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">选择的文件:</div>
+                ${previewHTML}
+                <button id="uploadFileBtn" onclick="uploadSelectedFile('${fileURL}')" style="margin-top: 8px; padding: 6px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer;">上传文件</button>
+            `;
+            logArea.appendChild(imgContainer);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // 上传选中的文件
+        function uploadSelectedFile(fileURL) {
+            const uploadBtn = document.getElementById('uploadFileBtn');
+            if (uploadBtn) {
+                uploadBtn.textContent = '上传中...';
+                uploadBtn.disabled = true;
+            }
+
+            window.uploadStartTime = Date.now();
+
+            callNative('uploadInterviewFile', {
+                host: 'http://68.79.42.215/report/upload/file',
+                authorization: 'af179270-17d9-4e51-a64a-0fda3e8a8408',
+                filePath: fileURL
+            });
+        }
+
+        // 关闭应用
+        function closeApp() {
+            callNative('closeApp');
+        }
+
+        // ==================== 音频列表相关函数 ====================
+
+        // 显示音频列表
+        function showAudioList() {
+            document.getElementById('audioListModal').classList.add('show');
+            audioListState.currentPage = 0;
+            loadAudioList(0);
+        }
+
+        // 关闭音频列表
+        function closeAudioList() {
+            document.getElementById('audioListModal').classList.remove('show');
+        }
+
+        // 加载音频列表
+        function loadAudioList(page) {
+            audioListState.currentPage = page;
+            callNative('getAudioList', {
+                surveyId: audioListState.surveyId,
+                page: page,
+                pageSize: audioListState.pageSize
+            });
+        }
+
+        // 渲染音频列表
+        function renderAudioList(data) {
+            const listEl = document.getElementById('audioList');
+            const paginationEl = document.getElementById('pagination');
+
+            audioListState.total = data.total;
+
+            if (!data.list || data.list.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">暂无录音文件</div>';
+                paginationEl.innerHTML = '';
+                return;
+            }
+
+            // 渲染列表
+            let html = '';
+            data.list.forEach(item => {
+                const fileSize = formatFileSize(item.fileSize);
+                const playURL = item.fileURL;
+                // 转义文件名中的特殊字符
+                const escapedFileName = item.fileName.replace(/'/g, "\\'").replace(/"/g, '\\"');
+                // 转义URL中的特殊字符
+                const escapedPlayURL = playURL.replace(/'/g, "\\'").replace(/"/g, '\\"');
+                html += `
+                    <div class="audio-item">
+                        <div class="audio-item-info">
+                            <div class="audio-item-name">${item.fileName}</div>
+                            <div class="audio-item-meta">${item.date} · ${fileSize}</div>
+                        </div>
+                        <div class="audio-item-actions">
+                            <button class="btn audio-item-btn" onclick="playAudio('${playURL}')">播放</button>
+                            <button class="btn audio-item-btn btn-primary" onclick="uploadAudioFile('${escapedPlayURL}', '${escapedFileName}')">上传</button>
+                            <button class="btn audio-item-btn btn-danger" onclick="deleteAudioFile('${escapedFileName}')">删除</button>
+                        </div>
+                    </div>
+                `;
+            });
+            listEl.innerHTML = html;
+
+            // 渲染分页
+            renderPagination(data.page, data.pageSize, data.total);
+        }
+
+        // 渲染分页
+        function renderPagination(currentPage, pageSize, total) {
+            const paginationEl = document.getElementById('pagination');
+            const totalPages = Math.ceil(total / pageSize);
+
+            if (totalPages <= 1) {
+                paginationEl.innerHTML = `<div class="pagination-info">共 ${total} 条</div>`;
+                return;
+            }
+
+            let html = `<div class="pagination-info">第 ${currentPage + 1}/${totalPages} 页 · 共 ${total} 条</div>`;
+
+            // 上一页
+            if (currentPage > 0) {
+                html += `<button class="btn audio-item-btn" onclick="loadAudioList(${currentPage - 1})">上一页</button>`;
+            }
+
+            // 下一页
+            if (currentPage < totalPages - 1) {
+                html += `<button class="btn audio-item-btn" onclick="loadAudioList(${currentPage + 1})">下一页</button>`;
+            }
+
+            paginationEl.innerHTML = html;
+        }
+
+        // 删除单个音频文件
+        function deleteAudioFile(fileName) {
+
+            addLog('删除文件1: ' + fileName);
+            addLog('删除文件2: ' + fileName);
+            callNative('deleteAudioFile', {
+                fileName: fileName,
+                surveyId: audioListState.surveyId
+            });
+        }
+
+        // 上传单个音频文件
+        function uploadAudioFile(fileURL, fileName) {
+            addLog('上传文件: ' + fileName);
+            callNative('uploadInterviewFile', {
+                host: 'http://68.79.42.215/report/upload/file',
+                authorization: 'af179270-17d9-4e51-a64a-0fda3e8a8408',
+                filePath: fileURL
+            });
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes < 1024) {
+                return bytes + ' B';
+            } else if (bytes < 1024 * 1024) {
+                return (bytes / 1024).toFixed(1) + ' KB';
+            } else {
+                return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+            }
+        }
+
+        // 播放音频（使用 file:// URL）
+        function playAudio(fileURL) {
+            console.log('准备播放:', fileURL);
+            addLog('准备播放: ' + fileURL);
+
+            const player = document.getElementById('audioPlayer');
+
+            // 监听事件
+            player.onloadedmetadata = function() {
+                console.log('音频元数据加载成功, 时长:', player.duration);
+                addLog('音频元数据加载成功, 时长: ' + player.duration.toFixed(1) + 's');
+            };
+
+            player.oncanplay = function() {
+                console.log('音频可以播放');
+                addLog('音频可以播放');
+            };
+
+            player.onerror = function(e) {
+                console.error('audio error:', e);
+                console.error('error code:', player.error?.code);
+                console.error('error message:', player.error?.message);
+                addLog('[错误] audio error code: ' + (player.error?.code || 'unknown'));
+            };
+
+            player.src = fileURL;
+            player.style.display = 'block';
+            player.load();
+
+            player.play().catch(err => {
+                console.error('play() 失败:', err);
+                console.error('play() 失败:', fileURL);
+                addLog('[错误] 播放失败: ' + err.message);
+            });
+        }
+
+        // 页面加载时获取录音状态
+        window.addEventListener('load', function() {
+            console.log('页面加载完成');
+            addLog('系统初始化完成');
+            callNative('getRecordingStatus');
+        });
+    </script>
+</body>
+</html>
