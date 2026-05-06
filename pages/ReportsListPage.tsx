@@ -122,18 +122,18 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
                   {/* Top Section: Icon + Title/Desc */}
                   <div className="flex items-start gap-3 mb-4">
                     {/* Icon - 大图标，带装饰背景 */}
-                    <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                      <FileText size={24} className="text-blue-500" />
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <FileText size={20} className="text-blue-500" />
                     </div>
 
                     {/* Text Content */}
-                    <div className="flex-1 min-w-0 pt-0.5">
-                      <h3 className="text-base font-bold text-gray-800 mb-1 line-clamp-2 leading-tight">
+                    <div className="flex-1 min-w-0 h-10 flex items-center">
+                      <h3 className="text-base font-bold text-gray-800 line-clamp-2 leading-tight">
                         {formatTitle(report.fileName)}
                       </h3>
-                      <p className="text-[13px] text-gray-400 truncate">
+                     {/* <p className="text-[13px] text-gray-400 truncate">
                         {report.dealSummary || "尽调小总结未生成，请刷新生成"}
-                      </p>
+                      </p>*/}
                     </div>
                   </div>
 
