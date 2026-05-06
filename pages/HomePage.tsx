@@ -726,9 +726,6 @@ const HomePage: React.FC<HomePageProps> = ({
                                   </span>
                                 )}
                               </div>
-                              <p className="text-[13px] text-gray-400 truncate">
-                                {item.dealSummary || "尽调小总结未生成，请刷新生成"}
-                              </p>
                             </div>
                           </div>
 

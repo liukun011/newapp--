@@ -10,6 +10,7 @@ import { useRecordingStore } from '../store/useRecordingStore';
 import VoiceInputModal from '../components/VoiceInputModal';
 import TemplateSwitchModal from '../components/TemplateSwitchModal';
 import config from '../config';
+import {markdownToHtml} from "@/utils/markdownToHtml.ts";
 
 interface DueDiligencePageProps {
   deal: DealRecord | null;
@@ -1030,9 +1031,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
             {currentDeal?.dealSummary ? (
               <div className={`relative z-10 px-0.5 transition-all duration-300`}>
-                <p className={`text-[13px] text-gray-700 leading-relaxed text-justify tracking-normal ${!isSummaryExpanded ? 'line-clamp-2' : ''}`}>
-                  {currentDeal.dealSummary}
-                </p>
+                <div className={`markdown-body text-[12px] text-gray-700 leading-relaxed text-justify tracking-normal ${!isSummaryExpanded ? 'line-clamp-2' : ''}`} dangerouslySetInnerHTML={{
+                  __html: markdownToHtml(currentDeal.dealSummary)
+                }}>
+                </div>
               </div>
             ) : (
               <div className="relative z-10 px-0.5 mt-2">
