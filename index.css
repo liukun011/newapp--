@@ -102,6 +102,29 @@ html, body {
   color: inherit;
 }
 
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5em 0;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid #d1d5db;
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.markdown-body th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.markdown-body tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
 /* Markdown 折叠时还原 line-clamp 效果 */
 .markdown-body.line-clamp-2 {
   display: -webkit-box;
