@@ -1008,7 +1008,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                         }
                       } catch (error) {
                         console.error('Refresh summary failed:', error);
-                        Toast.fail('刷新失败');
+                        // 优先提取接口中的失败消息，如果message包含timeout则可能是请求超时
+                        // @ts-ignore
+                        let message = error.message || '刷新失败';
+                        if (message?.includes?.('timeout')) message = '接口请求超时（15秒）';
+                        Toast.fail(message);
                       } finally {
                         setIsRefreshingSummary(false);
                       }
