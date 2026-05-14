@@ -199,9 +199,10 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
         });
       } else {
         // 新建模式：调用新建接口
-        res = await templateService.addApproveReportNew({
-          approveReportName: templateName.trim(),
-          approveTemplateUrl: selectedFile.url,
+        res = await templateService.insertTemplate({
+          reportTemplateName: templateName.trim(),
+          outTemplateUrl: selectedFile.url,
+          useScope: 'personal',
         });
       }
 

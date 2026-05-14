@@ -34,6 +34,11 @@ export interface ReportTemplate {
   recStatus: string;
   reportTemplateName: string; // 模板名称
   reportTemplateStatus: string; // 模板状态
+  isEnabled?: number;         // 是否启用（1:解析中 2:已禁用 3:已启用）
+  businessType?: string;      // 业务类型
+  reportTemplateDesc?: string; // 模板描述
+  lastModifiedDate?: string;  // 最后修改时间
+  createUser?: number;        // 创建人
 }
 
 /**
@@ -159,10 +164,12 @@ export const templateService = {
   /**
    * 查询报告模板列表
    * GET /template/list
+   * @param params.isEnabled - 可选，TemplateEnabledStatus.ENABLED=仅查询已生效的模板
    */
-  getTemplateList: () => {
+  getTemplateList: (params?: { isEnabled?: number }) => {
     return request<ApiResponse<ReportTemplate[]>>('/template/list', {
       method: 'GET',
+      params,
     });
   },
 
@@ -182,8 +189,9 @@ export const templateService = {
    * POST /template/insert
    */
   insertTemplate: (params: {
-    templateName: string;
-    templateUrl?: string;
+    reportTemplateName: string;
+    outTemplateUrl?: string;
+    useScope?: string;
   }) => {
     return request<ApiResponse<any>>('/template/insert', {
       method: 'POST',

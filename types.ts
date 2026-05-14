@@ -120,6 +120,13 @@ export interface QuestionInfo {
   questionType?: string;
 }
 
+/** 模板启用状态（与 PC 端一致） */
+export enum TemplateEnabledStatus {
+  PARSING = 1,   // 解析中
+  DISABLED = 2,  // 已禁用
+  ENABLED = 3,   // 已启用
+}
+
 /**
  * 模板类型枚举
  */

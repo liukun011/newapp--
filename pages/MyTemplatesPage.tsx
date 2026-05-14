@@ -1,53 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, FileUp, Plus, ChevronRight, Trash2, Edit2, Check, X } from 'lucide-react';
+import { ChevronRight, FileUp, Plus, Trash2, Edit2, X } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import { templateService, ReportTemplate } from '../services/templateService';
 import { questionService } from '../services/questionService';
 import RenameModal from '../components/RenameModal';
 import ConfirmModal from '../components/ConfirmModal';
-import { TemplateTypeEnum, TemplateInfo } from '../types';
-
-const TemplateReason: React.FC<{ 
-  reason: string; 
-  isExpanded: boolean; 
-  onToggle: () => void;
-}> = ({ reason, isExpanded, onToggle }) => {
-  const [isOverflowing, setIsOverflowing] = React.useState(false);
-  const textRef = React.useRef<HTMLParagraphElement>(null);
-
-  React.useLayoutEffect(() => {
-    const checkOverflow = () => {
-      if (textRef.current) {
-        const element = textRef.current;
-        const isOverflow = element.scrollHeight > element.clientHeight;
-        setIsOverflowing(isOverflow);
-      }
-    };
-
-    checkOverflow();
-    window.addEventListener('resize', checkOverflow);
-    return () => window.removeEventListener('resize', checkOverflow);
-  }, [reason]);
-
-  return (
-    <div 
-      className="bg-[#FEF2F2] rounded-lg px-3 py-2 flex items-start gap-2 cursor-pointer transition-all active:bg-[#FEE2E2]"
-      onClick={() => isOverflowing && onToggle()}
-    >
-       <p 
-        ref={textRef}
-        className={`text-[12px] text-[#EF4444] leading-relaxed flex-1 ${!isExpanded ? 'line-clamp-1' : ''}`}
-       >
-         未通过：{reason}
-       </p>
-       {isOverflowing && (
-         <div className="text-[#EF4444] mt-[2px]">
-           {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-         </div>
-       )}
-    </div>
-  );
-};
+import { TemplateTypeEnum, TemplateInfo, TemplateEnabledStatus } from '../types';
 
 interface MyTemplatesPageProps {
   onBack?: () => void;
@@ -62,7 +20,6 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
   const [questions, setQuestions] = useState<any[]>([]); // 问题清单数据
   const [activeQuestion, setActiveQuestion] = useState<any>(null); // 当前选中的/正在编辑的问题清单
   const [loading, setLoading] = useState(false);
-  const [expandedFailedId, setExpandedFailedId] = useState<string | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<any>(null); // 使用 any 规避多类型冲突
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   
@@ -128,42 +85,10 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
     setLoading(true);
     try {
       if (activeTab === 'templates') {
-        const [resList, resApprove] = await Promise.all([
-          templateService.getTemplateList(),
-          templateService.queryApproveReport()
-        ]);
-
-        let combined: any[] = [];
-        
-        // 1. 已通过模板
+        const resList = await templateService.getTemplateList();
         if (resList.success && resList.data) {
-          combined = [...resList.data.map(t => ({ ...t, _status: 'success' }))];
+          setTemplates(resList.data);
         }
-
-        // 2. 审核中/未通过模板
-        if (resApprove.success && resApprove.data) {
-          const filterApprove = resApprove.data
-            .filter((item: any) => item.approveReportStatus === '1' || item.approveReportStatus === '3')
-            .map((item: any) => ({
-              id: item.id,
-              reportTemplateName: item.approveReportName,
-              reportTemplateStatus: item.approveReportStatus,
-              viewTemplateUrl: item.approveTemplateUrl,
-              createDate: item.createDate,
-              errorMsg: item.errorMsg,
-              _status: item.approveReportStatus === '1' ? 'processing' : 'failed'
-            }));
-          combined = [...combined, ...filterApprove];
-        }
-
-        // 排序：时间倒序
-        combined.sort((a, b) => {
-          const dateA = new Date(a.createDate || 0).getTime();
-          const dateB = new Date(b.createDate || 0).getTime();
-          return dateB - dateA;
-        });
-
-        setTemplates(combined);
       } else {
         // 获取所有问题清单模板
         const res = await templateService.getQuestionTemplateList();
@@ -466,10 +391,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
               <div className="text-center py-20 text-gray-400 text-sm">暂无数据</div>
             ) : (
               templates.map(template => {
-                const temp = template as any;
-                const isProcessing = temp._status === 'processing';
-                const isFailed = temp._status === 'failed';
-                const isSuccess = temp._status === 'success';
+                const isEnabledVal = (template as any).isEnabled ?? TemplateEnabledStatus.ENABLED;
+                const isParsing = isEnabledVal === TemplateEnabledStatus.PARSING;
+                const isEnabled = isEnabledVal === TemplateEnabledStatus.ENABLED;
 
                 return (
                   <div key={template.id} className="bg-white rounded-[16px] overflow-hidden border border-gray-100/50 shadow-sm p-4">
@@ -480,26 +404,26 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                           <text x="12" y="16" fontSize="8" fill="#4B77F6" fontWeight="800" textAnchor="middle">W</text>
                         </svg>
                       </div>
-                      
+
                       <div className="flex-1 min-w-0 pr-1 flex items-center justify-between">
                         <h3 className="text-[15px] font-bold text-[#1E293B] truncate">{template.reportTemplateName}</h3>
-                        {isSuccess && <span className="px-2 py-[2px] bg-[#E6F8F3] text-[#20C997] text-[11px] font-bold rounded">已就绪</span>}
-                        {isProcessing && <span className="px-2 py-[2px] bg-[#FFF3E0] text-[#FF9800] text-[11px] font-bold rounded">处理中</span>}
-                        {isFailed && <span className="px-2 py-[2px] bg-[#FEE2E2] text-[#EF4444] text-[11px] font-bold rounded">未通过</span>}
+                        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                          isParsing
+                            ? 'border-blue-100 bg-blue-50 text-blue-600'
+                            : isEnabled
+                            ? 'border-green-100 bg-green-50 text-green-600'
+                            : 'border-slate-200 bg-white text-slate-500'
+                        }`}>
+                          {isParsing ? '解析中' : isEnabled ? '已启用' : '已禁用'}
+                        </span>
                       </div>
                     </div>
 
-                    {isFailed && (
-                      <div className="mt-3">
-                        <TemplateReason reason={temp.errorMsg || '模板解析失败'} isExpanded={expandedFailedId === template.id} onToggle={() => setExpandedFailedId(prev => (prev === template.id ? null : template.id))} />
-                      </div>
-                    )}
-
                     <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
                       <span className="text-[12px] text-gray-400">
-                        {isProcessing ? '预计2小时后完成' : (temp.createDate?.slice(5, 16) || '刚刚更新')}
+                        {(template as any).lastModifiedDate?.slice(5, 16) || '刚刚更新'}
                       </span>
-                      <button 
+                      <button
                         onClick={() => onPreview?.(template.reportTemplateName, template.viewTemplateUrl || '', 'templates')}
                         className="px-4 py-1.5 border border-[#4B77F6] text-[#4B77F6] text-[13px] font-bold rounded-full bg-white active:bg-gray-50 flex items-center gap-1"
                       >

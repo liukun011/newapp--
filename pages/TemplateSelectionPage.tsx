@@ -4,6 +4,7 @@ import { FileSpreadsheet } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { templateService, ReportTemplate } from '../services/templateService';
 import { dealService } from '../services/dealService';
+import { TemplateEnabledStatus } from '../types';
 
 interface TemplateSelectionPageProps {
   onBack: () => void;
@@ -47,7 +48,7 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
     try {
       // 同时获取模板列表和尽调详情
       const [templatesRes, detailRes] = await Promise.all([
-        templateService.getTemplateList(),
+        templateService.getTemplateList({ isEnabled: TemplateEnabledStatus.ENABLED }),
         dealId ? dealService.getDealInstDetail(dealId) : Promise.resolve(null),
       ]);
 
