@@ -1,9 +1,10 @@
 /**
- * 环境配置文件 - 增强版获取逻辑
- * 
- * 解决逻辑：
- * 1. 优先级：window.APP_CONFIG > 相对路径默认值
- * 2. 使用动态读取，确保在应用运行期间随时获取最新配置
+ * 环境配置文件
+ *
+ * 取值优先级（高 → 低）：
+ *   ① window.APP_CONFIG    —— 部署后修改 config.js，运行时覆盖
+ *   ② import.meta.env      —— 构建时由 .env 文件 + --mode 注入
+ *   ③ 硬编码默认值          —— 相对路径兜底
  */
 
 // 接口配置全局声明
@@ -21,9 +22,14 @@ declare global {
  * 核心配置抽取函数
  */
 const getVal = (key: 'VITE_API_BASE_URL' | 'VITE_AUTH_BASE_URL', defaultVal: string) => {
-  if (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG[key]) {
-    return window.APP_CONFIG[key];
+  // ① 运行时覆盖：部署后修改 config.js 可生效
+  if (typeof window !== 'undefined' && window.APP_CONFIG?.[key]) {
+    return window.APP_CONFIG[key]!;
   }
+  // ② 构建时注入：对应 .env.{mode} 中的值，已内联到产物
+  const envVal = import.meta.env[key];
+  if (envVal) return envVal;
+  // ③ 硬编码兜底
   return defaultVal;
 };
 
@@ -36,13 +42,15 @@ const config = {
   get apiBaseUrl() {
     return getVal('VITE_API_BASE_URL', '/report');
   },
-  
+
   get authBaseUrl() {
     return getVal('VITE_AUTH_BASE_URL', '/auth');
   },
 
   get env() {
-    return (typeof window !== 'undefined' && window.APP_CONFIG?.VITE_ENV) || mode;
+    return (typeof window !== 'undefined' && window.APP_CONFIG?.VITE_ENV)
+      || import.meta.env.VITE_ENV
+      || mode;
   },
 
   get uploadUrl() {

@@ -1,12 +1,11 @@
 /**
- * 此文件为外部配置文件，打包后映射到根目录的 config.js。
- * 运维人员在部署后可以直接修改此文件来生效不同环境的 API 地址。
+ * 运行时外部配置文件（优先级高于构建时注入的默认值）。
+ * 部署后可直接修改此文件以覆盖 API 地址，无需重新构建。
+ *
+ * 此文件在 dev/build 时会被 Vite 插件根据 --mode 自动替换为对应环境的值。
+ * 以下空值仅为占位模板，实际运行时会 fallback 到 .env.* 注入的配置。
  */
 window.APP_CONFIG = {
-  // 认证中心基础路径
-  // VITE_AUTH_BASE_URL: 'http://user.binarysee.com/auth/', // 正式环境
-  VITE_AUTH_BASE_URL: 'http://192.168.8.201:21000/auth/', // 测试环境
-  // 业务接口基础路径
-  VITE_API_BASE_URL: 'http://192.168.8.201:20101/report/',
-  // VITE_API_BASE_URL: '/report/', // 正式环境
+  VITE_AUTH_BASE_URL: '',
+  VITE_API_BASE_URL: '',
 };
