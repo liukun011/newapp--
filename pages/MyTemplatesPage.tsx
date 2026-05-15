@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronRight, FileUp, Plus, Trash2, Edit2, X } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import { templateService, ReportTemplate } from '../services/templateService';
@@ -58,6 +58,12 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
   const currentUserObj = userInfoStr ? JSON.parse(userInfoStr) : null;
   const currentUserId = currentUserObj?.userId;
 
+  // 轮询定时器：列表中有"解析中"的模板时，定时静默刷新列表
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 保持 templates 的最新引用，供 fetchData 闭包内比对使用，避免 useCallback 缓存导致比对基准陈旧
+  const templatesRef = useRef(templates);
+  templatesRef.current = templates;
+
   const getQuestionTemplateTagLabel = (q: any) => {
     if (q.templateType === TemplateTypeEnum.PRESET) {
       return '内置';
@@ -81,13 +87,30 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
   };
 
   // 获取数据 - 统一根据 activeTab 刷新
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (opts?: { silent?: boolean }) => {
+    // silent=true 时静默刷新，不显示 loading 动画，避免页面闪烁
+    if (!opts?.silent) setLoading(true);
     try {
       if (activeTab === 'templates') {
         const resList = await templateService.getTemplateList();
         if (resList.success && resList.data) {
-          setTemplates(resList.data);
+          // 静默轮询时比对新旧数据，仅当数据有变化时才更新列表，避免无意义的重渲染
+          if (opts?.silent) {
+            const newList = resList.data;
+            const oldList = templatesRef.current;
+            const hasChange =
+              newList.length !== oldList.length ||
+              newList.some((newItem) => {
+                const oldItem = oldList.find((t) => t.id === newItem.id);
+                // 新增项 或 isEnabled 状态发生变化
+                return !oldItem || (oldItem as any).isEnabled !== (newItem as any).isEnabled;
+              });
+            if (hasChange) {
+              setTemplates(newList);
+            }
+          } else {
+            setTemplates(resList.data);
+          }
         }
       } else {
         // 获取所有问题清单模板
@@ -113,9 +136,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
-  };
+  }, [activeTab, activeQuestion, currentUserId]);
 
   // 切换标签
   const handleTabChange = (key: 'templates' | 'questions') => {
@@ -135,6 +158,35 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
   useEffect(() => {
     if (initialTab) setActiveTab(initialTab);
   }, [initialTab]);
+
+  // 轮询：当模板列表中存在"解析中"的模板时，每 60 秒静默刷新列表，直到所有模板解析完成
+  useEffect(() => {
+    // 仅在模板 tab 下检查
+    if (activeTab !== 'templates') return;
+
+    const hasParsing = templates.some(
+      (item) => ((item as any).isEnabled ?? TemplateEnabledStatus.ENABLED) === TemplateEnabledStatus.PARSING
+    );
+
+    // 每次 templates 变化时先清除上一次的定时器，防止多个定时器叠加
+    if (pollTimerRef.current) {
+      clearTimeout(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+
+    // 存在解析中的模板时，启动 60 秒轮询
+    if (hasParsing) {
+      pollTimerRef.current = setTimeout(() => fetchData({ silent: true }), 60000);
+    }
+
+    // 组件卸载或依赖变化时清除定时器
+    return () => {
+      if (pollTimerRef.current) {
+        clearTimeout(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
+  }, [templates, activeTab, fetchData]);
 
   const handleDelete = (id: string) => {
     setDeletingTemplateId(id);
@@ -407,13 +459,16 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
 
                       <div className="flex-1 min-w-0 pr-1 flex items-center justify-between">
                         <h3 className="text-[15px] font-bold text-[#1E293B] truncate">{template.reportTemplateName}</h3>
-                        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold inline-flex items-center gap-1 ${
                           isParsing
                             ? 'border-blue-100 bg-blue-50 text-blue-600'
                             : isEnabled
                             ? 'border-green-100 bg-green-50 text-green-600'
                             : 'border-slate-200 bg-white text-slate-500'
                         }`}>
+                          {isParsing && (
+                            <span className="w-3.5 h-3.5 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></span>
+                          )}
                           {isParsing ? '解析中' : isEnabled ? '已启用' : '已禁用'}
                         </span>
                       </div>
