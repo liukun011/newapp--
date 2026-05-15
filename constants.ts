@@ -33,7 +33,7 @@ export const TEMPLATE_CATEGORY_OPTIONS = [
 ] as const;
 
 export const getCategoryTitle = (category?: string) =>
-  TEMPLATE_CATEGORY_OPTIONS.find((o) => o.id === category)?.title;
+  TEMPLATE_CATEGORY_OPTIONS.find((o) => o.id === category)?.title ?? '未分类';
 
 // 模板使用范围
 export const SCOPE_PERSONAL = 'personal';

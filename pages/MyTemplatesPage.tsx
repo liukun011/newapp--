@@ -463,7 +463,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                           <h3 className="text-[15px] font-bold text-[#1E293B] truncate">{template.reportTemplateName}</h3>
                           {template.businessType ? (
                             <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 text-blue-600 px-1.5 py-px text-[10px] font-medium mt-0.5">
-                              {getCategoryTitle(template.businessType) || template.businessType}
+                              {getCategoryTitle(template.businessType)}
                             </span>
                           ) : null}
                         </div>
@@ -482,9 +482,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                       </div>
                     </div>
 
-                    {template.reportTemplateDesc ? (
-                      <p className="mt-2 text-[12px] text-gray-400 line-clamp-1">{template.reportTemplateDesc}</p>
-                    ) : null}
+                    <p className="mt-3 text-[11px] leading-relaxed line-clamp-1 text-gray-400">
+                      {template.reportTemplateDesc || '暂无描述'}
+                    </p>
 
                     <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
                       <span className="text-[12px] text-gray-400">
@@ -492,9 +492,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                       </span>
                       <button
                         onClick={() => onPreview?.(template.reportTemplateName, template.viewTemplateUrl || '', 'templates')}
-                        className="px-4 py-1.5 border border-[#4B77F6] text-[#4B77F6] text-[13px] font-bold rounded-full bg-white active:bg-gray-50 flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-sm bg-[#4B77F6] active:scale-95 transition-all"
                       >
-                        预览 <ChevronRight size={14} />
+                        预览
                       </button>
                     </div>
                   </div>
