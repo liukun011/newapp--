@@ -24,3 +24,26 @@ export const LOGIN_SLIDES = [
 
 // Placeholder for the 3D Fox Mascot
 export const MASCOT_IMAGE_URL = `${import.meta.env.BASE_URL || '/'}assets/mascot.png`;
+
+// 模板分类
+export const TEMPLATE_CATEGORY_OPTIONS = [
+  { id: '信贷尽调', title: '信贷尽调' },
+  { id: '工业互联网与智能制造', title: '工业互联网与智能制造' },
+  { id: '不良资产', title: '不良资产' },
+] as const;
+
+export const getCategoryTitle = (category?: string) =>
+  TEMPLATE_CATEGORY_OPTIONS.find((o) => o.id === category)?.title;
+
+// 模板使用范围
+export const SCOPE_PERSONAL = 'personal';
+export const SCOPE_ORGANIZATION = 'organization';
+export const SCOPE_PUBLIC = 'public';
+
+export const TEMPLATE_SCOPE_OPTIONS = [
+  { id: SCOPE_PERSONAL, title: '个人使用' },
+  { id: SCOPE_ORGANIZATION, title: '全员使用' },
+  { id: SCOPE_PUBLIC, title: '网络公开' },
+] as const;
+
+export type TemplateScope = (typeof TEMPLATE_SCOPE_OPTIONS)[number]['id'];

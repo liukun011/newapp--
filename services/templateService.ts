@@ -192,6 +192,8 @@ export const templateService = {
     reportTemplateName: string;
     outTemplateUrl?: string;
     useScope?: string;
+    businessType?: string;
+    reportTemplateDesc?: string;
   }) => {
     return request<ApiResponse<any>>('/template/insert', {
       method: 'POST',

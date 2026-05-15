@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import Button from '../components/Button';
 import { templateService } from '../services/templateService';
 import { authService } from '../services/authService';
 import { nativeBridge } from '../services/nativeBridge';
 import config from '../config';
+import { TEMPLATE_CATEGORY_OPTIONS, SCOPE_PERSONAL } from '../constants';
+
+const TEMPLATE_NAME_MAX_LENGTH = 20;
+const TEMPLATE_DESC_MAX_LENGTH = 100;
 
 interface UploadTemplatePageProps {
   onBack: () => void;
@@ -24,6 +28,9 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
   initialData,
 }) => {
   const [templateName, setTemplateName] = useState('');
+  const [templateCategory, setTemplateCategory] = useState<(typeof TEMPLATE_CATEGORY_OPTIONS)[number]['id']>(TEMPLATE_CATEGORY_OPTIONS[0].id);
+  const [templateDesc, setTemplateDesc] = useState('');
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState<{name: string, url: string} | null>(null);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -191,7 +198,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
     try {
       let res;
       if (initialData?.id) {
-        // 更换模式：调用更换接口
+        // 更换模式：调用更换接口（AI判断当前为死代码，MyTemplatesPage 未传入 initialData，故无需补充 businessType/reportTemplateDesc）
         res = await templateService.replaceApproveReport({
           id: initialData.id,
           approveReportName: templateName.trim(),
@@ -202,7 +209,9 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
         res = await templateService.insertTemplate({
           reportTemplateName: templateName.trim(),
           outTemplateUrl: selectedFile.url,
-          useScope: 'personal',
+          useScope: SCOPE_PERSONAL,
+          businessType: templateCategory,
+          reportTemplateDesc: templateDesc.trim() || undefined,
         });
       }
 
@@ -313,6 +322,44 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
 
       {/* Form Content */}
       <div className="flex-1 px-4 pt-6 pb-24">
+        {/* Template Category */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
+            模板分类 <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowCategoryPicker(!showCategoryPicker)}
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors flex items-center justify-between"
+            >
+              <span>{TEMPLATE_CATEGORY_OPTIONS.find((o) => o.id === templateCategory)?.title || '请选择模板分类'}</span>
+              <ChevronDown size={18} className={`text-gray-400 transition-transform ${showCategoryPicker ? 'rotate-180' : ''}`} />
+            </button>
+            {showCategoryPicker && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                {TEMPLATE_CATEGORY_OPTIONS.map((opt) => (
+                  <div
+                    key={opt.id}
+                    onClick={() => {
+                      setTemplateCategory(opt.id);
+                      setShowCategoryPicker(false);
+                    }}
+                    className={`px-4 py-3 text-sm cursor-pointer active:bg-gray-50 transition-colors ${
+                      templateCategory === opt.id ? 'text-indigo-600 font-medium bg-indigo-50' : 'text-slate-700'
+                    }`}
+                  >
+                    {opt.title}
+                  </div>
+                ))}
+              </div>
+            )}
+            {showCategoryPicker && (
+              <div className="fixed inset-0 z-0" onClick={() => setShowCategoryPicker(false)} />
+            )}
+          </div>
+        </div>
+
         {/* Template Name */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
@@ -322,16 +369,38 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
             value={templateName}
             onChange={(e) => {
               let val = e.target.value;
-              if (val.length > 30) val = val.slice(0, 30);
+              if (val.length > TEMPLATE_NAME_MAX_LENGTH) val = val.slice(0, TEMPLATE_NAME_MAX_LENGTH);
               setTemplateName(val);
             }}
-            placeholder="请输入模板名称"
-            maxLength={30}
+            placeholder={`请输入模板名称，最多${TEMPLATE_NAME_MAX_LENGTH}个字符`}
+            maxLength={TEMPLATE_NAME_MAX_LENGTH}
             rows={2}
             className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-slate-800 placeholder-gray-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors resize-none"
           />
           <div className="text-right text-xs text-slate-400 mt-1">
-            {templateName.length}/30
+            {templateName.length}/{TEMPLATE_NAME_MAX_LENGTH}
+          </div>
+        </div>
+
+        {/* Template Description */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
+            模板描述
+          </label>
+          <textarea
+            value={templateDesc}
+            onChange={(e) => {
+              let val = e.target.value;
+              if (val.length > TEMPLATE_DESC_MAX_LENGTH) val = val.slice(0, TEMPLATE_DESC_MAX_LENGTH);
+              setTemplateDesc(val);
+            }}
+            placeholder={`请输入模板描述，最多${TEMPLATE_DESC_MAX_LENGTH}个字符`}
+            maxLength={TEMPLATE_DESC_MAX_LENGTH}
+            rows={3}
+            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-slate-800 placeholder-gray-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors resize-none"
+          />
+          <div className="text-right text-xs text-slate-400 mt-1">
+            {templateDesc.length}/{TEMPLATE_DESC_MAX_LENGTH}
           </div>
         </div>
 
@@ -340,7 +409,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
           <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
             上传模板 <span className="text-red-500">*</span>
           </label>
-            <div 
+            <div
               className="bg-white rounded-xl border border-dashed border-gray-300 p-8 flex flex-col items-center justify-center min-h-[200px] hover:border-indigo-400 transition-colors cursor-pointer active:bg-gray-50"
               onClick={handleChooseFile}
             >

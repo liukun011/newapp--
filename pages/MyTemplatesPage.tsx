@@ -6,6 +6,7 @@ import { questionService } from '../services/questionService';
 import RenameModal from '../components/RenameModal';
 import ConfirmModal from '../components/ConfirmModal';
 import { TemplateTypeEnum, TemplateInfo, TemplateEnabledStatus } from '../types';
+import { getCategoryTitle } from '../constants';
 
 interface MyTemplatesPageProps {
   onBack?: () => void;
@@ -458,7 +459,14 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                       </div>
 
                       <div className="flex-1 min-w-0 pr-1 flex items-center justify-between">
-                        <h3 className="text-[15px] font-bold text-[#1E293B] truncate">{template.reportTemplateName}</h3>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-[15px] font-bold text-[#1E293B] truncate">{template.reportTemplateName}</h3>
+                          {template.businessType ? (
+                            <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 text-blue-600 px-1.5 py-px text-[10px] font-medium mt-0.5">
+                              {getCategoryTitle(template.businessType) || template.businessType}
+                            </span>
+                          ) : null}
+                        </div>
                         <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold inline-flex items-center gap-1 ${
                           isParsing
                             ? 'border-blue-100 bg-blue-50 text-blue-600'
@@ -473,6 +481,10 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                         </span>
                       </div>
                     </div>
+
+                    {template.reportTemplateDesc ? (
+                      <p className="mt-2 text-[12px] text-gray-400 line-clamp-1">{template.reportTemplateDesc}</p>
+                    ) : null}
 
                     <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
                       <span className="text-[12px] text-gray-400">
