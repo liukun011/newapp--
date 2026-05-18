@@ -170,6 +170,7 @@ export interface DealRecord {
   logo: string;
   progress: string;
   status: string;
+  dealType?: number;         // 1 = demo 应用（只读）
   calculation: any;
   interviewDealAbstract: any;
   interviewInstList: any;

@@ -179,6 +179,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
   // 使用详情数据，如果没有则使用传入的 deal
   const currentDeal = dealDetail || deal;
+  const isDemo = currentDeal?.dealType === 1;
+  const isArchived = currentDeal?.status === '5';
+  const isReadOnly = isDemo || isArchived;
 
   const basicInfo = enterpriseInfo || {};
 
@@ -638,8 +641,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const handleChangeTemplateThrottled = useThrottleFn(() => onChangeTemplate?.(), 1000);
 
   const handleRecordingClickThrottled = useThrottleFn(() => {
-    // 检查是否已归档
-    if (currentDeal?.status === '5') {
+    // 检查是否已归档或为 demo 报告（只读）
+    if (isReadOnly) {
       if (onNavigateToHistory && currentDeal?.id) {
         onNavigateToHistory(currentDeal.id);
       }
@@ -816,7 +819,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             <ArrowLeft size={24} />
           </button>
           <h1 className="text-lg font-bold text-slate-800 truncate px-2">{currentDeal?.interviewCust || '尽调详情'}</h1>
-          {currentDeal?.status === '5' ? (
+          {isReadOnly ? (
             <div className="w-9" />
           ) : (
             <button
@@ -835,7 +838,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       <div className="flex-1 min-h-0 overflow-y-auto relative z-10 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="px-4 pb-36 pt-4 space-y-3">
           {(() => {
-            const isArchived = currentDeal?.status === '5';
             // 判断是否有真正完成了录音的访谈记录
             // interviewTotalCount 已在 fetchInterviewRecords 中过滤掉了仅创建未录音的实例
             // interviewInstList 也需要过滤：只有 interviewInstStatus !== '1' 的才算有效
@@ -911,8 +913,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 </div>
 
                 <div className="flex flex-col gap-2.5">
-                  {(!isArchived) && (
-                  <button 
+                  {(!isReadOnly) && (
+                  <button
                     onClick={handleGenerateReportThrottled}
                     disabled={isGenerating}
                     className="w-full bg-[#4B42F5] text-white rounded-2xl py-[12px] flex items-center justify-center gap-2 font-medium text-[14px] active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
@@ -936,8 +938,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                         <Download size={16} className="text-gray-600" />
                         <span className="text-[11px] text-gray-700 font-medium">立即下载</span>
                       </button>
-                      {(!isArchived) && (
-                      <button 
+                      {(!isReadOnly) && (
+                      <button
                         onClick={() => {
                           if (isGenerating) {
                             Toast.info('报告正在生成中，暂不支持更换模板');
@@ -954,8 +956,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       )}
                     </div>
                   ) : (
-                    (!isArchived) && (
-                    <button 
+                    (!isReadOnly) && (
+                    <button
                       onClick={() => {
                         if (isGenerating) {
                           Toast.info('报告正在生成中，暂不支持更换模板');
@@ -987,7 +989,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               </div>
               
               <div className="flex items-center gap-2">
-                {currentDeal?.status !== '5' && (
+                {!isReadOnly && (
                   <button
                     onClick={async () => {
                       if (!currentDeal?.id || isRefreshingSummary) return;
@@ -1093,8 +1095,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       handleNavigateMaterialsThrottled();
                     }}
                   >
-                    {currentDeal?.status !== '5' && <span className="font-bold mr-0.5">+</span>}
-                    {currentDeal?.status === '5' ? '立即查看' : '立即添加'}
+                    {!isReadOnly && <span className="font-bold mr-0.5">+</span>}
+                    {isReadOnly ? '立即查看' : '立即添加'}
                   </button>
                   <ChevronRight size={14} className="text-gray-300" />
                 </div>
@@ -1144,8 +1146,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       handleRecordingClickThrottled();
                     }}
                   >
-                    {currentDeal?.status !== '5' && <span className="font-bold mr-0.5">+</span>}
-                    {currentDeal?.status === '5' ? '历史访谈' : '访谈录音'}
+                    {!isReadOnly && <span className="font-bold mr-0.5">+</span>}
+                    {isReadOnly ? '历史访谈' : '访谈录音'}
                   </button>
                   <ChevronRight size={14} className="text-gray-300" />
                 </div>
@@ -1224,7 +1226,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                             <h3 className="text-[16px] font-bold text-slate-800">企查查资料</h3>
                             <span className="text-[14px] text-slate-300 font-medium">(7项)</span>
                         </div>
-                        <button 
+                        {!isReadOnly && (
+                        <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleSync();
@@ -1234,6 +1237,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                         >
                             {isSyncing ? '抓取中...' : (basicInfo.name ? '更新资料' : '抓取资料')}
                         </button>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mb-4">
@@ -1342,8 +1346,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 </div>
 
                 {/* Actions Inline - Medium Size */}
+                {!isReadOnly && (
                 <div className="flex items-center gap-2.5 mb-3.5">
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setTemplateModalVisible(true);
@@ -1352,7 +1357,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   >
                     切换清单
                   </button>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!hasEnterpriseName || isAnalyzingAi) return;
@@ -1361,14 +1366,15 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     disabled={!hasEnterpriseName || isAnalyzingAi}
                     className={`
                       flex items-center gap-1.5 rounded-full px-5 py-1.5 text-[12px] font-[800] transition-all
-                      ${(!hasEnterpriseName || isAnalyzingAi) 
-                        ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none border border-slate-50' 
+                      ${(!hasEnterpriseName || isAnalyzingAi)
+                        ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none border border-slate-50'
                         : 'bg-[#4B42F5] text-white shadow-[0_4px_10px_rgba(75,66,245,0.25)] active:scale-95'}
                     `}
                   >
                     <span>{aiInsightList.length > 0 ? '再次洞察' : 'AI 洞察'}</span>
                   </button>
                 </div>
+                )}
 
                 {/* Progress Bar Area - Detailed Animation */}
                 {isAnalyzingAi && (
@@ -1434,6 +1440,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         </div>
       </div>
 
+      {!isDemo && (
       <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-3 z-30">
         <button
           onClick={currentDeal?.status === '5' ? handleCancelArchiveThrottled : handleArchiveThrottled}
@@ -1452,6 +1459,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           )}
         </button>
       </div>
+      )}
 
 
       {/* Voice Input Modal */}
