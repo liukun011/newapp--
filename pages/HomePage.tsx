@@ -740,13 +740,15 @@ const HomePage: React.FC<HomePageProps> = ({
                             </div>
 
                             {activeTab === 'archived' ? (
+                              item.dealType === 1 ? null : (
                               <button
                                 className="flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-indigo-600 border border-indigo-200 bg-indigo-50 active:scale-95 transition-all"
                                 onClick={(e) => handleCancelArchive(e, item.id)}
                               >
                                 取消归档
                               </button>
-                            ) : (
+                              )
+                            ) : item.dealType === 1 ? null : (
                               /* 进行中：访谈录音按钮 */
                               <button
                                 className={`flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-md active:scale-95 transition-all ${
