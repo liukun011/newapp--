@@ -1097,7 +1097,7 @@ const App: React.FC = () => {
                       Toast.fail('加载预览失败');
                     }
                   }}
-                  isArchived={currentDeal?.status === '5'}
+                  isArchived={currentDeal?.status === '5' || currentDeal?.dealType === 1}
                   reportStatus={currentDeal?.reportStatus}
                 />
               )}
@@ -1284,7 +1284,7 @@ const App: React.FC = () => {
               {currentView === View.HISTORY && (
                 <HistoryRecordsPage
                   dealId={currentDeal?.id}
-                  isArchived={currentDeal?.status === '5'}
+                  isArchived={currentDeal?.status === '5' || currentDeal?.dealType === 1}
                   onBack={() => {
                     navigateBackward(historyBackView);
                   }}
@@ -1583,7 +1583,7 @@ const App: React.FC = () => {
                   dealName={currentDeal?.enterpriseName || (currentDeal as any)?.interviewCust}
                   dealLogo={currentDeal?.logo}
                   questionInfoList={currentDeal?.questionInfoList || []}
-                  isArchived={currentDeal?.status === '5'}
+                  isArchived={currentDeal?.status === '5' || currentDeal?.dealType === 1}
                   onBack={() => navigateBackward(View.DUE_DILIGENCE)}
                   onUpdateQuestion={undefined}
                   onDeleteQuestion={undefined}
