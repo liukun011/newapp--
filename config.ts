@@ -34,7 +34,7 @@ const getVal = (key: 'VITE_API_BASE_URL' | 'VITE_AUTH_BASE_URL', defaultVal: str
 };
 
 // 当前环境模式
-const mode = (import.meta.env.MODE || 'development');
+const mode = (import.meta.env.MODE || 'dev');
 
 const config = {
   // 注意：在 axios 实例创建后，直接修改 baseURL 可能无效
@@ -57,9 +57,9 @@ const config = {
     return `${this.apiBaseUrl}/upload/file`;
   },
   
-  get isDev() { return this.env === 'development'; },
+  get isDev() { return this.env === 'dev'; },
   get isTest() { return this.env === 'test'; },
-  get isProd() { return this.env === 'production' || !this.env; }
+  get isProd() { return this.env === 'prod' || !this.env; }
 };
 
 // 调试日志
