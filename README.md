@@ -13,7 +13,17 @@ yarn install
 ```
 
 ### 3. 开发环境运行
+
+项目支持多环境开发模式，通过 `--mode` 参数区分环境：
+
+| 环境 | 命令 | 说明 |
+| :--- | :--- | :--- |
+| **开发环境** | `yarn dev` | 默认开发环境，对应 `dev` 模式 |
+| **测试环境** | `yarn dev:test` | 连接测试环境后端服务 |
+| **生产环境** | `yarn dev:prod` | 连接生产环境后端服务（本地验证用） |
+
 ```bash
+# 启动默认开发环境
 yarn dev
 ```
 启动后访问：`http://localhost:5173/talk-assistant/`
@@ -26,7 +36,9 @@ yarn dev
 
 | 环境 | 构建命令 | 备注 |
 | :--- | :--- | :--- |
-| **构建** | `yarn build` | 默认构建（一般用于本地验证） |
+| **开发环境构建** | `yarn build:dev` | 构建至 dev 环境 |
+| **测试环境构建** | `yarn build:test` | 构建至 test 环境 |
+| **生产环境构建** | `yarn build` / `yarn build:prod` | 构建至 prod 环境 |
 
 ---
 

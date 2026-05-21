@@ -44,7 +44,13 @@
 ### 1.3 核心构建命令集 (Build Scripts)
 | 命令 | 环境/模式 | 详细业务作用与产物说明 |
 | :--- | :--- | :--- |
-| `yarn dev` | 本地开发环境 | 启动 Vite 开发服务器。支持路径别名 (@) 解析、热重载以及 Server Proxy 接口请求反向代理 |
+| `yarn dev` | 开发环境开发 | 启动 Vite 开发服务器（`--mode dev`）。支持路径别名 (@) 解析、热重载以及 Server Proxy 接口请求反向代理 |
+| `yarn dev:test` | 测试环境开发 | 启动 Vite 开发服务器（`--mode test`），连接测试环境后端服务 |
+| `yarn dev:prod` | 生产环境开发 | 启动 Vite 开发服务器（`--mode prod`），连接生产环境后端服务，用于本地验证 |
+| `yarn build` | 生产环境构建 | 默认构建命令（`--mode prod`），产物输出至 `/talk-assistant` |
+| `yarn build:dev` | 开发环境构建 | 构建产物对应 dev 环境配置 |
+| `yarn build:test` | 测试环境构建 | 构建产物对应 test 环境配置 |
+| `yarn build:prod` | 生产环境构建 | 同 `yarn build`，产物对应 prod 环境配置 |
 | `yarn preview` | 产物本地回验 | 启动静态 Web 服务器以验证 `/dist` (或 /talk-assistant) 文件夹中的 Chunk 分离与路由是否正常 |
 
 ---
