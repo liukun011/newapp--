@@ -62,6 +62,14 @@ export const DealReportStatusDescription: Record<DealReportStatusEnum, string> =
   [DealReportStatusEnum.REPORT_FAILED]: '报告生成失败',
 };
 
+// 尽调总结状态枚举
+export enum SummaryStatusEnum {
+  IDLE = '1',        // 初始（未生成）
+  GENERATING = '2',  // 生成中
+  GENERATED = '3',   // 生成成功
+  FAILED = '4',      // 生成失败
+}
+
 export interface Question {
   id: number | string;
   text: string;
@@ -190,6 +198,7 @@ export interface DealRecord {
   supplementary: any;
   templateId: any;
   dealSummary?: string;
+  summaryStatus?: string;
   lastModifiedDate?: string;
   companyName?: string;
   creditCode?: string;

@@ -3,7 +3,7 @@ import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
-import { DealRecord, DealReportStatusEnum, QuestionInfo, TemplateInfo } from '../types';
+import { DealRecord, DealReportStatusEnum, SummaryStatusEnum, TemplateInfo } from '../types';
 import { dealService } from '../services/dealService';
 import { nativeBridge } from '@/services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
@@ -58,7 +58,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [aiInsightList, setAiInsightList] = useState<any[]>([]);
   const [voiceModalInitialContent, setVoiceModalInitialContent] = useState('');
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
-  const [isRefreshingSummary, setIsRefreshingSummary] = useState(false);
+  // 尽调总结本地状态：IDLE/GENERATING/GENERATED/FAILED，驱动按钮和内容区展示
+  const [summaryStatus, setSummaryStatus] = useState<SummaryStatusEnum>(SummaryStatusEnum.IDLE);
+  // 追踪当前 WebSocket 实例，防止重复连接
+  const wsRef = React.useRef<WebSocket | null>(null);
   const [interviewRecords, setInterviewRecords] = useState<any[]>([]);
   const [interviewTotalCount, setInterviewTotalCount] = useState(0);
 
@@ -202,7 +205,14 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     }
   }, [currentDeal?.companyName, currentDeal?.creditCode]);
 
-  /* 
+  // 从详情数据同步 summaryStatus 到本地状态（本地状态优先，仅在接口返回后对齐）
+  useEffect(() => {
+    if (currentDeal?.summaryStatus) {
+      setSummaryStatus(currentDeal.summaryStatus as SummaryStatusEnum);
+    }
+  }, [currentDeal?.summaryStatus]);
+
+  /*
   // 轮询检查报告生成状态 (已弃用，改为 WebSocket)
   useEffect(() => {
     // 只有当报告状态为"生成中"时才启动轮询
@@ -234,10 +244,23 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   }, [currentDeal?.reportStatus, currentDeal?.id]);
   */
 
-  // WebSocket 实时检查报告生成状态
+  // 合并报告和总结的生成状态，任一生成中时保持 WS 连接（避免两个独立状态触发重复连接）
+  const wsShouldBeConnected = (currentDeal?.reportStatus === DealReportStatusEnum.REPORT_GENERATING
+    || summaryStatus === SummaryStatusEnum.GENERATING) && !!currentDeal?.id;
+
+  // WebSocket 实时接收报告生成状态 & 尽调总结状态更新
   useEffect(() => {
-    // 只有当报告状态为"生成中"时才启动 WebSocket
-    if (currentDeal?.reportStatus != DealReportStatusEnum.REPORT_GENERATING || !currentDeal?.id) {
+    // 关闭连接：所有生成任务已完成或页面已无关联数据
+    if (!wsShouldBeConnected) {
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      return;
+    }
+
+    // 已有活跃连接则复用，防止因依赖变化重复创建
+    if (wsRef.current?.readyState === WebSocket.OPEN || wsRef.current?.readyState === WebSocket.CONNECTING) {
       return;
     }
 
@@ -246,25 +269,55 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     const wsUrl = `${wsBaseUrl}/ws/report-status?dealInstId=${currentDeal.id}&token=${token}`;
 
     console.log('[WebSocket] Connecting to report status:', wsUrl);
-    
-    let socket: WebSocket | null = new WebSocket(wsUrl);
+
+    const socket = new WebSocket(wsUrl);
+    wsRef.current = socket;
 
     socket.onmessage = (event) => {
-      console.log('[WebSocket] Received report status update:', event.data);
+      console.log('[WebSocket] Received:', event.data);
       try {
-        // 尝试解析推送的消息内容
         const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        // 如果包含 reportStatus，则直接更新本地状态
-        const newStatus = data.reportStatus || (typeof data === 'string' ? data : null);
-        
-        if (newStatus) {
+
+        // 处理报告状态更新
+        if (data.reportStatus) {
           setDealDetail(prev => {
             if (!prev) return null;
-            // 只有当状态确实发生变化时才更新，避免无效渲染
-            if (prev.reportStatus === newStatus) return prev;
-            console.log('[WebSocket] Updating local reportStatus to:', newStatus);
-            return { ...prev, reportStatus: newStatus };
+            if (prev.reportStatus === data.reportStatus) return prev;
+            console.log('[WebSocket] Updating local reportStatus to:', data.reportStatus);
+            return { ...prev, reportStatus: data.reportStatus };
           });
+        }
+
+        // 处理尽调总结异步生成状态（由后端异步生成后通过 WS 推送）
+        if (data.summaryStatus) {
+          const newSummaryStatus = data.summaryStatus as string;
+          console.log('[WebSocket] Updating local summaryStatus to:', newSummaryStatus);
+
+          if (newSummaryStatus === SummaryStatusEnum.GENERATED) {
+            // 生成成功：刷新详情获取内容，再置 GENERATED
+            dealService.getDealInstDetail(currentDeal.id).then(res => {
+              if (res.success && res.data) {
+                setDealDetail(res.data);
+                onDealDetailLoadedRef.current?.(res.data);
+              }
+            }).finally(() => {
+              setSummaryStatus(SummaryStatusEnum.GENERATED);
+              Toast.success('尽调总结生成完成');
+            });
+          } else if (newSummaryStatus === SummaryStatusEnum.FAILED) {
+            // 生成失败：直接置 FAILED，刷新详情后 sync effect 对齐服务器状态
+            setSummaryStatus(SummaryStatusEnum.FAILED);
+            dealService.getDealInstDetail(currentDeal.id).then(res => {
+              if (res.success && res.data) {
+                setDealDetail(res.data);
+                onDealDetailLoadedRef.current?.(res.data);
+              }
+            });
+            Toast.fail('尽调总结生成失败');
+          } else if (newSummaryStatus === SummaryStatusEnum.GENERATING) {
+            // 生成中：同步本地状态（按钮禁用、内容区显示生成中提示）
+            setSummaryStatus(SummaryStatusEnum.GENERATING);
+          }
         }
       } catch (e) {
         // 非 JSON 格式则尝试作为纯字符串状态处理
@@ -281,17 +334,17 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
     socket.onclose = (e) => {
       console.log('[WebSocket] Connection closed:', e.code, e.reason);
-      socket = null;
+      wsRef.current = null;
     };
 
     return () => {
-      if (socket) {
+      if (wsRef.current) {
         console.log('[WebSocket] Cleaning up connection');
-        socket.close();
-        socket = null;
+        wsRef.current.close();
+        wsRef.current = null;
       }
     };
-  }, [currentDeal?.reportStatus, currentDeal?.id]);
+  }, [wsShouldBeConnected, currentDeal?.id]);
 
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
@@ -640,6 +693,29 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
   const handleChangeTemplateThrottled = useThrottleFn(() => onChangeTemplate?.(), 1000);
 
+  /** 触发尽调总结异步生成：乐观更新 → 调接口 → 失败回退，结果由 WS 推送 */
+  const handleGenerateSummary = async () => {
+    if (!currentDeal?.id || summaryStatus === SummaryStatusEnum.GENERATING) return;
+
+    // 乐观更新：立即置为 GENERATING 并清空旧内容，避免用户看到过期数据
+    setSummaryStatus(SummaryStatusEnum.GENERATING);
+    setDealDetail(prev => prev ? { ...prev, dealSummary: '' } : prev);
+
+    try {
+      // 异步提交生成任务，不等待结果，由 WS 推送完成状态
+      await dealService.generateInterviewSummary(currentDeal.id);
+      Toast.info({ message: '尽调总结生成中', duration: 1500 });
+    } catch (error) {
+      // 接口调用失败（网络/超时），回退 IDLE 并刷新详情恢复服务器端状态
+      setSummaryStatus(SummaryStatusEnum.IDLE);
+      const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+      if (detailRes.success && detailRes.data) {
+        setDealDetail(detailRes.data);
+        onDealDetailLoadedRef.current?.(detailRes.data);
+      }
+    }
+  };
+
   const handleRecordingClickThrottled = useThrottleFn(() => {
     // 检查是否已归档或为 demo 报告（只读）
     if (isReadOnly) {
@@ -980,54 +1056,31 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
           {/* 尽调小总结 Card */}
           <div className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
-            <div className={`flex items-center justify-between ${currentDeal?.dealSummary ? 'mb-3' : ''} relative z-10 px-0.5`}>
+            <div className={`flex items-center justify-between ${summaryStatus === SummaryStatusEnum.GENERATED ? 'mb-3' : ''} relative z-10 px-0.5`}>
               <div className="flex items-center gap-2">
                 <h3 className="text-[16px] font-bold text-slate-800 tracking-tight">尽调小总结</h3>
                 <div className="bg-[#F4F7FF] text-[#86909C] text-[10px] px-2 py-0.5 rounded-md font-medium">
                   自动提炼, 仅供参考
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 {!isReadOnly && (
                   <button
-                    onClick={async () => {
-                      if (!currentDeal?.id || isRefreshingSummary) return;
-                      setIsRefreshingSummary(true);
-                      Toast.info({ message: '正在刷新总结...', duration: 1500 });
-                      
-                      try {
-                        const res = await dealService.generateInterviewSummary(currentDeal.id, true);
-                        if (res.success) {
-                          const detailRes = await dealService.getDealInstDetail(currentDeal.id);
-                          if (detailRes.success && detailRes.data) {
-                            setDealDetail(detailRes.data);
-                            onDealDetailLoadedRef.current?.(detailRes.data);
-                            Toast.success('刷新成功');
-                          }
-                        } else {
-                          Toast.fail(res.message || '刷新失败');
-                        }
-                      } catch (error) {
-                        console.error('Refresh summary failed:', error);
-                        // 优先提取接口中的失败消息，如果message包含timeout则可能是请求超时
-                        // @ts-ignore
-                        let message = error.message || '刷新失败';
-                        if (message?.includes?.('timeout')) message = '接口请求超时（15秒）';
-                        Toast.fail(message);
-                      } finally {
-                        setIsRefreshingSummary(false);
-                      }
-                    }}
-                    className={`p-1 text-indigo-400 hover:text-indigo-600 transition-colors active:scale-95 ${isRefreshingSummary ? 'animate-spin cursor-not-allowed opacity-70' : ''}`}
+                    onClick={handleGenerateSummary}
+                    className={`p-1 transition-colors active:scale-95 ${summaryStatus === SummaryStatusEnum.GENERATING ? 'cursor-not-allowed opacity-70' : 'text-indigo-400 hover:text-indigo-600'}`}
                   >
-                    <RotateCw size={14} />
+                    {summaryStatus === SummaryStatusEnum.GENERATING ? (
+                      <div className="w-3.5 h-3.5 border-2 border-indigo-400/80 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <RotateCw size={14} />
+                    )}
                   </button>
                 )}
-                <button 
+                <button
                   onClick={() => currentDeal?.dealSummary && setIsSummaryExpanded(!isSummaryExpanded)}
-                  disabled={!currentDeal?.dealSummary}
-                  className={`flex items-center gap-0.5 px-2 py-0.5 rounded-[6px] text-[11px] font-medium transition-all ${currentDeal?.dealSummary ? 'bg-[#F0F2FF] text-[#4B42F5] active:scale-95' : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
+                  disabled={summaryStatus !== SummaryStatusEnum.GENERATED || !currentDeal?.dealSummary}
+                  className={`flex items-center gap-0.5 px-2 py-0.5 rounded-[6px] text-[11px] font-medium transition-all ${summaryStatus === SummaryStatusEnum.GENERATED && currentDeal?.dealSummary ? 'bg-[#F0F2FF] text-[#4B42F5] active:scale-95' : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
                 >
                   {isSummaryExpanded ? '收起' : '展开'}
                   {isSummaryExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -1035,16 +1088,24 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               </div>
             </div>
 
-            {currentDeal?.dealSummary ? (
-              <div className={`relative z-10 px-0.5 transition-all duration-300`}>
+            {summaryStatus === SummaryStatusEnum.GENERATED && currentDeal?.dealSummary ? (
+              // 生成成功 → 展示 markdown 渲染的总结内容（支持展开/收起）
+              <div className="relative z-10 px-0.5 transition-all duration-300">
                 <div className={`markdown-body text-[12px] text-gray-700 leading-relaxed text-justify tracking-normal ${!isSummaryExpanded ? 'line-clamp-2' : ''}`} dangerouslySetInnerHTML={{
                   __html: markdownToHtml(currentDeal.dealSummary)
                 }}>
                 </div>
               </div>
             ) : (
+              // 其他状态 → 根据 status 显示对应的占位提示（失败/生成中/未生成）
               <div className="relative z-10 px-0.5 mt-2">
-                <p className="text-[13px] text-gray-400">尽调小总结未生成，请刷新生成</p>
+                <p className="text-[13px] text-gray-400">
+                  {summaryStatus === SummaryStatusEnum.FAILED
+                    ? '尽调总结生成失败，请重新生成'
+                    : summaryStatus === SummaryStatusEnum.GENERATING
+                      ? '正在生成尽调总结...'
+                      : '尽调小总结未生成，请点击生成'}
+                </p>
               </div>
             )}
           </div>
