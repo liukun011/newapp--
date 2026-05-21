@@ -165,6 +165,8 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
       
       // 判断企业信息是否发生变化
       const isCompanyChanged = (companyName.trim() !== (deal.companyName || '')) || (creditCode.trim() !== (deal.creditCode || ''));
+      // 后端要求：若 companyName 从有值变为空，需显式传递 clearCompany:true 才能清空
+      const isCompanyCleared = !!(deal?.companyName && !companyName.trim());
 
       // 如果企业信息变了，清除旧的 AI 洞察结果
       if (isCompanyChanged) {
@@ -182,6 +184,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
         companyName: companyName.trim() || undefined,
         creditCode: creditCode.trim() || undefined,
         logo: logoUrl.trim(),
+        clearCompany: isCompanyCleared || undefined,  // 清空企业名称时通知后端，避免被忽略
       });
 
       // 如果企业信息变了，触发同步更新
