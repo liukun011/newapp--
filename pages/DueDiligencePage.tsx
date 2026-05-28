@@ -289,36 +289,36 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         }
 
         // 处理尽调总结异步生成状态（由后端异步生成后通过 WS 推送）
-        if (data.summaryStatus) {
-          const newSummaryStatus = data.summaryStatus as string;
-          console.log('[WebSocket] Updating local summaryStatus to:', newSummaryStatus);
-
-          if (newSummaryStatus === SummaryStatusEnum.GENERATED) {
-            // 生成成功：刷新详情获取内容，再置 GENERATED
-            dealService.getDealInstDetail(currentDeal.id).then(res => {
-              if (res.success && res.data) {
-                setDealDetail(res.data);
-                onDealDetailLoadedRef.current?.(res.data);
-              }
-            }).finally(() => {
-              setSummaryStatus(SummaryStatusEnum.GENERATED);
-              Toast.success('尽调总结生成完成');
-            });
-          } else if (newSummaryStatus === SummaryStatusEnum.FAILED) {
-            // 生成失败：直接置 FAILED，刷新详情后 sync effect 对齐服务器状态
-            setSummaryStatus(SummaryStatusEnum.FAILED);
-            dealService.getDealInstDetail(currentDeal.id).then(res => {
-              if (res.success && res.data) {
-                setDealDetail(res.data);
-                onDealDetailLoadedRef.current?.(res.data);
-              }
-            });
-            Toast.fail('尽调总结生成失败');
-          } else if (newSummaryStatus === SummaryStatusEnum.GENERATING) {
-            // 生成中：同步本地状态（按钮禁用、内容区显示生成中提示）
-            setSummaryStatus(SummaryStatusEnum.GENERATING);
-          }
-        }
+        // if (data.summaryStatus) {
+        //   const newSummaryStatus = data.summaryStatus as string;
+        //   console.log('[WebSocket] Updating local summaryStatus to:', newSummaryStatus);
+        //
+        //   if (newSummaryStatus === SummaryStatusEnum.GENERATED) {
+        //     // 生成成功：刷新详情获取内容，再置 GENERATED
+        //     dealService.getDealInstDetail(currentDeal.id).then(res => {
+        //       if (res.success && res.data) {
+        //         setDealDetail(res.data);
+        //         onDealDetailLoadedRef.current?.(res.data);
+        //       }
+        //     }).finally(() => {
+        //       setSummaryStatus(SummaryStatusEnum.GENERATED);
+        //       Toast.success('尽调总结生成完成');
+        //     });
+        //   } else if (newSummaryStatus === SummaryStatusEnum.FAILED) {
+        //     // 生成失败：直接置 FAILED，刷新详情后 sync effect 对齐服务器状态
+        //     setSummaryStatus(SummaryStatusEnum.FAILED);
+        //     dealService.getDealInstDetail(currentDeal.id).then(res => {
+        //       if (res.success && res.data) {
+        //         setDealDetail(res.data);
+        //         onDealDetailLoadedRef.current?.(res.data);
+        //       }
+        //     });
+        //     Toast.fail('尽调总结生成失败');
+        //   } else if (newSummaryStatus === SummaryStatusEnum.GENERATING) {
+        //     // 生成中：同步本地状态（按钮禁用、内容区显示生成中提示）
+        //     setSummaryStatus(SummaryStatusEnum.GENERATING);
+        //   }
+        // }
       } catch (e) {
         // 非 JSON 格式则尝试作为纯字符串状态处理
         const newStatus = event.data;
@@ -1055,7 +1055,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           })()}
 
           {/* 尽调小总结 Card */}
-          <div className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
+         {/* <div className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
             <div className={`flex items-center justify-between ${summaryStatus === SummaryStatusEnum.GENERATED ? 'mb-3' : ''} relative z-10 px-0.5`}>
               <div className="flex items-center gap-2">
                 <h3 className="text-[16px] font-bold text-slate-800 tracking-tight">尽调小总结</h3>
@@ -1108,7 +1108,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 </p>
               </div>
             )}
-          </div>
+          </div>*/}
 
           {/* 尽调资料 */}
           {(() => {
