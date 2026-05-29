@@ -48,17 +48,10 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     setLocalReportStatus(reportStatus);
   }, [reportStatus]);
 
-  // 封装返回逻辑：离开前生成总结
+  // 封装返回逻辑：离开前不再生成总结
   const handleBackWithSummary = useCallback(() => {
-    if (dealId) {
-      console.log('Leaving MaterialsListPage: Generating summary for dealId:', dealId);
-      // Fire-and-forget call
-      dealService.generateInterviewSummary(dealId).catch(err => {
-        console.error('Failed to generate summary on exit:', err);
-      });
-    }
     onBack();
-  }, [dealId, onBack]);
+  }, [onBack]);
 
   // 获取尽调详情数据
   const fetchDealDetail = useCallback(async () => {
