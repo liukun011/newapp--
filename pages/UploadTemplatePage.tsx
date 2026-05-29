@@ -50,6 +50,14 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
     }
   }, [initialData]);
 
+  // 选择文件后，如果模板名称为空，自动用文件名（去掉后缀）填充
+  useEffect(() => {
+    if (selectedFile && !templateName) {
+      const nameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, '');
+      setTemplateName(nameWithoutExt);
+    }
+  }, [selectedFile]);
+
   // 处理Native文件上传
   const uploadNativeFile = async (localPath: string) => {
       if (isUploadingRef.current) return;
