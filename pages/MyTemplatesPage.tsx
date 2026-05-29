@@ -490,12 +490,14 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                       <span className="text-[12px] text-gray-400">
                         {(template as any).lastModifiedDate?.slice(5, 16) || '刚刚更新'}
                       </span>
-                      <button
-                        onClick={() => onPreview?.(template.reportTemplateName, template.viewTemplateUrl || '', 'templates')}
-                        className="px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-sm bg-[#4B77F6] active:scale-95 transition-all"
-                      >
-                        预览
-                      </button>
+                      {!isParsing && (
+                        <button
+                          onClick={() => onPreview?.(template.reportTemplateName, template.viewTemplateUrl || '', 'templates')}
+                          className="px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-sm bg-[#4B77F6] active:scale-95 transition-all"
+                        >
+                          预览
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
