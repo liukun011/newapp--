@@ -65,6 +65,10 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
   const templatesRef = useRef(templates);
   templatesRef.current = templates;
 
+  // 滚动容器 ref，用于在列表和详情切换时保存/恢复滚动位置
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const savedListScrollTopRef = useRef(0);
+
   const getQuestionTemplateTagLabel = (q: any) => {
     if (q.templateType === TemplateTypeEnum.PRESET) {
       return '内置';
@@ -391,6 +395,24 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
     }
   }, [editingQuestion, isCreatingNew]);
 
+  // 滚动位置管理：进入详情时保存列表位置并回顶，返回列表时恢复
+  useEffect(() => {
+    if (editingQuestion) {
+      // 进入详情：保存列表滚动位置，然后回顶
+      if (scrollContainerRef.current) {
+        savedListScrollTopRef.current = scrollContainerRef.current.scrollTop;
+        scrollContainerRef.current.scrollTo(0, 0);
+      }
+    } else if (activeTab === 'questions') {
+      // 返回列表：等 React 渲染完成后恢复之前的位置
+      if (scrollContainerRef.current && savedListScrollTopRef.current > 0) {
+        requestAnimationFrame(() => {
+          scrollContainerRef.current?.scrollTo(0, savedListScrollTopRef.current);
+        });
+      }
+    }
+  }, [editingQuestion, activeTab]);
+
   return (
     <div className="flex flex-col h-screen bg-[#F7F8FA] pb-20">
       {/* Header + Tool Bar */}
@@ -432,7 +454,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="w-8 h-8 border-3 border-indigo-200 border-t-[#4B77F6] rounded-full animate-spin"></div>
@@ -503,204 +525,193 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                 );
               })
             )}
-          </div>
-        ) : (
+            </div>
+        ) : !editingQuestion ? (
           <div className="space-y-3">
-            {!editingQuestion ? (
-              <>
-                {/* Header: Title + Stats + New Button - More compact */}
-                <div className="flex items-center justify-between mb-1 px-0.5">
-                  <h2 className="text-[14px] font-bold text-[#1E293B]">全部清单</h2>
-                  <div className="flex items-center gap-2">
-                     <span className="px-2.5 py-0.5 bg-white rounded-full text-[10px] font-bold text-[#64748B] shadow-sm border border-gray-50">
-                       共 <span className="text-[#3B82F6]">{questions.length}</span> 份
-                     </span>
-                     <button 
-                       onClick={() => {
-                         setIsNewDialogVisible(true);
-                       }}
-                       className="flex items-center gap-1 px-3 py-1 bg-[#4B77F6] text-white text-[12px] font-bold rounded-full shadow-md active:scale-95 transition-all"
-                     >
-                       <Plus size={14} strokeWidth={3} /> 新建
-                     </button>
-                  </div>
+              <div className="flex items-center justify-between mb-1 px-0.5">
+                <h2 className="text-[14px] font-bold text-[#1E293B]">全部清单</h2>
+                <div className="flex items-center gap-2">
+                   <span className="px-2.5 py-0.5 bg-white rounded-full text-[10px] font-bold text-[#64748B] shadow-sm border border-gray-50">
+                     共 <span className="text-[#3B82F6]">{questions.length}</span> 份
+                   </span>
+                   <button
+                     onClick={() => {
+                       setIsNewDialogVisible(true);
+                     }}
+                     className="flex items-center gap-1 px-3 py-1 bg-[#4B77F6] text-white text-[12px] font-bold rounded-full shadow-md active:scale-95 transition-all"
+                   >
+                     <Plus size={14} strokeWidth={3} /> 新建
+                   </button>
                 </div>
+              </div>
 
-                {/* Questions List Cards - Tightened paddings and spacing */}
-                <div className="space-y-2">
-                  {questions.map(item => {
-                    const q = item as TemplateInfo; // 强制断言为问题清单类型数据
-                    return (
-                      <div 
-                        key={q.id} 
-                        onClick={() => {
-                          setActiveQuestion(q);
-                          setIsCreatingNew(false);
-                          setEditingQuestion(q); // 点击进入编辑模式或查看模式
-                        }} 
-                        className="relative rounded-[20px] p-3.5 transition-all cursor-pointer active:scale-[0.98] bg-white border border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-gray-100"
-                      >
-                        <div className="flex justify-between items-start gap-3">
-                          <div className="flex-1 min-w-0 pr-2">
-                            <div className="flex items-center gap-2 mb-1">
-                              <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-hidden">
-                                <h3 className="text-[15px] font-bold text-[#1E293B] truncate">{q.templateName}</h3>
-                                {getQuestionTemplateTagLabel(q) && (
-                                  <span className="px-1.5 py-[1px] bg-indigo-50 border border-indigo-100/50 text-indigo-500 text-[9px] font-bold rounded-md shrink-0 whitespace-nowrap">
-                                    {getQuestionTemplateTagLabel(q)}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <p className="text-[12px] text-[#64748B] leading-snug mb-2 line-clamp-1">
-                              {q.templateDesc || "针对该场景的问卷建议，包含核心问题与风险排查。"}
-                            </p>
-                            <div className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#F8FAFF] text-[#94A3B8]">
-                              {q.questionList?.length || 0} 个问题
+              <div className="space-y-2">
+                {questions.map(item => {
+                  const q = item as TemplateInfo;
+                  return (
+                    <div
+                      key={q.id}
+                      onClick={() => {
+                        setActiveQuestion(q);
+                        setIsCreatingNew(false);
+                        setEditingQuestion(q);
+                      }}
+                      className="relative rounded-[20px] p-3.5 transition-all cursor-pointer active:scale-[0.98] bg-white border border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-gray-100"
+                    >
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex-1 min-w-0 pr-2">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-hidden">
+                              <h3 className="text-[15px] font-bold text-[#1E293B] truncate">{q.templateName}</h3>
+                              {getQuestionTemplateTagLabel(q) && (
+                                <span className="px-1.5 py-[1px] bg-indigo-50 border border-indigo-100/50 text-indigo-500 text-[9px] font-bold rounded-md shrink-0 whitespace-nowrap">
+                                  {getQuestionTemplateTagLabel(q)}
+                                </span>
+                              )}
                             </div>
                           </div>
-
-                          <div className="shrink-0 flex items-center gap-1.5 -mt-0.5 pr-0.5">
-                            {canModify(q) && (
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteType('question');
-                                  setDeletingTemplateId(q.id);
-                                  setIsDeleteModalOpen(true);
-                                }}
-                                className="w-7 h-7 flex items-center justify-center text-[#CBD5E1] hover:text-red-500 active:scale-90 transition-all rounded-full hover:bg-gray-50/50"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                            <ChevronRight size={18} className="text-[#CBD5E1]" />
+                          <p className="text-[12px] text-[#64748B] leading-snug mb-2 line-clamp-1">
+                            {q.templateDesc || "针对该场景的问卷建议，包含核心问题与风险排查。"}
+                          </p>
+                          <div className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#F8FAFF] text-[#94A3B8]">
+                            {q.questionList?.length || 0} 个问题
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            ) : (
-              /* EDITOR VIEW: Show when a question template is selected for editing */
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                {/* Editor/Viewer Header - More compact */}
-                <div className="flex items-center justify-between mb-2.5 px-0.5">
-                  <h2 className="text-[14px] font-bold text-[#1E293B]">
-                    {isCreatingNew ? '新建问题清单' : (canModify(editingQuestion) ? '编辑问题清单' : '查看问题清单')}
-                  </h2>
-                  <button 
-                    onClick={() => setEditingQuestion(null)}
-                    className="px-2.5 py-1 bg-white rounded-full text-[11px] font-bold text-[#64748B] shadow-sm border border-gray-100 active:scale-95 transition-all"
-                  >
-                    返回列表
-                  </button>
-                </div>
 
-                {/* Detail Information Card - Ultra Refined & Compact */}
-                <div className="bg-white rounded-[24px] p-4 shadow-sm border border-gray-100/50 mb-3">
-                   <div className="flex justify-between items-start gap-2.5">
-                      <div className="flex-1 min-w-0">
-                         <div className="flex items-center gap-1.5 mb-1 flex-wrap text-wrap">
-                            <h3 className="text-[16px] font-black text-slate-800 tracking-tight leading-tight">
-                               {editingQuestion?.templateName || '未命名清单'}
-                            </h3>
-                            <div className="px-1.5 py-0.5 bg-indigo-50 text-[#4B77F6] text-[9px] font-extrabold rounded-md flex items-center justify-center shrink-0 origin-left scale-95">
-                               {editingQuestion?.questionList?.length || 0} 个问题
-                            </div>
-                         </div>
-                         <p className="text-[11px] leading-relaxed text-slate-400 font-medium line-clamp-2 pr-2">
-                            {editingQuestion?.templateDesc || "暂无场景描述"}
-                         </p>
+                        <div className="shrink-0 flex items-center gap-1.5 -mt-0.5 pr-0.5">
+                          {canModify(q) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteType('question');
+                                setDeletingTemplateId(q.id);
+                                setIsDeleteModalOpen(true);
+                              }}
+                              className="w-7 h-7 flex items-center justify-center text-[#CBD5E1] hover:text-red-500 active:scale-90 transition-all rounded-full hover:bg-gray-50/50"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                          <ChevronRight size={18} className="text-[#CBD5E1]" />
+                        </div>
                       </div>
-                      
-                      {canModify(editingQuestion) && (
-                        <button 
-                          onClick={() => {
-                            setEditName(editingQuestion?.templateName || '');
-                            setEditDesc(editingQuestion?.templateDesc || '');
-                            setIsEditInfoModalVisible(true);
-                          }}
-                          className="flex-shrink-0 px-2.5 py-1 border border-slate-100 text-slate-400 font-bold text-[10px] rounded-full active:bg-slate-50 transition-all mt-0.5"
-                        >
-                           编辑信息
-                        </button>
-                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+        ) : (
+          <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="flex items-center justify-between mb-2.5 px-0.5">
+                <h2 className="text-[14px] font-bold text-[#1E293B]">
+                  {isCreatingNew ? '新建问题清单' : (canModify(editingQuestion) ? '编辑问题清单' : '查看问题清单')}
+                </h2>
+                <button
+                  onClick={() => setEditingQuestion(null)}
+                  className="px-2.5 py-1 bg-white rounded-full text-[11px] font-bold text-[#64748B] shadow-sm border border-gray-100 active:scale-95 transition-all"
+                >
+                  返回列表
+                </button>
+              </div>
+
+              <div className="bg-white rounded-[24px] p-4 shadow-sm border border-gray-100/50 mb-3">
+                 <div className="flex justify-between items-start gap-2.5">
+                    <div className="flex-1 min-w-0">
+                       <div className="flex items-center gap-1.5 mb-1 flex-wrap text-wrap">
+                          <h3 className="text-[16px] font-black text-slate-800 tracking-tight leading-tight">
+                             {editingQuestion?.templateName || '未命名清单'}
+                          </h3>
+                          <div className="px-1.5 py-0.5 bg-indigo-50 text-[#4B77F6] text-[9px] font-extrabold rounded-md flex items-center justify-center shrink-0 origin-left scale-95">
+                             {editingQuestion?.questionList?.length || 0} 个问题
+                          </div>
+                       </div>
+                       <p className="text-[11px] leading-relaxed text-slate-400 font-medium line-clamp-2 pr-2">
+                          {editingQuestion?.templateDesc || "暂无场景描述"}
+                       </p>
+                    </div>
+
+                    {canModify(editingQuestion) && (
+                      <button
+                        onClick={() => {
+                          setEditName(editingQuestion?.templateName || '');
+                          setEditDesc(editingQuestion?.templateDesc || '');
+                          setIsEditInfoModalVisible(true);
+                        }}
+                        className="flex-shrink-0 px-2.5 py-1 border border-slate-100 text-slate-400 font-bold text-[10px] rounded-full active:bg-slate-50 transition-all mt-0.5"
+                      >
+                         编辑信息
+                      </button>
+                    )}
+                 </div>
+              </div>
+
+              {canModify(editingQuestion) && (
+                <div className="bg-white rounded-[20px] p-3 shadow-sm border border-gray-50/50 mb-2">
+                   <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-[#4B77F6] shadow-sm border border-blue-50">
+                        <Plus size={16} strokeWidth={3} />
+                      </div>
+                      <span className="text-[15px] font-bold text-[#1E293B]">添加问题</span>
+                   </div>
+
+                   <div className="bg-[#F8F9FB] rounded-lg p-3">
+                      <textarea
+                        value={newQuestionName}
+                        onChange={(e) => setNewQuestionName(e.target.value)}
+                        className="w-full h-14 bg-transparent border-none outline-none resize-none text-[13px] text-[#334155] font-medium placeholder:text-[#CBD5E1] leading-relaxed"
+                        placeholder="请输入问题内容..."
+                      />
+                   </div>
+
+                   <div className="flex justify-end mt-2">
+                      <button
+                        onClick={handleAddQuestion}
+                        disabled={isAddingQuestion || !newQuestionName.trim()}
+                        className={`px-5 py-2 bg-[#4B77F6] text-white font-bold rounded-full text-[12px] shadow-md shadow-blue-50 transition-all ${
+                          (isAddingQuestion || !newQuestionName.trim()) ? 'opacity-50 grayscale' : 'active:scale-95'
+                        }`}
+                      >
+                        {isAddingQuestion ? '处理中...' : '加入当前清单'}
+                      </button>
                    </div>
                 </div>
+              )}
 
-                {/* Add Question Card - Conditionally show when editable */}
-                {canModify(editingQuestion) && (
-                  <div className="bg-white rounded-[20px] p-3 shadow-sm border border-gray-50/50 mb-2">
-                     <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-[#4B77F6] shadow-sm border border-blue-50">
-                          <Plus size={16} strokeWidth={3} />
+              {!isCreatingNew && (
+                <div className="mt-4 mb-3">
+                  <h3 className="text-[15px] font-bold text-[#1E293B] mb-2 px-1">问题列表</h3>
+                  <div className="space-y-2">
+                    {editingQuestion?.questionList?.map((qItem: any, idx: number) => (
+                      <div key={idx} className="bg-white rounded-[16px] p-3 shadow-[0_1px_4px_rgba(0,0,0,0.01)] border border-gray-50 flex items-start gap-2.5">
+                        <div className="w-6 h-6 rounded-full bg-[#F0F5FF] flex items-center justify-center text-[#4B77F6] text-[11px] font-extrabold shrink-0 mt-0.5">
+                          {idx + 1}
                         </div>
-                        <span className="text-[15px] font-bold text-[#1E293B]">添加问题</span>
-                     </div>
+                        <p className="flex-1 text-[13px] font-bold text-[#334155] leading-snug pt-0.5 pr-2">
+                          {qItem.questionName}
+                        </p>
 
-                     <div className="bg-[#F8F9FB] rounded-lg p-3">
-                        <textarea 
-                          value={newQuestionName}
-                          onChange={(e) => setNewQuestionName(e.target.value)}
-                          className="w-full h-14 bg-transparent border-none outline-none resize-none text-[13px] text-[#334155] font-medium placeholder:text-[#CBD5E1] leading-relaxed"
-                          placeholder="请输入问题内容..."
-                        />
-                     </div>
-
-                     <div className="flex justify-end mt-2">
-                        <button 
-                          onClick={handleAddQuestion}
-                          disabled={isAddingQuestion || !newQuestionName.trim()}
-                          className={`px-5 py-2 bg-[#4B77F6] text-white font-bold rounded-full text-[12px] shadow-md shadow-blue-50 transition-all ${
-                            (isAddingQuestion || !newQuestionName.trim()) ? 'opacity-50 grayscale' : 'active:scale-95'
-                          }`}
-                        >
-                          {isAddingQuestion ? '处理中...' : '加入当前清单'}
-                        </button>
-                     </div>
-                  </div>
-                )}
-
-                {/* Question List Section - Hide when creating new */}
-                {!isCreatingNew && (
-                  <div className="mt-4 mb-3">
-                    <h3 className="text-[15px] font-bold text-[#1E293B] mb-2 px-1">问题列表</h3>
-                    <div className="space-y-2">
-                      {editingQuestion?.questionList?.map((qItem: any, idx: number) => (
-                        <div key={idx} className="bg-white rounded-[16px] p-3 shadow-[0_1px_4px_rgba(0,0,0,0.01)] border border-gray-50 flex items-start gap-2.5">
-                          <div className="w-6 h-6 rounded-full bg-[#F0F5FF] flex items-center justify-center text-[#4B77F6] text-[11px] font-extrabold shrink-0 mt-0.5">
-                            {idx + 1}
+                        {canModify(editingQuestion) && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleOpenEditModal(qItem)}
+                              className="w-7 h-7 flex items-center justify-center text-[#94A3B8] hover:text-[#4B77F6] hover:bg-blue-50 rounded-full transition-all shrink-0"
+                            >
+                              <Edit2 size={13} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteQuestion(qItem.id)}
+                              className="w-7 h-7 flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-50 rounded-full transition-all shrink-0"
+                            >
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
                           </div>
-                          <p className="flex-1 text-[13px] font-bold text-[#334155] leading-snug pt-0.5 pr-2">
-                            {qItem.questionName}
-                          </p>
-                          
-                          {canModify(editingQuestion) && (
-                            <div className="flex items-center gap-1">
-                              <button 
-                                onClick={() => handleOpenEditModal(qItem)}
-                                className="w-7 h-7 flex items-center justify-center text-[#94A3B8] hover:text-[#4B77F6] hover:bg-blue-50 rounded-full transition-all shrink-0"
-                              >
-                                <Edit2 size={13} />
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteQuestion(qItem.id)}
-                                className="w-7 h-7 flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-50 rounded-full transition-all shrink-0"
-                              >
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
         )}
         <div className="h-20" />
       </div>
