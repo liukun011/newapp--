@@ -316,7 +316,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F8FA]">
+    <div className="flex flex-col h-screen bg-[#F7F8FA]">
       {/* Header */}
       <div className="bg-white px-4 py-3 flex items-center justify-center relative border-b border-gray-100">
         <button 
@@ -329,7 +329,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
       </div>
 
       {/* Form Content */}
-      <div className="flex-1 px-4 pt-6 pb-24">
+      <div className="flex-1 px-4 pt-6 pb-28 overflow-y-auto">
         {/* Template Category */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
