@@ -398,7 +398,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
         {/* Tabs */}
         <div className="flex relative">
           {[
-            { key: 'templates' as const, label: '我的模板' },
+            { key: 'templates' as const, label: '报告模板' },
             { key: 'questions' as const, label: '问题清单' },
           ].map((tab, idx) => {
             const isActive = activeTab === tab.key;

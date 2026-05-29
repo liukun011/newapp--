@@ -21,7 +21,7 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
 
       {/* Content - 提取出来的二级菜单列表形 */}
       <div className="px-4 pt-2 space-y-3">
-        {/* 我的模板 */}
+        {/* 报告模板 */}
         <div
           className="bg-white rounded-[20px] p-4 flex items-center justify-between shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:scale-[0.98] transition-all cursor-pointer"
           onClick={onNavigateToTemplates}
@@ -32,7 +32,7 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
             </div>
             <div className="flex flex-col">
               <span className="text-[16px] font-bold text-slate-800 mb-1">模板管理</span>
-              <span className="text-[12px] text-slate-500">我的模板、上传处理</span>
+              <span className="text-[12px] text-slate-500">报告模板、上传处理</span>
             </div>
           </div>
           <ChevronRight size={20} className="text-gray-300" />
