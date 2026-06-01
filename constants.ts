@@ -27,9 +27,10 @@ export const MASCOT_IMAGE_URL = `${import.meta.env.BASE_URL || '/'}assets/mascot
 
 // 模板分类
 export const TEMPLATE_CATEGORY_OPTIONS = [
-  { id: '信贷尽调', title: '信贷尽调' },
-  { id: '数字化转型诊断', title: '数字化转型诊断' },
-  { id: '不良资产', title: '不良资产' },
+  {id: '投资价值分析', title: '投资价值分析'},
+  {id: '信贷尽调', title: '信贷尽调'},
+  {id: '数字化转型诊断', title: '数字化转型诊断'},
+  {id: '不良资产', title: '不良资产'},
 ] as const;
 
 export const getCategoryTitle = (category?: string) =>
