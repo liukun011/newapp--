@@ -28,7 +28,7 @@ export const MASCOT_IMAGE_URL = `${import.meta.env.BASE_URL || '/'}assets/mascot
 // 模板分类
 export const TEMPLATE_CATEGORY_OPTIONS = [
   { id: '信贷尽调', title: '信贷尽调' },
-  { id: '工业互联网与智能制造', title: '工业互联网与智能制造' },
+  { id: '数字化转型诊断', title: '数字化转型诊断' },
   { id: '不良资产', title: '不良资产' },
 ] as const;
 
