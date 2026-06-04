@@ -1538,12 +1538,10 @@ const App: React.FC = () => {
                   dealId={currentDeal?.id}
                   dealName={currentDeal?.enterpriseName || (currentDeal as any)?.interviewCust}
                   dealLogo={currentDeal?.logo}
+                  questionId={currentDeal?.questionId}
                   questionInfoList={currentDeal?.questionInfoList || []}
                   isArchived={currentDeal?.status === '5' || currentDeal?.dealType === 1}
                   onBack={() => navigateBackward(View.DUE_DILIGENCE)}
-                  onUpdateQuestion={undefined}
-                  onDeleteQuestion={undefined}
-                  onAddQuestion={undefined}
                   onSave={async (finalQuestions) => {
                     const deal = currentDealRef.current;
                     if (deal) {

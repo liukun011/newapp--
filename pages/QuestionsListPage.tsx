@@ -16,6 +16,7 @@ interface QuestionsListPageProps {
   dealId?: string;
   dealName?: string;
   dealLogo?: string;
+  questionId?: string | number;
   questionInfoList?: QuestionInfo[];
   onBack: () => void;
   onSave?: (questions: QuestionInfo[]) => Promise<void>;
@@ -28,6 +29,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   dealId,
   dealName = '尽调详情',
   dealLogo,
+  questionId,
   questionInfoList = [],
   onBack,
   onSave,
@@ -44,6 +46,19 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   const questionsRef = useRef<QuestionInfo[]>(questionInfoList);
   const isDirtyRef = useRef(false);
   const hasCalledSaveRef = useRef(false);
+
+  // 手动编辑弹窗状态
+  const [editingQuestion, setEditingQuestion] = useState<QuestionInfo | null>(null);
+  const [editedQuestionName, setEditedQuestionName] = useState('');
+  const [questionEditModalVisible, setQuestionEditModalVisible] = useState(false);
+
+  // 删除确认弹窗状态
+  const [deletingQuestion, setDeletingQuestion] = useState<QuestionInfo | null>(null);
+  const [questionDeleteModalVisible, setQuestionDeleteModalVisible] = useState(false);
+
+  // 手动添加弹窗状态
+  const [questionAddModalVisible, setQuestionAddModalVisible] = useState(false);
+  const [newQuestionName, setNewQuestionName] = useState('');
 
   // 统一的状态更新方法
   const setLocalQuestions = (val: QuestionInfo[] | ((p: QuestionInfo[]) => QuestionInfo[])) => {
@@ -173,10 +188,117 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
     // 立即更新 Ref 和 State
     setLocalQuestions(p => [...p, newQ]);
     setLocalAiInsights(p => p.map(item => item.id === aiQ.id ? { ...item, isAdded: true } : item));
-    
+
     // 明确标记为已脏
     isDirtyRef.current = true;
     Toast.success('已加入清单');
+  };
+
+  // === 手动编辑问题 ===
+  const handleEditQuestion = (question: QuestionInfo) => {
+    setEditingQuestion(question);
+    setEditedQuestionName(question.questionName);
+    setQuestionEditModalVisible(true);
+  };
+
+  const handleConfirmEdit = async () => {
+    if (!editedQuestionName.trim() || !editingQuestion || !dealId) return;
+
+    const updatedList = questionsRef.current.map(q =>
+      q.id === editingQuestion.id ? { ...q, questionName: editedQuestionName.trim() } : q
+    );
+    setLocalQuestions(updatedList);
+
+    try {
+      Toast.loading({ message: '保存中...', duration: 0 });
+      const res = await dealService.createOrUpdateDealInst({
+        id: dealId,
+        questionId: questionId,
+        questionInfoList: updatedList,
+      });
+      Toast.clear();
+      if (res.success) {
+        Toast.success('修改成功');
+      }
+    } catch (e: any) {
+      Toast.clear();
+      console.error('Failed to save question edit:', e);
+      Toast.fail(e.message || '保存失败');
+    }
+    setQuestionEditModalVisible(false);
+  };
+
+  // === 手动添加问题 ===
+  const handleConfirmAdd = async () => {
+    if (!newQuestionName.trim() || !dealId) return;
+
+    const newQuestion: QuestionInfo = {
+      id: String(Date.now()),
+      questionName: newQuestionName.trim(),
+      questionIndex: questionsRef.current.length + 1,
+      recStatus: '1',
+      questionAnswer: null,
+      questionAnswerTime: null,
+      questionStatus: '0',
+      templateId: '',
+      agencyId: '',
+      CHECKED: false,
+    };
+
+    const updatedList = [...questionsRef.current, newQuestion];
+    setLocalQuestions(updatedList);
+
+    try {
+      Toast.loading({ message: '保存中...', duration: 0 });
+      const res = await dealService.createOrUpdateDealInst({
+        id: dealId,
+        questionId: questionId,
+        questionInfoList: updatedList,
+      });
+      Toast.clear();
+      if (res.success) {
+        Toast.success('添加成功');
+      }
+    } catch (e: any) {
+      Toast.clear();
+      console.error('Failed to save new question:', e);
+      Toast.fail(e.message || '保存失败');
+    }
+    setQuestionAddModalVisible(false);
+    setNewQuestionName('');
+  };
+
+  // === 删除问题 ===
+  const handleDeleteQuestion = (question: QuestionInfo) => {
+    setDeletingQuestion(question);
+    setQuestionDeleteModalVisible(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingQuestion || !dealId) return;
+
+    const remainingQuestions = questionsRef.current.filter(q => q.id !== deletingQuestion.id);
+    const reindexedList = remainingQuestions.map((q, index) => ({ ...q, questionIndex: index + 1 }));
+    setLocalQuestions(reindexedList);
+
+    try {
+      Toast.loading({ message: '保存中...', duration: 0 });
+      const res = await dealService.createOrUpdateDealInst({
+        id: dealId,
+        questionId: questionId,
+        questionInfoList: reindexedList,
+      });
+      Toast.clear();
+      if (res.success) {
+        Toast.success('删除成功');
+      }
+    } catch (e: any) {
+      Toast.clear();
+      console.error('Failed to save after delete:', e);
+      Toast.fail(e.message || '保存失败');
+    }
+    setQuestionDeleteModalVisible(false);
+    setDeletingQuestion(null);
   };
 
   return (
@@ -184,7 +306,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
       {/* Header */}
       <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-slate-50 shrink-0 z-10">
         <button onClick={handleBack} className="p-2 -ml-2 text-slate-600 active:bg-slate-50 rounded-full"><ArrowLeft size={24} /></button>
-        <h1 className="text-[18px] font-bold text-slate-800">问题集合</h1>
+        <h1 className="text-[18px] font-bold text-slate-800">问题清单</h1>
         <div className="w-8" />
       </div>
 
@@ -213,6 +335,18 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
 
       {/* List Content */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 pb-28">
+        {!isArchived && activeTab === 'ALL' && (
+          <button
+            onClick={() => {
+              setNewQuestionName('');
+              setQuestionAddModalVisible(true);
+            }}
+            className="w-full h-11 mb-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-[14px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all shadow-sm"
+          >
+            <Plus size={18} strokeWidth={2.5} />
+            手动添加
+          </button>
+        )}
         {loadingAi && activeTab === 'PENDING' ? (
           <div className="py-10 text-center text-slate-400 text-[13px]">加载 AI 建议中...</div>
         ) : filteredQuestions.length === 0 ? (
@@ -262,14 +396,31 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                         </div>
                       </div>
                       
-                      {activeTab === 'PENDING' && (
-                        <button 
+                      {activeTab === 'PENDING' ? (
+                        !isArchived ? (
+                        <button
                           onClick={(e) => { e.stopPropagation(); handleAddAiQuestion(item); }}
                           className="shrink-0 bg-[#4B42F5] text-white px-3 py-1.5 rounded-lg text-[11px] font-bold active:scale-95 transition-all"
                         >
                           加入
                         </button>
-                      )}
+                        ) : null
+                      ) : !isArchived ? (
+                        <div className="shrink-0 flex items-center gap-1">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleEditQuestion(item); }}
+                            className="p-1.5 text-gray-300 hover:text-indigo-500 transition-colors"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteQuestion(item); }}
+                            className="p-1.5 text-gray-300 hover:text-indigo-500 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
 
                     {!isAiRaw && expandedIds[item.id] && item.questionAnswer && (
@@ -290,6 +441,86 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
           </div>
         )}
       </div>
+
+      {/* Edit Question Modal */}
+      {questionEditModalVisible && editingQuestion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setQuestionEditModalVisible(false)} />
+          <div className="relative bg-white rounded-2xl w-[85%] max-w-[340px] shadow-xl animate-fadeIn">
+            <div className="pt-5 pb-3 text-center">
+              <h3 className="text-lg font-semibold text-slate-800">编辑问题</h3>
+            </div>
+            <div className="px-5 pb-5">
+              <textarea
+                value={editedQuestionName}
+                onChange={(e) => setEditedQuestionName(e.target.value)}
+                className="w-full min-h-[120px] p-4 text-base text-slate-700 bg-gray-50 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none resize-none transition-all"
+                placeholder="请输入问题内容"
+              />
+            </div>
+            <div className="flex border-t border-gray-100">
+              <button onClick={() => setQuestionEditModalVisible(false)}
+                className="flex-1 py-4 text-center text-slate-600 font-medium hover:bg-gray-50 rounded-bl-2xl transition-colors"
+              >取消</button>
+              <button onClick={handleConfirmEdit}
+                className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors bg-primary-gradient"
+              >确认</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Question Modal */}
+      {questionDeleteModalVisible && deletingQuestion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setQuestionDeleteModalVisible(false)} />
+          <div className="relative bg-white rounded-2xl w-[85%] max-w-[320px] shadow-xl animate-fadeIn overflow-hidden">
+            <div className="pt-6 pb-4 px-6 text-center">
+              <div className="w-14 h-14 mx-auto mb-4 bg-indigo-50 rounded-full flex items-center justify-center">
+                <Trash2 size={24} className="text-indigo-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">删除问题</h3>
+              <p className="text-sm text-slate-500 leading-relaxed">确定要删除该问题吗？删除后无法恢复。</p>
+            </div>
+            <div className="flex border-t border-gray-100">
+              <button onClick={() => { setQuestionDeleteModalVisible(false); setDeletingQuestion(null); }}
+                className="flex-1 py-4 text-center text-slate-600 font-medium hover:bg-gray-50 transition-colors"
+              >取消</button>
+              <button onClick={handleConfirmDelete}
+                className="flex-1 py-4 text-center text-white font-medium bg-indigo-600 hover:bg-indigo-700 transition-colors"
+              >确认删除</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Question Modal */}
+      {questionAddModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => { setQuestionAddModalVisible(false); setNewQuestionName(''); }} />
+          <div className="relative bg-white rounded-2xl w-[85%] max-w-[340px] shadow-xl animate-fadeIn">
+            <div className="pt-5 pb-3 text-center">
+              <h3 className="text-lg font-semibold text-slate-800">新增问题</h3>
+            </div>
+            <div className="px-5 pb-5">
+              <textarea
+                value={newQuestionName}
+                onChange={(e) => setNewQuestionName(e.target.value)}
+                className="w-full min-h-[120px] p-4 text-base text-slate-700 bg-gray-50 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none resize-none transition-all"
+                placeholder="请输入问题内容"
+              />
+            </div>
+            <div className="flex border-t border-gray-100">
+              <button onClick={() => { setQuestionAddModalVisible(false); setNewQuestionName(''); }}
+                className="flex-1 py-4 text-center text-slate-600 font-medium hover:bg-gray-50 rounded-bl-2xl transition-colors"
+              >取消</button>
+              <button onClick={handleConfirmAdd}
+                className="flex-1 py-4 text-center text-white font-medium rounded-br-2xl transition-colors bg-primary-gradient"
+              >确认</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
