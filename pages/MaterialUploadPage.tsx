@@ -7,7 +7,6 @@ import VoiceInputModal from '../components/VoiceInputModal';
 import { DealRecord, Resource, QuestionInfo } from '../types';
 import { dealService } from '../services/dealService';
 import { templateService, ReportTemplate } from '../services/templateService';
-import { TemplateInfo } from '../services/questionService';
 import { nativeBridge } from '../services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
 import config from '../config';
@@ -47,9 +46,6 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const [resources, setResources] = useState<Resource[]>([]);
   const [questions, setQuestions] = useState<QuestionInfo[]>([]);
   const [fileProgressMap, setFileProgressMap] = useState<Record<string, { progress: number; status: string }>>({});
-
-  // 模板分类列表
-  const [questionCategories, setQuestionCategories] = useState<TemplateInfo[]>([]);
 
   // 标记各个 tab 的数据是否已加载
   const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set());
@@ -111,25 +107,6 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     }
   };
 
-  // 获取问题清单分类列表
-  const fetchQuestions = async () => {
-    if (!deal?.id) {
-      setQuestions([]);
-      setQuestionCategories([]);
-      return;
-    }
-
-    try {
-      // 直接查询所有可用的问题清单分类，不依赖 questionId
-      const res = await dealService.getTemplateList(deal.id);
-      if (res.success && res.data) {
-        setQuestionCategories(res.data || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch question templates:', error);
-    }
-  };
-
   // 获取模板详情
   const fetchTemplateDetail = async () => {
     if (!deal?.templateId) {
@@ -165,17 +142,6 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     }
   }, [deal?.questionInfoList]);
 
-  // 当 deal 变化时，重新获取分类列表
-  useEffect(() => {
-    if (deal?.id) {
-      dealService.getTemplateList(deal.id).then(res => {
-        if (res.success && res.data) {
-          setQuestionCategories(res.data || []);
-        }
-      });
-    }
-  }, [deal?.id]);
-
   // 当 activeTab 变化时，懒加载对应 tab 的数据
   useEffect(() => {
     const loadTabData = async () => {
@@ -188,9 +154,6 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           break;
         case 'template':
           await fetchTemplateDetail();
-          break;
-        case 'questions':
-          await fetchQuestions();
           break;
       }
 
@@ -1480,7 +1443,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       <QuestionListPicker
         visible={templateModalVisible}
         onClose={() => setTemplateModalVisible(false)}
-        templates={questionCategories}
+        dealId={deal?.id || ''}
         onAdd={handleAddQuestionLists}
       />
 

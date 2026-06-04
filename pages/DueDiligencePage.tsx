@@ -3,7 +3,7 @@ import { useThrottleFn } from '../hooks/useThrottleFn';
 import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
-import { DealRecord, DealReportStatusEnum, SummaryStatusEnum, TemplateInfo } from '../types';
+import { DealRecord, DealReportStatusEnum, SummaryStatusEnum } from '../types';
 import { dealService } from '../services/dealService';
 import { nativeBridge } from '@/services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
@@ -53,7 +53,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [showLimitTips, setShowLimitTips] = useState(false);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
-  const [templates, setTemplates] = useState<TemplateInfo[]>([]);
   const [isAnalyzingAi, setIsAnalyzingAi] = useState(false);
   const [aiInsightList, setAiInsightList] = useState<any[]>([]);
   const [voiceModalInitialContent, setVoiceModalInitialContent] = useState('');
@@ -76,17 +75,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [isSyncing, setIsSyncing] = useState(false);
   const [loadingEnterprise, setLoadingEnterprise] = useState(false);
   const [lastEnterpriseKey, setLastEnterpriseKey] = useState<string>(''); // 用于记录上次抓取时的企业标识
-
-  const fetchQuestionListTemplates = async (dealId: string) => {
-    try {
-      const res = await dealService.getTemplateList(dealId);
-      if (res.success && res.data) {
-        setTemplates(res.data);
-      }
-    } catch (e) {
-      console.error('Failed to fetch question list templates:', e);
-    }
-  };
 
   const fetchDealDetail = async () => {
     if (!deal?.id) return;
@@ -152,7 +140,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     setDealDetail(null);
     setInterviewRecords([]);
     setInterviewTotalCount(0);
-    fetchQuestionListTemplates(deal.id);
 
     fetchDealDetail();
     fetchInterviewRecords();
@@ -1531,7 +1518,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       <QuestionListPicker
         visible={templateModalVisible}
         onClose={() => setTemplateModalVisible(false)}
-        templates={templates}
+        dealId={currentDeal?.id || ''}
         onAdd={handleAddQuestionList}
       />
     </div>
