@@ -454,10 +454,10 @@ export const dealService = {
    * 获取模板列表
    * GET /api/templateInfo/getTemplateList
    */
-  getTemplateList: (interviewDealInstId: string) => {
+  getTemplateList: (interviewDealInstId?: string) => {
     return request<ApiResponse<any[]>>('/templateInfo/getTemplateList', {
       method: 'GET',
-      params: { interviewDealInstId },
+      params: interviewDealInstId ? { interviewDealInstId } : undefined,
     });
   },
 

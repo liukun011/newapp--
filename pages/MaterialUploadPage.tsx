@@ -673,12 +673,11 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         if (detailRes.success && detailRes.data && detailRes.data.questionInfoList) {
           setQuestions(detailRes.data.questionInfoList);
         }
-      } else {
-        Toast.fail(res.message || '添加失败');
       }
-    } catch (e) {
+    } catch (e: any) {
       Toast.clear();
       console.error('Add question list failed:', e);
+      Toast.fail(e.message || '添加失败');
     }
   };
 
@@ -1455,7 +1454,6 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       <QuestionListPicker
         visible={templateModalVisible}
         onClose={() => setTemplateModalVisible(false)}
-        dealId={deal?.id || ''}
         onAdd={handleAddQuestionLists}
       />
 

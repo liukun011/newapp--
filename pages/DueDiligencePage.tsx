@@ -735,13 +735,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         Toast.clear();
         await fetchDealDetail();
         Toast.success('清单已更新');
-      } else {
-        Toast.clear();
-        Toast.fail(res.message || '添加失败');
       }
-    } catch (e) {
+    } catch (e: any) {
       Toast.clear();
       console.error('Add question list failed:', e);
+      Toast.fail(e.message || '添加失败');
     }
   };
 
@@ -1518,7 +1516,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       <QuestionListPicker
         visible={templateModalVisible}
         onClose={() => setTemplateModalVisible(false)}
-        dealId={currentDeal?.id || ''}
         onAdd={handleAddQuestionList}
       />
     </div>

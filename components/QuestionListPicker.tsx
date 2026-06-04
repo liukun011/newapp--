@@ -6,14 +6,12 @@ import { dealService } from '../services/dealService';
 interface QuestionListPickerProps {
   visible: boolean;
   onClose: () => void;
-  dealId: string;
   onAdd: (ids: string[]) => Promise<void>;
 }
 
 const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
   visible,
   onClose,
-  dealId,
   onAdd
 }) => {
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>([]);
@@ -24,11 +22,11 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
 
   // 每次打开时重新获取数据
   React.useEffect(() => {
-    if (visible && dealId) {
+    if (visible) {
       setTempSelectedIds([]);
       setLoadFailed(false);
       setLoading(true);
-      dealService.getTemplateList(dealId).then(res => {
+      dealService.getTemplateList().then(res => {
         if (res.success && res.data) {
           setTemplates(res.data);
         } else {
@@ -41,7 +39,7 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
         setLoading(false);
       });
     }
-  }, [visible, dealId]);
+  }, [visible]);
 
   const toggle = (id: string) => {
     setTempSelectedIds((prev) =>
