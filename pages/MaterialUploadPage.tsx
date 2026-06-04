@@ -596,13 +596,17 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       if (deal?.id) {
         try {
           Toast.loading({ message: '保存中...', duration: 0 });
-          await dealService.createOrUpdateDealInst({
+          const res = await dealService.createOrUpdateDealInst({
             id: deal.id,
             questionId: deal.questionId,
             questionInfoList: updatedList,
           });
           Toast.clear();
-          Toast.success('修改成功');
+          if (res.success) {
+            Toast.success('修改成功');
+          } else {
+            Toast.fail(res.message || '保存失败');
+          }
         } catch (e) {
           Toast.clear();
           console.error('Failed to save question edit:', e);
@@ -633,13 +637,17 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       if (deal?.id) {
         try {
           Toast.loading({ message: '保存中...', duration: 0 });
-          await dealService.createOrUpdateDealInst({
+          const res = await dealService.createOrUpdateDealInst({
             id: deal.id,
             questionId: deal.questionId,
             questionInfoList: updatedList,
           });
           Toast.clear();
-          Toast.success('添加成功');
+          if (res.success) {
+            Toast.success('添加成功');
+          } else {
+            Toast.fail(res.message || '保存失败');
+          }
         } catch (e) {
           Toast.clear();
           console.error('Failed to save new question:', e);
@@ -686,13 +694,17 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       if (deal?.id) {
         try {
           Toast.loading({ message: '保存中...', duration: 0 });
-          await dealService.createOrUpdateDealInst({
+          const res = await dealService.createOrUpdateDealInst({
             id: deal.id,
             questionId: deal.questionId,
             questionInfoList: reindexedList,
           });
           Toast.clear();
-          Toast.success('删除成功');
+          if (res.success) {
+            Toast.success('删除成功');
+          } else {
+            Toast.fail(res.message || '保存失败');
+          }
         } catch (e) {
           Toast.clear();
           console.error('Failed to save after delete:', e);

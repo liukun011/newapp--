@@ -19,19 +19,24 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // 每次打开时重新获取数据
   React.useEffect(() => {
     if (visible && dealId) {
       setTempSelectedIds([]);
+      setLoadFailed(false);
       setLoading(true);
       dealService.getTemplateList(dealId).then(res => {
         if (res.success && res.data) {
           setTemplates(res.data);
+        } else {
+          setLoadFailed(true);
         }
       }).catch(err => {
         console.error('Failed to fetch question list templates:', err);
+        setLoadFailed(true);
       }).finally(() => {
         setLoading(false);
       });
@@ -89,7 +94,9 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
             </div>
           ) : templates.length === 0 ? (
             <div className="py-20 flex flex-col items-center justify-center gap-3">
-              <span className="text-[14px] text-slate-400 font-medium tracking-wide">暂无清单数据</span>
+              <span className="text-[14px] text-slate-400 font-medium tracking-wide">
+                {loadFailed ? '加载失败，请重试' : '暂无清单数据'}
+              </span>
             </div>
           ) : (
             <div className="space-y-1.5">

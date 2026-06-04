@@ -732,16 +732,16 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         questionIds
       });
       if (res.success) {
+        Toast.clear();
         await fetchDealDetail();
         Toast.success('清单已更新');
       } else {
+        Toast.clear();
         Toast.fail(res.message || '添加失败');
-        throw new Error(res.message);
       }
-    } catch (e: any) {
+    } catch (e) {
+      Toast.clear();
       console.error('Add question list failed:', e);
-      Toast.fail(e.message || '网络错误');
-      throw e;
     }
   };
 
