@@ -322,6 +322,18 @@ export const dealService = {
     });
   },
 
+  /**
+   * 给报告添加问题清单
+   * POST /deal/addQuestion
+   * @param id 尽调实例 ID
+   * @param questionIds 问题清单 ID 数组（可传多个，追加到现有清单中）
+   */
+  addReportQuestionList: (data: { id: string; questionIds: string[] }) => {
+    return request<ApiResponse<any>>('/deal/addQuestion', {
+      method: 'POST',
+      data,
+    });
+  },
 
   /**
    * 补充资料信息（语音录入）

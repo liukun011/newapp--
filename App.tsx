@@ -5,8 +5,6 @@ import { Plus } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import { useRecordingStore } from './store/useRecordingStore';
 import { dealService } from './services/dealService';
-import { templateService } from './services/templateService';
-import { questionService } from './services/questionService';
 // import SplashScreen from './pages/SplashScreen'; (已禁用)
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
@@ -352,53 +350,11 @@ const App: React.FC = () => {
 
 
   /**
-   * 更换模板时同步更新问题列表
+   * 更新本地模板 ID（模板已在服务端更换成功）
    */
-  const handleTemplateChangeSyncQuestions = async (newTemplateId: string) => {
+  const handleTemplateChanged = (newTemplateId: string) => {
     if (!currentDeal?.id) return;
-    
-    try {
-      // 1. 获取模板详情得到 questionId
-      const templateRes = await templateService.getTemplateDetail(newTemplateId);
-      if (templateRes.success && templateRes.data) {
-        const questionId = String(templateRes.data.questionId);
-        
-        // 2. 根据 questionId 查询对应的问题列表 (queryUserProperties 已在 queryQuestionList 中封装)
-        const questionsRes = await questionService.queryQuestionList(questionId);
-        
-        if (questionsRes.success) {
-          // 对问题进行编号
-          const syncedQuestions = (questionsRes.data || []).map((q, i) => ({
-            ...q,
-            questionIndex: i + 1,
-            CHECKED: false
-          }));
-
-          console.log('[App] Synced questions for new template:', syncedQuestions.length);
-
-          // 3. 更新全局 Deal 状态
-          setCurrentDeal({
-            ...currentDeal,
-            templateId: newTemplateId,
-            questionId: Number(questionId), // 同步更新 questionId
-            questionInfoList: syncedQuestions
-          });
-          return;
-        }
-      }
-      
-      // 回退方案：仅更新模板ID
-      setCurrentDeal({
-        ...currentDeal,
-        templateId: newTemplateId
-      });
-    } catch (error) {
-      console.error('[App] Failed to sync questions after template change:', error);
-      setCurrentDeal({
-        ...currentDeal,
-        templateId: newTemplateId
-      });
-    }
+    setCurrentDeal({ ...currentDeal, templateId: newTemplateId });
   };
 
   // 前进导航（跳转到新页面）
@@ -1406,7 +1362,7 @@ const App: React.FC = () => {
                   onTemplateChanged={async (newTemplateId) => {
                     // 更换成功后，同步问题列表
                     if (currentDeal?.id) {
-                      await handleTemplateChangeSyncQuestions(newTemplateId);
+                      await handleTemplateChanged(newTemplateId);
                     } else if (currentDeal) {
                       setCurrentDeal({
                         ...currentDeal,
@@ -1450,7 +1406,7 @@ const App: React.FC = () => {
                         Toast.success('更换成功');
                         
                         // 按照用户需求：同步问题列表
-                        await handleTemplateChangeSyncQuestions(templateId);
+                        await handleTemplateChanged(templateId);
 
                         // 返回到尽调详情页
                         navigateBackward(View.DUE_DILIGENCE);
@@ -1515,8 +1471,8 @@ const App: React.FC = () => {
                          
                          // 同步问题列表 (如果有定义该函数)
                          // 假设该函数在作用域内
-                         if (typeof handleTemplateChangeSyncQuestions === 'function') {
-                            await handleTemplateChangeSyncQuestions(templateId);
+                         if (typeof handleTemplateChanged === 'function') {
+                            await handleTemplateChanged(templateId);
                          }
 
                          // 返回到来源页 (如资料上传页) 而不是死板的详情页

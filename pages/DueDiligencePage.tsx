@@ -8,7 +8,7 @@ import { dealService } from '../services/dealService';
 import { nativeBridge } from '@/services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
 import VoiceInputModal from '../components/VoiceInputModal';
-import TemplateSwitchModal from '../components/TemplateSwitchModal';
+import QuestionListPicker from '../components/QuestionListPicker';
 import config from '../config';
 import {markdownToHtml} from "@/utils/markdownToHtml.ts";
 
@@ -77,14 +77,14 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [loadingEnterprise, setLoadingEnterprise] = useState(false);
   const [lastEnterpriseKey, setLastEnterpriseKey] = useState<string>(''); // 用于记录上次抓取时的企业标识
 
-  const fetchTemplates = async (dealId: string) => {
+  const fetchQuestionListTemplates = async (dealId: string) => {
     try {
       const res = await dealService.getTemplateList(dealId);
       if (res.success && res.data) {
         setTemplates(res.data);
       }
     } catch (e) {
-      console.error('Failed to fetch templates:', e);
+      console.error('Failed to fetch question list templates:', e);
     }
   };
 
@@ -152,7 +152,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     setDealDetail(null);
     setInterviewRecords([]);
     setInterviewTotalCount(0);
-    fetchTemplates(deal.id);
+    fetchQuestionListTemplates(deal.id);
 
     fetchDealDetail();
     fetchInterviewRecords();
@@ -736,27 +736,23 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     onNavigateToRecording();
   }, 1000);
 
-  const handleSwitchTemplate = async (questionId: string) => {
+  const handleAddQuestionList = async (questionIds: string[]) => {
     if (!currentDeal?.id) return;
     try {
-      Toast.loading({ message: '切换中...', duration: 0 });
-      const res = await dealService.createOrUpdateDealInst({
+      Toast.loading({ message: '添加中...', duration: 0 });
+      const res = await dealService.addReportQuestionList({
         id: currentDeal.id,
-        questionId: questionId
+        questionIds
       });
       if (res.success) {
-        // 成功后全量拉取最新详情和模板列表，触发 UI 同步更新
-        await Promise.all([
-          fetchDealDetail(),
-          fetchTemplates(currentDeal.id)
-        ]);
+        await fetchDealDetail();
         Toast.success('清单已更新');
       } else {
-        Toast.fail(res.message || '切换失败');
+        Toast.fail(res.message || '添加失败');
         throw new Error(res.message);
       }
     } catch (e: any) {
-      console.error('Switch template failed:', e);
+      console.error('Add question list failed:', e);
       Toast.fail(e.message || '网络错误');
       throw e;
     }
@@ -1377,16 +1373,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             const questionList = currentDeal?.questionInfoList || [];
             const totalCount = questionList.length;
             const checkedCount = questionList.filter((q) => q.CHECKED === true).length;
-            const qId = (currentDeal as any)?.questionId || currentDeal?.reportTemplate?.id;
-            const matchedTemplate = templates.find(t => String(t.id) === String(qId));
-            const templateName = matchedTemplate?.templateName || currentDeal?.reportTemplate?.templateName || '默认访谈模板';
-            
-            console.log('[DueDiligence] Template Selection:', {
-                qId,
-                found: !!matchedTemplate,
-                name: templateName
-            });
-            
             // 数据源直接取最开始的两条
             const displayQuestions = questionList.slice(0, 2);
 
@@ -1401,9 +1387,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       <span className="text-[12px] font-medium text-slate-200">/{totalCount}</span>
                     </div>
                   </div>
-                  <p className="text-[13px] text-slate-400 font-medium leading-none">
-                    当前问题清单：<span className="text-slate-500">{templateName}</span>
-                  </p>
                 </div>
 
                 {/* Actions Inline - Medium Size */}
@@ -1416,7 +1399,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     }}
                     className="flex items-center border border-[#EBEBF5] text-slate-700 rounded-full px-5 py-1.5 text-[12px] font-[800] active:bg-gray-50 transition-all shadow-sm"
                   >
-                    切换清单
+                    添加清单
                   </button>
                   <button
                     onClick={(e) => {
@@ -1545,13 +1528,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         }}
       />
       {/* Template Switch Modal */}
-      <TemplateSwitchModal
+      <QuestionListPicker
         visible={templateModalVisible}
         onClose={() => setTemplateModalVisible(false)}
-        dealId={currentDeal?.id || ''}
         templates={templates}
-        currentQuestionId={(currentDeal as any)?.questionId || currentDeal?.reportTemplate?.id}
-        onSelect={handleSwitchTemplate}
+        onAdd={handleAddQuestionList}
       />
     </div>
   );

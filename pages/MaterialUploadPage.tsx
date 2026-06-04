@@ -7,12 +7,12 @@ import VoiceInputModal from '../components/VoiceInputModal';
 import { DealRecord, Resource, QuestionInfo } from '../types';
 import { dealService } from '../services/dealService';
 import { templateService, ReportTemplate } from '../services/templateService';
-import { questionService, TemplateInfo } from '../services/questionService';
+import { TemplateInfo } from '../services/questionService';
 import { nativeBridge } from '../services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
-import { motion, useAnimation } from 'framer-motion';
 import config from '../config';
 import AudioPlayerModal from '../components/AudioPlayerModal';
+import QuestionListPicker from '../components/QuestionListPicker';
 
 
 interface MaterialUploadPageProps {
@@ -48,9 +48,8 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const [questions, setQuestions] = useState<QuestionInfo[]>([]);
   const [fileProgressMap, setFileProgressMap] = useState<Record<string, { progress: number; status: string }>>({});
 
-  // 模板分类列表和选中的分类
-  const [templateCategories, setTemplateCategories] = useState<TemplateInfo[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  // 模板分类列表
+  const [questionCategories, setQuestionCategories] = useState<TemplateInfo[]>([]);
 
   // 标记各个 tab 的数据是否已加载
   const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set());
@@ -74,18 +73,14 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const [newQuestionName, setNewQuestionName] = useState('');
   const [showLimitTips, setShowLimitTips] = useState(false);
 
-  // 分类选择器状态
-  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  // 添加清单弹窗状态
+  const [templateModalVisible, setTemplateModalVisible] = useState(false);
 
   // 音频播放弹窗状态
   const [audioModalVisible, setAudioModalVisible] = useState(false);
   const [currentAudioUrl, setCurrentAudioUrl] = useState('');
   const [currentAudioName, setCurrentAudioName] = useState('');
   const { currentDealId } = useRecordingStore();
-  
-  // Animation controls for floating add button
-  const controls = useAnimation();
-  const bubbleRef = React.useRef<HTMLDivElement>(null);
 
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
@@ -116,43 +111,22 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     }
   };
 
-  // 获取问题列表
+  // 获取问题清单分类列表
   const fetchQuestions = async () => {
-    // 优先使用当前模板的 questionId，否则使用 deal 的 questionId
-    const questionIdToUse = currentTemplate?.questionId
-      ? String(currentTemplate.questionId)
-      : deal?.questionId;
-
-    if (!questionIdToUse) {
+    if (!deal?.id) {
       setQuestions([]);
-      setTemplateCategories([]);
+      setQuestionCategories([]);
       return;
     }
 
     try {
-      // 调用接口，传入 questionId
-      const categoriesRes = await questionService.queryTemplateCategories(questionIdToUse);
-      if (categoriesRes.success && categoriesRes.data) {
-        setTemplateCategories(categoriesRes.data);
-
-        // 在 templateInfoVos 中查找 id === questionId 的分类
-        const matchedCategory = categoriesRes.data.find(c => c.id === questionIdToUse);
-
-        if (matchedCategory) {
-          // 找到匹配的分类，选中它并显示其问题列表 (FRONTEND RE-INDEXING)
-          setSelectedCategoryId(matchedCategory.id);
-          const reindexed = (matchedCategory.questionList || []).map((q, i) => ({ ...q, questionIndex: i + 1 }));
-          setQuestions(reindexed);
-        } else if (categoriesRes.data.length > 0) {
-          // 如果没找到匹配的，默认选中第一个 (FRONTEND RE-INDEXING)
-          const firstCategory = categoriesRes.data[0];
-          setSelectedCategoryId(firstCategory.id);
-          const reindexed = (firstCategory.questionList || []).map((q, i) => ({ ...q, questionIndex: i + 1 }));
-          setQuestions(reindexed);
-        }
+      // 直接查询所有可用的问题清单分类，不依赖 questionId
+      const res = await dealService.getTemplateList(deal.id);
+      if (res.success && res.data) {
+        setQuestionCategories(res.data || []);
       }
     } catch (error) {
-      console.error('Failed to fetch questions:', error);
+      console.error('Failed to fetch question templates:', error);
     }
   };
 
@@ -191,19 +165,16 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     }
   }, [deal?.questionInfoList]);
 
-  // 当模板 ID 变化时，重新获取分类信息以保持 UI 一致 (不覆盖 questions，questions 由上面的 effect 处理)
+  // 当 deal 变化时，重新获取分类列表
   useEffect(() => {
-    if (deal?.questionId) {
-      questionService.queryTemplateCategories(String(deal.questionId)).then(res => {
+    if (deal?.id) {
+      dealService.getTemplateList(deal.id).then(res => {
         if (res.success && res.data) {
-          setTemplateCategories(res.data);
-          // 选中匹配的分类
-          const matched = res.data.find(c => String(c.id) === String(deal.questionId));
-          if (matched) setSelectedCategoryId(matched.id);
+          setQuestionCategories(res.data || []);
         }
       });
     }
-  }, [deal?.templateId, deal?.questionId]);
+  }, [deal?.id]);
 
   // 当 activeTab 变化时，懒加载对应 tab 的数据
   useEffect(() => {
@@ -645,17 +616,6 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
 
 
-  const handleRefreshQuestionsThrottled = useThrottleFn(async () => {
-    // 清除问题列表缓存并重新加载
-    setLoadedTabs(prev => {
-      const newSet = new Set(prev);
-      newSet.delete('questions');
-      return newSet;
-    });
-    await fetchQuestions();
-    Toast.success('刷新成功');
-  }, 1000);
-
   const handleQuestionAddThrottled = useThrottleFn(() => {
     setNewQuestionName('');
     setQuestionAddModalVisible(true);
@@ -669,7 +629,22 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           : q
       );
       setQuestions(updatedList);
-      Toast.success('修改成功');
+
+      if (deal?.id) {
+        try {
+          Toast.loading({ message: '保存中...', duration: 0 });
+          await dealService.createOrUpdateDealInst({
+            id: deal.id,
+            questionId: deal.questionId,
+            questionInfoList: updatedList,
+          });
+          Toast.clear();
+          Toast.success('修改成功');
+        } catch (e) {
+          Toast.clear();
+          console.error('Failed to save question edit:', e);
+        }
+      }
     }
     setQuestionEditModalVisible(false);
   }, 1000);
@@ -677,7 +652,6 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
   const handleAddQuestionConfirmThrottled = useThrottleFn(async () => {
     if (newQuestionName.trim()) {
       const newQuestion: QuestionInfo = {
-        // Temporarily use random ID if needed, or backend will ignore/replace it
         id: String(Date.now()),
         questionName: newQuestionName.trim(),
         questionIndex: questions.length + 1,
@@ -685,59 +659,82 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         questionAnswer: null,
         questionAnswerTime: null,
         questionStatus: '0',
-        templateId: '', // Should be filled if known, or backend handles
+        templateId: '',
         agencyId: '',
         CHECKED: false,
       };
 
       const updatedList = [...questions, newQuestion];
       setQuestions(updatedList);
-      Toast.success('添加成功');
+
+      if (deal?.id) {
+        try {
+          Toast.loading({ message: '保存中...', duration: 0 });
+          await dealService.createOrUpdateDealInst({
+            id: deal.id,
+            questionId: deal.questionId,
+            questionInfoList: updatedList,
+          });
+          Toast.clear();
+          Toast.success('添加成功');
+        } catch (e) {
+          Toast.clear();
+          console.error('Failed to save new question:', e);
+        }
+      }
     }
     setQuestionAddModalVisible(false);
   }, 1000);
 
-  const handleCategorySelect = (categoryId: string) => {
-    if (categoryId === selectedCategoryId) {
-      setShowCategoryPicker(false);
-      return;
-    }
-
-    Dialog.confirm({
-      title: '切换确认',
-      message: '切换模板分类将重置之前新增或修改的问题，是否确认切换？',
-      confirmButtonColor: '#4337F1',
-    })
-      .then(() => {
-        setSelectedCategoryId(categoryId);
-        setShowCategoryPicker(false);
-
-        // 查找对应的分类并更新问题列表
-        const category = templateCategories.find(c => c.id === categoryId);
-        if (category) {
-          // FRONTEND RE-INDEXING
-          const reindexed = (category.questionList || []).map((q, i) => ({ ...q, questionIndex: i + 1 }));
-          setQuestions(reindexed);
-        }
-      })
-      .catch(() => {
-        // 取消切换
+  const handleAddQuestionLists = async (questionIds: string[]) => {
+    if (!deal?.id || questionIds.length === 0) return;
+    try {
+      Toast.loading({ message: '添加中...', duration: 0 });
+      const res = await dealService.addReportQuestionList({
+        id: deal.id,
+        questionIds,
       });
+      Toast.clear();
+      if (res.success) {
+        Toast.success('清单添加成功');
+        setTemplateModalVisible(false);
+        const detailRes = await dealService.getDealInstDetail(deal.id);
+        if (detailRes.success && detailRes.data && detailRes.data.questionInfoList) {
+          setQuestions(detailRes.data.questionInfoList);
+        }
+      } else {
+        Toast.fail(res.message || '添加失败');
+      }
+    } catch (e) {
+      Toast.clear();
+      console.error('Add question list failed:', e);
+    }
   };
 
   const handleDeleteQuestionConfirmThrottled = useThrottleFn(async () => {
     if (deletingQuestion) {
-      // Filter out the deleted question
       const remainingQuestions = questions.filter(q => q.id !== deletingQuestion.id);
-
-      // Re-index remaining questions (FRONTEND MANAGEMENT as requested)
       const reindexedList = remainingQuestions.map((q, index) => ({
         ...q,
         questionIndex: index + 1
       }));
-
       setQuestions(reindexedList);
-      Toast.success('删除成功');
+
+      if (deal?.id) {
+        try {
+          Toast.loading({ message: '保存中...', duration: 0 });
+          await dealService.createOrUpdateDealInst({
+            id: deal.id,
+            questionId: deal.questionId,
+            questionInfoList: reindexedList,
+          });
+          Toast.clear();
+          Toast.success('删除成功');
+        } catch (e) {
+          Toast.clear();
+          console.error('Failed to save after delete:', e);
+        }
+      }
     }
     setQuestionDeleteModalVisible(false);
   }, 1000);
@@ -1191,31 +1188,21 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         {/* Tab 3: Questions */}
         {activeTab === 'questions' && (
           <div className="flex flex-col h-full p-4 pb-2 overflow-hidden relative">
-            {/* Category Selector and Refresh Button */}
+            {/* Action Buttons */}
             <div className="flex items-center gap-3">
-              {/* Custom Category Picker Trigger */}
-              <div className="flex-1 relative">
-                <button
-                  onClick={() => setShowCategoryPicker(true)}
-                  className="w-full h-12 px-4 pr-10 bg-white text-slate-800 text-sm rounded-xl border border-gray-200 flex items-center justify-between active:bg-gray-50 transition-all text-left truncate"
-                >
-                  <span className="truncate">
-                    {templateCategories.find(c => c.id === selectedCategoryId)?.templateName || '请选择分类'}
-                  </span>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </button>
-              </div>
-
-              {/* Refresh Button */}
               <button
-                onClick={handleRefreshQuestionsThrottled}
-                className="w-12 h-12 flex items-center justify-center bg-white rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
+                onClick={() => setTemplateModalVisible(true)}
+                className="flex-1 h-12 rounded-xl bg-white border border-indigo-100 text-indigo-600 font-bold text-[14px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all shadow-sm"
               >
-                <RefreshCw size={20} />
+                <Plus size={18} strokeWidth={2.5} />
+                添加清单
+              </button>
+              <button
+                onClick={() => handleQuestionAddThrottled()}
+                className="flex-1 h-12 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-[14px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all shadow-sm"
+              >
+                <Plus size={18} strokeWidth={2.5} />
+                手动添加
               </button>
             </div>
 
@@ -1283,38 +1270,6 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               </div>
             )}
 
-            {/* Add Question Button (Draggable) */}
-            <motion.div
-              ref={bubbleRef}
-              animate={controls}
-              drag
-              dragMomentum={false}
-              whileDrag={{ scale: 1.1 }}
-              dragConstraints={{ left: -window.innerWidth + 60, right: 0, top: -window.innerHeight + 100, bottom: 0 }}
-              onDragEnd={() => {
-                if (!bubbleRef.current) return;
-                const rect = bubbleRef.current.getBoundingClientRect();
-                const screenWidth = window.innerWidth;
-                const centerX = rect.left + rect.width / 2;
-                
-                // Determine if we should snap to left or right
-                if (centerX < screenWidth / 2) {
-                   const targetX = -(screenWidth - 32 - rect.width);
-                   controls.start({ x: targetX, transition: { type: "spring", stiffness: 400, damping: 30 } });
-                } else {
-                   // Snap to Right Edge (initial position)
-                   controls.start({ x: 0, transition: { type: "spring", stiffness: 400, damping: 30 } });
-                }
-              }}
-              className="fixed right-6 bottom-24 z-40"
-            >
-              <button
-                onClick={(e) => { e.stopPropagation(); handleQuestionAddThrottled(); }}
-                className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-transform active:scale-95 bg-primary-gradient"
-              >
-                <Plus size={24} />
-              </button>
-            </motion.div>
           </div>
         )}
 
@@ -1521,43 +1476,13 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         </div>
       )}
 
-      {/* Category Picker ActionSheet-like Modal */}
-      {showCategoryPicker && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowCategoryPicker(false)}
-          />
-          <div className="relative bg-white w-full rounded-t-[24px] max-h-[70vh] flex flex-col animate-slide-up overflow-hidden pb-8">
-            <div className="p-5 border-b border-gray-50 flex items-center justify-between sticky top-0 bg-white z-10">
-              <span className="text-gray-400 text-sm" onClick={() => setShowCategoryPicker(false)}>取消</span>
-              <span className="text-base font-bold text-slate-800">选择问题集</span>
-              <span className="text-indigo-600 text-sm font-bold" onClick={() => setShowCategoryPicker(false)}>完成</span>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <div className="px-2">
-                {templateCategories.map((category) => {
-                  const isSelected = category.id === selectedCategoryId;
-                  return (
-                    <div
-                      key={category.id}
-                      onClick={() => handleCategorySelect(category.id)}
-                      className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50 last:border-b-0"
-                    >
-                      <span className={`text-[16px] flex-1 mr-2 truncate ${isSelected ? 'text-indigo-600 font-bold' : 'text-slate-700'}`}>
-                        {category.templateName}
-                      </span>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'}`}>
-                        {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Question List Picker Modal */}
+      <QuestionListPicker
+        visible={templateModalVisible}
+        onClose={() => setTemplateModalVisible(false)}
+        templates={questionCategories}
+        onAdd={handleAddQuestionLists}
+      />
 
       {/* Audio Player Modal */}
       <AudioPlayerModal
