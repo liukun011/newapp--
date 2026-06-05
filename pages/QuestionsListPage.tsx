@@ -362,7 +362,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                             </span>
                           ) : (
                             <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${isAiSource ? 'bg-indigo-50 text-indigo-500' : 'bg-blue-50 text-blue-500'}`}>
-                              {isAiSource ? 'AI 洞察问题' : '模板预设问题'}
+                              {isAiSource ? 'AI 洞察问题' : '清单添加问题'}
                             </span>
                           )}
                           {!isAiRaw && isChecked && <span className="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded">已访谈</span>}
