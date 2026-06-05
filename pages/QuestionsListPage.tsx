@@ -14,8 +14,6 @@ export interface AiInsightQuestion {
 
 interface QuestionsListPageProps {
   dealId?: string;
-  dealName?: string;
-  dealLogo?: string;
   questionId?: string | number;
   questionInfoList?: QuestionInfo[];
   onBack: () => void;
@@ -27,8 +25,6 @@ type TabType = 'ALL' | 'PENDING';
 
 const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   dealId,
-  dealName = '尽调详情',
-  dealLogo,
   questionId,
   questionInfoList = [],
   onBack,
@@ -101,7 +97,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
           await dealService.acceptAiInsight(dealId, aiInsightsToAccept);
         }
 
-        // 2. 清洗数据并保存全量清单
+        // 2. 保存全量清单
         const cleanedQuestions = currentQuestions.map(q => {
            if (q.id && String(q.id).startsWith('temp_')) {
                const { id, ...rest } = q;
@@ -109,14 +105,20 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
            }
            return q;
          });
-         
-        await onSave(cleanedQuestions); 
+
+        await dealService.createOrUpdateDealInst({
+          id: dealId,
+          questionId,
+          questionInfoList: cleanedQuestions,
+        });
+
+        onSave?.(cleanedQuestions);
         isDirtyRef.current = false;
-        if (showToast) Toast.clear(); 
-    } catch(e) { 
+        if (showToast) Toast.clear();
+    } catch(e) {
         console.error('[QuestionsList] Save error:', e);
-        if (showToast) Toast.clear(); 
-        hasCalledSaveRef.current = false; 
+        if (showToast) Toast.clear();
+        hasCalledSaveRef.current = false;
     }
   };
 
@@ -171,18 +173,18 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
       return;
     }
 
-    const newQ: QuestionInfo = { 
+    const newQ: QuestionInfo = {
         id: `temp_ai_${Date.now()}`,
-        questionName: aiQ.questionContent.trim(), 
-        questionIndex: questionsRef.current.length + 1, 
-        recStatus: '1', 
-        questionAnswer: null, 
-        questionAnswerTime: null, 
-        questionStatus: '0', 
+        questionName: aiQ.questionContent.trim(),
+        questionIndex: questionsRef.current.length + 1,
+        recStatus: '1',
+        questionAnswer: null,
+        questionAnswerTime: null,
+        questionStatus: '0',
         questionType: '2',
-        templateId: '', 
-        agencyId: '', 
-        CHECKED: false 
+        templateId: '',
+        agencyId: '',
+        CHECKED: false
     };
 
     // 立即更新 Ref 和 State
@@ -192,6 +194,36 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
     // 明确标记为已脏
     isDirtyRef.current = true;
     Toast.success('已加入清单');
+  };
+
+  // === 通用保存 ===
+  const saveQuestions = async (updatedList: QuestionInfo[], successMsg: string) => {
+    if (!dealId) return;
+    try {
+      Toast.loading({ message: '保存中...', duration: 0 });
+      // 清理临时 ID，与 performSave 保持一致
+      const cleanedList = updatedList.map(q => {
+        if (q.id && String(q.id).startsWith('temp_')) {
+          const { id, ...rest } = q;
+          return rest as QuestionInfo;
+        }
+        return q;
+      });
+      const res = await dealService.createOrUpdateDealInst({
+        id: dealId,
+        questionId,
+        questionInfoList: cleanedList,
+      });
+      Toast.clear();
+      if (res.success) {
+        Toast.success(successMsg);
+        onSave?.(updatedList);
+      }
+    } catch (e: any) {
+      Toast.clear();
+      console.error('Failed to save questions:', e);
+      Toast.fail(e.message || '保存失败');
+    }
   };
 
   // === 手动编辑问题 ===
@@ -208,23 +240,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
       q.id === editingQuestion.id ? { ...q, questionName: editedQuestionName.trim() } : q
     );
     setLocalQuestions(updatedList);
-
-    try {
-      Toast.loading({ message: '保存中...', duration: 0 });
-      const res = await dealService.createOrUpdateDealInst({
-        id: dealId,
-        questionId: questionId,
-        questionInfoList: updatedList,
-      });
-      Toast.clear();
-      if (res.success) {
-        Toast.success('修改成功');
-      }
-    } catch (e: any) {
-      Toast.clear();
-      console.error('Failed to save question edit:', e);
-      Toast.fail(e.message || '保存失败');
-    }
+    await saveQuestions(updatedList, '修改成功');
     setQuestionEditModalVisible(false);
   };
 
@@ -235,35 +251,20 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
     const newQuestion: QuestionInfo = {
       id: String(Date.now()),
       questionName: newQuestionName.trim(),
-      questionIndex: questionsRef.current.length + 1,
+      questionIndex: 1,
       recStatus: '1',
       questionAnswer: null,
       questionAnswerTime: null,
       questionStatus: '0',
+      questionType: '3',
       templateId: '',
       agencyId: '',
       CHECKED: false,
     };
 
-    const updatedList = [...questionsRef.current, newQuestion];
+    const updatedList = [newQuestion, ...questionsRef.current];
     setLocalQuestions(updatedList);
-
-    try {
-      Toast.loading({ message: '保存中...', duration: 0 });
-      const res = await dealService.createOrUpdateDealInst({
-        id: dealId,
-        questionId: questionId,
-        questionInfoList: updatedList,
-      });
-      Toast.clear();
-      if (res.success) {
-        Toast.success('添加成功');
-      }
-    } catch (e: any) {
-      Toast.clear();
-      console.error('Failed to save new question:', e);
-      Toast.fail(e.message || '保存失败');
-    }
+    await saveQuestions(updatedList, '添加成功');
     setQuestionAddModalVisible(false);
     setNewQuestionName('');
   };
@@ -280,23 +281,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
     const remainingQuestions = questionsRef.current.filter(q => q.id !== deletingQuestion.id);
     const reindexedList = remainingQuestions.map((q, index) => ({ ...q, questionIndex: index + 1 }));
     setLocalQuestions(reindexedList);
-
-    try {
-      Toast.loading({ message: '保存中...', duration: 0 });
-      const res = await dealService.createOrUpdateDealInst({
-        id: dealId,
-        questionId: questionId,
-        questionInfoList: reindexedList,
-      });
-      Toast.clear();
-      if (res.success) {
-        Toast.success('删除成功');
-      }
-    } catch (e: any) {
-      Toast.clear();
-      console.error('Failed to save after delete:', e);
-      Toast.fail(e.message || '保存失败');
-    }
+    await saveQuestions(reindexedList, '删除成功');
     setQuestionDeleteModalVisible(false);
     setDeletingQuestion(null);
   };

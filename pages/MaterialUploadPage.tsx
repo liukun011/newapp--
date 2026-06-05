@@ -604,12 +604,11 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           Toast.clear();
           if (res.success) {
             Toast.success('修改成功');
-          } else {
-            Toast.fail(res.message || '保存失败');
           }
-        } catch (e) {
+        } catch (e: any) {
           Toast.clear();
           console.error('Failed to save question edit:', e);
+          Toast.fail(e.message || '保存失败');
         }
       }
     }
@@ -621,17 +620,18 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
       const newQuestion: QuestionInfo = {
         id: String(Date.now()),
         questionName: newQuestionName.trim(),
-        questionIndex: questions.length + 1,
+        questionIndex: 1,
         recStatus: '1',
         questionAnswer: null,
         questionAnswerTime: null,
         questionStatus: '0',
+        questionType: '3',
         templateId: '',
         agencyId: '',
         CHECKED: false,
       };
 
-      const updatedList = [...questions, newQuestion];
+      const updatedList = [newQuestion, ...questions];
       setQuestions(updatedList);
 
       if (deal?.id) {
@@ -645,12 +645,11 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           Toast.clear();
           if (res.success) {
             Toast.success('添加成功');
-          } else {
-            Toast.fail(res.message || '保存失败');
           }
-        } catch (e) {
+        } catch (e: any) {
           Toast.clear();
           console.error('Failed to save new question:', e);
+          Toast.fail(e.message || '保存失败');
         }
       }
     }
@@ -701,12 +700,11 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           Toast.clear();
           if (res.success) {
             Toast.success('删除成功');
-          } else {
-            Toast.fail(res.message || '保存失败');
           }
-        } catch (e) {
+        } catch (e: any) {
           Toast.clear();
           console.error('Failed to save after delete:', e);
+          Toast.fail(e.message || '保存失败');
         }
       }
     }

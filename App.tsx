@@ -357,6 +357,26 @@ const App: React.FC = () => {
     setCurrentDeal({ ...currentDeal, templateId: newTemplateId });
   };
 
+  /**
+   * 刷新尽调详情
+   */
+  const refreshDealDetail = async (): Promise<boolean> => {
+    const dealId = currentDeal?.id;
+    if (!dealId) return false;
+    try {
+      const res = await dealService.getDealInstDetail(dealId);
+      if (res.success && res.data) {
+        setCurrentDeal(res.data);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Refresh deal detail failed:', e);
+      Toast.fail('刷新详情失败');
+      return false;
+    }
+  };
+
   // 前进导航（跳转到新页面）
   const navigateForward = (view: View) => {
     console.log(`[App] navigateForward to: ${view}. Previous Stack:`, viewStack);
@@ -453,11 +473,7 @@ const App: React.FC = () => {
 
           // 如果回退到详情页，尝试刷新详情数据
           if (previousView === View.DUE_DILIGENCE && currentDealRef.current?.id) {
-            dealService.getDealInstDetail(currentDealRef.current.id).then(res => {
-              if (res.success && res.data) {
-                setCurrentDeal(res.data);
-              }
-            }).catch(err => console.error('Auto-refresh deal detail failed:', err));
+            refreshDealDetail();
           }
         }
         // 情况B: 栈里没记录了（比如刷新后 stack重置了，但 currentView 是二级页面），强制回首页
@@ -1508,12 +1524,7 @@ const App: React.FC = () => {
                               navigateBackward(View.DUE_DILIGENCE);
                               
                               // 尝试刷新 currentDeal 状态
-                              try {
-                                  const detailRes = await dealService.getDealInstDetail(currentDeal.id);
-                                  if (detailRes.success && detailRes.data) {
-                                      setCurrentDeal(detailRes.data);
-                                  }
-                              } catch(e) { console.error(e); }
+                              refreshDealDetail();
 
                            } else {
                               Toast.fail(res.message || '提交失败');
@@ -1536,8 +1547,6 @@ const App: React.FC = () => {
               {currentView === View.QUESTIONS_LIST && (
                 <QuestionsListPage
                   dealId={currentDeal?.id}
-                  dealName={currentDeal?.enterpriseName || (currentDeal as any)?.interviewCust}
-                  dealLogo={currentDeal?.logo}
                   questionId={currentDeal?.questionId}
                   questionInfoList={currentDeal?.questionInfoList || []}
                   isArchived={currentDeal?.status === '5' || currentDeal?.dealType === 1}
@@ -1545,21 +1554,11 @@ const App: React.FC = () => {
                   onSave={async (finalQuestions) => {
                     const deal = currentDealRef.current;
                     if (deal) {
-                      try {
-                        await dealService.createOrUpdateDealInst({
-                          id: deal.id,
-                          questionId: deal.questionId,
-                          questionInfoList: finalQuestions
-                        });
-
-                        setCurrentDeal({
-                          ...deal,
-                          questionInfoList: finalQuestions
-                        });
-                      } catch (e) {
-                        console.error('Save all questions failed:', e);
-                        throw e; // Check if QuestionsListPage handles this
-                      }
+                      setCurrentDeal({
+                        ...deal,
+                        questionInfoList: finalQuestions
+                      });
+                      refreshDealDetail();
                     }
                   }}
                 />
