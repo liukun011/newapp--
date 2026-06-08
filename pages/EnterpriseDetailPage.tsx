@@ -1,13 +1,54 @@
 import React from 'react';
 import { ArrowLeft, Building2, ShieldCheck, History } from 'lucide-react';
 
+const fallbackBasic = {
+  name: '杭州云杉智能科技有限公司',
+  creditCode: '91330100MA2MOCK001',
+  regStatus: '存续',
+  legalPersonName: '王明远',
+  regCapital: '3000万人民币',
+  estiblishTime: '2019-04-12',
+  industry: '软件和信息技术服务业',
+  staffNumRange: '100-299人',
+  regLocation: '浙江省杭州市西湖区 mock 路 88 号',
+  companyOrgType: '有限责任公司',
+  regInstitute: '杭州市市场监督管理局',
+  regNumber: '330100MOCK001',
+  orgNumber: 'MA2MOCK001',
+  approvedTime: '2026-05-20',
+  historyNames: ['杭州云杉数据科技有限公司'],
+};
+
+const fallbackEnterpriseData = {
+  ...fallbackBasic,
+  basicInfo: JSON.stringify({ result: fallbackBasic }),
+  equityChange: JSON.stringify({
+    result: {
+      items: [
+        {
+          investor_name: '小狸产业基金',
+          change_time: '2025-12-18',
+          ratio_before: '12%',
+          ratio_after: '18%',
+        },
+        {
+          investor_name: '创始团队持股平台',
+          change_time: '2025-06-30',
+          ratio_before: '46%',
+          ratio_after: '42%',
+        },
+      ],
+    },
+  }),
+};
+
 interface EnterpriseDetailPageProps {
   data: any;
   onBack: () => void;
 }
 
 const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBack }) => {
-  const info = data || {};
+  const info = data && Object.keys(data).length > 0 ? data : fallbackEnterpriseData;
   
   // 解析 basicInfo JSON 字符串
   let parsedBasic: any = {};
@@ -23,10 +64,10 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
   // 解析 equityChange JSON 字符串
   let parsedEquityChanges: any[] = [];
   try {
-    const rawEquity = data?.equityChange;
+    const rawEquity = info?.equityChange || parsedBasic?.equityChange;
     if (rawEquity) {
       const parsed = typeof rawEquity === 'string' ? JSON.parse(rawEquity) : rawEquity;
-      parsedEquityChanges = parsed?.result?.items || (Array.isArray(parsed) ? parsed : []);
+      parsedEquityChanges = parsed?.result?.items || parsed?.items || (Array.isArray(parsed) ? parsed : []);
     }
   } catch (e) {
     console.error('Failed to parse equityChange JSON:', e);

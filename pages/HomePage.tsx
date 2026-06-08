@@ -247,6 +247,8 @@ const HomePage: React.FC<HomePageProps> = ({
   };
 
   // 加载更多数据
+  const getStatusFilter = (tab: "ongoing" | "archived") => tab === "ongoing" ? ["1"] : ["5"];
+
   const loadMore = async () => {
     if (loadingMore || !hasMore) return;
     
@@ -257,7 +259,7 @@ const HomePage: React.FC<HomePageProps> = ({
         pageNo: nextPage,
         pageSize: 10, // 每次加载10条
         dealInstTitle: searchQuery,
-        status: activeTab === "ongoing" ? ["1"] : ["5"],
+        status: getStatusFilter(activeTab),
       });
 
       if (res.success && res.data) {
@@ -278,7 +280,7 @@ const HomePage: React.FC<HomePageProps> = ({
     }
   };
 
-  const fetchDeals = async (showGlobalLoading = true, resetPage = false) => {
+  const fetchDeals = async (showGlobalLoading = true, resetPage = false, tab: "ongoing" | "archived" = activeTab) => {
     if (showGlobalLoading) setLoading(true);
     
     const currentPage = resetPage ? 1 : pageNo;
@@ -289,7 +291,7 @@ const HomePage: React.FC<HomePageProps> = ({
         pageNo: currentPage,
         pageSize: 10, // 每次加载10条
         dealInstTitle: searchQuery,
-        status: activeTab === "ongoing" ? ["1"] : ["5"], 
+        status: getStatusFilter(tab),
       });
       
       const delayPromise = !showGlobalLoading 
@@ -354,6 +356,15 @@ const HomePage: React.FC<HomePageProps> = ({
   // 手动触发搜索
   const handleSearch = () => {
     setSearchQuery(searchTerm);
+  };
+
+  const switchTab = (tab: "ongoing" | "archived") => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+    setDeals([]);
+    setPageNo(1);
+    setHasMore(true);
+    fetchDeals(true, true, tab);
   };
 
   // 支持回车键搜索
@@ -627,8 +638,7 @@ const HomePage: React.FC<HomePageProps> = ({
                     : "text-gray-500 hover:text-gray-600"
                 }`}
                 onClick={() => {
-                  setActiveTab("ongoing");
-                  onTabChange?.("ongoing");
+                  switchTab("ongoing");
                 }}
               >
                 进行中
@@ -640,8 +650,7 @@ const HomePage: React.FC<HomePageProps> = ({
                     : "text-gray-500 hover:text-gray-600"
                 }`}
                 onClick={() => {
-                  setActiveTab("archived");
-                  onTabChange?.("archived");
+                  switchTab("archived");
                 }}
               >
                 已归档

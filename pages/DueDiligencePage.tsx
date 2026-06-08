@@ -237,6 +237,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
   // WebSocket 实时接收报告生成状态 & 尽调总结状态更新
   useEffect(() => {
+    if (config.isMock) return;
+
     // 关闭连接：所有生成任务已完成或页面已无关联数据
     if (!wsShouldBeConnected) {
       if (wsRef.current) {

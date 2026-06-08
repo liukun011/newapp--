@@ -287,6 +287,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   }, [isRecording, interviewInstId]);
 
   const formatTime = (totalSeconds: number) => {
+    if (!Number.isFinite(totalSeconds)) return '00:00:00';
     const hrs = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
     const secs = totalSeconds % 60;

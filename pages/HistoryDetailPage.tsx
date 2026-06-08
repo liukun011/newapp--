@@ -19,6 +19,9 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
   interviewInstTitle,
   onBack
 }) => {
+  const fallbackInterview = deal?.interviewInstList?.[0];
+  const effectiveInterviewInstId = interviewInstId || fallbackInterview?.interviewInstId || fallbackInterview?.id || '';
+  const effectiveInterviewInstTitle = interviewInstTitle || fallbackInterview?.interviewInstTitle || fallbackInterview?.interviewInstName || '访谈详情';
   const [activeTab, setActiveTab] = useState<'questions' | 'transcription'>('questions');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [expandedQuestion, setExpandedQuestion] = useState<number | string | null>(null);
@@ -50,11 +53,11 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
 
   // 获取录音文件
   useEffect(() => {
-    if (interviewInstId) {
+    if (effectiveInterviewInstId) {
       const fetchAudio = async () => {
         try {
           const res = await dealService.queryInterviewRecordFileInstByInterviewInstId({
-             interviewInstId
+             interviewInstId: effectiveInterviewInstId
           });
           if (res.success && res.data) {
              // 使用 recordFileUrl 字段
@@ -70,7 +73,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
       };
       fetchAudio();
     }
-  }, [interviewInstId]);
+  }, [effectiveInterviewInstId]);
 
   // 监听原生返回键
   useEffect(() => {
@@ -153,7 +156,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
 
   // 格式化时间
   const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return '00:00:00';
+    if (!Number.isFinite(seconds)) return '00:00:00';
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
@@ -162,11 +165,11 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
 
   // 获取录音转写数据（支持分页）
   const fetchTranscription = async (page: number, append = false) => {
-    if (!interviewInstId) return;
+    if (!effectiveInterviewInstId) return;
     if (append) setLoadingMoreTranscription(true);
     try {
       const res = await dealService.queryInterviewInstContentListByPage({
-        interviewInstId,
+        interviewInstId: effectiveInterviewInstId,
         pageNum: page,
         pageSize: 100
       });
@@ -198,13 +201,13 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
 
   // 切换到转写 tab 时加载第一页
   useEffect(() => {
-    if (activeTab === 'transcription' && interviewInstId) {
+    if (activeTab === 'transcription' && effectiveInterviewInstId) {
       // 重置分页状态
       setTranscriptionPage(1);
       setHasMoreTranscription(true);
       fetchTranscription(1, false);
     }
-  }, [activeTab, interviewInstId]);
+  }, [activeTab, effectiveInterviewInstId]);
 
   // 滚动加载更多
   const handleContentScroll = () => {
@@ -233,7 +236,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
           <ArrowLeft size={22} />
         </button>
         <h1 className="text-lg font-bold text-slate-800 flex-1 text-center truncate mx-4">
-          {interviewInstTitle || '访谈详情'}
+          {effectiveInterviewInstTitle}
         </h1>
         <div className="w-10" /> 
       </div>

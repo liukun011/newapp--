@@ -25,6 +25,12 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
   onBack,
   onRefresh
 }) => {
+  const previewHtml = React.useMemo(() => {
+    const prefix = 'data:text/html;charset=utf-8,';
+    if (!previewUrl?.startsWith(prefix)) return '';
+    return decodeURIComponent(previewUrl.slice(prefix.length));
+  }, [previewUrl]);
+
   const handleDownload = () => {
       // 监听下载结果
       const handleDownloadResult = (response: any) => {
@@ -95,7 +101,8 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
         {previewUrl ? (
           <iframe 
             className="absolute inset-0 w-full h-full border-none"
-            src={previewUrl}
+            src={previewHtml ? undefined : previewUrl}
+            srcDoc={previewHtml || undefined}
             title="报告预览"
             sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
           />

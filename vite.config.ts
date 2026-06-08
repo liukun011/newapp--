@@ -18,8 +18,9 @@ const __dirname = path.dirname(__filename);
  * 同时保留部署后手动修改 config.js 覆盖的能力。
  */
 function injectRuntimeConfig(mode: string, env: Record<string, string>): Plugin {
-  const apiBaseUrl = env.VITE_API_BASE_URL || '';
-  const authBaseUrl = env.VITE_AUTH_BASE_URL || '';
+  const mockPrototype = true;
+  const apiBaseUrl = mockPrototype ? '/mock-report' : env.VITE_API_BASE_URL || '';
+  const authBaseUrl = mockPrototype ? '/mock-auth' : env.VITE_AUTH_BASE_URL || '';
 
   const content = `/**
  * 运行时外部配置文件（优先级高于构建时注入的默认值）。
@@ -77,8 +78,9 @@ window.APP_CONFIG = {
 export default defineConfig(({ mode }) => {
   const envVars = loadEnv(mode, process.cwd());
 
-  const authServer = envVars.VITE_AUTH_SERVER || '';
-  const apiServer = envVars.VITE_API_SERVER || '';
+  const mockPrototype = true;
+  const authServer = mockPrototype ? 'http://127.0.0.1:5173' : envVars.VITE_AUTH_SERVER || '';
+  const apiServer = mockPrototype ? 'http://127.0.0.1:5173' : envVars.VITE_API_SERVER || '';
 
   // 打印代理信息，方便调试
   console.log(`\x1b[36m[ViteConfig] Proxy AUTH to:\x1b[0m ${authServer}`);

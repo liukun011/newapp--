@@ -6,6 +6,7 @@
  * 以下空值仅为占位模板，实际运行时会 fallback 到 .env.* 注入的配置。
  */
 window.APP_CONFIG = {
-  VITE_AUTH_BASE_URL: '',
-  VITE_API_BASE_URL: '',
+  VITE_AUTH_BASE_URL: '/mock-auth',
+  VITE_API_BASE_URL: '/mock-report',
+  VITE_ENV: 'mock',
 };

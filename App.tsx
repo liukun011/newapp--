@@ -266,19 +266,35 @@ const App: React.FC = () => {
   const [historyBackView, setHistoryBackView] = useState<View>(View.RECORDING);
 
   // 历史访谈详情数据
-  const [historyDetailData, setHistoryDetailData] = useState<{ id: string, title: string } | null>(null);
+  const [historyDetailData, setHistoryDetailData] = useState<{ id: string, title: string } | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('zov-history-detail');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
 
   // 状态持久化
   useEffect(() => {
     if (currentView === View.LOGIN) {
       sessionStorage.removeItem('zov-current-view');
       sessionStorage.removeItem('zov-current-deal');
+      sessionStorage.removeItem('zov-history-detail');
       // 清除历史详情数据
       setHistoryDetailData(null);
     } else {
       sessionStorage.setItem('zov-current-view', currentView);
     }
   }, [currentView]);
+
+  useEffect(() => {
+    if (historyDetailData) {
+      sessionStorage.setItem('zov-history-detail', JSON.stringify(historyDetailData));
+    } else {
+      sessionStorage.removeItem('zov-history-detail');
+    }
+  }, [historyDetailData]);
 
   // 企查查资料详情数据
   const [enterpriseDetailData, setEnterpriseDetailData] = useState<any>(null);
@@ -1265,10 +1281,12 @@ const App: React.FC = () => {
                     navigateBackward(View.RECORDING);
                   }}
                   onRecordClick={(record: any) => {
-                    setHistoryDetailData({
+                    const nextHistoryDetailData = {
                       id: record.interviewInstId || record.id,
-                      title: record.interviewInstTitle
-                    });
+                      title: record.interviewInstTitle || record.interviewInstName || '访谈详情'
+                    };
+                    setHistoryDetailData(nextHistoryDetailData);
+                    sessionStorage.setItem('zov-history-detail', JSON.stringify(nextHistoryDetailData));
                     setPreviousView(View.HISTORY);
                     navigateForward(View.HISTORY_DETAIL);
                   }}
@@ -1277,8 +1295,8 @@ const App: React.FC = () => {
               {currentView === View.HISTORY_DETAIL && (
                 <HistoryDetailPage
                   deal={currentDeal}
-                  interviewInstId={historyDetailData?.id || ''}
-                  interviewInstTitle={historyDetailData?.title || ''}
+                  interviewInstId={historyDetailData?.id || currentDeal?.interviewInstList?.[0]?.interviewInstId || ''}
+                  interviewInstTitle={historyDetailData?.title || currentDeal?.interviewInstList?.[0]?.interviewInstTitle || currentDeal?.interviewInstList?.[0]?.interviewInstName || ''}
                   onBack={() => navigateBackward(View.HISTORY)}
                 />
               )}
@@ -1717,7 +1735,10 @@ const App: React.FC = () => {
 
           {/* Global Fixed Bottom Navigation Bar - Only for Home, Management, Reports and Settings */}
           {(currentView === View.HOME || currentView === View.SETTINGS || currentView === View.MANAGEMENT || currentView === View.REPORTS_LIST) && (
-            <div className="fixed bottom-0 left-0 right-0 h-[70px] bg-white border-t border-[#E5E5E5] z-50 flex items-center justify-around pb-1 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+            <div
+              className="fixed bottom-0 left-1/2 right-auto w-full max-w-md -translate-x-1/2 bg-white border-t border-[#E5E5E5] z-50 flex items-center justify-around pb-1 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]"
+              style={{ height: 70 }}
+            >
               {/* 首页 */}
               <button
                 className="flex flex-col items-center gap-1 min-w-[64px] pt-1"

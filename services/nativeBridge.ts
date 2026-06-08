@@ -80,6 +80,80 @@ class NativeBridgeService {
   }
 
   /**
+   * 浏览器原型环境下的 Native 成功回调。
+   * 真实 iOS/Android 分支不会进入这里，仅用于离线 mock 原型避免上传/下载流程超时。
+   */
+  private mockNativeSuccess(action: string, parameters: any = {}) {
+    const mockUrl = `data:text/plain;charset=utf-8,${encodeURIComponent('小狸报告 mock 文件内容')}`;
+
+    window.setTimeout(() => {
+      if (action === 'uploadInterviewFile') {
+        this.handleNativeCallback({
+          action: 'onUploadResult',
+          success: true,
+          message: '上传成功',
+          data: {
+            success: true,
+            errno: 0,
+            url: mockUrl,
+            data: { url: mockUrl },
+            result: {
+              success: true,
+              errno: 0,
+              url: mockUrl,
+              data: { url: mockUrl },
+            },
+            percent: 100,
+          },
+        });
+        return;
+      }
+
+      if (action === 'downloadFile') {
+        this.handleNativeCallback({
+          action: 'onDownloadResult',
+          success: true,
+          message: '下载成功',
+          data: {
+            filePath: parameters?.filePath || mockUrl,
+            percent: 100,
+          },
+        });
+        return;
+      }
+
+      if (action === 'openPhotoLibrary' || action === 'openCamera') {
+        this.handleNativeCallback({
+          action: 'imageSelected',
+          success: true,
+          data: {
+            imageURL: mockUrl,
+          },
+        });
+        return;
+      }
+
+      if (action === 'chooseFile') {
+        this.handleNativeCallback({
+          action: 'fileSelected',
+          success: true,
+          data: {
+            fileURL: mockUrl,
+            fileName: 'mock-file.txt',
+          },
+        });
+        return;
+      }
+
+      this.handleNativeCallback({
+        action,
+        success: true,
+        data: true,
+      });
+    }, 300);
+  }
+
+  /**
    * 调用 Native 方法
    */
   private callNative(action: string, parameters: any = {}) {
@@ -102,13 +176,7 @@ class NativeBridgeService {
       }
     } else {
       console.warn('[NativeBridge] Not in native environment');
-      // 模拟失败回调，防止 Promise 对应的 await 永远挂起
-      // 这样业务层会接收到 success: false，从而继续执行后续逻辑（如跳转页面）
-      this.handleNativeCallback({
-        action,
-        success: false,
-        message: 'Not in native environment'
-      });
+      this.mockNativeSuccess(action, parameters);
     }
   }
 

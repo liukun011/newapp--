@@ -21,7 +21,11 @@ declare global {
 /**
  * 核心配置抽取函数
  */
+const MOCK_MODE = true;
+
 const getVal = (key: 'VITE_API_BASE_URL' | 'VITE_AUTH_BASE_URL', defaultVal: string) => {
+  if (MOCK_MODE) return defaultVal;
+
   // ① 运行时覆盖：部署后修改 config.js 可生效
   if (typeof window !== 'undefined' && window.APP_CONFIG?.[key]) {
     return window.APP_CONFIG[key]!;
@@ -40,14 +44,16 @@ const config = {
   // 注意：在 axios 实例创建后，直接修改 baseURL 可能无效
   // 所以默认值必须具有普适性（走相对路径代理）
   get apiBaseUrl() {
-    return getVal('VITE_API_BASE_URL', '/report');
+    return getVal('VITE_API_BASE_URL', '/mock-report');
   },
 
   get authBaseUrl() {
-    return getVal('VITE_AUTH_BASE_URL', '/auth');
+    return getVal('VITE_AUTH_BASE_URL', '/mock-auth');
   },
 
   get env() {
+    if (MOCK_MODE) return 'mock';
+
     return (typeof window !== 'undefined' && window.APP_CONFIG?.VITE_ENV)
       || import.meta.env.VITE_ENV
       || mode;
@@ -56,7 +62,8 @@ const config = {
   get uploadUrl() {
     return `${this.apiBaseUrl}/upload/file`;
   },
-  
+
+  get isMock() { return MOCK_MODE; },
   get isDev() { return this.env === 'dev'; },
   get isTest() { return this.env === 'test'; },
   get isProd() { return this.env === 'prod' || !this.env; }

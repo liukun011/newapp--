@@ -2,6 +2,7 @@ import React, { memo, useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Toast } from 'react-vant';
 import { dealService } from '../services/dealService';
+import { mockPreviewHtml } from '../mock/mockData';
 
 interface TemplatePreviewPageProps {
   templateName: string;
@@ -23,6 +24,12 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
   onPreviewReport
 }) => {
   const [loading, setLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const previewHtml = React.useMemo(() => {
+    const prefix = 'data:text/html;charset=utf-8,';
+    if (!previewUrl.startsWith(prefix)) return '';
+    return decodeURIComponent(previewUrl.slice(prefix.length));
+  }, [previewUrl]);
 
   // 监听原生返回键
   useEffect(() => {
@@ -45,9 +52,7 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
       const missingId = !skipIdInPreview && !templateId;
       
       if (missingId || !templateUrl) {
-         if (templateUrl) {
-           Toast.fail('缺少文件ID，无法预览');
-         }
+         setPreviewUrl(mockPreviewHtml(templateName || '模板预览', '<p>当前模板暂无文件地址，已展示离线 mock 预览内容。</p>'));
          return;
       }
 
@@ -62,6 +67,7 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
         Toast.clear();
         
         if (res.success && res.data) {
+          setPreviewUrl(String(res.data));
           if (onPreviewReport) {
             onPreviewReport(
               templateName || '模板预览',
@@ -71,11 +77,13 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
             );
           }
         } else {
+          setPreviewUrl(mockPreviewHtml(templateName || '模板预览', '<p>预览接口暂无数据，已展示离线 mock 预览内容。</p>'));
           Toast.fail(res.message || '加载预览失败');
         }
       } catch (error) {
         Toast.clear();
         console.error('Fetch preview url failed:', error);
+        setPreviewUrl(mockPreviewHtml(templateName || '模板预览', '<p>预览加载异常，已展示离线 mock 预览内容。</p>'));
         Toast.fail('加载预览失败');
       } finally {
         setLoading(false);
@@ -83,7 +91,7 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
     };
 
     fetchPreviewUrl();
-  }, [templateId, templateUrl, onPreviewReport]);
+  }, [templateId, templateUrl, templateName, skipIdInPreview, onPreviewReport]);
 
   return (
     <div className="flex flex-col h-screen bg-[#F7F8FA]">
@@ -99,9 +107,19 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
 
       {/* Preview Content */}
       <div className="flex-1 relative overflow-hidden bg-white mb-[80px]"> 
-        <div className="flex flex-col items-center justify-center h-full text-gray-400">
+        {previewUrl ? (
+          <iframe
+            className="absolute inset-0 w-full h-full border-none bg-white"
+            src={previewHtml ? undefined : previewUrl}
+            srcDoc={previewHtml || undefined}
+            title={templateName || '模板预览'}
+            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-gray-400">
             {loading ? <p>正在加载...</p> : <p>暂无预览内容</p>}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Select Button - Fixed at bottom */}

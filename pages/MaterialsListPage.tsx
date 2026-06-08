@@ -213,6 +213,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
 
   // 监听文件解析进度 WebSocket (参考 web-ai-doc)
   useEffect(() => {
+    if (config.isMock) return;
     if (!dealId) return;
 
     // 获取登录 Token
