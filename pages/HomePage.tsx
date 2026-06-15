@@ -1,19 +1,23 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useThrottleFn } from "../hooks/useThrottleFn";
 import {
+  Archive,
+  Bell,
   Search,
   Trash2,
   Check,
   FileText,
-  Plus,
   Clock,
-  ChevronDown,
   Building2,
+  Mic,
+  FolderOpen,
+  ClipboardList,
+  Briefcase,
+  UsersRound,
 } from "lucide-react";
-import { SwipeCell, PullRefresh, Toast, Swiper, Popup, Dialog } from "react-vant";
-import Mascot from "../components/Mascot";
+import { SwipeCell, PullRefresh, Toast, Popup, Dialog } from "react-vant";
 
-import { DealRecord } from "../types";
+import { DealRecord, DealReportStatusEnum, DealStatusEnum } from "../types";
 import { dealService } from "../services/dealService";
 import { authService } from "../services/authService";
 import { useRecordingStore } from "../store/useRecordingStore";
@@ -29,6 +33,14 @@ interface HomePageProps {
   onTabChange?: (tab: "ongoing" | "archived") => void;
 }
 
+const projectCardIcons = [
+  FolderOpen,
+  ClipboardList,
+  FileText,
+  Briefcase,
+  UsersRound,
+];
+
 const HomePage: React.FC<HomePageProps> = ({ 
   onNavigateToDetail, 
   onNavigateToRecording,
@@ -40,6 +52,8 @@ const HomePage: React.FC<HomePageProps> = ({
   const [searchQuery, setSearchQuery] = useState(""); // 实际用于查询的值
   const [loading, setLoading] = useState(false);
   const [deals, setDeals] = useState<DealRecord[]>([]);
+  const [summaryDeals, setSummaryDeals] = useState<DealRecord[]>([]);
+  const [loadError, setLoadError] = useState("");
   const [showLimitTips, setShowLimitTips] = useState(false);
   const { currentDealId } = useRecordingStore();
   
@@ -87,46 +101,43 @@ const HomePage: React.FC<HomePageProps> = ({
   };
 
   const handleSwitchTenant = async (tenant: any) => {
-    Dialog.confirm({
-      title: '切换组织',
-      message: `确认切换为 ${tenant.name} 吗？`,
-      cancelButtonText: '取 消',
-      confirmButtonText: '确 定',
-      confirmButtonColor: '#3B82F6',
-      onConfirm: async () => {
-        try {
-          Toast.loading({ message: '切换中...', duration: 0 });
-          const res = await authService.switchTenant(tenant.id);
-          if (res.successful && res.data) {
-            // 更新本地用户信息
-            const userInfoStr = localStorage.getItem('zov-user-info');
-            if (userInfoStr) {
-              const userInfo = JSON.parse(userInfoStr);
-              userInfo.tenantName = tenant.name;
-              userInfo.tenantId = tenant.id;
-              localStorage.setItem('zov-user-info', JSON.stringify(userInfo));
-              setTenantName(tenant.name);
-            }
-            // 更新 Token（如果接口返回新 Token）
-            if (res.data.accessToken) {
-              localStorage.setItem('zov-user-token', res.data.accessToken);
-            } else if (res.data.token) {
-              localStorage.setItem('zov-user-token', res.data.token);
-            }
-            
-            Toast.success('切换成功');
-            setShowTenantModal(false);
-            // 刷新尽调列表
-            fetchDeals(true, true);
-          } else {
-            Toast.fail(res.message || '切换失败');
-          }
-        } catch (error) {
-          console.error("Failed to switch tenant:", error);
-          Toast.fail('切换失败，请重试');
+    if (String(tenant.id) === String(currentUserObj?.tenantId)) {
+      setShowTenantModal(false);
+      return;
+    }
+
+    try {
+      Toast.loading({ message: '切换中...', duration: 0 });
+      const res = await authService.switchTenant(tenant.id);
+      if (res.successful && res.data) {
+        // 更新本地用户信息
+        const userInfoStr = localStorage.getItem('zov-user-info');
+        if (userInfoStr) {
+          const userInfo = JSON.parse(userInfoStr);
+          userInfo.tenantName = tenant.name;
+          userInfo.tenantId = tenant.id;
+          localStorage.setItem('zov-user-info', JSON.stringify(userInfo));
+          setTenantName(tenant.name);
         }
+        // 更新 Token（如果接口返回新 Token）
+        if (res.data.accessToken) {
+          localStorage.setItem('zov-user-token', res.data.accessToken);
+        } else if (res.data.token) {
+          localStorage.setItem('zov-user-token', res.data.token);
+        }
+
+        Toast.success(`已切换到「${tenant.name}」`);
+        setShowTenantModal(false);
+        // 刷新尽调列表
+        fetchSummaryDeals();
+        fetchDeals(true, true);
+      } else {
+        Toast.fail(res.message || '切换失败');
       }
-    });
+    } catch (error) {
+      console.error("Failed to switch tenant:", error);
+      Toast.fail('切换失败，请重试');
+    }
   };
 
   // 新建尽调弹框
@@ -137,22 +148,6 @@ const HomePage: React.FC<HomePageProps> = ({
 
   // Swipe Item State
   const [swipingItemId, setSwipingItemId] = useState<string | null>(null);
-
-  // AI Banner 轮播状态
-  const bannerItems = [
-    {
-      title: "AI 智能资料分析",
-      description: "告别繁琐检索：AI 智能分析，让数万页文档瞬间化为精炼干货。"
-    },
-    {
-      title: "听见即记录",
-      description: "告别手动速记：AI 高效转写，把您的声音实时转化为精准文档。"
-    },
-    {
-      title: "透视数据核心",
-      description: "AI 深度挖掘海量指标，一键生成结构化报告，让复杂决策更科学"
-    }
-  ];
 
   const isFirstRender = useRef(true);
 
@@ -193,6 +188,7 @@ const HomePage: React.FC<HomePageProps> = ({
           setTenantName(userInfo.tenantName || '默认组织');
         }
         // 同步后刷新列表
+        fetchSummaryDeals();
         fetchDeals(true, true);
       } catch (e) {
         console.error('Failed to update tenant name after sync', e);
@@ -205,8 +201,10 @@ const HomePage: React.FC<HomePageProps> = ({
     if (isFirstRender.current) {
       isFirstRender.current = false;
       checkUserInfoSync();
+      fetchSummaryDeals();
       fetchDeals(true, true);
     } else {
+      fetchSummaryDeals();
       fetchDeals(true, true);
     }
 
@@ -247,7 +245,46 @@ const HomePage: React.FC<HomePageProps> = ({
   };
 
   // 加载更多数据
-  const getStatusFilter = (tab: "ongoing" | "archived") => tab === "ongoing" ? ["1"] : ["5"];
+  const getStatusFilter = (tab: "ongoing" | "archived") => (
+    tab === "ongoing"
+      ? [String(DealStatusEnum.PREPARE)]
+      : [String(DealStatusEnum.ARCHIVE)]
+  );
+
+  const isArchivedDeal = (item: DealRecord) => {
+    const status = String(item.status ?? '').trim().toLowerCase();
+    return status === String(DealStatusEnum.ARCHIVE) || status === 'archive' || status === 'archived' || status === '已归档';
+  };
+
+  const fetchArchivedFallback = async (pageNoForQuery: number) => {
+    const fallbackRes = await dealService.queryDealInstList({
+      pageNo: pageNoForQuery,
+      pageSize: 50,
+      dealInstTitle: searchQuery,
+    });
+
+    if (fallbackRes.success && fallbackRes.data) {
+      return (fallbackRes.data.records || []).filter(isArchivedDeal);
+    }
+
+    return [];
+  };
+
+  const fetchSummaryDeals = async () => {
+    try {
+      const res = await dealService.queryDealInstList({
+        pageNo: 1,
+        pageSize: 100,
+        dealInstTitle: searchQuery,
+      });
+
+      if (res.success && res.data) {
+        setSummaryDeals(res.data.records || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch summary deals:", error);
+    }
+  };
 
   const loadMore = async () => {
     if (loadingMore || !hasMore) return;
@@ -282,6 +319,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
   const fetchDeals = async (showGlobalLoading = true, resetPage = false, tab: "ongoing" | "archived" = activeTab) => {
     if (showGlobalLoading) setLoading(true);
+    setLoadError("");
     
     const currentPage = resetPage ? 1 : pageNo;
     
@@ -302,7 +340,10 @@ const HomePage: React.FC<HomePageProps> = ({
 
       if (res.success && res.data) {
         console.log(res.data);
-        const newDeals = res.data.records || [];
+        let newDeals = res.data.records || [];
+        if (tab === 'archived' && newDeals.length === 0) {
+          newDeals = await fetchArchivedFallback(currentPage);
+        }
         
         if (resetPage) {
           setDeals(newDeals);
@@ -318,9 +359,31 @@ const HomePage: React.FC<HomePageProps> = ({
         setTimeout(() => {
           setSwipeCellKey(prev => prev + 1);
         }, 100);
+      } else {
+        setDeals([]);
+        setHasMore(false);
+        setLoadError(res.message || "列表暂时无法加载");
       }
     } catch (error) {
       console.error("Failed to fetch deals:", error);
+      if (tab === 'archived') {
+        try {
+          const fallbackDeals = await fetchArchivedFallback(currentPage);
+          setDeals(fallbackDeals);
+          setPageNo(1);
+          setHasMore(false);
+          setLoadError(fallbackDeals.length > 0 ? "" : "暂无归档项目");
+        } catch (fallbackError) {
+          console.error("Failed to fetch archived fallback deals:", fallbackError);
+          setDeals([]);
+          setHasMore(false);
+          setLoadError("归档列表暂时无法加载");
+        }
+      } else {
+        setDeals([]);
+        setHasMore(false);
+        setLoadError("列表暂时无法加载");
+      }
     } finally {
       if (showGlobalLoading) setLoading(false);
     }
@@ -361,7 +424,6 @@ const HomePage: React.FC<HomePageProps> = ({
   const switchTab = (tab: "ongoing" | "archived") => {
     setActiveTab(tab);
     onTabChange?.(tab);
-    setDeals([]);
     setPageNo(1);
     setHasMore(true);
     fetchDeals(true, true, tab);
@@ -405,6 +467,7 @@ const HomePage: React.FC<HomePageProps> = ({
         }
 
         // 删除成功后刷新列表（重置分页，从第1页开始加载）
+        fetchSummaryDeals();
         fetchDeals(true, true);
       } else {
         Toast.fail(res.message || '删除失败');
@@ -435,10 +498,6 @@ const HomePage: React.FC<HomePageProps> = ({
   const handleRecordClickThrottled = useThrottleFn((e: React.MouseEvent, item: DealRecord) => {
     e.stopPropagation();
     
-    if (item.status === '5') {
-      return;
-    }
-
     // 校验是否有正在进行的访谈（悬浮窗存在 即 currentDealId 不为空）
     if (currentDealId && currentDealId !== item.id) {
       setShowLimitTips(true);
@@ -469,6 +528,7 @@ const HomePage: React.FC<HomePageProps> = ({
           Toast.clear();
           if (res.success) {
             Toast.success('已取消归档');
+            fetchSummaryDeals();
             fetchDeals(true, true);
           } else {
             Toast.fail(res.message || '操作失败');
@@ -484,11 +544,18 @@ const HomePage: React.FC<HomePageProps> = ({
 
   const handleConfirmDeleteThrottled = useThrottleFn(confirmDelete, 1000);
 
+  const overviewDeals = summaryDeals.length > 0 ? summaryDeals : deals;
+  const generatedCount = overviewDeals.filter((item) => String(item.reportStatus) === DealReportStatusEnum.REPORT_GENERATED || item.report?.id).length;
+  const interviewCount = overviewDeals.reduce((sum, item) => {
+    const list = Array.isArray(item.interviewInstList) ? item.interviewInstList : [];
+    return sum + list.filter((record: any) => String(record?.interviewInstStatus || record?.status || '') !== '1').length;
+  }, 0);
+  const projectCount = overviewDeals.length;
 
   return (
-    <div className="flex flex-col h-screen relative bg-[#F7F8FA]">
+    <div className="flex flex-col h-screen relative xl-page">
       {/* Top Fixed Header: Tenant Info & Search & Bell */}
-      <div className="bg-[#F7F8FA] px-4 pt-4 pb-0 flex-shrink-0 relative z-40">
+      <div className="px-4 pt-4 pb-0 flex-shrink-0 relative z-40">
         {/* Custom Limit Tips Toast */}
         {showLimitTips && (
            <div className="fixed top-20 left-4 right-4 z-[100] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center">
@@ -500,60 +567,30 @@ const HomePage: React.FC<HomePageProps> = ({
            </div>
         )}
 
-        {/* Header Title & Bell Row (Matches Screenshot 1) */}
-        <div className="flex items-center justify-between mb-4">
-          <div 
-            className="flex flex-col active:opacity-70 transition-opacity cursor-pointer"
-            onClick={() => {
-              setShowTenantModal(true);
-              fetchTenants();
-            }}
-          >
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-[18px] font-[800] text-[#1E293B] tracking-tight truncate max-w-[200px]">
-                {tenantName}
-              </h1>
-              <div className="w-5 h-5 flex items-center justify-center bg-[#F1F5F9] rounded-[6px] text-[#AAB6C6]">
-                <ChevronDown size={12} strokeWidth={3} />
-              </div>
-            </div>
-            <p className="text-[11px] text-[#94A3B8] font-bold tracking-wide mt-0.5">
-              让访谈更简单、更专业
-            </p>
-          </div>
-
-          {/* 
-          <button 
-            className="relative w-11 h-11 flex items-center justify-center bg-white rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-[#F1F5F9] active:scale-95 transition-transform"
-            onClick={() => Toast.info({ 
-              message: '功能开发中，敬请期待！',
-            })}
-          >
-             <Bell size={22} className="text-[#334155]" strokeWidth={2} />
-             <div className="absolute top-3 right-3 w-2 h-2 bg-[#EF4444] rounded-full border-[1.5px] border-white" />
-          </button>
-          */}
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Search Box */}
-          <div className="flex-1 relative">
+        <div className="grid grid-cols-[1fr_44px] items-center gap-2.5 mb-3">
+          <div className="relative">
             <input
               type="text"
-              placeholder="请搜索访谈"
+              placeholder="搜索项目 / 客户 / 企业"
               value={searchTerm}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              className="w-full h-[46px] px-5 bg-white rounded-2xl text-[15px] text-slate-800 placeholder-gray-400 shadow-[0_4px_12px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all border border-[#F1F5F9]"
+              className="w-full h-[40px] pl-9 pr-3 bg-[#fffefa]/80 rounded-[14px] text-[13px] text-[#1f2024] placeholder-[#a49a8d] shadow-[0_3px_10px_rgba(92,74,42,0.045)] focus:outline-none focus:ring-2 focus:ring-[#f2dda0] transition-all border border-[#eadfca]"
               style={{ outline: 'none', WebkitTapHighlightColor: 'transparent', WebkitAppearance: 'none' }}
             />
             <button
               onClick={handleSearch}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-indigo-600 active:scale-95 transition-all"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 p-1 text-[#a49a8d] hover:text-[#8b641d] active:scale-95 transition-all"
             >
               <Search size={18} />
             </button>
           </div>
+          <button 
+            className="xl-icon-btn"
+            onClick={() => Toast.info('暂无新通知')}
+          >
+            <Bell size={21} strokeWidth={2.2} />
+          </button>
         </div>
       </div>
 
@@ -561,99 +598,45 @@ const HomePage: React.FC<HomePageProps> = ({
       <div 
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto relative z-10 scroll-smooth bg-[#F7F8FA]"
+        className="flex-1 overflow-y-auto relative z-10 scroll-smooth"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-          {/* Banner inside scroll area */}
-          <div className="px-4 mb-[14px] mt-[14px]">
-            <div className="rounded-2xl shadow-sm overflow-hidden transform transition-transform active:scale-[0.99]">
-              <Swiper 
-                autoplay={3000} 
-                className="h-[150px] w-full"
-                style={{ borderRadius: '16px' }}
-              >
-                {bannerItems.map((item, index) => (
-                  <Swiper.Item key={index}>
-                    <div 
-                      className="h-full w-full relative p-5"
-                      style={{ background: 'linear-gradient(270deg, #C3D1FD 0%, #CADCF9 0%, #E6F2FF 100%)' }}
-                    >
-                      <div className="relative z-10 max-w-[60%] h-full flex flex-col justify-center">
-                        <h2 
-                          className="mb-2"
-                          style={{
-                            fontFamily: "'Alimama ShuHeiTi', sans-serif",
-                            fontSize: '22px',
-                            fontWeight: 'bold',
-                            lineHeight: 'normal',
-                            letterSpacing: '0em',
-                            fontVariationSettings: '"opsz" auto',
-                            fontFeatureSettings: '"kern" on',
-                            color: '#001D6E'
-                          }}
-                        >
-                          {item.title}
-                        </h2>
-                        <p 
-                          className="line-clamp-3"
-                          style={{
-                            fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
-                            fontSize: '12px',
-                            fontWeight: 'normal',
-                            lineHeight: '18px',
-                            letterSpacing: '0em',
-                            fontVariationSettings: '"opsz" auto',
-                            fontFeatureSettings: '"kern" on',
-                            color: 'rgba(0, 0, 0, 0.6)',
-                            minHeight: '54px'
-                          }}
-                        >
-                          {item.description}
-                        </p>
-                      </div>
-                      
-                      {/* Right Image */}
-                      <div className="absolute top-0 right-0 bottom-0 w-[45%] pointer-events-none">
-                        <img 
-                          src="/talk-assistant/assets/home.png" 
-                          alt="Analysis" 
-                          className="w-full h-full object-contain object-right-bottom scale-110 -translate-y-5 translate-x-2"
-                        />
-                      </div>
-                    </div>
-                  </Swiper.Item>
-                ))}
-              </Swiper>
+          <div className="px-4 mt-2.5">
+            <div className="xl-card px-3 py-3">
+              <div className="grid grid-cols-3 divide-x divide-[#eadfca]">
+                <div className="px-2">
+                  <div className="text-[22px] leading-none font-semibold text-[#1f2024]">{interviewCount}</div>
+                  <div className="xl-meta mt-2">访谈记录</div>
+                </div>
+                <div className="px-3">
+                  <div className="text-[22px] leading-none font-semibold text-[#1f2024]">{generatedCount}</div>
+                  <div className="xl-meta mt-2">生成报告</div>
+                </div>
+                <div className="px-3">
+                  <div className="text-[22px] leading-none font-semibold text-[#1f2024]">{projectCount}</div>
+                  <div className="xl-meta mt-2">尽调项目</div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Sticky Header: Title + Tabs */}
-          <div className="sticky top-0 z-40 bg-[#F7F8FA] pt-1 pb-2 px-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.02)]">
-            <h3 className="text-lg font-bold text-slate-800 mb-2 px-1">访谈记录</h3>
-            <div className="bg-gray-100 p-1 rounded-xl flex">
+          <div className="sticky top-0 z-40 pt-2.5 pb-2 px-4 bg-[linear-gradient(180deg,#f7f2e8_0%,rgba(247,242,232,0.96)_100%)]">
+            <div className="xl-segment flex">
               <button
-                className={`flex-1 py-1.5 text-[14px] font-bold rounded-lg transition-all ${
-                  activeTab === "ongoing" 
-                    ? "bg-white text-indigo-600 shadow-sm" 
-                    : "text-gray-500 hover:text-gray-600"
-                }`}
+                className={`flex-1 xl-segment-item transition-all ${activeTab === "ongoing" ? "is-active" : ""}`}
                 onClick={() => {
                   switchTab("ongoing");
                 }}
               >
-                进行中
+                进行中 {activeTab === 'ongoing' ? deals.length : ''}
               </button>
               <button
-                className={`flex-1 py-1.5 text-[14px] font-bold rounded-lg transition-all ${
-                  activeTab === "archived" 
-                    ? "bg-white text-indigo-600 shadow-sm" 
-                    : "text-gray-500 hover:text-gray-600"
-                }`}
+                className={`flex-1 xl-segment-item transition-all ${activeTab === "archived" ? "is-active" : ""}`}
                 onClick={() => {
                   switchTab("archived");
                 }}
               >
-                已归档
+                已归档 {activeTab === 'archived' ? deals.length : ''}
               </button>
             </div>
           </div>
@@ -672,20 +655,29 @@ const HomePage: React.FC<HomePageProps> = ({
           <div className="px-4">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                <p className="text-gray-400 text-sm mt-4">加载中...</p>
+                <div className="w-12 h-12 border-4 border-[#f2dda0] border-t-[#c99a3a] rounded-full animate-spin"></div>
+                <p className="text-[#8a8174] text-sm mt-4">加载中...</p>
               </div>
             ) : deals.length === 0 ? (
               <div className="min-h-[40vh] flex flex-col items-center justify-center opacity-80">
-                 <div className="relative mb-3 flex items-center justify-center">
-                   <Mascot size="medium" />
+                 <div className="w-14 h-14 rounded-[20px] bg-[#fff3cf] text-[#8b641d] flex items-center justify-center mb-3 border border-[#eadfca]">
+                   <FileText size={26} strokeWidth={2.2} />
                  </div>
-                 <p className="text-xs text-gray-400">小狸可以帮你做访谈记录，写尽调报告</p>
+                 <p className="text-xs text-[#8a8174]">{loadError || (activeTab === 'archived' ? '暂无归档项目' : '暂无尽调项目')}</p>
+                 {loadError && (
+                   <button
+                     className="mt-3 xl-btn-ghost px-4 min-h-[36px] text-[12px]"
+                     onClick={() => fetchDeals(true, true)}
+                   >
+                     重新加载
+                   </button>
+                 )}
               </div>
             ) : (
               <div className={`flex flex-col ${deals.length <= 2 ? 'pb-4' : 'pb-32'}`}>
-                {deals.map((item) => {
+                {deals.map((item, index) => {
                   const isSwiping = swipingItemId === item.id;
+                  const ProjectIcon = projectCardIcons[index % projectCardIcons.length];
                   return (
                     <div key={item.id} className="mb-2">
                       <SwipeCell
@@ -694,7 +686,7 @@ const HomePage: React.FC<HomePageProps> = ({
                         onClose={() => setSwipingItemId(null)}
                         rightAction={
                           <button
-                            className="h-full px-6 bg-red-500 text-white flex items-center justify-center rounded-r-2xl"
+                            className="h-full px-6 bg-red-500 text-white flex items-center justify-center rounded-r-[22px]"
                             onClick={() => handleDeleteThrottled(item.id)}
                           >
                             <Trash2 size={20} />
@@ -703,71 +695,46 @@ const HomePage: React.FC<HomePageProps> = ({
                       >
                         <div
                           onClick={() => handleNavigateThrottled(item)}
-                          className={`bg-white flex flex-col shadow-[0_2px_8px_rgba(0,0,0,0.04)] active:scale-[0.99] transition-transform overflow-hidden rounded-l-2xl ${
-                            isSwiping ? 'rounded-r-none' : 'rounded-r-2xl'
+                          className={`xl-card flex flex-col active:scale-[0.99] transition-transform overflow-hidden rounded-l-[18px] ${
+                            isSwiping ? 'rounded-r-none' : 'rounded-r-[18px]'
                           }`}
                         >
-                          {/* Upper Section: Icon + Title/Summary */}
-                          <div className="flex gap-4 p-4 pb-3">
-                            {/* Icon/Logo */}
-                            <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center shadow-inner bg-indigo-50 text-indigo-500 overflow-hidden">
-                              {item.logo ? (
-                                <img
-                                  src={item.logo}
-                                  alt={item.interviewCust}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <FileText size={24} className="drop-shadow-sm" />
-                              )}
+                          <div className="grid grid-cols-[42px_minmax(0,1fr)_60px] gap-3 p-3 min-h-[88px]">
+                            <div className="w-[42px] h-[42px] rounded-[14px] flex-shrink-0 flex items-center justify-center bg-[#fbf6eb] text-[#9a6f21] border border-[#eadfca] self-center">
+                              <ProjectIcon size={19} strokeWidth={2.05} />
                             </div>
 
-                            {/* Text Content */}
-                            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                              <div className="flex justify-between items-start mb-1">
-                                <h3 className="text-[16px] font-bold text-slate-800 truncate pr-2 flex-1 leading-snug">
-                                  {item.interviewCust}
-                                </h3>
-                                {/* 访谈中 标签 */}
-                                {(currentDealId === item.id) && (
-                                  <span className="flex-shrink-0 px-2 py-0.5 bg-[#E8F9F3] text-[#1BC98A] text-[10px] font-medium rounded-md transform translate-y-0.5 ml-1">
-                                    访谈中
-                                  </span>
-                                )}
+                            <div className="min-w-0 self-stretch flex flex-col justify-center pr-1">
+                              <h3 className="text-[14.5px] leading-[19px] font-medium text-[#1f2024] truncate whitespace-nowrap">
+                                {item.interviewCust}
+                              </h3>
+                              <div className="flex items-center gap-1.5 text-[#7d7467] mt-1.5">
+                                <Clock size={12} />
+                                <span className="text-[11.5px] font-normal leading-none">{formatTime(item.lastModifiedDate)}</span>
                               </div>
                             </div>
-                          </div>
-
-                          {/* Divider */}
-                          <div className="h-[1px] bg-gray-100 mx-4" />
-
-                          {/* Lower Section: Time + Button */}
-                          <div className="flex justify-between items-center px-4 py-3">
-                            <div className="flex items-center gap-1.5 text-gray-300">
-                              <Clock size={13} />
-                              <span className="text-[12px] font-medium">{formatTime(item.lastModifiedDate, true)}</span>
+                            <div className="self-stretch flex flex-col items-end justify-between min-w-[60px]">
+                              {(currentDealId === item.id) ? (
+                                <span className="min-h-[24px] px-2 rounded-full bg-[#e8f8ef] border border-[#bfe6cd] text-[#25784a] text-[10px] font-normal flex items-center whitespace-nowrap">录音中</span>
+                              ) : (
+                                <span className="min-h-[24px] px-2 rounded-full bg-[#fff8e6] border border-[#dfcda9] text-[#8b641d] text-[10px] font-normal flex items-center whitespace-nowrap">
+                                  {String(item.reportStatus) === DealReportStatusEnum.REPORT_GENERATED || item.report?.id ? '已生成' : '未生成'}
+                                </span>
+                              )}
+                              <button
+                                className="w-9 h-9 rounded-[13px] border border-[#eadfca] bg-[#fffefa]/80 text-[#8b641d] flex items-center justify-center active:scale-95 transition-transform"
+                                onClick={(e) => {
+                                  if (activeTab === 'archived') {
+                                    handleCancelArchive(e, item.id);
+                                  } else {
+                                    handleRecordClickThrottled(e, item);
+                                  }
+                                }}
+                                aria-label={activeTab === 'archived' ? '取消归档' : '进入录音'}
+                              >
+                                {activeTab === 'archived' ? <Archive size={18} strokeWidth={2.2} /> : <Mic size={18} strokeWidth={2.25} />}
+                              </button>
                             </div>
-
-                            {activeTab === 'archived' ? (
-                              item.dealType === 1 ? null : (
-                              <button
-                                className="flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-indigo-600 border border-indigo-200 bg-indigo-50 active:scale-95 transition-all"
-                                onClick={(e) => handleCancelArchive(e, item.id)}
-                              >
-                                取消归档
-                              </button>
-                              )
-                            ) : item.dealType === 1 ? null : (
-                              /* 进行中：访谈录音按钮 */
-                              <button
-                                className={`flex items-center gap-1 pl-3 pr-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-md active:scale-95 transition-all ${
-                                  item.status === '5' ? 'bg-gray-300 shadow-none' : 'bg-[#4337F1]'
-                                }`}
-                                onClick={(e) => handleRecordClickThrottled(e, item)}
-                              >
-                                <Plus size={14} strokeWidth={2.5} /> 访谈录音
-                              </button>
-                            )}
                           </div>
                         </div>
                       </SwipeCell>
@@ -779,7 +746,7 @@ const HomePage: React.FC<HomePageProps> = ({
               {loadingMore && (
                 <div className="flex items-center justify-center py-4">
                   <div className="flex items-center gap-2 text-gray-400">
-                    <div className="w-4 h-4 border-2 border-gray-300 border-t-indigo-500 rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-[#c99a3a] rounded-full animate-spin"></div>
                     <span className="text-xs">加载中...</span>
                   </div>
                 </div>
@@ -817,8 +784,8 @@ const HomePage: React.FC<HomePageProps> = ({
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
                 <Trash2 size={32} className="text-red-500" />
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2">确认删除？</h3>
-              <p className="text-slate-500 text-center text-[14px] leading-relaxed">
+              <h3 className="text-xl font-medium text-[#1f2024] mb-2">确认删除？</h3>
+              <p className="text-[#7d7467] text-center text-[14px] leading-relaxed">
                 删除后该尽调记录下的所有附件、转写及报告将无法找回，请谨慎操作。
               </p>
             </div>
@@ -826,7 +793,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <div className="flex gap-3 mt-2">
               <button
                 onClick={cancelDelete}
-                className="flex-1 h-12 rounded-full border-2 border-gray-200 text-slate-700 font-medium hover:bg-gray-50 active:scale-95 transition-all"
+                className="flex-1 h-12 rounded-[16px] border border-[#eadfca] text-[#7d7467] font-normal hover:bg-[#fff8e6] active:scale-95 transition-all"
               >
                 取消
               </button>
@@ -834,7 +801,7 @@ const HomePage: React.FC<HomePageProps> = ({
               {/* 确认按钮 */}
               <button
                 onClick={handleConfirmDeleteThrottled}
-                className="flex-1 h-12 rounded-full bg-red-500 text-white font-medium hover:bg-red-600 active:scale-95 transition-all shadow-lg shadow-red-500/30"
+                className="flex-1 h-12 rounded-[16px] bg-red-500 text-white font-normal hover:bg-red-600 active:scale-95 transition-all shadow-lg shadow-red-500/20"
               >
                 确认
               </button>
@@ -843,31 +810,38 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       )}
 
-      {/* Tenant/Organization Switcher Modal (Top-aligned Compact Style) */}
+      {/* Tenant/Organization Switcher Drawer */}
       <Popup
         visible={showTenantModal}
         onClose={() => setShowTenantModal(false)}
-        position="center"
-        style={{ top: '25%', transform: 'translate3d(-50%, -25%, 0)' }}
-        className="bg-white rounded-[32px] w-[85%] max-w-[320px] overflow-hidden shadow-2xl"
+        position="bottom"
+        closeOnClickOverlay
+        className="!bg-transparent"
       >
-        <div className="flex flex-col max-h-[60vh]">
+        <div className="mx-2 mb-2 overflow-hidden rounded-t-[22px] border border-[#eadfca] bg-[#fffefa] shadow-[0_-18px_42px_rgba(58,47,30,0.18)]">
+          <div className="mx-auto mt-4 h-1 w-10 rounded-full bg-[#e9eef7]" />
           {/* Modal Header */}
-          <div className="p-6 pb-3 flex items-center justify-between flex-shrink-0">
-            <h3 className="text-[18px] font-bold text-[#1E293B]">切换组织</h3>
+          <div className="px-4 pb-2 pt-6 flex items-center justify-between flex-shrink-0">
+            <h3 className="text-[14px] leading-none font-medium text-[#c9bda9]">切换组织</h3>
+            <button
+              onClick={() => setShowTenantModal(false)}
+              className="h-8 min-w-8 rounded-full border border-[#eadfca] bg-[#fffefa] px-2.5 text-[12px] text-[#8b641d]"
+            >
+              关闭
+            </button>
           </div>
 
           {/* List Area */}
-          <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-2.5">
+          <div className="max-h-[42vh] overflow-y-auto px-3 pb-5 pt-2 space-y-2">
             {tenantsLoading ? (
-              <div className="flex flex-col items-center justify-center py-10">
-                <div className="w-8 h-8 border-3 border-indigo-100 border-t-indigo-500 rounded-full animate-spin mb-3" />
-                <p className="text-gray-400 text-xs">加载中...</p>
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="w-7 h-7 border-2 border-[#f2dda0] border-t-[#c99a3a] rounded-full animate-spin mb-3" />
+                <p className="text-[#a49a8d] text-xs">加载中...</p>
               </div>
             ) : tenants.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 grayscale opacity-60">
-                <Building2 size={40} className="text-gray-200 mb-3" />
-                <p className="text-gray-400 text-xs">暂无可选组织</p>
+              <div className="flex flex-col items-center justify-center py-8 opacity-70">
+                <Building2 size={34} className="text-[#d8c8aa] mb-3" />
+                <p className="text-[#a49a8d] text-xs">暂无可选组织</p>
               </div>
             ) : (
               tenants.map((tenant) => {
@@ -876,29 +850,29 @@ const HomePage: React.FC<HomePageProps> = ({
                   <div 
                     key={tenant.id}
                     onClick={() => handleSwitchTenant(tenant)}
-                    className={`flex items-center gap-3.5 p-3.5 rounded-[20px] border-2 transition-all active:scale-[0.98] ${
+                    className={`flex min-h-[60px] items-center gap-3 rounded-[14px] border transition-all active:scale-[0.99] ${
                       isActive 
-                        ? 'bg-[#F0F7FF] border-[#3B82F6]/30 shadow-[0_4px_12px_rgba(59,130,246,0.08)]' 
-                        : 'bg-[#F8FAFC] border-transparent hover:border-gray-200'
+                        ? 'bg-[#fff8e6] border-[#e5c97e] px-3 py-2.5 shadow-[0_4px_12px_rgba(201,154,58,0.05)]' 
+                        : 'bg-[#fffefa] border-[#eee5d5] px-3 py-2.5'
                     }`}
                   >
                     {/* Organization Icon */}
-                    <div className={`w-12 h-12 rounded-[14px] flex items-center justify-center flex-shrink-0 ${
-                      isActive ? 'bg-[#3B82F6] text-white shadow-lg shadow-blue-500/15' : 'bg-white text-[#94A3B8] shadow-sm'
+                    <div className={`w-9 h-9 rounded-[9px] flex items-center justify-center flex-shrink-0 ${
+                      isActive ? 'bg-[#dfbd56] text-[#6f4e15] shadow-[0_5px_12px_rgba(201,154,58,0.10)]' : 'bg-[#f7f3eb] text-[#a49a8d]'
                     }`}>
-                      <Building2 size={20} />
+                      <Building2 size={18} strokeWidth={2} />
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <h4 className={`text-[15px] font-bold truncate ${isActive ? 'text-[#3B82F6]' : 'text-slate-800'}`}>
+                      <div className="flex items-center justify-between gap-3 mb-0.5">
+                        <h4 className={`text-[14px] leading-[18px] font-medium truncate ${isActive ? 'text-[#c99a3a]' : 'text-[#1f2024]'}`}>
                           {tenant.name}
                         </h4>
-                        {isActive && <Check size={18} className="text-[#3B82F6]" strokeWidth={3} />}
+                        {isActive && <Check size={16} className="text-[#c99a3a] shrink-0" strokeWidth={2.6} />}
                       </div>
-                      <p className={`text-[10px] font-bold uppercase tracking-widest ${isActive ? 'text-[#3B82F6]/60' : 'text-[#94A3B8]'}`}>
-                        {(tenant.tenantAdmin || (currentUserId && String(tenant.createdBy) === String(currentUserId))) ? 'ADMIN' : 'MEMBER'}
+                      <p className={`text-[11px] leading-none font-normal ${isActive ? 'text-[#8b641d]/62' : 'text-[#a49a8d]'}`}>
+                        {(tenant.tenantAdmin || (currentUserId && String(tenant.createdBy) === String(currentUserId))) ? '管理员' : '成员'}
                       </p>
                     </div>
                   </div>

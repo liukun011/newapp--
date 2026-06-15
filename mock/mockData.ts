@@ -65,9 +65,9 @@ export const mockUser = {
 };
 
 export const mockTenants = [
-  { id: 'tenant-001', name: '小狸科技官方', isTenantAdmin: true },
-  { id: 'tenant-002', name: '华东金融事业部', isTenantAdmin: false },
-  { id: 'tenant-003', name: '创新业务孵化组', isTenantAdmin: true },
+  { id: 'tenant-001', name: '小狸科技官方', isTenantAdmin: true, tenantAdmin: true, createdBy: 'mock-user-001' },
+  { id: 'tenant-002', name: '华东金融事业部', isTenantAdmin: true, tenantAdmin: true, createdBy: 'mock-user-001' },
+  { id: 'tenant-003', name: '创新业务孵化组', isTenantAdmin: true, tenantAdmin: true, createdBy: 'mock-user-001' },
 ];
 
 export const mockMembers = [
@@ -223,7 +223,6 @@ export const mockDeals: DealRecord[] = [
     logo: asset('homebeginimg.png'),
     progress: '78',
     status: String(DealStatusEnum.END),
-    dealType: 1,
     calculation: null,
     interviewDealAbstract: null,
     interviewInstList: [],

@@ -207,7 +207,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
     >
       <div 
-        className="w-full bg-white rounded-t-3xl animate-slide-up"
+        className="w-full bg-[#fffefa] rounded-t-3xl animate-slide-up"
         style={{ 
           maxHeight: '80vh',
           // animation handled by class
@@ -215,7 +215,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4">
-          <h2 className="text-lg font-bold text-slate-800">补充信息</h2>
+          <h2 className="text-lg font-medium text-[#1f2024]">补充信息</h2>
           
           <div className="flex items-center gap-3">
             <button 
@@ -228,7 +228,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
                 }
                 onClose();
               }}
-              className="px-5 py-1.5 border border-gray-300 text-gray-600 rounded-full text-base font-medium active:scale-95 transition-transform"
+              className="px-5 py-1.5 border border-gray-300 text-gray-600 rounded-[999px] text-base font-medium active:scale-95 transition-transform"
             >
               取消
             </button>
@@ -236,7 +236,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             <button 
               onClick={handleSave}
               disabled={readOnly}
-              className={`px-5 py-1.5 border rounded-full text-base font-medium transition-transform border-primary text-primary ${readOnly ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+              className={`px-5 py-1.5 border rounded-[999px] text-base font-medium transition-transform border-primary text-primary ${readOnly ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
             >
               保存
             </button>
@@ -250,7 +250,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             onChange={(e) => setContent(e.target.value)}
             placeholder="请输入需要补充的文字信息，或点击录音按钮进行语音输入..."
             readOnly={readOnly}
-            className="w-full h-48 p-4 pb-16 bg-gray-50 rounded-2xl text-sm text-slate-700 placeholder-gray-400 resize-none border border-gray-200 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 disabled:bg-gray-100 disabled:text-gray-500"
+            className="w-full h-48 p-4 pb-16 bg-[#f7f2e8] rounded-[18px] text-sm text-[#4f463b] placeholder-gray-400 resize-none border border-[#eadfca] outline-none focus:border-[#dfcda9] focus:ring-2 focus:ring-[#f2dda0] disabled:bg-[#f4eee3] disabled:text-[#7d7467]"
           />
           
           {/* Voice Record Button - positioned on bottom border */}
@@ -261,17 +261,17 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             <button 
               onClick={handleRecordClick}
               disabled={readOnly}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg ${
+              className={`w-14 h-14 rounded-[999px] flex items-center justify-center transition-all shadow-lg ${
                 readOnly 
                   ? 'bg-gray-300 cursor-not-allowed'
                   : isLocalRecording 
                     ? 'bg-red-500 animate-pulse active:scale-95' 
-                    : 'bg-indigo-500 hover:bg-indigo-600 active:scale-95'
+                    : 'bg-[#c99a3a] hover:bg-[#c99a3a] active:scale-95'
               }`}
             >
               <Mic size={24} className="text-white" />
             </button>
-            <span className="mt-2 text-sm text-gray-500">
+            <span className="mt-2 text-sm text-[#7d7467]">
               {isLocalRecording ? '录音中...' : '点击录音转写'}
             </span>
           </div>

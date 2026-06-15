@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw, MoreHorizontal, Camera, Image, Upload } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
 import { DealRecord, DealReportStatusEnum, SummaryStatusEnum } from '../types';
@@ -21,8 +21,8 @@ interface DueDiligencePageProps {
   onChangeTemplate?: () => void;
   onPreviewReport?: (name: string, reportUrl: string, previewUrl: string, showDownloadButton?: boolean) => void;
   onNavigateToHistory?: (dealId: string) => void;
+  onOpenInterviewRecord?: (record: any) => void;
   onDealDetailLoaded?: (detail: DealRecord) => void;
-  onNavigateToEnterpriseDetail?: (data: any) => void;
   onBack: () => void;
   isEnterpriseSyncing?: boolean;
   setIsEnterpriseSyncing?: (syncing: boolean) => void;
@@ -38,8 +38,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   onChangeTemplate,
   onPreviewReport,
   onNavigateToHistory,
+  onOpenInterviewRecord,
   onDealDetailLoaded,
-  onNavigateToEnterpriseDetail,
 }) => {
   const basePath = import.meta.env.BASE_URL || '/';
   // 详情数据
@@ -59,6 +59,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   // 尽调总结本地状态：IDLE/GENERATING/GENERATED/FAILED，驱动按钮和内容区展示
   const [summaryStatus, setSummaryStatus] = useState<SummaryStatusEnum>(SummaryStatusEnum.IDLE);
+  const [reportProgress, setReportProgress] = useState(68);
   // 追踪当前 WebSocket 实例，防止重复连接
   const wsRef = React.useRef<WebSocket | null>(null);
   const [interviewRecords, setInterviewRecords] = useState<any[]>([]);
@@ -75,6 +76,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [isSyncing, setIsSyncing] = useState(false);
   const [loadingEnterprise, setLoadingEnterprise] = useState(false);
   const [lastEnterpriseKey, setLastEnterpriseKey] = useState<string>(''); // 用于记录上次抓取时的企业标识
+  const [activeDetailTab, setActiveDetailTab] = useState<'interview' | 'questions' | 'materials' | 'enterprise'>('interview');
+  const [isCompressed, setIsCompressed] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const fetchDealDetail = async () => {
     if (!deal?.id) return;
@@ -275,6 +279,14 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             console.log('[WebSocket] Updating local reportStatus to:', data.reportStatus);
             return { ...prev, reportStatus: data.reportStatus };
           });
+        }
+
+        const nextProgress = data.percent ?? data.progress ?? data.reportProgress;
+        if (nextProgress !== undefined && nextProgress !== null) {
+          const numericProgress = Number(nextProgress);
+          if (!Number.isNaN(numericProgress)) {
+            setReportProgress(Math.max(0, Math.min(99, Math.round(numericProgress))));
+          }
         }
 
         // 处理尽调总结异步生成状态（由后端异步生成后通过 WS 推送）
@@ -542,8 +554,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   }, [handleBackThrottled]);
 
   const handleEditInfoThrottled = useThrottleFn(() => onEditInfo?.(), 1000);
-  const handleNavigateMaterialsThrottled = useThrottleFn(onNavigateToMaterials, 1000);
-  const handleNavigateQuestionsThrottled = useThrottleFn(() => onNavigateToQuestions?.(), 1000);
 
   const handleReportPreviewThrottled = useThrottleFn(async () => {
     if (currentDeal?.report?.id && currentDeal?.report?.fileUrl) {
@@ -630,7 +640,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       ),
       confirmButtonText: '确认',
       cancelButtonText: '取消',
-      confirmButtonColor: '#4337F1',
+      confirmButtonColor: '#C99A3A',
     }).then(async () => {
       if (!currentDeal?.id) {
         Toast.fail('尽调信息不存在');
@@ -650,31 +660,50 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       }
 
       try {
-        Toast.loading({ message: '正在生成报告...', duration: 0, forbidClick: true });
+        setReportProgress(12);
+        setDealDetail(prev => {
+          const source = prev || currentDeal;
+          if (!source) return prev;
+          const next = {
+            ...source,
+            reportStatus: DealReportStatusEnum.REPORT_GENERATING,
+          };
+          onDealDetailLoadedRef.current?.(next);
+          return next;
+        });
+        Toast.loading({ message: '报告生成中', duration: 0, forbidClick: true });
         const res = await dealService.generateInterviewInstReportAsync(currentDeal.id);
         Toast.clear();
 
         if (res.success) {
-          Toast.success('报告生成任务已提交');
-          try {
-            const detailRes = await dealService.getDealInstDetail(currentDeal.id);
-            if (detailRes.success && detailRes.data) {
-              setDealDetail(detailRes.data);
-              onDealDetailLoadedRef.current?.(detailRes.data);
+          setReportProgress(68);
+          Toast.success('报告生成中');
+          window.setTimeout(async () => {
+            try {
+              const detailRes = await dealService.getDealInstDetail(currentDeal.id);
+              if (detailRes.success && detailRes.data) {
+                setDealDetail(detailRes.data);
+                onDealDetailLoadedRef.current?.(detailRes.data);
+                if (detailRes.data.reportStatus === DealReportStatusEnum.REPORT_GENERATED) {
+                  setReportProgress(100);
+                }
+              }
+            } catch (error) {
+              console.error('Failed to refresh deal detail after report generation:', error);
             }
-          } catch (error) {
-            console.error('Failed to refresh deal detail:', error);
-          }
+          }, 4500);
           } else {
+            setDealDetail(prev => prev ? { ...prev, reportStatus: currentDeal.reportStatus } : prev);
             setTimeout(() => {
-              Toast({ type: 'fail', message: res.message || '生成报告失败', duration: 3000 });
+              Toast({ type: 'fail', message: res.message || '报告暂时无法生成', duration: 3000 });
             }, 100);
           }
       } catch (error) {
         Toast.clear();
+        setDealDetail(prev => prev ? { ...prev, reportStatus: currentDeal.reportStatus } : prev);
         console.error('Generate report failed:', error);
         setTimeout(() => {
-          Toast({ type: 'fail', message: (error as any).message || '生成报告失败', duration: 3000 });
+          Toast({ type: 'fail', message: (error as any).message || '报告暂时无法生成', duration: 3000 });
         }, 100);
       }
     }).catch(() => { });
@@ -773,7 +802,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       message: '请确认所有访谈工作已完成。归档后仅支持查看和导出报告，不再支持编辑。',
       cancelButtonText: '暂不归档',
       confirmButtonText: '确认归档',
-      confirmButtonColor: '#4337F1',
+      confirmButtonColor: '#C99A3A',
     }).then(async () => {
       if (!currentDeal?.id) {
         Toast.fail('尽调信息不存在');
@@ -836,662 +865,504 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       }
     });
   }, 1000);
+
+  const handleSyncEnterpriseThrottled = useThrottleFn(async () => {
+    const name = currentDeal?.companyName?.trim() || basicInfo.name?.trim();
+    const code = currentDeal?.creditCode?.trim();
+
+    if (!name && !code) {
+      Toast.info('请先补充企业名称');
+      onEditInfo?.();
+      return;
+    }
+
+    if (!currentDeal?.id || isSyncing) return;
+    try {
+      setIsSyncing(true);
+      Toast.loading({ message: '正在同步企业信息', duration: 0 });
+      const res = await dealService.syncEnterprise(currentDeal.id);
+      Toast.clear();
+      if (res.success) {
+        Toast.success('已开始同步');
+        setTimeout(async () => {
+          const basicRes = await dealService.getEnterpriseBasicInfo(currentDeal.id!);
+          if (basicRes.success) setEnterpriseInfo(basicRes.data);
+        }, 1500);
+      } else {
+        Toast.info(res.message || '暂时无法同步');
+      }
+    } catch (e: any) {
+      Toast.clear();
+      Toast.info(e.message || '暂时无法同步');
+    } finally {
+      setIsSyncing(false);
+    }
+  }, 1000);
+
+  const materialCount = (currentDeal?.resources?.length || 0) + (Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary.length : 0);
+  const questionList = currentDeal?.questionInfoList || [];
+  const enterpriseRiskTags = Array.isArray(basicInfo.riskTags) ? basicInfo.riskTags : [];
+  const enterpriseMetrics = basicInfo.operationMetrics || {};
+  const enterpriseEquityChanges = (() => {
+    const raw = enterpriseInfo?.equityChange || basicInfo.equityChange;
+    if (!raw) return [];
+    try {
+      if (Array.isArray(raw)) return raw;
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      return parsed?.result?.items || parsed?.items || [];
+    } catch {
+      return [];
+    }
+  })();
+  const enterpriseShareholders = Array.isArray(basicInfo.shareholders) ? basicInfo.shareholders : [];
+  const completedInstList = Array.isArray(currentDeal?.interviewInstList)
+    ? currentDeal.interviewInstList.filter((record: any) => record.interviewInstStatus && String(record.interviewInstStatus) !== '1')
+    : [];
+  const hasInterviewRecords = interviewTotalCount > 0
+    || ['4', '5'].includes(String(currentDeal?.status || ''))
+    || completedInstList.length > 0;
+  const isGenerated = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED;
+  const isGenerating = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING;
+  const isFailed = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED;
+
+  let reportCardState: 'notStarted' | 'interviewDone' | 'generating' | 'generated' | 'failed' | 'loading' = 'loading';
+  if (isGenerated) {
+    reportCardState = 'generated';
+  } else if (String(currentDeal?.status) === '1') {
+    reportCardState = 'notStarted';
+  } else if (['2', '3'].includes(String(currentDeal?.status))) {
+    reportCardState = hasInterviewRecords ? 'interviewDone' : 'notStarted';
+  } else if (hasInterviewRecords || ['4', '5'].includes(String(currentDeal?.status))) {
+    reportCardState = 'interviewDone';
+  }
+  if (isGenerating) {
+    reportCardState = 'generating';
+  } else if (isFailed) {
+    reportCardState = 'failed';
+  }
+
+  const reportCardTitleMap: Record<typeof reportCardState, string> = {
+    loading: '',
+    generating: '报告生成中',
+    generated: '报告已生成',
+    failed: '报告生成失败',
+    interviewDone: '访谈已完成',
+    notStarted: '访谈未开始',
+  };
+  const reportCardDescMap: Record<typeof reportCardState, string> = {
+    loading: '',
+    generating: '预计还需 46 秒，完成后可预览和下载',
+    generated: '访谈即报告，小狸智能捕捉核心洞察',
+    failed: '请重试或检查资料内容',
+    interviewDone: '访谈即报告，小狸智能捕捉核心洞察',
+    notStarted: '暂无访谈记录，请先开始访谈',
+  };
+
   return (
-    <div className="absolute inset-0 flex flex-col bg-[#F7F8FA] overflow-hidden">
-      {/* 隐藏的文件输入框 */}
-      <input
-        type="file"
-        ref={cameraInputRef}
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-      <input
-        type="file"
-        ref={galleryInputRef}
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-      <input
-        type="file"
-        ref={fileInputRef}
-        className="hidden"
-        onChange={handleFileChange}
-      />
+    <div className="absolute inset-0 flex flex-col xl-page xl-detail overflow-hidden">
+      <input type="file" ref={cameraInputRef} accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
+      <input type="file" ref={galleryInputRef} accept="image/*" className="hidden" onChange={handleFileChange} />
+      <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
 
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100/50 relative z-50 shrink-0">
-        <div className="flex items-center justify-between px-4 py-3">
-          {/* Custom Limit Tips Toast */}
-          {showLimitTips && (
-            <div className="fixed top-24 left-4 right-4 z-[1000] animate-[slideDown_0.3s_ease-out_forwards] flex justify-center">
-              <div className="bg-black/30 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
-                <span className="text-sm font-medium tracking-wide">
-                  您正有一个访谈正在进行中，暂时不支持开启新任务。
-                </span>
-              </div>
-            </div>
-          )}
-          <button onClick={handleBackThrottled} className="p-2 -ml-2 text-slate-700 hover:bg-white/50 rounded-full">
-            <ArrowLeft size={24} />
-          </button>
-          <h1 className="text-lg font-bold text-slate-800 truncate px-2">{currentDeal?.interviewCust || '尽调详情'}</h1>
-          {isReadOnly ? (
-            <div className="w-9" />
-          ) : (
-            <button
-              onClick={handleEditInfoThrottled}
-              className="p-2 -mr-2 text-slate-700 hover:bg-white/50 rounded-full cursor-pointer"
-            >
-              <Edit2 size={20} />
-            </button>
-          )}
+      {showLimitTips && (
+        <div className="fixed top-24 left-4 right-4 z-[1000] flex justify-center">
+          <div className="bg-black/55 text-white px-5 py-3 rounded-2xl shadow-lg">
+            <span className="text-[13px] font-medium">当前有访谈正在录音，暂时不能开启新任务</span>
+          </div>
         </div>
-      </div>
-
-
-
-      {/* Scrollable Content Container */}
-      <div className="flex-1 min-h-0 overflow-y-auto relative z-10 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="px-4 pb-36 pt-4 space-y-3">
-          {(() => {
-            // 判断是否有真正完成了录音的访谈记录
-            // interviewTotalCount 已在 fetchInterviewRecords 中过滤掉了仅创建未录音的实例
-            // interviewInstList 也需要过滤：只有 interviewInstStatus !== '1' 的才算有效
-            const completedInstList = Array.isArray(currentDeal?.interviewInstList)
-              ? currentDeal.interviewInstList.filter((r: any) => r.interviewInstStatus && String(r.interviewInstStatus) !== '1')
-              : [];
-            const hasInterviewRecords = interviewTotalCount > 0 || 
-                                       ['4', '5'].includes(currentDeal?.status || '') || 
-                                       completedInstList.length > 0;
-            const isGenerated = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED;
-            const isGenerating = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING;
-            const isFailed = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED;
-            
-            let headerIcon = '';
-            let headerTitle = '';
-            let headerSub = '';
-            
-            if (isGenerated) {
-              headerIcon = 'talksuccess.png';
-              headerTitle = '报告已生成';
-              headerSub = '访谈即报告，小狸智能捕捉核心洞察';
-            } else if (String(currentDeal?.status) === '1') {
-              // 状态 1 明确为“尽调准备阶段”，绝不可能有已完成的真实访谈，屏蔽一切可能的脏数据
-              headerIcon = 'talkfaild.png';
-              headerTitle = '访谈未开始';
-              headerSub = '暂无访谈记录，请先开始访谈';
-            } else if (['2', '3'].includes(String(currentDeal?.status))) {
-              // 状态 2, 3（已创建部分、进行中）且未生成报告时
-              if (hasInterviewRecords) {
-                headerIcon = 'talksuccess.png';
-                headerTitle = '访谈已完成';
-                headerSub = '访谈即报告，小狸智能捕捉核心洞察';
-              } else {
-                headerIcon = 'talkfaild.png';
-                headerTitle = '访谈未开始';
-                headerSub = '暂无访谈记录，请先开始访谈';
-              }
-            } else if (hasInterviewRecords || ['4', '5'].includes(String(currentDeal?.status))) {
-              headerIcon = 'talksuccess.png';
-              headerTitle = '访谈已完成';
-              headerSub = '访谈即报告，小狸智能捕捉核心洞察';
-            }
-            
-            if (isGenerating) {
-              headerIcon = 'talksuccess.png';
-              headerTitle = '报告生成中';
-              headerSub = '小狸AI全速生成报告中，请稍候...';
-            } else if (isFailed) {
-              headerIcon = 'talkfaild.png';
-              headerTitle = '报告生成失败';
-              headerSub = '请重试或检查资料内容';
-            }
-            
-            // 如果连标题都没有（还在加载初始状态），则渲染一个带骨架感的占位容器或保持留白
-            if (!headerTitle && !isGenerating) {
-               return (
-                 <div className="bg-white rounded-[24px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-indigo-50/30 h-[178px] flex items-center justify-center">
-                    <div className="w-6 h-6 border-2 border-indigo-100 border-t-indigo-500 rounded-full animate-spin"></div>
-                 </div>
-               );
-            }
-
-            return (
-              <div className="bg-white rounded-[24px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-indigo-50/30">
-                <div className="flex items-center gap-0 mb-3 -mt-2">
-                  <div className="w-[100px] h-[100px] flex-shrink-0 relative -ml-3 -my-3">
-                     <img src={`${basePath}assets/${headerIcon}`} alt="status" className="w-full h-full object-contain drop-shadow-sm" />
-                  </div>
-                  <div className="flex flex-col gap-0.5 z-10 -ml-1">
-                     <h2 className="text-[17.5px] font-bold text-slate-800 tracking-tight">{headerTitle}</h2>
-                     <p className="text-[12px] text-gray-500 leading-snug">{headerSub}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2.5">
-                  {(!isReadOnly) && (
-                  <button
-                    onClick={handleGenerateReportThrottled}
-                    disabled={isGenerating}
-                    className="w-full bg-[#4B42F5] text-white rounded-2xl py-[12px] flex items-center justify-center gap-2 font-medium text-[14px] active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isGenerating ? (
-                      <div className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <FileText size={16} />
-                    )}
-                    <span>{isGenerating ? '报告生成中...' : (isGenerated ? '重新生成报告' : '立即生成报告')}</span>
-                  </button>
-                  )}
-
-                  {isGenerated && !isGenerating ? (
-                    <div className="flex gap-2">
-                      <button onClick={handleReportPreviewThrottled} className="flex-1 bg-white border border-gray-100 rounded-2xl py-2.5 flex flex-col items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-                        <Eye size={16} className="text-gray-600" />
-                        <span className="text-[11px] text-gray-700 font-medium">预览报告</span>
-                      </button>
-                      <button onClick={handleDownloadReportThrottled} className="flex-1 bg-white border border-gray-100 rounded-2xl py-2.5 flex flex-col items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-                        <Download size={16} className="text-gray-600" />
-                        <span className="text-[11px] text-gray-700 font-medium">立即下载</span>
-                      </button>
-                      {(!isReadOnly) && (
-                      <button
-                        onClick={() => {
-                          if (isGenerating) {
-                            Toast.info('报告正在生成中，暂不支持更换模板');
-                            return;
-                          }
-                          handleChangeTemplateThrottled?.();
-                        }}
-                        disabled={isGenerating}
-                        className={`flex-1 bg-white border border-gray-100 rounded-2xl py-2.5 flex flex-col items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${isGenerating ? 'opacity-50 grayscale select-none' : ''}`}
-                      >
-                        <RefreshCw size={16} className="text-gray-600" />
-                        <span className="text-[11px] text-gray-700 font-medium">更换模板</span>
-                      </button>
-                      )}
-                    </div>
-                  ) : (
-                    (!isReadOnly) && (
-                    <button
-                      onClick={() => {
-                        if (isGenerating) {
-                          Toast.info('报告正在生成中，暂不支持更换模板');
-                          return;
-                        }
-                        handleChangeTemplateThrottled?.();
-                      }}
-                      disabled={isGenerating}
-                      className={`w-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] rounded-2xl py-[12px] flex items-center justify-center gap-1.5 font-medium text-[14px] text-gray-700 active:scale-[0.98] transition-all ${isGenerating ? 'opacity-50 grayscale select-none' : ''}`}
-                    >
-                      <RefreshCw size={16} className="text-gray-600" />
-                      <span>更换模板</span>
-                    </button>
-                    )
-                  )}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* 尽调小总结 Card */}
-         {/* <div className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
-            <div className={`flex items-center justify-between ${summaryStatus === SummaryStatusEnum.GENERATED ? 'mb-3' : ''} relative z-10 px-0.5`}>
-              <div className="flex items-center gap-2">
-                <h3 className="text-[16px] font-bold text-slate-800 tracking-tight">尽调小总结</h3>
-                <div className="bg-[#F4F7FF] text-[#86909C] text-[10px] px-2 py-0.5 rounded-md font-medium">
-                  自动提炼, 仅供参考
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {!isReadOnly && (
-                  <button
-                    onClick={handleGenerateSummary}
-                    className={`p-1 transition-colors active:scale-95 ${summaryStatus === SummaryStatusEnum.GENERATING ? 'cursor-not-allowed opacity-70' : 'text-indigo-400 hover:text-indigo-600'}`}
-                  >
-                    {summaryStatus === SummaryStatusEnum.GENERATING ? (
-                      <div className="w-3.5 h-3.5 border-2 border-indigo-400/80 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <RotateCw size={14} />
-                    )}
-                  </button>
-                )}
-                <button
-                  onClick={() => currentDeal?.dealSummary && setIsSummaryExpanded(!isSummaryExpanded)}
-                  disabled={summaryStatus !== SummaryStatusEnum.GENERATED || !currentDeal?.dealSummary}
-                  className={`flex items-center gap-0.5 px-2 py-0.5 rounded-[6px] text-[11px] font-medium transition-all ${summaryStatus === SummaryStatusEnum.GENERATED && currentDeal?.dealSummary ? 'bg-[#F0F2FF] text-[#4B42F5] active:scale-95' : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
-                >
-                  {isSummaryExpanded ? '收起' : '展开'}
-                  {isSummaryExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                </button>
-              </div>
-            </div>
-
-            {summaryStatus === SummaryStatusEnum.GENERATED && currentDeal?.dealSummary ? (
-              // 生成成功 → 展示 markdown 渲染的总结内容（支持展开/收起）
-              <div className="relative z-10 px-0.5 transition-all duration-300">
-                <div className={`markdown-body text-[12px] text-gray-700 leading-relaxed text-justify tracking-normal ${!isSummaryExpanded ? 'line-clamp-2' : ''}`} dangerouslySetInnerHTML={{
-                  __html: markdownToHtml(currentDeal.dealSummary)
-                }}>
-                </div>
-              </div>
-            ) : (
-              // 其他状态 → 根据 status 显示对应的占位提示（失败/生成中/未生成）
-              <div className="relative z-10 px-0.5 mt-2">
-                <p className="text-[13px] text-gray-400">
-                  {summaryStatus === SummaryStatusEnum.FAILED
-                    ? '尽调总结生成失败，请重新生成'
-                    : summaryStatus === SummaryStatusEnum.GENERATING
-                      ? '正在生成尽调总结...'
-                      : '尽调小总结未生成，请点击生成'}
-                </p>
-              </div>
-            )}
-          </div>*/}
-
-          {/* 尽调资料 */}
-          {(() => {
-            const resourcesCount = currentDeal?.resources?.length || 0;
-            const supplementaryCount = Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary.length : 0;
-            const totalCount = resourcesCount + supplementaryCount;
-            
-            const getFileIconSrc = (fileName: string | undefined): string => {
-              const ext = fileName?.split('.').pop()?.toLowerCase() || '';
-              if (['xlsx', 'xls', 'csv'].includes(ext)) {
-                return `${basePath}assets/excel.png`;
-              } else if (['doc', 'docx'].includes(ext)) {
-                return `${basePath}assets/word.png`;
-              } else if (['pdf'].includes(ext)) {
-                return `${basePath}assets/pdf.png`;
-              } else if (['txt', 'text'].includes(ext)) {
-                return `${basePath}assets/txt.png`;
-              } else if (['ppt', 'pptx'].includes(ext)) {
-                return `${basePath}assets/ppt.png`;
-              } else if (['mp3', 'wav', 'm4a', 'aac', 'flac', 'amr', '3gp', 'ogg'].includes(ext)) {
-                return `${basePath}assets/wav.png`;
-              } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) {
-                return `${basePath}assets/image.png`;
-              }
-              return `${basePath}assets/txt.png`;
-            };
-
-            const displayList = [
-              ...(currentDeal?.resources || []).map((r: any) => ({ name: r.fileName || r.name || '资料', fileName: r.fileName })),
-              ...(Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary : []).map((s: any) => ({ name: s.fileName || s.name || '补充资料', fileName: s.fileName }))
-            ].slice(0, 2);
-
-            return (
-            <div 
-              className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden active:bg-gray-50 transition-colors cursor-pointer"
-              onClick={handleNavigateMaterialsThrottled}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[16px] font-bold text-slate-800 tracking-wider">尽调资料 <span className="font-medium">({totalCount})</span></h3>
-                <div className="flex items-center gap-1">
-                  <button 
-                    className="flex items-center border border-[#4B42F5] text-[#4B42F5] rounded-full px-2.5 py-[2px] text-[11px] active:bg-indigo-50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleNavigateMaterialsThrottled();
-                    }}
-                  >
-                    {!isReadOnly && <span className="font-bold mr-0.5">+</span>}
-                    {isReadOnly ? '立即查看' : '立即添加'}
-                  </button>
-                  <ChevronRight size={14} className="text-gray-300" />
-                </div>
-              </div>
-
-              {totalCount === 0 ? (
-                <div className="border border-dashed border-gray-200 rounded-xl py-4 flex items-center justify-center gap-2">
-                  <FileText size={14} className="text-gray-300" />
-                  <span className="text-[12px] text-gray-400">暂无尽调资料</span>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {displayList.map((item: any, idx: number) => {
-                    const iconSrc = getFileIconSrc(item.fileName);
-                    return (
-                    <div key={idx} className="border border-gray-100 rounded-xl px-3 py-2.5 flex items-center gap-2 bg-[#FAFAFA]/50">
-                      <div className="w-[26px] h-[26px] flex-shrink-0">
-                        <img src={iconSrc} alt="file icon" className="w-full h-full object-contain" />
-                      </div>
-                      <span className="text-[13px] text-slate-700 truncate">{item.name}</span>
-                    </div>
-                  )})}
-                </div>
-              )}
-            </div>
-            )
-          })()}
-
-          {/* 访谈录音 */}
-          {(() => {
-            const records = interviewRecords;
-            const totalCount = interviewTotalCount;
-            const displayList = records.slice(0, 2);
-
-            return (
-            <div 
-              className="bg-white rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.04)] relative overflow-hidden active:bg-gray-50 transition-colors cursor-pointer"
-              onClick={handleRecordingClickThrottled}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[16px] font-bold text-slate-800 tracking-wider">访谈录音 <span className="font-medium">({totalCount})</span></h3>
-                <div className="flex items-center gap-1">
-                  <button 
-                    className="flex items-center border border-[#4B42F5] text-[#4B42F5] rounded-full px-2.5 py-[2px] text-[11px] active:bg-indigo-50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRecordingClickThrottled();
-                    }}
-                  >
-                    {!isReadOnly && <span className="font-bold mr-0.5">+</span>}
-                    {isReadOnly ? '历史访谈' : '访谈录音'}
-                  </button>
-                  <ChevronRight size={14} className="text-gray-300" />
-                </div>
-              </div>
-
-              {totalCount === 0 ? (
-                <div className="border border-dashed border-gray-200 rounded-xl py-4 flex items-center justify-center gap-2">
-                  {/* mockup uses a specific line icon, using general audio icon here */}
-                  <div className="w-3.5 h-3.5 flex items-center justify-center border border-gray-300 rounded-[2px]">
-                     <div className="w-1 h-2 bg-gray-300 rounded-full"></div>
-                  </div>
-                  <span className="text-[12px] text-gray-400">暂无访谈录音</span>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {displayList.map((item: any, idx: number) => (
-                    <div key={idx} className="border border-gray-100 rounded-xl px-3 py-2.5 flex items-center gap-2 bg-[#FAFAFA]/50">
-                      <div className="w-[26px] h-[26px] bg-[#EAF2FF] rounded flex justify-center items-center text-[#5681F0]">
-                        <Mic size={14} />
-                      </div>
-                      <span className="text-[13px] text-slate-700 truncate">{item.interviewInstName || '访谈录音'}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            )
-          })()}
-
-          {/* 企查查资料 */}
-          {(() => {
-            const handleSync = async () => {
-                const name = currentDeal?.companyName?.trim() || basicInfo.name?.trim();
-                const code = currentDeal?.creditCode?.trim();
-                
-                if (!name && !code) {
-                    Toast.info('请先填写企业名称，再抓取数据');
-                    onEditInfo?.();
-                    return;
-                }
-
-                if (!currentDeal?.id || isSyncing) return;
-                try {
-                    setIsSyncing(true);
-                    Toast.loading({ message: '同步中...', duration: 0 });
-                    const res = await dealService.syncEnterprise(currentDeal.id);
-                    if (res.success) {
-                        Toast.success('同步指令已下发，后台处理中');
-                        // 稍微延迟后刷新数据
-                        setTimeout(async () => {
-                            const basicRes = await dealService.getEnterpriseBasicInfo(currentDeal.id!);
-                            if (basicRes.success) setEnterpriseInfo(basicRes.data);
-                        }, 2000);
-                    } else {
-                        Toast.info(res.message || '请先填写企业名称，再抓取数据');
-                    }
-                } catch (e: any) {
-                    console.error('Sync failed:', e);
-                    Toast.info(e.message || '请先填写企业名称，再抓取数据');
-                } finally {
-                    setIsSyncing(false);
-                }
-            };
-
-            const getInsightStatus = () => {
-                if (isSyncing) return { text: '洞察中', color: 'text-amber-500' };
-                return { text: '待洞察', color: 'text-gray-400' };
-            };
-
-            const insightStatus = getInsightStatus();
-            
-            return (
-                <div className="bg-white rounded-[24px] p-4 shadow-[0_2px_16px_rgba(0,0,0,0.06)] border border-indigo-50/30">
-                    <div className="flex items-center justify-between mb-4 px-1">
-                        <div className="flex items-center gap-1.5">
-                            <h3 className="text-[16px] font-bold text-slate-800">企查查资料</h3>
-                            <span className="text-[14px] text-slate-300 font-medium">(7项)</span>
-                        </div>
-                        {!isReadOnly && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleSync();
-                            }}
-                            disabled={isSyncing}
-                            className="flex items-center border border-[#4B42F5] text-[#4B42F5] rounded-full px-2.5 py-[2px] text-[11px] active:bg-indigo-50 transition-all disabled:opacity-50"
-                        >
-                            {isSyncing ? '抓取中...' : (basicInfo.name ? '更新资料' : '抓取资料')}
-                        </button>
-                        )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                        {/* 企业名称 */}
-                        <div className="bg-[#F8FAFE] rounded-2xl p-3 border border-indigo-50/30">
-                            <p className="text-[11px] text-[#94A3B8] font-bold mb-2">企业名称</p>
-                            <div className="flex items-center justify-between gap-1">
-                                <span className="text-[14px] font-[800] text-slate-800 truncate">
-                                    {basicInfo.name || currentDeal?.companyName || '待补充'}
-                                </span>
-                                <div className="bg-[#EEF2FF] text-[#6366F1] text-[9px] px-1.5 py-0.5 rounded-md flex-shrink-0 font-bold">线索</div>
-                            </div>
-                        </div>
-
-                        {/* 统一代码 */}
-                        <div className="bg-[#F8FAFE] rounded-2xl p-3 border border-indigo-50/30">
-                            <p className="text-[11px] text-[#94A3B8] font-bold mb-2">统一代码</p>
-                            <div className="flex items-center justify-between gap-1">
-                                <span className="text-[14px] font-[800] text-slate-800 truncate">
-                                    {basicInfo.creditCode || currentDeal?.creditCode || '待补充'}
-                                </span>
-                                <div className="bg-[#EEF2FF] text-[#6366F1] text-[9px] px-1.5 py-0.5 rounded-md flex-shrink-0 font-bold">线索</div>
-                            </div>
-                        </div>
-
-                        {/* 企查查状态 
-                        <div className="bg-[#F8FAFE] rounded-2xl p-3 border border-indigo-50/30">
-                            <p className="text-[11px] text-[#94A3B8] font-bold mb-2">企查查状态</p>
-                            <div className="flex items-center justify-between gap-1">
-                                <span className={`text-[14px] font-[800] ${basicInfo.regStatus ? 'text-slate-800' : 'text-gray-400'}`}>
-                                    {basicInfo.regStatus || (isSyncing ? '同步中' : '待同步')}
-                                </span>
-                                <div className="bg-[#EEF2FF] text-[#6366F1] text-[9px] px-1.5 py-0.5 rounded-md flex-shrink-0 font-bold">线索</div>
-                            </div>
-                        </div>
-                        */}
-
-                        {/* 股权变更 
-                        <div className="bg-[#F8FAFE] rounded-2xl p-3 border border-indigo-50/30">
-                            <p className="text-[11px] text-[#94A3B8] font-bold mb-2">股权变更</p>
-                            <div className="flex items-center justify-between gap-1">
-                                <span className={`text-[14px] font-[800] ${insightStatus.color} truncate`}>
-                                    {insightStatus.text}
-                                </span>
-                                <div className="bg-[#EEF2FF] text-[#6366F1] text-[9px] px-1.5 py-0.5 rounded-md flex-shrink-0 font-bold">线索</div>
-                            </div>
-                        </div>
-                        */}
-                    </div>
-
-                    <button 
-                         disabled={!hasEnterpriseName || isSyncing}
-                         className={`w-full mt-4 flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-dashed border-slate-200 transition-all ${
-                            (!hasEnterpriseName || isSyncing) 
-                            ? 'opacity-40 grayscale select-none pointer-events-none' 
-                            : 'active:scale-[0.98] active:bg-slate-100 cursor-pointer'
-                         }`}
-                         onClick={(e) => {
-                            e.stopPropagation();
-                            if (!hasEnterpriseName || isSyncing) return;
-                            onNavigateToEnterpriseDetail?.({
-                                ...enterpriseInfo,
-                                aiInsights: aiInsights
-                            });
-                         }}
-                    >
-                        <span className={`text-[14px] font-[800] ${!hasEnterpriseName ? 'text-slate-400' : 'text-slate-700'}`}>查看完整企查查资料</span>
-                        <ChevronRight size={18} className={!hasEnterpriseName ? 'text-gray-200' : 'text-gray-300'} />
-                    </button>
-                </div>
-            );
-          })()}
-
-          {/* 问题集合 */}
-          {(() => {
-            const questionList = currentDeal?.questionInfoList || [];
-            const totalCount = questionList.length;
-            const checkedCount = questionList.filter((q) => q.CHECKED === true).length;
-            // 数据源直接取最开始的两条
-            const displayQuestions = questionList.slice(0, 2);
-
-            return (
-              <div className="bg-white rounded-[32px] p-5 shadow-[0_2px_24px_rgba(0,0,0,0.06)] border border-indigo-50/20">
-                {/* Header */}
-                <div className="mb-3">
-                  <div className="flex items-center gap-1 mb-1">
-                    <h3 className="text-[16px] font-bold text-slate-800">问题清单</h3>
-                    <div className="flex items-baseline">
-                      <span className="text-[14px] font-bold text-slate-800 ml-0.5">{checkedCount}</span>
-                      <span className="text-[12px] font-medium text-slate-200">/{totalCount}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions Inline - Medium Size */}
-                {!isReadOnly && (
-                <div className="flex items-center gap-2.5 mb-3.5">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setTemplateModalVisible(true);
-                    }}
-                    className="flex items-center border border-[#EBEBF5] text-slate-700 rounded-full px-5 py-1.5 text-[12px] font-[800] active:bg-gray-50 transition-all shadow-sm"
-                  >
-                    添加清单
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!hasEnterpriseName || isAnalyzingAi) return;
-                      handleAiInsight();
-                    }}
-                    disabled={!hasEnterpriseName || isAnalyzingAi}
-                    className={`
-                      flex items-center gap-1.5 rounded-full px-5 py-1.5 text-[12px] font-[800] transition-all
-                      ${(!hasEnterpriseName || isAnalyzingAi)
-                        ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none border border-slate-50'
-                        : 'bg-[#4B42F5] text-white shadow-[0_4px_10px_rgba(75,66,245,0.25)] active:scale-95'}
-                    `}
-                  >
-                    <span>{aiInsightList.length > 0 ? '再次洞察' : 'AI 洞察'}</span>
-                  </button>
-                </div>
-                )}
-
-                {/* Progress Bar Area - Detailed Animation */}
-                {isAnalyzingAi && (
-                  <div className="bg-[#F2F7FF] rounded-[24px] p-4 mb-4 border border-white shadow-sm overflow-hidden relative">
-                    <div className="flex items-center gap-3 mb-3">
-                       <div className="w-5 h-5 border-[2.5px] border-indigo-500 border-t-transparent animate-spin rounded-full shrink-0" />
-                       <span className="text-[14px] font-bold text-slate-700">问题清单生成中</span>
-                    </div>
-                    {/* Progress Track */}
-                    <div className="h-1.5 w-full bg-white/60 rounded-full overflow-hidden">
-                       <div 
-                         className="h-full bg-[#4B42F5] rounded-full animate-[progress_5s_ease-in-out_infinite]"
-                         style={{ width: '60%' }}
-                       />
-                    </div>
-                    {/* Inline Animation definition */}
-                    <style>{`
-                       @keyframes progress {
-                         0% { transform: translateX(-100%); }
-                         50% { transform: translateX(0); }
-                         100% { transform: translateX(100%); }
-                       }
-                    `}</style>
-                  </div>
-                )}
-
-                {/* Question Preview List */}
-                <div className="space-y-2 mb-3">
-                  {displayQuestions.map((q, idx) => (
-                    <div key={idx} className="bg-[#F8FAFC] rounded-[18px] p-3 border border-white">
-                      <p className="text-[13px] text-slate-700 font-medium leading-[1.5] line-clamp-2">
-                        {q.questionName}
-                      </p>
-                    </div>
-                  ))}
-                  {displayQuestions.length === 0 && (
-                    <div className="bg-[#F8FAFC] rounded-[18px] p-4 text-center border border-dashed border-slate-200">
-                      <span className="text-[12px] text-slate-400">暂无问题条目</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Bottom Entry - Compact Premium */}
-                <button 
-                  onClick={handleNavigateQuestionsThrottled}
-                  className="group w-full h-[48px] rounded-[16px] border border-indigo-100/40 bg-gradient-to-r from-white to-[#F8FAFF] flex items-center justify-between px-3.5 active:scale-[0.98] transition-all shadow-sm"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-7.5 h-7.5 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 group-active:scale-90 transition-transform">
-                      <FileText size={16} strokeWidth={2.5} />
-                    </div>
-                    <span className="text-[13px] font-bold text-slate-700 tracking-tight">
-                        {aiInsightList.length > 0 ? '点击查看AI洞察生成的问题清单' : '点击查看完整问题清单'}
-                    </span>
-                  </div>
-                  <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:text-indigo-400 transition-colors">
-                    <ChevronRight size={14} strokeWidth={3} />
-                  </div>
-                </button>
-              </div>
-            );
-          })()}
-        </div>
-      </div>
-
-      {!isDemo && (
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-3 z-30">
-        <button
-          onClick={currentDeal?.status === '5' ? handleCancelArchiveThrottled : handleArchiveThrottled}
-          className={`w-full h-12 rounded-full font-bold text-lg transition-transform flex items-center justify-center gap-2 ${currentDeal?.status === '5'
-            ? 'bg-white text-indigo-600 border border-indigo-200 shadow-md active:scale-95'
-            : 'bg-[#4337F1] text-white shadow-lg active:scale-95'
-            }`}
-        >
-          {currentDeal?.status === '5' ? (
-            '取消归档'
-          ) : (
-            <>
-              <Archive size={20} strokeWidth={2.5} />
-              归档
-            </>
-          )}
-        </button>
-      </div>
       )}
 
+      <div className="px-4 pt-4 pb-2 shrink-0 relative z-50">
+        <div className="grid grid-cols-[48px_1fr_48px] items-center gap-2">
+          <button onClick={handleBackThrottled} className="xl-icon-btn">
+            <ArrowLeft size={21} />
+          </button>
+          <div className="min-w-0 text-center flex items-center justify-center">
+            <h1 className="xl-page-title truncate">{currentDeal?.interviewCust || '尽调详情'}</h1>
+          </div>
+          <div className="relative">
+            <button onClick={() => setShowMoreMenu((value) => !value)} className="xl-icon-btn">
+              <MoreHorizontal size={21} />
+            </button>
+            {showMoreMenu && (
+              <div className="absolute right-0 top-12 w-36 rounded-[18px] bg-[#fffefa] border border-[#eadfca] shadow-[0_16px_36px_rgba(74,56,25,0.14)] overflow-hidden z-[60]">
+                <button
+                  className="w-full h-11 px-4 flex items-center gap-2 text-[13px] font-normal text-[#1f2024] active:bg-[#fff8e6]"
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    handleEditInfoThrottled();
+                  }}
+                >
+                  <Edit2 size={16} /> 名称编辑
+                </button>
+                {!isDemo && (
+                  <button
+                    className="w-full h-11 px-4 flex items-center gap-2 text-[13px] font-normal text-[#1f2024] active:bg-[#fff8e6]"
+                    onClick={() => {
+                      setShowMoreMenu(false);
+                      currentDeal?.status === '5' ? handleCancelArchiveThrottled() : handleArchiveThrottled();
+                    }}
+                  >
+                    <Archive size={16} /> {currentDeal?.status === '5' ? '取消归档' : '归档'}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="flex-1 min-h-0 overflow-y-auto relative z-10 scroll-smooth"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+        onScroll={(event) => setIsCompressed(event.currentTarget.scrollTop > 150)}
+        onWheel={(event) => {
+          if (event.deltaY > 24) setIsCompressed(true);
+          if (event.deltaY < -24 && event.currentTarget.scrollTop < 12) setIsCompressed(false);
+        }}
+      >
+        <div className="px-4 pb-12 pt-1.5 space-y-3">
+          {!isCompressed && (
+            <>
+              {reportCardState === 'loading' ? (
+                <div className="xl-report-state min-h-[136px] flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-[#eadfca] border-t-[#C99A3A] rounded-full animate-spin" />
+                </div>
+              ) : (
+                <div className={`xl-report-state ${reportCardState === 'generating' ? 'is-processing' : ''} ${reportCardState === 'failed' || reportCardState === 'notStarted' ? 'is-failed' : ''}`}>
+                  <div className="xl-report-state-head">
+                    <div className="xl-report-illu">
+                      <FileText size={24} strokeWidth={2.1} />
+                    </div>
+                    <div className="min-w-0">
+                      <h2>{reportCardTitleMap[reportCardState]}</h2>
+                      <p>{reportCardDescMap[reportCardState]}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2.5">
+                    {isGenerating ? (
+                      <div className="xl-report-progress">
+                        <div className="flex items-center justify-between gap-3">
+                          <span>报告生成中</span>
+                          <strong>{reportProgress}%</strong>
+                        </div>
+                        <div className="xl-report-progress-track">
+                          <div style={{ width: `${reportProgress}%` }} />
+                        </div>
+                      </div>
+                    ) : (
+                      !isReadOnly && (
+                        <button
+                          onClick={handleGenerateReportThrottled}
+                          className={`xl-report-btn ${isGenerated ? 'soft' : 'gold'} w-full`}
+                        >
+                          <FileText size={15} />
+                          <span>{isGenerated ? '重新生成报告' : '立即生成报告'}</span>
+                        </button>
+                      )
+                    )}
+
+                    {isGenerated && !isGenerating ? (
+                      <div className={`xl-report-actions ${isReadOnly ? 'two' : 'three'}`}>
+                        <button onClick={handleReportPreviewThrottled} className="xl-report-btn ghost vertical">
+                          <Eye size={15} />
+                          <span>预览报告</span>
+                        </button>
+                        <button onClick={handleDownloadReportThrottled} className="xl-report-btn ghost vertical">
+                          <Download size={15} />
+                          <span>立即下载</span>
+                        </button>
+                        {!isReadOnly && (
+                          <button
+                            onClick={() => {
+                              if (isGenerating) {
+                                Toast.info('报告正在生成中，暂不支持更换模板');
+                                return;
+                              }
+                              handleChangeTemplateThrottled?.();
+                            }}
+                            disabled={isGenerating}
+                            className="xl-report-btn ghost vertical disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <RefreshCw size={15} />
+                            <span>更换模板</span>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      !isReadOnly && !isGenerating && (
+                        <button
+                          onClick={() => {
+                            handleChangeTemplateThrottled?.();
+                          }}
+                          className="xl-report-btn ghost w-full"
+                        >
+                          <RefreshCw size={15} /> 更换模板
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="sticky top-0 z-40 -mx-1 px-1 py-1.5 bg-[linear-gradient(180deg,#f8f3e8_0%,rgba(248,243,232,0.96)_100%)]">
+            <div className="xl-segment flex">
+              {[
+                ['interview', '访谈'],
+                ['questions', '问题'],
+                ['materials', '资料'],
+                ['enterprise', '企业信息'],
+              ].map(([key, label]) => (
+                <button
+                  key={key}
+                  className={`flex-1 xl-segment-item ${activeDetailTab === key ? 'is-active' : ''}`}
+                  onClick={() => setActiveDetailTab(key as typeof activeDetailTab)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {activeDetailTab === 'interview' && (
+            <div className="space-y-2.5">
+              {!isReadOnly && (
+                <div className="xl-card p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="xl-section-title">开始新的访谈</h3>
+                    </div>
+                    <button onClick={handleRecordingClickThrottled} className="xl-btn-primary min-w-[116px] px-3 flex items-center justify-center gap-1.5">
+                      <Mic size={16} /> 开始访谈
+                    </button>
+                  </div>
+                </div>
+              )}
+              {interviewRecords.length === 0 ? (
+                <div className="xl-card-flat p-5 text-center xl-body">暂无访谈记录</div>
+              ) : (
+                interviewRecords.map((record: any) => (
+                  <button
+                    key={record.interviewInstId || record.id}
+                    className="w-full xl-card-flat p-4 text-left flex items-center justify-between gap-3 active:scale-[0.99] transition-transform min-h-[58px]"
+                    onClick={() => onOpenInterviewRecord?.(record)}
+                  >
+                    <div className="min-w-0">
+                      <h3 className="xl-card-title truncate">{record.interviewInstName || record.interviewInstTitle || '访谈记录'}</h3>
+                      <p className="xl-meta mt-1">{record.createTime || record.lastModifiedTime || '可查看'}</p>
+                    </div>
+                    <span className="xl-pill">可查看</span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+
+          {activeDetailTab === 'questions' && (
+            <div className="xl-card p-4">
+              <div className="flex items-center justify-between mb-2.5">
+                <h3 className="xl-section-title">问题清单</h3>
+                {!isReadOnly && (
+                  <div className="flex gap-2">
+                    <button onClick={() => setTemplateModalVisible(true)} className="xl-btn-ghost px-3 min-h-[34px] text-[11px]">添加</button>
+                    <button onClick={handleAiInsight} disabled={!hasEnterpriseName || isAnalyzingAi} className="xl-btn-primary px-3 min-h-[34px] text-[11px] disabled:opacity-50">{isAnalyzingAi ? '生成中' : 'AI 洞察'}</button>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                {questionList.map((q, idx) => (
+                  <div key={idx} className="xl-card-flat p-3">
+                    <p className="text-[12px] leading-[17px] font-normal text-[#1f2024]">{q.questionName}</p>
+                  </div>
+                ))}
+                {questionList.length === 0 && <div className="xl-card-flat p-4 text-center xl-body">暂无问题条目</div>}
+              </div>
+            </div>
+          )}
+
+          {activeDetailTab === 'materials' && (
+            <div className="space-y-2.5">
+              {!isReadOnly && (
+                <div className="xl-card p-4">
+                  <div className="grid grid-cols-4 gap-2.5 text-center">
+                    {[
+                      [Camera, '相机', () => cameraInputRef.current?.click()],
+                      [Image, '相册', () => galleryInputRef.current?.click()],
+                      [Upload, '文件', () => fileInputRef.current?.click()],
+                      [Mic, '语音录入', () => setVoiceModalVisible(true)],
+                    ].map(([Icon, label, action]: any) => (
+                      <button key={label} onClick={action} className="min-h-[62px] rounded-[15px] bg-[#fbfaf6] border border-[#eadfca] flex flex-col items-center justify-center gap-1.5 text-[#334155] active:scale-95 transition-transform">
+                        <Icon size={19} />
+                        <span className="text-[10.5px] font-normal text-[#6f665b]">{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="xl-card p-4">
+                <div className="space-y-1">
+                  {[
+                    ...(currentDeal?.resources || []),
+                    ...(Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary : []),
+                  ].map((item: any, idx: number) => (
+                    <div key={idx} className="flex items-center gap-3 py-2.5 border-b border-[#eadfca]/70 last:border-b-0">
+                      <div className="w-9 h-9 rounded-[12px] bg-[#f0eadf] text-[#8b641d] flex items-center justify-center text-[11px] font-semibold">
+                        {(item.fileName || item.name || 'PDF').split('.').pop()?.slice(0, 3).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="xl-card-title truncate">{item.fileName || item.name || '资料文件'}</h3>
+                        <p className="xl-meta mt-1">可用于报告</p>
+                      </div>
+                      <span className="xl-pill">可用</span>
+                    </div>
+                  ))}
+                  {materialCount === 0 && <div className="xl-card-flat p-4 text-center xl-body">暂无资料</div>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeDetailTab === 'enterprise' && (
+            <div className="xl-card p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="xl-section-title">企业信息</h3>
+                {!isReadOnly && (
+                  <button onClick={handleSyncEnterpriseThrottled} disabled={isSyncing} className="xl-btn-ghost px-3 min-h-[36px] text-[12px] disabled:opacity-50">
+                    {isSyncing ? '同步中' : '同步'}
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="xl-card-flat p-3 col-span-2">
+                  <p className="xl-meta mb-1.5">企业名称</p>
+                  <p className="xl-card-title truncate">{basicInfo.name || currentDeal?.companyName || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3">
+                  <p className="xl-meta mb-1.5">企业状态</p>
+                  <p className="xl-card-title truncate">{basicInfo.regStatus || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3">
+                  <p className="xl-meta mb-1.5">法定代表人</p>
+                  <p className="xl-card-title truncate">{basicInfo.legalPersonName || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3">
+                  <p className="xl-meta mb-1.5">注册资本</p>
+                  <p className="xl-card-title truncate">{basicInfo.regCapital || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3">
+                  <p className="xl-meta mb-1.5">人员规模</p>
+                  <p className="xl-card-title truncate">{basicInfo.staffNumRange || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3 col-span-2">
+                  <p className="xl-meta mb-1.5">统一社会信用代码</p>
+                  <p className="xl-card-title truncate">{basicInfo.creditCode || currentDeal?.creditCode || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3 col-span-2">
+                  <p className="xl-meta mb-1.5">所属行业</p>
+                  <p className="xl-card-title">{basicInfo.industry || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3 col-span-2">
+                  <p className="xl-meta mb-1.5">注册地址</p>
+                  <p className="text-[12px] leading-[17px] font-normal text-[#1f2024]">{basicInfo.regLocation || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3 col-span-2">
+                  <p className="xl-meta mb-2">风险标签</p>
+                  {enterpriseRiskTags.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {enterpriseRiskTags.map((tag: string) => (
+                        <span key={tag} className="xl-pill">{tag}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="xl-card-title">待补充</p>
+                  )}
+                </div>
+                <div className="xl-card-flat p-3">
+                  <p className="xl-meta mb-1.5">收入增长</p>
+                  <p className="xl-card-title truncate">{enterpriseMetrics.revenueGrowth || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3">
+                  <p className="xl-meta mb-1.5">应收周转</p>
+                  <p className="xl-card-title truncate">{enterpriseMetrics.receivableTurnoverDays || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3">
+                  <p className="xl-meta mb-1.5">在手合同</p>
+                  <p className="xl-card-title truncate">{enterpriseMetrics.contractBacklog || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3">
+                  <p className="xl-meta mb-1.5">成立日期</p>
+                  <p className="xl-card-title truncate">{basicInfo.estiblishTime || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3 col-span-2">
+                  <p className="xl-meta mb-1.5">公司类型</p>
+                  <p className="text-[12px] leading-[17px] font-normal text-[#1f2024]">{basicInfo.companyOrgType || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3 col-span-2">
+                  <p className="xl-meta mb-1.5">登记机关</p>
+                  <p className="text-[12px] leading-[17px] font-normal text-[#1f2024]">{basicInfo.regInstitute || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3">
+                  <p className="xl-meta mb-1.5">注册号</p>
+                  <p className="xl-card-title truncate">{basicInfo.regNumber || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3">
+                  <p className="xl-meta mb-1.5">组织机构代码</p>
+                  <p className="xl-card-title truncate">{basicInfo.orgNumber || '待补充'}</p>
+                </div>
+                <div className="xl-card-flat p-3 col-span-2">
+                  <p className="xl-meta mb-2">主要股东</p>
+                  {enterpriseShareholders.length > 0 ? (
+                    <div className="space-y-2">
+                      {enterpriseShareholders.map((holder: any, idx: number) => (
+                        <div key={`${holder.name}-${idx}`} className="flex items-center justify-between gap-3 text-[12px]">
+                          <span className="font-normal text-[#1f2024] truncate">{holder.name}</span>
+                          <span className="shrink-0 text-[#8b641d] font-semibold">{holder.ratio}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="xl-card-title">待补充</p>
+                  )}
+                </div>
+                <div className="xl-card-flat p-3 col-span-2">
+                  <p className="xl-meta mb-2">股权变更</p>
+                  {enterpriseEquityChanges.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {enterpriseEquityChanges.map((change: any, idx: number) => (
+                        <div key={`${change.investor_name}-${idx}`} className="rounded-[12px] bg-[#fffdf8] border border-[#eadfca]/70 p-2.5">
+                          <div className="flex items-start justify-between gap-3">
+                            <span className="text-[12px] font-medium text-[#1f2024] leading-[17px]">{change.investor_name || '股权变更'}</span>
+                            <span className="text-[10.5px] text-[#a49a8d] font-normal shrink-0">{change.change_time || '-'}</span>
+                          </div>
+                          <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+                            <div className="rounded-[10px] bg-[#f7f2e8] px-2 py-1.5">
+                              <span className="text-[#a49a8d]">变更前 </span>
+                              <span className="font-medium text-[#6f665b]">{change.ratio_before || '-'}</span>
+                            </div>
+                            <div className="rounded-[10px] bg-[#fff8e6] px-2 py-1.5">
+                              <span className="text-[#8b641d]">变更后 </span>
+                              <span className="font-semibold text-[#8b641d]">{change.ratio_after || '-'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="xl-card-title">暂无股权变更</p>
+                  )}
+                </div>
+                <div className="xl-card-flat p-3 col-span-2">
+                  <p className="xl-meta mb-1.5">经营范围</p>
+                  <p className="text-[12px] leading-[18px] font-normal text-[#1f2024]">{basicInfo.businessScope || '待补充'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Voice Input Modal */}
       <VoiceInputModal

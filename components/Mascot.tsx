@@ -9,7 +9,7 @@ const Mascot: React.FC<{ size?: 'small' | 'medium' | 'large' }> = ({ size = 'med
   return (
     <div className={`relative ${sizeClass} mx-auto flex items-center justify-center`}>
       {/* Glow effect behind mascot */}
-      <div className="absolute inset-0 bg-blue-400/20 blur-3xl rounded-full scale-110"></div>
+      <div className="absolute inset-0 bg-[#d8b557]/20 blur-3xl rounded-full scale-110"></div>
       
       <img 
         src={MASCOT_IMAGE_URL} 

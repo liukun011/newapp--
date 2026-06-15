@@ -42,29 +42,29 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       />
       
       {/* 弹窗内容 */}
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-[320px] mx-auto overflow-hidden animate-scaleIn">
-        <div className="pt-8 pb-4 px-6 text-center text-slate-900">
+      <div className="relative bg-[#fffefa] rounded-[22px] border border-[#eadfca] shadow-[0_18px_44px_rgba(92,74,42,0.16)] w-full max-w-[320px] mx-auto overflow-hidden animate-scaleIn">
+        <div className="pt-7 pb-4 px-6 text-center text-[#1f2024]">
           {/* 可选展示 Icon */}
           {icon && (
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full flex items-center justify-center">
+            <div className="w-14 h-14 mx-auto mb-4 bg-[#fff8e6] border border-[#eadfca] rounded-[16px] flex items-center justify-center">
               {icon}
             </div>
           )}
-          <h2 className="text-lg font-bold mb-2">{title}</h2>
-          <p className="text-sm text-gray-500 leading-relaxed">{message}</p>
+          <h2 className="text-lg font-semibold mb-2">{title}</h2>
+          <p className="text-sm text-[#7d7467] leading-relaxed">{message}</p>
         </div>
 
         {/* 按钮组 */}
         <div className="px-6 pb-8 pt-2 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 border-2 border-gray-100 text-slate-600 text-[15px] font-medium rounded-full hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            className="flex-1 py-3 border border-[#eadfca] text-[#6f665b] text-[14px] font-medium rounded-[14px] hover:bg-[#fff8e6] active:bg-[#fff3cf] transition-colors"
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3 text-base font-medium text-white rounded-full active:scale-95 transition-all bg-confirm-gradient"
+            className="flex-1 py-3 text-[14px] font-medium text-[#151515] rounded-[14px] active:scale-95 transition-all bg-confirm-gradient shadow-[0_6px_14px_rgba(201,154,58,0.14)]"
           >
             {confirmText}
           </button>

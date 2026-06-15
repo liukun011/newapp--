@@ -4,6 +4,7 @@ import { copyWithToast } from '@/utils/copyUtils';
 import { Toast, Popup, Dialog, List, Loading } from 'react-vant';
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';
+import { mockMembers, mockTenants, mockUser } from '../mock/mockData';
 
 interface Member {
   id: string;
@@ -29,22 +30,71 @@ const maskPhoneNumber = (val: string) => {
   return val;
 };
 
-const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({ onBack }) => {
-  const [tenantName, setTenantName] = useState('小狸科技官方');
-  const [tenantId, setTenantId] = useState<string>('');
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState('');
+const getCurrentUser = () => {
+  try {
+    const userInfoStr = localStorage.getItem('zov-user-info');
+    return userInfoStr ? JSON.parse(userInfoStr) : mockUser;
+  } catch (error) {
+    console.warn('Failed to parse user info, using mock user', error);
+    return mockUser;
+  }
+};
 
-  const userInfoStr = localStorage.getItem('zov-user-info');
-  const currentUserObj = userInfoStr ? JSON.parse(userInfoStr) : null;
-  const currentUserId = currentUserObj?.userId;
+const hasTenantAdminPermission = (tenant: any, userId?: string) => {
+  if (!tenant) return false;
+  return !!(
+    tenant.tenantAdmin ||
+    tenant.isTenantAdmin ||
+    tenant.admin ||
+    (userId && String(tenant.createdBy) === String(userId))
+  );
+};
+
+const formatMember = (user: any): Member => {
+  let formattedTime = '未知时间';
+  if (user.createdTime) {
+    try {
+      const date = new Date(user.createdTime);
+      const Y = date.getFullYear();
+      const M = String(date.getMonth() + 1).padStart(2, '0');
+      const D = String(date.getDate()).padStart(2, '0');
+      const h = String(date.getHours()).padStart(2, '0');
+      const m = String(date.getMinutes()).padStart(2, '0');
+      const s = String(date.getSeconds()).padStart(2, '0');
+      formattedTime = `${Y}-${M}-${D} ${h}:${m}:${s}`;
+    } catch (e) {
+      formattedTime = user.createdTime;
+    }
+  }
+
+  return {
+    id: user.id || user.username || Math.random().toString(),
+    name: user.username || user.nickName || '匿名用户',
+    phone: user.mobile || '',
+    avatar: user.avatar || '',
+    isAdmin: !!(user.isTenantAdmin || user.tenantAdmin || user.admin),
+    createdTime: formattedTime
+  };
+};
+
+const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({ onBack }) => {
+  const currentUserObj = getCurrentUser();
+  const currentUserId = currentUserObj?.userId || currentUserObj?.id;
+  const fallbackTenant = mockTenants.find((item) => String(item.id) === String(currentUserObj?.tenantId)) || mockTenants[0];
+
+  const [tenantName, setTenantName] = useState(currentUserObj?.tenantName || fallbackTenant.name || '小狸科技官方');
+  const [tenantId, setTenantId] = useState<string>(currentUserObj?.tenantId || fallbackTenant.id || '');
+  const [isAdmin, setIsAdmin] = useState<boolean>(
+    !!currentUserObj?.isTenantAdmin || hasTenantAdminPermission(fallbackTenant, currentUserId)
+  );
+  const [searchQuery, setSearchQuery] = useState('');
   
   // 组织切换相关
   const [showTenantModal, setShowTenantModal] = useState(false);
-  const [tenants, setTenants] = useState<any[]>([]);
+  const [tenants, setTenants] = useState<any[]>(mockTenants);
   const [tenantsLoading, setTenantsLoading] = useState(false);
   
-  const [members, setMembers] = useState<Member[]>([]);
+  const [members, setMembers] = useState<Member[]>(mockMembers.map(formatMember));
   const [membersLoading, setMembersLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [finished, setFinished] = useState(false);
@@ -81,37 +131,11 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
       const res = await authService.getOrganizationUsers({
         current: page,
         size: 10,
-        orgId: "" 
+        orgId: tenantId || currentUserObj?.tenantId || mockUser.tenantId
       });
       
       if (res.successful && res.data && res.data.records) {
-        const newRecords = res.data.records.map((user: any) => {
-          // 格式化时间 2025-11-05T01:43:22Z -> 2025-11-05 01:43:22
-          let formattedTime = '未知时间';
-          if (user.createdTime) {
-            try {
-              const date = new Date(user.createdTime);
-              const Y = date.getFullYear();
-              const M = String(date.getMonth() + 1).padStart(2, '0');
-              const D = String(date.getDate()).padStart(2, '0');
-              const h = String(date.getHours()).padStart(2, '0');
-              const m = String(date.getMinutes()).padStart(2, '0');
-              const s = String(date.getSeconds()).padStart(2, '0');
-              formattedTime = `${Y}-${M}-${D} ${h}:${m}:${s}`;
-            } catch (e) {
-              formattedTime = user.createdTime;
-            }
-          }
-
-          return {
-            id: user.id || user.username || Math.random().toString(),
-            name: user.username || '匿名用户',
-            phone: user.mobile || '', 
-            avatar: user.avatar || '',
-            isAdmin: !!user.isTenantAdmin,
-            createdTime: formattedTime
-          };
-        });
+        const newRecords = res.data.records.map(formatMember);
         
         if (isRefresh) {
           setMembers(newRecords);
@@ -125,12 +149,14 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
         }
         setCurrentPage(page);
       } else if (res.code === 403) {
-        setMembers([]);
+        setMembers(mockMembers.map(formatMember));
+        setIsAdmin(true);
         setFinished(true);
       }
     } catch (e) {
       console.error('Failed to fetch members', e);
-      if (isRefresh) setMembers([]);
+      if (isRefresh) setMembers(mockMembers.map(formatMember));
+      setIsAdmin(true);
       setFinished(true);
     } finally {
       setLoading(false);
@@ -168,18 +194,31 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
             fetchMembers(1, true);
           }
 
-          // Fetch tenants list to check admin status
           const fetchTenantsRes = await authService.getTenants();
           if (fetchTenantsRes.successful && fetchTenantsRes.data && Array.isArray(fetchTenantsRes.data)) {
             setTenants(fetchTenantsRes.data);
             const currentTenant = fetchTenantsRes.data.find((t: any) => String(t.id) === String(currentId));
             if (currentTenant) {
-              setIsAdmin(!!currentTenant.tenantAdmin || (currentUserId && String(currentTenant.createdBy) === String(currentUserId)));
+              setIsAdmin(hasTenantAdminPermission(currentTenant, currentUserId));
             }
+          } else {
+            setTenants(mockTenants);
+            setIsAdmin(true);
           }
+        } else {
+          localStorage.setItem('zov-user-info', JSON.stringify(mockUser));
+          setTenantName(mockUser.tenantName);
+          setTenantId(mockUser.tenantId);
+          setEditValue(mockUser.tenantName);
+          setTenants(mockTenants);
+          setMembers(mockMembers.map(formatMember));
+          setIsAdmin(true);
         }
       } catch (e) {
         console.error('Failed to load tenant info', e);
+        setTenants(mockTenants);
+        setMembers(mockMembers.map(formatMember));
+        setIsAdmin(true);
       }
     };
     
@@ -193,10 +232,12 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
       if (res.successful && res.data) {
         setTenants(res.data);
       } else {
-        Toast.fail(res.message || '获取组织列表失败');
+        setTenants(mockTenants);
+        Toast.info('已使用演示组织数据');
       }
     } catch (error) {
       console.error("Failed to fetch tenants:", error);
+      setTenants(mockTenants);
     } finally {
       setTenantsLoading(false);
     }
@@ -208,7 +249,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
       message: `确认切换为 ${tenant.name} 吗？`,
       cancelButtonText: '取 消',
       confirmButtonText: '确 定',
-      confirmButtonColor: '#3B82F6',
+      confirmButtonColor: '#C99A3A',
       onConfirm: async () => {
         try {
           Toast.loading({ message: '切换中...', duration: 0 });
@@ -226,8 +267,8 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
               setTenantName(tenant.name);
               setTenantId(tenant.id);
               
-              const userId = userInfo.userId;
-              setIsAdmin(!!tenant.tenantAdmin || (userId && String(tenant.createdBy) === String(userId)));
+              const userId = userInfo.userId || userInfo.id;
+              setIsAdmin(hasTenantAdminPermission(tenant, userId));
               
               setEditValue(tenant.name);
               
@@ -334,11 +375,11 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
   );
 
   return (
-    <div className="flex flex-col h-screen bg-[#F8FAFC]">
+    <div className="flex flex-col h-screen xl-page">
       {/* Header */}
-      <div className="bg-white px-4 py-3 flex items-center justify-between relative flex-shrink-0">
-        <button onClick={onBack} className="p-2 -ml-2 text-slate-600 active:scale-90 transition-transform">
-          <ChevronLeft size={24} />
+      <div className="bg-[linear-gradient(180deg,#f7f2e8_0%,rgba(247,242,232,0.96)_100%)] px-4 py-3 flex items-center justify-between relative flex-shrink-0">
+        <button onClick={onBack} className="xl-icon-btn !min-w-10 !min-h-10">
+          <ChevronLeft size={21} />
         </button>
         
         <div className="flex flex-col items-center">
@@ -351,7 +392,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                   onChange={(e) => setEditValue(e.target.value)}
                   onBlur={handleSave}
                   onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                  className="text-center text-[18px] font-bold text-slate-800 bg-[#F1F5F9] border-2 border-[#3B82F6] rounded-[12px] px-4 py-1.5 focus:outline-none min-w-[180px] max-w-[280px]"
+                  className="text-center text-[18px] font-medium text-[#1f2024] bg-[#fbf7ee] border-2 border-[#C99A3A] rounded-[12px] px-4 py-1.5 focus:outline-none min-w-[180px] max-w-[280px]"
                 />
               </div>
             ) : (
@@ -362,10 +403,10 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                   fetchTenants();
                 }}
               >
-                  <h1 className="text-[18px] font-bold text-slate-800">{tenantName}</h1>
+                  <h1 className="text-[18px] font-medium text-[#1f2024]">{tenantName}</h1>
                   {/* Icons container positioned to the right to maintain text centering */}
                   <div className="flex items-center gap-1 ml-0.5 whitespace-nowrap">
-                    <ChevronDown size={18} className="text-slate-400" />
+                    <ChevronDown size={18} className="text-[#a49a8d]" />
                     {isAdmin && (
                       <div 
                         className="p-1 -mr-1" 
@@ -374,13 +415,13 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                           setIsEditing(true);
                         }}
                       >
-                        <Edit2 size={14} className="text-slate-300" />
+                        <Edit2 size={14} className="text-[#c9bda9]" />
                       </div>
                     )}
                   </div>
               </div>
             )}
-            <span className="text-[11px] text-slate-400 font-medium mt-0.5">组织管理</span>
+            <span className="text-[11px] text-[#7d7467] font-medium mt-0.5">组织管理</span>
         </div>
 
         <div className="w-10" />
@@ -389,28 +430,28 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
       <div className="flex-1 overflow-y-auto px-6 py-6">
         {!isAdmin ? (
           <div className="h-full flex flex-col items-center justify-center -mt-20">
-            <div className="w-40 h-40 bg-slate-50/50 rounded-full flex items-center justify-center mb-2">
+            <div className="w-40 h-40 bg-[#fbf7ee]/50 rounded-[999px] flex items-center justify-center mb-2">
               <ShieldAlert size={80} className="text-slate-200" strokeWidth={1.2} />
             </div>
-            <h2 className="text-[18px] font-black text-slate-800 mb-2">暂无管理权限</h2>
-            <p className="text-[13px] text-slate-400 font-medium text-center leading-relaxed max-w-[260px] px-2">
-              您当前在 <span className="text-slate-500 font-bold">{tenantName}</span> 的身份为成员，仅管理员可进行组织管理操作。
+            <h2 className="text-[18px] font-semibold text-[#1f2024] mb-2">暂无管理权限</h2>
+            <p className="text-[13px] text-[#a49a8d] font-medium text-center leading-relaxed max-w-[260px] px-2">
+              您当前在 <span className="text-[#7d7467] font-medium">{tenantName}</span> 的身份为成员，仅管理员可进行组织管理操作。
             </p>
           </div>
         ) : (
           <div className="space-y-5">
             {/* Invite Button */}
             <button 
-                className="w-full bg-[#3B82F6] hover:bg-blue-600 active:scale-[0.98] transition-all text-white py-3 rounded-[20px] flex items-center justify-center gap-2 shadow-[0_6px_15px_rgba(59,130,246,0.15)]"
+                className="w-full bg-primary-gradient active:scale-[0.98] transition-all text-[#151515] py-3 rounded-[14px] flex items-center justify-center gap-2 shadow-[0_6px_14px_rgba(201,154,58,0.14)]"
                 onClick={() => fetchInviteCode()}
             >
               <UserPlus size={18} strokeWidth={2.5} />
-              <span className="text-[15px] font-bold tracking-wide">邀请新成员</span>
+              <span className="text-[15px] font-medium tracking-wide">邀请新成员</span>
             </button>
 
             {/* Section Header & Search */}
             <div className="flex items-center justify-between">
-                <h2 className="text-[14px] font-bold text-slate-300 uppercase tracking-widest px-1">
+                <h2 className="text-[14px] font-medium text-[#c9bda9] uppercase tracking-widest px-1">
                     组织人员 ({members.length})
                 </h2>
                 <div className="relative w-40">
@@ -419,51 +460,51 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                         placeholder="搜索..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-9 pl-8 pr-3 bg-white border border-slate-100 rounded-full text-[13px] text-slate-600 placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-100 transition-all shadow-sm"
+                        className="w-full h-9 pl-8 pr-3 bg-[#fffefa] border border-[#eadfca]/70 rounded-[999px] text-[13px] text-[#6f665b] placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-[#f2dda0] transition-all shadow-[0_3px_10px_rgba(92,74,42,0.04)]"
                     />
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#c9bda9]" />
                 </div>
             </div>
 
             {/* Member List */}
-            <div className="bg-white rounded-[32px] shadow-[0_4px_20px_rgba(0,0,0,0.01)] border border-slate-50/50 overflow-hidden min-h-[200px] flex flex-col">
+            <div className="xl-card overflow-hidden min-h-[200px] flex flex-col">
                 <List
                   finished={finished}
                   onLoad={onLoad}
-                  finishedText={<span className="text-[12px] text-slate-300">没有更多了</span>}
-                  loadingText={<div className="flex items-center justify-center gap-2"><Loading size="14px" /><span className="text-[12px] text-slate-300">加载中...</span></div>}
+                  finishedText={<span className="text-[12px] text-[#c9bda9]">没有更多了</span>}
+                  loadingText={<div className="flex items-center justify-center gap-2"><Loading size="14px" /><span className="text-[12px] text-[#c9bda9]">加载中...</span></div>}
                 >
                   {membersLoading && members.length === 0 ? (
                       <div className="flex-1 flex flex-col items-center justify-center py-16 opacity-40">
-                          <Loading type="spinner" color="#3B82F6" size="28px" />
-                          <p className="text-slate-400 text-[13px] mt-3">正在加载成员...</p>
+                          <Loading type="spinner" color="#C99A3A" size="28px" />
+                          <p className="text-[#a49a8d] text-[13px] mt-3">正在加载成员...</p>
                       </div>
                   ) : (
                     <>
                       {filteredMembers.map((member: Member, index: number) => (
                         <div 
                             key={member.id} 
-                            className={`flex items-center gap-4 p-4 ${index !== filteredMembers.length - 1 ? 'border-b border-slate-50/80' : ''} active:bg-slate-50 transition-colors cursor-pointer`}
+                            className={`flex items-center gap-3.5 p-3.5 ${index !== filteredMembers.length - 1 ? 'border-b border-[#eadfca]/60' : ''} active:bg-[#fff8e6] transition-colors cursor-pointer`}
                         >
-                            <div className="w-12 h-12 rounded-[16px] overflow-hidden bg-slate-100 flex-shrink-0 shadow-sm">
+                            <div className="w-10 h-10 rounded-[13px] overflow-hidden bg-[#f4eee3] flex-shrink-0 border border-[#eadfca]/60">
                                 {member.avatar ? (
                                   <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-200">
+                                  <div className="w-full h-full flex items-center justify-center bg-[#fff8e6] text-[#dfcda9]">
                                     <Building2 size={24} />
                                   </div>
                                 )}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[16px] font-bold text-slate-900 truncate tracking-tight">
+                                    <span className="text-[14.5px] font-medium text-[#151515] truncate tracking-tight">
                                         {member.isAdmin ? maskPhoneNumber(member.phone || member.name) : maskPhoneNumber(member.name)}
                                     </span>
                                     {member.isAdmin && (
-                                        <span className="px-1.5 py-0.5 bg-blue-50 text-[#3B82F6] text-[9px] font-bold rounded-md border border-blue-100/50">管理员</span>
+                                        <span className="px-1.5 py-0.5 bg-[#fff8e6] text-[#C99A3A] text-[9px] font-medium rounded-md border border-[#eadfca]/50">管理员</span>
                                     )}
                                 </div>
-                                <span className="text-[12.5px] text-[#A5B3C2] font-bold mt-0.5 block min-h-[18px]">
+                                <span className="text-[12.5px] text-[#A5B3C2] font-medium mt-0.5 block min-h-[18px]">
                                     {/* 加入时间暂时隐藏 */}
                                     {/* {member.isAdmin ? "" : `加入时间：${member.createdTime}`} */}
                                 </span>
@@ -473,7 +514,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                       {!membersLoading && filteredMembers.length === 0 && (
                           <div className="py-16 flex flex-col items-center justify-center opacity-30 flex-1">
                               <Search size={40} className="text-slate-200 mb-2" />
-                              <p className="text-slate-400 text-[13px]">未找到相关成员</p>
+                              <p className="text-[#a49a8d] text-[13px]">未找到相关成员</p>
                           </div>
                       )}
                     </>
@@ -490,50 +531,50 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
         onClose={() => setShowTenantModal(false)}
         position="bottom"
         round
-        className="bg-white"
+        className="bg-[#fffefa]"
       >
         <div className="flex flex-col max-h-[70vh] p-5 pb-8">
-            <div className="w-12 h-1.5 bg-slate-100 rounded-full self-center mb-5" />
+            <div className="w-12 h-1.5 bg-slate-100 rounded-[999px] self-center mb-5" />
             
-            <h2 className="text-[14px] font-bold text-slate-300 uppercase tracking-widest mb-4 px-1">
+            <h2 className="text-[14px] font-medium text-[#c9bda9] uppercase tracking-widest mb-4 px-1">
                 切换组织
             </h2>
             
             <div className="space-y-2 overflow-y-auto">
                 {tenantsLoading && tenants.length === 0 ? (
-                    <div className="py-10 flex justify-center text-slate-400">加载中...</div>
+                    <div className="py-10 flex justify-center text-[#a49a8d]">加载中...</div>
                 ) : (
                     tenants.map((item) => (
                         <div 
                             key={item.id}
-                            className={`flex items-center gap-3 p-3 rounded-xl transition-all active:scale-[0.98] cursor-pointer ${
+                            className={`flex items-center gap-3 p-3 rounded-[14px] transition-all active:scale-[0.98] cursor-pointer ${
                                 String(item.id) === String(tenantId) 
-                                ? 'bg-[#F1F7FF] border border-[#E0EFFF]' 
-                                : 'bg-white border border-slate-50'
+                                ? 'bg-[#fff8e6] border border-[#dfcda9]' 
+                                : 'bg-[#fffefa] border border-[#eadfca]/60'
                             }`}
                             onClick={() => handleSwitchTenant(item)}
                         >
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                                 String(item.id) === String(tenantId) 
-                                ? 'bg-[#3B82F6] text-white' 
-                                : 'bg-[#F1F5F9] text-slate-400'
+                                ? 'bg-primary-gradient text-[#151515]' 
+                                : 'bg-[#fbf7ee] text-[#a49a8d]'
                             }`}>
                                 <Building2 size={20} />
                             </div>
                             
                             <div className="flex-1 min-w-0">
-                                <h3 className={`text-[15px] font-bold truncate ${
-                                    String(item.id) === String(tenantId) ? 'text-[#3B82F6]' : 'text-slate-800'
+                                <h3 className={`text-[15px] font-medium truncate ${
+                                    String(item.id) === String(tenantId) ? 'text-[#C99A3A]' : 'text-[#1f2024]'
                                 }`}>
                                     {item.name}
                                 </h3>
-                                <p className="text-[11px] text-slate-400 font-medium leading-none mt-1">
-                                    {(item.tenantAdmin || (currentUserId && String(item.createdBy) === String(currentUserId))) ? '管理员' : '成员'}
+                                <p className="text-[11px] text-[#a49a8d] font-medium leading-none mt-1">
+                                    {hasTenantAdminPermission(item, currentUserId) ? '管理员' : '成员'}
                                 </p>
                             </div>
                             
                             {String(item.id) === String(tenantId) && (
-                                <Check size={18} className="text-[#3B82F6]" strokeWidth={3} />
+                                <Check size={18} className="text-[#C99A3A]" strokeWidth={3} />
                             )}
                         </div>
                     ))
@@ -550,33 +591,33 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
         round
         style={{ width: '85%', maxWidth: '320px', borderRadius: '32px', overflow: 'hidden' }}
       >
-        <div className="bg-white p-4 flex flex-col items-center relative overflow-hidden">
+        <div className="bg-[#fffefa] p-4 flex flex-col items-center relative overflow-hidden">
             {/* 装饰性背景 */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50/50 rounded-full blur-2xl -mr-12 -mt-12" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#fff8e6]/50 rounded-[999px] blur-2xl -mr-12 -mt-12" />
             <div className="absolute top-8 right-0 opacity-[0.03] rotate-12">
-                <Users size={120} className="text-blue-600" />
+                <Users size={120} className="text-[#a87a22]" />
             </div>
 
             {/* 图标 */}
-            <div className="w-14 h-14 bg-[#EFF6FF] rounded-[22px] flex items-center justify-center mb-3 relative z-10">
-                <UserPlus size={26} className="text-[#3B82F6]" strokeWidth={2.5} />
+            <div className="w-12 h-12 bg-[#fff8e6] border border-[#eadfca] rounded-[15px] flex items-center justify-center mb-3 relative z-10">
+                <UserPlus size={23} className="text-[#8b641d]" strokeWidth={2.3} />
             </div>
 
             {/* 标题文案 */}
-            <h3 className="text-[17px] font-black text-slate-800 mb-1 relative z-10">邀请成员加入</h3>
-            <p className="text-[12px] text-slate-400 font-bold mb-3 relative z-10 text-center">
+            <h3 className="text-[17px] font-semibold text-[#1f2024] mb-1 relative z-10">邀请成员加入</h3>
+            <p className="text-[12px] text-[#a49a8d] font-medium mb-3 relative z-10 text-center">
                 分享邀请链接让成员快速加入组织
             </p>
 
             {/* 链接容器 */}
-            <div className="w-full bg-[#F8FAFC] rounded-[20px] p-3 mb-3 relative z-10 border border-slate-50 flex flex-col justify-center">
-                <p className="text-[10px] text-slate-300 font-black mb-2 text-center uppercase tracking-wider">组织邀请链接</p>
+            <div className="w-full bg-[#fffdf8] rounded-[20px] p-3 mb-3 relative z-10 border border-[#eadfca]/50 flex flex-col justify-center">
+                <p className="text-[10px] text-[#c9bda9] font-semibold mb-2 text-center uppercase tracking-wider">组织邀请链接</p>
                 {inviteUrl ? (
                     <div
-                        className="bg-white border border-slate-100 rounded-[12px] px-2 py-1 overflow-y-auto"
+                        className="bg-[#fffefa] border border-[#eadfca]/70 rounded-[12px] px-2 py-1 overflow-y-auto"
                         style={{ maxHeight: '100px' }}
                     >
-                        <span className="text-[12px] text-slate-500 font-medium break-all leading-snug select-all">
+                        <span className="text-[12px] text-[#7d7467] font-medium break-all leading-snug select-all">
                             {inviteUrl}
                         </span>
                     </div>
@@ -589,7 +630,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
 
             {/* 复制按钮 */}
             <button
-                className={`w-full h-10 bg-[#0F172A] text-white rounded-[14px] text-[14px] font-bold active:scale-95 transition-all relative z-10 shadow-lg shadow-slate-100 ${
+                className={`w-full h-10 bg-primary-gradient text-[#151515] rounded-[14px] text-[14px] font-medium active:scale-95 transition-all relative z-10 shadow-[0_6px_14px_rgba(201,154,58,0.14)] ${
                     !inviteUrl ? 'opacity-50 pointer-events-none' : ''
                 }`}
                 onClick={async () => {

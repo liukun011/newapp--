@@ -130,10 +130,10 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
   ];
 
   const renderSection = (title: string, icon: React.ReactNode, items: { label: string, value: string }[]) => (
-    <div className="bg-white rounded-[16px] p-3 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-gray-100/50 mb-3">
+    <div className="bg-[#fffefa] rounded-[16px] p-3 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#eadfca]/60 mb-3">
       <div className="flex items-center gap-1.5 mb-3 px-1">
-        <div className="text-blue-500 scale-90">{icon}</div>
-        <h2 className="text-[13px] font-bold text-slate-800">{title}</h2>
+        <div className="text-[#8b641d] scale-90">{icon}</div>
+        <h2 className="text-[13px] font-medium text-[#1f2024]">{title}</h2>
       </div>
       <div className="grid grid-cols-2 gap-2">
         {items.map((item, index) => {
@@ -141,10 +141,10 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
           return (
             <div 
               key={index} 
-              className={`bg-[#F8FAFC] rounded-[10px] p-2.5 border border-white flex flex-col gap-0.5 ${isFullWidth ? 'col-span-2' : 'col-span-1'}`}
+              className={`bg-[#fffdf8] rounded-[10px] p-2.5 border border-white flex flex-col gap-0.5 ${isFullWidth ? 'col-span-2' : 'col-span-1'}`}
             >
-              <div className="text-[10px] text-[#94A3B8] font-bold tracking-tight">{item.label}</div>
-              <div className="text-[12px] font-[800] text-slate-700 leading-tight break-all">
+              <div className="text-[10px] text-[#94A3B8] font-medium tracking-tight">{item.label}</div>
+              <div className="text-[12px] font-medium text-[#4f463b] leading-tight break-all">
                 {item.value}
               </div>
             </div>
@@ -155,14 +155,14 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
   );
 
   return (
-    <div className="flex flex-col h-screen bg-[#F7F8FA] w-full max-w-md mx-auto relative shadow-2xl">
+    <div className="flex flex-col h-screen bg-[#f7f2e8] w-full max-w-md mx-auto relative shadow-[0_18px_44px_rgba(92,74,42,0.16)]">
       {/* Header */}
-      <div className="bg-white px-4 pt-3 pb-2.5 flex items-center border-b border-gray-100 shadow-sm relative z-20 shrink-0">
-        <button onClick={onBack} className="p-2 -ml-2 text-slate-700 active:bg-gray-100 rounded-full transition-colors">
+      <div className="bg-[#fffefa] px-4 pt-3 pb-2.5 flex items-center border-b border-[#eadfca]/60 shadow-[0_3px_10px_rgba(92,74,42,0.04)] relative z-20 shrink-0">
+        <button onClick={onBack} className="p-2 -ml-2 text-[#4f463b] active:bg-[#f4eee3] rounded-[999px] transition-colors">
           <ArrowLeft size={18} />
         </button>
         <div className="flex-1 text-center pr-8">
-          <h1 className="text-[15px] font-bold text-slate-800">企查查资料</h1>
+          <h1 className="text-[15px] font-medium text-[#1f2024]">企查查资料</h1>
         </div>
       </div>
 
@@ -171,35 +171,35 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
         {renderSection('企业概况', <Building2 size={16} />, overviewItems)}
 
         {/* 股权变更明细 */}
-        <div className="bg-white rounded-[16px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-gray-100/50 mb-3">
+        <div className="bg-[#fffefa] rounded-[16px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#eadfca]/60 mb-3">
           <div className="flex items-center gap-1.5 mb-4 px-1">
             <div className="text-orange-500 scale-90"><History size={16} /></div>
-            <h2 className="text-[13px] font-bold text-slate-800">股权变更明细</h2>
+            <h2 className="text-[13px] font-medium text-[#1f2024]">股权变更明细</h2>
           </div>
           <div className="flex flex-col gap-3">
             {parsedEquityChanges.length > 0 ? (
               parsedEquityChanges.map((change, idx) => (
-                <div key={idx} className="bg-[#F8FAFC] rounded-[10px] p-3 border border-white flex flex-col gap-2">
+                <div key={idx} className="bg-[#fffdf8] rounded-[10px] p-3 border border-white flex flex-col gap-2">
                    {/* 第一行：投资人 + 日期 */}
                    <div className="flex justify-between items-start">
-                     <div className="text-[12px] font-extrabold text-[#1E293B]">{change.investor_name || '股权变更'}</div>
-                     <div className="text-[10px] text-slate-400 font-bold">{formatChangeDate(change.change_time)}</div>
+                     <div className="text-[12px] font-semibold text-[#1E293B]">{change.investor_name || '股权变更'}</div>
+                     <div className="text-[10px] text-[#a49a8d] font-medium">{formatChangeDate(change.change_time)}</div>
                    </div>
                    {/* 两栏：变更前 vs 变更后 */}
-                   <div className="grid grid-cols-2 gap-3 mt-1 pt-2 border-t border-slate-100">
+                   <div className="grid grid-cols-2 gap-3 mt-1 pt-2 border-t border-[#eadfca]/70">
                      <div className="flex flex-col gap-1">
-                        <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">持股比例(前)</div>
-                        <div className="text-[12px] text-slate-500 font-medium">{change.ratio_before || '-'}</div>
+                        <div className="text-[9px] font-medium text-[#a49a8d] uppercase tracking-tighter">持股比例(前)</div>
+                        <div className="text-[12px] text-[#7d7467] font-medium">{change.ratio_before || '-'}</div>
                      </div>
                      <div className="flex flex-col gap-1">
-                        <div className="text-[9px] font-bold text-[#4B42F5] uppercase tracking-tighter">持股比例(后)</div>
-                        <div className="text-[13px] text-indigo-600 font-black">{change.ratio_after || '-'}</div>
+                        <div className="text-[9px] font-medium text-[#C99A3A] uppercase tracking-tighter">持股比例(后)</div>
+                        <div className="text-[13px] text-[#8b641d] font-semibold">{change.ratio_after || '-'}</div>
                      </div>
                    </div>
                 </div>
               ))
             ) : (
-              <div className="bg-[#F8FAFC] rounded-[10px] p-6 border border-dashed border-gray-200 flex flex-col items-center justify-center text-slate-400">
+              <div className="bg-[#fffdf8] rounded-[10px] p-6 border border-dashed border-[#eadfca] flex flex-col items-center justify-center text-[#a49a8d]">
                 <div className="text-[12px] font-medium">暂无股权变更数据</div>
               </div>
             )}

@@ -39,10 +39,10 @@ const RenameModal: React.FC<RenameModalProps> = ({ isOpen, initialValue, onClose
       />
       
       {/* 弹窗内容 */}
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm mx-auto overflow-hidden">
+      <div className="relative bg-[#fffefa] rounded-[22px] border border-[#eadfca] shadow-[0_18px_44px_rgba(92,74,42,0.16)] w-full max-w-sm mx-auto overflow-hidden">
         {/* 标题 */}
         <div className="pt-8 pb-6 px-6 text-center">
-          <h2 className="text-xl font-semibold text-slate-900">编辑名称</h2>
+          <h2 className="text-[18px] font-semibold text-[#1f2024]">编辑名称</h2>
         </div>
 
         {/* 输入框 */}
@@ -53,7 +53,7 @@ const RenameModal: React.FC<RenameModalProps> = ({ isOpen, initialValue, onClose
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
             autoFocus
-            className="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl text-[15px] text-slate-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+            className="w-full px-4 py-4 bg-[#fffdf8] border border-[#eadfca] rounded-[14px] text-[15px] text-[#1f2024] placeholder-[#a49a8d] focus:outline-none focus:ring-2 focus:ring-[#f2dda0] transition-all"
             placeholder="请输入模板名称"
           />
         </div>
@@ -62,14 +62,14 @@ const RenameModal: React.FC<RenameModalProps> = ({ isOpen, initialValue, onClose
         <div className="px-6 pb-8 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3.5 bg-white border-2 border-gray-200 text-gray-700 text-[15px] font-medium rounded-full hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            className="flex-1 px-6 py-3.5 bg-[#fffefa] border border-[#eadfca] text-[#6f665b] text-[14px] font-medium rounded-[14px] hover:bg-[#fff8e6] active:bg-[#fff3cf] transition-colors"
           >
             取消
           </button>
           <button
             onClick={handleConfirm}
             disabled={!inputValue.trim()}
-            className="flex-1 px-6 py-3.5 text-white text-[15px] font-medium rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-confirm-gradient"
+            className="flex-1 px-6 py-3.5 text-[#151515] text-[14px] font-medium rounded-[14px] transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-confirm-gradient shadow-[0_6px_14px_rgba(201,154,58,0.14)]"
           >
             确认
           </button>

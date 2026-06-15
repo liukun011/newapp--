@@ -232,7 +232,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
           title: '提交成功',
           message: message,
           confirmButtonText: '我知道了',
-          confirmButtonColor: '#4337F1',
+          confirmButtonColor: '#C99A3A',
           onConfirm: () => {
             setShowSuccess(true);
             onSubmit?.();
@@ -254,12 +254,12 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
   // 如果显示成功页面
   if (showSuccess) {
     return (
-      <div className="flex flex-col min-h-screen bg-[#F7F8FA]">
+      <div className="flex flex-col min-h-screen bg-[#f7f2e8]">
         {/* Header with back button */}
-        <div className="bg-white px-4 py-3 flex items-center border-b border-gray-100">
+        <div className="bg-[#fffefa] px-4 py-3 flex items-center border-b border-[#eadfca]/60">
           <button 
             onClick={onBack}
-            className="p-2 -ml-2 text-slate-700 hover:bg-slate-50 rounded-full active:bg-slate-100 transition-colors"
+            className="p-2 -ml-2 text-[#4f463b] hover:bg-[#fbf7ee] rounded-[999px] active:bg-slate-100 transition-colors"
           >
             <ArrowLeft size={24} />
           </button>
@@ -278,7 +278,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
                 e.currentTarget.style.display = 'none';
               }}
             />
-            {/* Blue gradient blur effect below image */}
+            {/* Gold gradient blur effect below image */}
             <div 
               className="absolute w-40 h-12"
               style={{
@@ -293,11 +293,11 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
           </div>
 
           {/* Title */}
-          <h2 className="text-xl font-bold text-slate-800 mb-3">
+          <h2 className="text-xl font-medium text-[#1f2024] mb-3">
             已进入生成队列
           </h2>
 
-          <p className="text-sm text-gray-500 text-center leading-relaxed max-w-sm">
+          <p className="text-sm text-[#7d7467] text-center leading-relaxed max-w-sm">
             {isAdmin 
               ? '您是组织的管理员，模板通过后会共享给组织成员。' 
               : '您是组织的成员，模板通过后不会共享。'}
@@ -306,7 +306,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
           {/* View List Button */}
           <button
             onClick={onViewList}
-            className="mt-12 w-64 h-14 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white text-base font-semibold rounded-full shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 active:scale-95 transition-all"
+            className="mt-12 w-64 h-14 bg-gradient-to-r from-[#e8d287] to-[#c99a3a] text-white text-base font-semibold rounded-[999px] shadow-[0_6px_14px_rgba(201,154,58,0.14)] hover:shadow-[0_14px_34px_rgba(92,74,42,0.12)] hover:shadow-[rgba(201,154,58,0.24)] active:scale-95 transition-all"
           >
             查看列表
           </button>
@@ -316,36 +316,36 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#F7F8FA]">
+    <div className="flex flex-col h-screen bg-[#f7f2e8]">
       {/* Header */}
-      <div className="bg-white px-4 py-3 flex items-center justify-center relative border-b border-gray-100">
+      <div className="bg-[#fffefa] px-4 py-3 flex items-center justify-center relative border-b border-[#eadfca]/60">
         <button 
           onClick={onBack}
-          className="absolute left-4 p-2 text-slate-700 hover:bg-slate-50 rounded-full active:bg-slate-100 transition-colors"
+          className="absolute left-4 p-2 text-[#4f463b] hover:bg-[#fbf7ee] rounded-[999px] active:bg-slate-100 transition-colors"
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-lg font-semibold text-slate-800">{initialData ? '更换访谈模板' : '上传访谈模板'}</h1>
+        <h1 className="text-lg font-semibold text-[#1f2024]">{initialData ? '更换访谈模板' : '上传访谈模板'}</h1>
       </div>
 
       {/* Form Content */}
       <div className="flex-1 px-4 pt-6 pb-28 overflow-y-auto">
         {/* Template Category */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
+          <label className="block text-sm font-medium text-[#6f665b] mb-2 px-1">
             模板分类 <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <button
               type="button"
               onClick={() => setShowCategoryPicker(!showCategoryPicker)}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors flex items-center justify-between"
+              className="w-full px-4 py-3 bg-[#fffefa] border border-[#eadfca] rounded-[14px] text-sm text-[#1f2024] focus:outline-none focus:border-[#dfcda9] focus:ring-1 focus:ring-[#f2dda0] transition-colors flex items-center justify-between"
             >
               <span>{TEMPLATE_CATEGORY_OPTIONS.find((o) => o.id === templateCategory)?.title || '请选择模板分类'}</span>
-              <ChevronDown size={18} className={`text-gray-400 transition-transform ${showCategoryPicker ? 'rotate-180' : ''}`} />
+              <ChevronDown size={18} className={`text-[#a49a8d] transition-transform ${showCategoryPicker ? 'rotate-180' : ''}`} />
             </button>
             {showCategoryPicker && (
-              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+              <div className="absolute z-10 mt-1 w-full bg-[#fffefa] border border-[#eadfca] rounded-[14px] shadow-lg overflow-hidden">
                 {TEMPLATE_CATEGORY_OPTIONS.map((opt) => (
                   <div
                     key={opt.id}
@@ -353,8 +353,8 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
                       setTemplateCategory(opt.id);
                       setShowCategoryPicker(false);
                     }}
-                    className={`px-4 py-3 text-sm cursor-pointer active:bg-gray-50 transition-colors ${
-                      templateCategory === opt.id ? 'text-indigo-600 font-medium bg-indigo-50' : 'text-slate-700'
+                    className={`px-4 py-3 text-sm cursor-pointer active:bg-[#f7f2e8] transition-colors ${
+                      templateCategory === opt.id ? 'text-[#8b641d] font-medium bg-[#fff8e6]' : 'text-[#4f463b]'
                     }`}
                   >
                     {opt.title}
@@ -370,7 +370,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
 
         {/* Template Name */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
+          <label className="block text-sm font-medium text-[#6f665b] mb-2 px-1">
             模板名称 <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -383,16 +383,16 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
             placeholder={`请输入模板名称，最多${TEMPLATE_NAME_MAX_LENGTH}个字符`}
             maxLength={TEMPLATE_NAME_MAX_LENGTH}
             rows={2}
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-slate-800 placeholder-gray-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors resize-none"
+            className="w-full px-4 py-3 bg-[#fffefa] border border-[#eadfca] rounded-[14px] text-sm text-[#1f2024] placeholder-gray-400 focus:outline-none focus:border-[#dfcda9] focus:ring-1 focus:ring-[#f2dda0] transition-colors resize-none"
           />
-          <div className="text-right text-xs text-slate-400 mt-1">
+          <div className="text-right text-xs text-[#a49a8d] mt-1">
             {templateName.length}/{TEMPLATE_NAME_MAX_LENGTH}
           </div>
         </div>
 
         {/* Template Description */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
+          <label className="block text-sm font-medium text-[#6f665b] mb-2 px-1">
             模板描述
           </label>
           <textarea
@@ -405,32 +405,32 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
             placeholder={`请输入模板描述，最多${TEMPLATE_DESC_MAX_LENGTH}个字符`}
             maxLength={TEMPLATE_DESC_MAX_LENGTH}
             rows={3}
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-slate-800 placeholder-gray-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 transition-colors resize-none"
+            className="w-full px-4 py-3 bg-[#fffefa] border border-[#eadfca] rounded-[14px] text-sm text-[#1f2024] placeholder-gray-400 focus:outline-none focus:border-[#dfcda9] focus:ring-1 focus:ring-[#f2dda0] transition-colors resize-none"
           />
-          <div className="text-right text-xs text-slate-400 mt-1">
+          <div className="text-right text-xs text-[#a49a8d] mt-1">
             {templateDesc.length}/{TEMPLATE_DESC_MAX_LENGTH}
           </div>
         </div>
 
         {/* Upload Template */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-2 px-1">
+          <label className="block text-sm font-medium text-[#6f665b] mb-2 px-1">
             上传模板 <span className="text-red-500">*</span>
           </label>
             <div
-              className="bg-white rounded-xl border border-dashed border-gray-300 p-8 flex flex-col items-center justify-center min-h-[200px] hover:border-indigo-400 transition-colors cursor-pointer active:bg-gray-50"
+              className="bg-[#fffefa] rounded-[14px] border border-dashed border-gray-300 p-8 flex flex-col items-center justify-center min-h-[200px] hover:border-[#dfcda9] transition-colors cursor-pointer active:bg-[#f7f2e8]"
               onClick={handleChooseFile}
             >
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                <ImageIcon size={28} className="text-gray-400" />
+              <div className="w-16 h-16 bg-[#f4eee3] rounded-[999px] flex items-center justify-center mb-3">
+                <ImageIcon size={28} className="text-[#a49a8d]" />
               </div>
               {selectedFile ? (
                 <div className="text-center">
-                  <p className="text-sm font-medium text-slate-800 mb-1">{selectedFile.name}</p>
-                  <p className="text-xs text-gray-500">点击重新选择</p>
+                  <p className="text-sm font-medium text-[#1f2024] mb-1">{selectedFile.name}</p>
+                  <p className="text-xs text-[#7d7467]">点击重新选择</p>
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">请上传.docx格式的模板附件</p>
+                <p className="text-sm text-[#a49a8d]">请上传.docx格式的模板附件</p>
               )}
             </div>
         </div>
@@ -443,7 +443,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
             variant="secondary"
             block
             onClick={onCancel}
-            className="flex-1 !rounded-full !h-12 !text-base !bg-white shadow-lg !border-0 !text-gray-700"
+            className="flex-1 !rounded-[999px] !h-12 !text-base !bg-[#fffefa] shadow-lg !border-0 !text-[#4f463b]"
           >
             取消
           </Button>
@@ -452,7 +452,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
             block
             onClick={handleSubmitThrottled}
             disabled={loading}
-            className={`flex-1 !rounded-full !h-12 !text-base shadow-lg ${
+            className={`flex-1 !rounded-[999px] !h-12 !text-base shadow-lg ${
               loading ? 'bg-gray-400' : 'bg-confirm-gradient'
             }`}
           >

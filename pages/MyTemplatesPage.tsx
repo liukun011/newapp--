@@ -414,9 +414,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
   }, [editingQuestion, activeTab]);
 
   return (
-    <div className="flex flex-col h-screen bg-[#F7F8FA] pb-20">
+    <div className="flex flex-col h-screen bg-[#f7f2e8] pb-20">
       {/* Header + Tool Bar */}
-      <div className="bg-white px-4 flex items-center justify-between sticky top-0 z-30 shadow-sm border-b border-gray-50">
+      <div className="bg-[#fffefa] px-4 min-h-[52px] flex items-center justify-between sticky top-0 z-30 shadow-[0_3px_10px_rgba(92,74,42,0.04)] border-b border-[#eadfca]/50">
         {/* Tabs */}
         <div className="flex relative">
           {[
@@ -428,12 +428,12 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
               <button
                 key={tab.key}
                 onClick={() => handleTabChange(tab.key)}
-                className={`py-3 pr-3 ${idx === 0 ? 'pl-0' : 'pl-3'} text-[13px] font-bold relative transition-colors`}
+                className={`py-3 pr-3 ${idx === 0 ? 'pl-0' : 'pl-3'} text-[13px] font-medium relative transition-colors min-h-[44px]`}
               >
                 <span className={`relative ${isActive ? 'text-[#1E293B]' : 'text-[#94A3B8]'}`}>
                   {tab.label}
                   {isActive && (
-                    <div className="absolute -bottom-[8px] left-0 right-0 h-[3px] bg-[#4B77F6] rounded-full transition-all duration-300" />
+                    <div className="absolute -bottom-[8px] left-0 right-0 h-[3px] bg-[#C99A3A] rounded-[999px] transition-all duration-300" />
                   )}
                 </span>
               </button>
@@ -441,29 +441,35 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
           })}
         </div>
 
-        {/* Action Button */}
-        {activeTab === 'templates' && (
-          <button 
-            onClick={() => onUpload()}
-            className="flex items-center gap-1 px-2.5 py-1 bg-white border border-gray-100 rounded-full shadow-sm active:scale-95 transition-all"
-          >
-            <FileUp size={14} className="text-[#1E293B]" />
-            <span className="text-[12px] font-bold text-[#1E293B]">上传</span>
-          </button>
-        )}
+        <div className="w-[1px]" />
       </div>
 
       {/* Main Content Area */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-8 h-8 border-3 border-indigo-200 border-t-[#4B77F6] rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-3 border-[#eadfca] border-t-[#c99a3a] rounded-[999px] animate-spin"></div>
             <p className="text-[#94A3B8] text-sm mt-4">加载中...</p>
           </div>
         ) : activeTab === 'templates' ? (
           <div className="space-y-3">
+            <div className="flex items-center justify-between mb-1 px-0.5">
+              <h2 className="text-[14px] font-medium text-[#1E293B]">全部模板</h2>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 bg-[#fffefa] rounded-[999px] text-[10px] font-medium text-[#64748B] shadow-[0_3px_10px_rgba(92,74,42,0.04)] border border-[#eadfca]/50">
+                  共 <span className="text-[#C99A3A]">{templates.length}</span> 份
+                </span>
+                <button
+                  onClick={() => onUpload()}
+                  className="flex items-center gap-1 px-3 py-1 bg-primary-gradient text-[#151515] text-[12px] font-medium rounded-[999px] shadow-md active:scale-95 transition-all"
+                  aria-label="上传报告模板"
+                >
+                  <FileUp size={14} strokeWidth={2.6} /> 上传
+                </button>
+              </div>
+            </div>
             {templates.length === 0 ? (
-              <div className="text-center py-20 text-gray-400 text-sm">暂无数据</div>
+              <div className="text-center py-20 text-[#a49a8d] text-sm">暂无数据</div>
             ) : (
               templates.map(template => {
                 const isEnabledVal = (template as any).isEnabled ?? TemplateEnabledStatus.ENABLED;
@@ -471,51 +477,51 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                 const isEnabled = isEnabledVal === TemplateEnabledStatus.ENABLED;
 
                 return (
-                  <div key={template.id} className="bg-white rounded-[16px] overflow-hidden border border-gray-100/50 shadow-sm p-4">
+                  <div key={template.id} className="bg-[#fffefa] rounded-[16px] overflow-hidden border border-[#eadfca]/60 shadow-[0_3px_10px_rgba(92,74,42,0.04)] p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-[#5c8fff] to-[#3B82F6] flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-[#D8B557] to-[#C99A3A] flex items-center justify-center flex-shrink-0 shadow-[0_3px_10px_rgba(92,74,42,0.04)]">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.4142 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" fill="white" fillOpacity="0.9" />
-                          <text x="12" y="16" fontSize="8" fill="#4B77F6" fontWeight="800" textAnchor="middle">W</text>
+                          <text x="12" y="16" fontSize="8" fill="#C99A3A" fontWeight="800" textAnchor="middle">W</text>
                         </svg>
                       </div>
 
                       <div className="flex-1 min-w-0 pr-1 flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-[15px] font-bold text-[#1E293B] truncate">{template.reportTemplateName}</h3>
+                          <h3 className="text-[15px] font-medium text-[#1E293B] truncate">{template.reportTemplateName}</h3>
                           {template.businessType ? (
-                            <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 text-blue-600 px-1.5 py-px text-[10px] font-medium mt-0.5">
+                            <span className="inline-flex items-center rounded-[999px] border border-[#eadfca] bg-[#fff8e6] text-[#a87a22] px-1.5 py-px text-[10px] font-medium mt-0.5">
                               {getCategoryTitle(template.businessType)}
                             </span>
                           ) : null}
                         </div>
-                        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold inline-flex items-center gap-1 ${
+                        <span className={`shrink-0 rounded-[999px] border px-2.5 py-1 text-[11px] font-medium inline-flex items-center gap-1 ${
                           isParsing
-                            ? 'border-blue-100 bg-blue-50 text-blue-600'
+                            ? 'border-[#eadfca] bg-[#fff8e6] text-[#a87a22]'
                             : isEnabled
                             ? 'border-green-100 bg-green-50 text-green-600'
-                            : 'border-slate-200 bg-white text-slate-500'
+                            : 'border-[#dfcda9] bg-[#fffefa] text-[#7d7467]'
                         }`}>
                           {isParsing && (
-                            <span className="w-3.5 h-3.5 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></span>
+                            <span className="w-3.5 h-3.5 border-2 border-[#dfcda9] border-t-[#c99a3a] rounded-[999px] animate-spin"></span>
                           )}
                           {isParsing ? '解析中' : isEnabled ? '已启用' : '已禁用'}
                         </span>
                       </div>
                     </div>
 
-                    <p className="mt-3 text-[11px] leading-relaxed line-clamp-1 text-gray-400">
+                    <p className="mt-3 text-[11px] leading-relaxed line-clamp-1 text-[#a49a8d]">
                       {template.reportTemplateDesc || '暂无描述'}
                     </p>
 
-                    <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
-                      <span className="text-[12px] text-gray-400">
+                    <div className="mt-4 pt-3 border-t border-[#eadfca]/50 flex items-center justify-between">
+                      <span className="text-[12px] text-[#a49a8d]">
                         {(template as any).lastModifiedDate?.slice(5, 16) || '刚刚更新'}
                       </span>
                       {!isParsing && (
                         <button
                           onClick={() => onPreview?.(template.reportTemplateName, template.viewTemplateUrl || '', 'templates')}
-                          className="px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-sm bg-[#4B77F6] active:scale-95 transition-all"
+                          className="px-3 py-1.5 rounded-[999px] text-xs font-medium text-white shadow-[0_3px_10px_rgba(92,74,42,0.04)] bg-[#C99A3A] active:scale-95 transition-all"
                         >
                           预览
                         </button>
@@ -529,16 +535,16 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
         ) : !editingQuestion ? (
           <div className="space-y-3">
               <div className="flex items-center justify-between mb-1 px-0.5">
-                <h2 className="text-[14px] font-bold text-[#1E293B]">全部清单</h2>
+                <h2 className="text-[14px] font-medium text-[#1E293B]">全部清单</h2>
                 <div className="flex items-center gap-2">
-                   <span className="px-2.5 py-0.5 bg-white rounded-full text-[10px] font-bold text-[#64748B] shadow-sm border border-gray-50">
-                     共 <span className="text-[#3B82F6]">{questions.length}</span> 份
+                   <span className="px-2.5 py-0.5 bg-[#fffefa] rounded-[999px] text-[10px] font-medium text-[#64748B] shadow-[0_3px_10px_rgba(92,74,42,0.04)] border border-[#eadfca]/50">
+                     共 <span className="text-[#C99A3A]">{questions.length}</span> 份
                    </span>
                    <button
                      onClick={() => {
                        setIsNewDialogVisible(true);
                      }}
-                     className="flex items-center gap-1 px-3 py-1 bg-[#4B77F6] text-white text-[12px] font-bold rounded-full shadow-md active:scale-95 transition-all"
+                     className="flex items-center gap-1 px-3 py-1 bg-primary-gradient text-[#151515] text-[12px] font-medium rounded-[999px] shadow-md active:scale-95 transition-all"
                    >
                      <Plus size={14} strokeWidth={3} /> 新建
                    </button>
@@ -556,15 +562,15 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                         setIsCreatingNew(false);
                         setEditingQuestion(q);
                       }}
-                      className="relative rounded-[20px] p-3.5 transition-all cursor-pointer active:scale-[0.98] bg-white border border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-gray-100"
+                      className="relative rounded-[20px] p-3.5 transition-all cursor-pointer active:scale-[0.98] bg-[#fffefa] border border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#eadfca]/60"
                     >
                       <div className="flex justify-between items-start gap-3">
                         <div className="flex-1 min-w-0 pr-2">
                           <div className="flex items-center gap-2 mb-1">
                             <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-hidden">
-                              <h3 className="text-[15px] font-bold text-[#1E293B] truncate">{q.templateName}</h3>
+                              <h3 className="text-[15px] font-medium text-[#1E293B] truncate">{q.templateName}</h3>
                               {getQuestionTemplateTagLabel(q) && (
-                                <span className="px-1.5 py-[1px] bg-indigo-50 border border-indigo-100/50 text-indigo-500 text-[9px] font-bold rounded-md shrink-0 whitespace-nowrap">
+                                <span className="px-1.5 py-[1px] bg-[#fff8e6] border border-[#eadfca]/50 text-[#8b641d] text-[9px] font-medium rounded-md shrink-0 whitespace-nowrap">
                                   {getQuestionTemplateTagLabel(q)}
                                 </span>
                               )}
@@ -573,7 +579,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                           <p className="text-[12px] text-[#64748B] leading-snug mb-2 line-clamp-1">
                             {q.templateDesc || "针对该场景的问卷建议，包含核心问题与风险排查。"}
                           </p>
-                          <div className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#F8FAFF] text-[#94A3B8]">
+                          <div className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-[#F8FAFF] text-[#94A3B8]">
                             {q.questionList?.length || 0} 个问题
                           </div>
                         </div>
@@ -587,7 +593,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                                 setDeletingTemplateId(q.id);
                                 setIsDeleteModalOpen(true);
                               }}
-                              className="w-7 h-7 flex items-center justify-center text-[#CBD5E1] hover:text-red-500 active:scale-90 transition-all rounded-full hover:bg-gray-50/50"
+                              className="w-7 h-7 flex items-center justify-center text-[#CBD5E1] hover:text-red-500 active:scale-90 transition-all rounded-[999px] hover:bg-[#f7f2e8]/50"
                             >
                               <Trash2 size={14} />
                             </button>
@@ -603,29 +609,29 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
         ) : (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="flex items-center justify-between mb-2.5 px-0.5">
-                <h2 className="text-[14px] font-bold text-[#1E293B]">
+                <h2 className="text-[14px] font-medium text-[#1E293B]">
                   {isCreatingNew ? '新建问题清单' : (canModify(editingQuestion) ? '编辑问题清单' : '查看问题清单')}
                 </h2>
                 <button
                   onClick={() => setEditingQuestion(null)}
-                  className="px-2.5 py-1 bg-white rounded-full text-[11px] font-bold text-[#64748B] shadow-sm border border-gray-100 active:scale-95 transition-all"
+                  className="px-2.5 py-1 bg-[#fffefa] rounded-[999px] text-[11px] font-medium text-[#64748B] shadow-[0_3px_10px_rgba(92,74,42,0.04)] border border-[#eadfca]/60 active:scale-95 transition-all"
                 >
                   返回列表
                 </button>
               </div>
 
-              <div className="bg-white rounded-[24px] p-4 shadow-sm border border-gray-100/50 mb-3">
+              <div className="bg-[#fffefa] rounded-[24px] p-4 shadow-[0_3px_10px_rgba(92,74,42,0.04)] border border-[#eadfca]/60 mb-3">
                  <div className="flex justify-between items-start gap-2.5">
                     <div className="flex-1 min-w-0">
                        <div className="flex items-center gap-1.5 mb-1 flex-wrap text-wrap">
-                          <h3 className="text-[16px] font-black text-slate-800 tracking-tight leading-tight">
+                          <h3 className="text-[16px] font-semibold text-[#1f2024] tracking-tight leading-tight">
                              {editingQuestion?.templateName || '未命名清单'}
                           </h3>
-                          <div className="px-1.5 py-0.5 bg-indigo-50 text-[#4B77F6] text-[9px] font-extrabold rounded-md flex items-center justify-center shrink-0 origin-left scale-95">
+                          <div className="px-1.5 py-0.5 bg-[#fff8e6] text-[#C99A3A] text-[9px] font-semibold rounded-md flex items-center justify-center shrink-0 origin-left scale-95">
                              {editingQuestion?.questionList?.length || 0} 个问题
                           </div>
                        </div>
-                       <p className="text-[11px] leading-relaxed text-slate-400 font-medium line-clamp-2 pr-2">
+                       <p className="text-[11px] leading-relaxed text-[#a49a8d] font-medium line-clamp-2 pr-2">
                           {editingQuestion?.templateDesc || "暂无场景描述"}
                        </p>
                     </div>
@@ -637,7 +643,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                           setEditDesc(editingQuestion?.templateDesc || '');
                           setIsEditInfoModalVisible(true);
                         }}
-                        className="flex-shrink-0 px-2.5 py-1 border border-slate-100 text-slate-400 font-bold text-[10px] rounded-full active:bg-slate-50 transition-all mt-0.5"
+                        className="flex-shrink-0 px-2.5 py-1 border border-[#eadfca]/70 text-[#a49a8d] font-medium text-[10px] rounded-[999px] active:bg-[#fbf7ee] transition-all mt-0.5"
                       >
                          编辑信息
                       </button>
@@ -646,12 +652,12 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
               </div>
 
               {canModify(editingQuestion) && (
-                <div className="bg-white rounded-[20px] p-3 shadow-sm border border-gray-50/50 mb-2">
+                <div className="bg-[#fffefa] rounded-[20px] p-3 shadow-[0_3px_10px_rgba(92,74,42,0.04)] border border-[#eadfca]/60 mb-2">
                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-[#4B77F6] shadow-sm border border-blue-50">
+                      <div className="w-8 h-8 bg-[#fffefa] rounded-lg flex items-center justify-center text-[#C99A3A] shadow-[0_3px_10px_rgba(92,74,42,0.04)] border border-[#fff8e6]">
                         <Plus size={16} strokeWidth={3} />
                       </div>
-                      <span className="text-[15px] font-bold text-[#1E293B]">添加问题</span>
+                      <span className="text-[15px] font-medium text-[#1E293B]">添加问题</span>
                    </div>
 
                    <div className="bg-[#F8F9FB] rounded-lg p-3">
@@ -667,7 +673,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                       <button
                         onClick={handleAddQuestion}
                         disabled={isAddingQuestion || !newQuestionName.trim()}
-                        className={`px-5 py-2 bg-[#4B77F6] text-white font-bold rounded-full text-[12px] shadow-md shadow-blue-50 transition-all ${
+                        className={`px-5 py-2 bg-primary-gradient text-[#151515] font-medium rounded-[999px] text-[12px] shadow-[0_5px_12px_rgba(201,154,58,0.10)] transition-all ${
                           (isAddingQuestion || !newQuestionName.trim()) ? 'opacity-50 grayscale' : 'active:scale-95'
                         }`}
                       >
@@ -679,14 +685,14 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
 
               {!isCreatingNew && (
                 <div className="mt-4 mb-3">
-                  <h3 className="text-[15px] font-bold text-[#1E293B] mb-2 px-1">问题列表</h3>
+                  <h3 className="text-[15px] font-medium text-[#1E293B] mb-2 px-1">问题列表</h3>
                   <div className="space-y-2">
                     {editingQuestion?.questionList?.map((qItem: any, idx: number) => (
-                      <div key={idx} className="bg-white rounded-[16px] p-3 shadow-[0_1px_4px_rgba(0,0,0,0.01)] border border-gray-50 flex items-start gap-2.5">
-                        <div className="w-6 h-6 rounded-full bg-[#F0F5FF] flex items-center justify-center text-[#4B77F6] text-[11px] font-extrabold shrink-0 mt-0.5">
+                      <div key={idx} className="bg-[#fffefa] rounded-[16px] p-3 shadow-[0_1px_4px_rgba(0,0,0,0.01)] border border-[#eadfca]/50 flex items-start gap-2.5">
+                        <div className="w-6 h-6 rounded-[999px] bg-[#FFF8E6] flex items-center justify-center text-[#C99A3A] text-[11px] font-semibold shrink-0 mt-0.5">
                           {idx + 1}
                         </div>
-                        <p className="flex-1 text-[13px] font-bold text-[#334155] leading-snug pt-0.5 pr-2">
+                        <p className="flex-1 text-[13px] font-medium text-[#334155] leading-snug pt-0.5 pr-2">
                           {qItem.questionName}
                         </p>
 
@@ -694,13 +700,13 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleOpenEditModal(qItem)}
-                              className="w-7 h-7 flex items-center justify-center text-[#94A3B8] hover:text-[#4B77F6] hover:bg-blue-50 rounded-full transition-all shrink-0"
+                              className="w-7 h-7 flex items-center justify-center text-[#94A3B8] hover:text-[#C99A3A] hover:bg-[#fff8e6] rounded-[999px] transition-all shrink-0"
                             >
                               <Edit2 size={13} />
                             </button>
                             <button
                               onClick={() => handleDeleteQuestion(qItem.id)}
-                              className="w-7 h-7 flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-50 rounded-full transition-all shrink-0"
+                              className="w-7 h-7 flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-50 rounded-[999px] transition-all shrink-0"
                             >
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             </button>
@@ -734,12 +740,12 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
       {isNewDialogVisible && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-6">
           <div 
-             className="bg-white rounded-[28px] w-full max-w-[300px] overflow-hidden shadow-2xl relative animate-scaleIn"
+             className="bg-[#fffefa] rounded-[28px] w-full max-w-[300px] overflow-hidden shadow-[0_18px_44px_rgba(92,74,42,0.16)] relative animate-scaleIn"
              style={{ transform: 'translateY(-10%)' }}
           >
             {/* Modal Header - Tighter */}
             <div className="pt-5 px-5 pb-2 flex items-center justify-between">
-              <h3 className="text-[16px] font-bold text-[#1E293B]">新建问题清单</h3>
+              <h3 className="text-[16px] font-medium text-[#1E293B]">新建问题清单</h3>
               <button 
                 onClick={() => setIsNewDialogVisible(false)}
                 className="w-7 h-7 flex items-center justify-center text-[#94A3B8] active:scale-90 transition-all"
@@ -751,13 +757,13 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
             {/* Form Area - Compact */}
             <div className="px-5 pb-5 space-y-3">
               <div className="space-y-1.5">
-                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">
+                <label className="block text-[12px] font-medium text-[#94A3B8] ml-1">
                   清单名称<span className="text-[#EF4444] ml-0.5">*</span>
                 </label>
                 <div className="relative">
                    <input 
                       type="text"
-                      className="w-full h-[44px] bg-[#F8FAFC] border-none rounded-[16px] px-4 text-[14px] font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all placeholder:text-[#CBD5E1]"
+                      className="w-full h-[44px] bg-[#fffdf8] border-none rounded-[16px] px-4 text-[14px] font-medium text-[#1f2024] outline-none focus:ring-2 focus:ring-[#C99A3A]/20 transition-all placeholder:text-[#CBD5E1]"
                       placeholder="核心业务尽调清单"
                       value={newModalName}
                       onChange={(e) => setNewModalName(e.target.value)}
@@ -766,10 +772,10 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">描述</label>
+                <label className="block text-[12px] font-medium text-[#94A3B8] ml-1">描述</label>
                 <div className="relative">
                    <textarea 
-                      className="w-full h-[90px] bg-[#F8FAFC] border-none rounded-[16px] p-4 text-[14px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all resize-none placeholder:text-[#CBD5E1] leading-relaxed"
+                      className="w-full h-[90px] bg-[#fffdf8] border-none rounded-[16px] p-4 text-[14px] font-medium text-[#4f463b] outline-none focus:ring-2 focus:ring-[#C99A3A]/20 transition-all resize-none placeholder:text-[#CBD5E1] leading-relaxed"
                       placeholder="请输入描述"
                       value={newModalDesc}
                       onChange={(e) => setNewModalDesc(e.target.value)}
@@ -781,7 +787,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
               <div className="flex gap-2.5 pt-1.5">
                 <button 
                   onClick={() => setIsNewDialogVisible(false)}
-                  className="flex-1 h-[44px] bg-[#F1F5F9] text-[#64748B] font-bold text-[14px] rounded-full active:scale-95 transition-all"
+                  className="flex-1 h-[44px] bg-[#fbf7ee] text-[#64748B] font-medium text-[14px] rounded-[999px] active:scale-95 transition-all"
                 >
                   取消
                 </button>
@@ -823,10 +829,10 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                        setIsUpdating(false);
                      }
                   }}
-                  className={`flex-1 h-[44px] font-bold text-[14px] rounded-full shadow-lg active:scale-95 transition-all ${
+                  className={`flex-1 h-[44px] font-medium text-[14px] rounded-[999px] shadow-lg active:scale-95 transition-all ${
                      (!newModalName.trim() || isUpdating)
                      ? 'bg-[#CBD5E1] text-white shadow-none cursor-not-allowed'
-                     : 'bg-[#3B82F6] text-white shadow-blue-500/10 active:bg-[#2563EB]'
+                     : 'bg-primary-gradient text-[#151515] shadow-[rgba(201,154,58,0.12)] active:bg-[#A87A22]'
                   }`}
                 >
                   新建清单
@@ -847,7 +853,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
         onCancel={() => setIsEditItemModalOpen(false)}
       >
         <div className="p-4">
-          <div className="bg-[#F8F9FB] rounded-xl p-3 border border-gray-50">
+          <div className="bg-[#F8F9FB] rounded-[14px] p-3 border border-[#eadfca]/50">
             <textarea
               autoFocus
               value={editingItemValue}
@@ -861,9 +867,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
       {/* 编辑清单信息弹窗 - 尺寸对齐新建弹窗 */}
       {isEditInfoModalVisible && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-6">
-          <div className="bg-white rounded-[28px] w-full max-w-[300px] overflow-hidden shadow-2xl relative animate-scaleIn" style={{ transform: 'translateY(-10%)' }}>
+          <div className="bg-[#fffefa] rounded-[28px] w-full max-w-[300px] overflow-hidden shadow-[0_18px_44px_rgba(92,74,42,0.16)] relative animate-scaleIn" style={{ transform: 'translateY(-10%)' }}>
             <div className="pt-5 px-5 pb-2 flex items-center justify-between">
-              <h3 className="text-[16px] font-bold text-[#1E293B]">编辑清单信息</h3>
+              <h3 className="text-[16px] font-medium text-[#1E293B]">编辑清单信息</h3>
               <button 
                 onClick={() => setIsEditInfoModalVisible(false)} 
                 className="w-7 h-7 flex items-center justify-center text-[#94A3B8] active:scale-90 transition-all"
@@ -873,20 +879,20 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
             </div>
             <div className="px-5 pb-5 space-y-3">
               <div className="space-y-1.5">
-                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">
+                <label className="block text-[12px] font-medium text-[#94A3B8] ml-1">
                   清单名称<span className="text-[#EF4444] ml-0.5">*</span>
                 </label>
                 <input 
                    type="text" 
-                   className="w-full h-[44px] bg-[#F8FAFC] border-none rounded-[16px] px-4 text-[14px] font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all placeholder:text-[#CBD5E1]" 
+                   className="w-full h-[44px] bg-[#fffdf8] border-none rounded-[16px] px-4 text-[14px] font-medium text-[#1f2024] outline-none focus:ring-2 focus:ring-[#C99A3A]/20 transition-all placeholder:text-[#CBD5E1]" 
                    value={editName} 
                    onChange={(e) => setEditName(e.target.value)} 
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="block text-[12px] font-bold text-[#94A3B8] ml-1">描述</label>
+                <label className="block text-[12px] font-medium text-[#94A3B8] ml-1">描述</label>
                 <textarea 
-                   className="w-full h-[90px] bg-[#F8FAFC] border-none rounded-[16px] p-4 text-[14px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-[#3B82F6]/20 transition-all resize-none placeholder:text-[#CBD5E1] leading-relaxed"
+                   className="w-full h-[90px] bg-[#fffdf8] border-none rounded-[16px] p-4 text-[14px] font-medium text-[#4f463b] outline-none focus:ring-2 focus:ring-[#C99A3A]/20 transition-all resize-none placeholder:text-[#CBD5E1] leading-relaxed"
                    placeholder="请输入描述"
                    value={editDesc} 
                    onChange={(e) => setEditDesc(e.target.value)} 
@@ -895,7 +901,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
               <div className="flex gap-2.5 pt-1.5">
                 <button 
                    onClick={() => setIsEditInfoModalVisible(false)} 
-                   className="flex-1 h-[44px] bg-[#F1F5F9] text-[#64748B] font-bold text-[14px] rounded-full active:scale-95 transition-all"
+                   className="flex-1 h-[44px] bg-[#fbf7ee] text-[#64748B] font-medium text-[14px] rounded-[999px] active:scale-95 transition-all"
                 >
                    取消
                 </button>
@@ -905,7 +911,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                     await handleUpdateTemplate();
                     setIsEditInfoModalVisible(false);
                   }} 
-                  className={`flex-1 h-[44px] font-bold text-[14px] rounded-full shadow-lg active:scale-95 transition-all ${isUpdating || !editName.trim() ? 'bg-gray-200 text-white shadow-none' : 'bg-[#3B82F6] text-white shadow-blue-500/10'}`}
+                  className={`flex-1 h-[44px] font-medium text-[14px] rounded-[999px] shadow-lg active:scale-95 transition-all ${isUpdating || !editName.trim() ? 'bg-gray-200 text-white shadow-none' : 'bg-primary-gradient text-[#151515] shadow-[rgba(201,154,58,0.12)]'}`}
                 >
                   保存
                 </button>

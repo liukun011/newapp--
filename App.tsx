@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { Plus } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, FileText, Grid2X2, Home, Plus, UserRound, X } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 import { useRecordingStore } from './store/useRecordingStore';
 import { dealService } from './services/dealService';
+import { ReportTemplate, templateService } from './services/templateService';
 // import SplashScreen from './pages/SplashScreen'; (已禁用)
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
@@ -33,7 +34,7 @@ import ReportPreviewPage from './pages/ReportPreviewPage';
 import OrganizationManagementPage from './pages/OrganizationManagementPage';
 import ShareAppPage from './pages/ShareAppPage';
 import EnterpriseDetailPage from './pages/EnterpriseDetailPage';
-import { View, DealRecord } from './types';
+import { TemplateEnabledStatus, View, DealRecord } from './types';
 
 import RecordingFloatBubble from './components/RecordingFloatBubble';
 import { nativeBridge } from './services/nativeBridge';
@@ -307,8 +308,22 @@ const App: React.FC = () => {
   const [creditCode, setCreditCode] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [enterpriseOptions, setEnterpriseOptions] = useState<any[]>([]);
+  const [templateOptions, setTemplateOptions] = useState<ReportTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [searching, setSearching] = useState(false);
   const [creating, setCreating] = useState(false);
+
+  const resetCreateForm = () => {
+    setShowCreateModal(false);
+    setNewCustomerName("");
+    setCreditCode("");
+    setCompanyName("");
+    setEnterpriseOptions([]);
+    setSelectedTemplateId("");
+    setShowTemplatePicker(false);
+  };
 
   // 企业搜索防抖
   useEffect(() => {
@@ -322,6 +337,34 @@ const App: React.FC = () => {
     }
     return () => clearTimeout(timer);
   }, [companyName, showCreateModal]);
+
+  useEffect(() => {
+    if (!showCreateModal) return;
+
+    let cancelled = false;
+    const fetchTemplates = async () => {
+      setLoadingTemplates(true);
+      try {
+        const res = await templateService.getTemplateList({ isEnabled: TemplateEnabledStatus.ENABLED });
+        if (cancelled) return;
+        const list = res.success && Array.isArray(res.data) ? res.data : [];
+        setTemplateOptions(list);
+        setSelectedTemplateId((current) => current || list[0]?.id || "");
+      } catch (e) {
+        console.error('Fetch templates failed:', e);
+        if (!cancelled) {
+          setTemplateOptions([]);
+        }
+      } finally {
+        if (!cancelled) setLoadingTemplates(false);
+      }
+    };
+
+    fetchTemplates();
+    return () => {
+      cancelled = true;
+    };
+  }, [showCreateModal]);
 
   const handleEnterpriseSearch = async (val: string) => {
     if (!val || val.length < 2) {
@@ -796,6 +839,7 @@ const App: React.FC = () => {
         interviewCust: newCustomerName.trim(),
         companyName: companyName || undefined,
         creditCode: creditCode || undefined,
+        templateId: selectedTemplateId || undefined,
       });
 
       if (res.success && res.data) {
@@ -808,15 +852,11 @@ const App: React.FC = () => {
         }
 
         Toast.success('创建成功');
-        setShowCreateModal(false);
-        setNewCustomerName("");
-        setCreditCode("");
-        setCompanyName("");
-        setEnterpriseOptions([]);
-        // 必须使用 navigateForward 将新页面压入栈中，保证能从资料页返回首页
+        resetCreateForm();
+        // 新建完成后直接进入尽调详情，减少跳转成本
         setPreviousView(View.HOME);
         setMaterialUploadTab('upload');
-        navigateForward(View.MATERIAL_UPLOAD);
+        navigateForward(View.DUE_DILIGENCE);
       } else {
         Toast.fail(res.message || '创建失败');
       }
@@ -827,6 +867,8 @@ const App: React.FC = () => {
       setCreating(false);
     }
   };
+
+  const selectedTemplate = templateOptions.find((item) => String(item.id) === String(selectedTemplateId));
 
   return (
     <>
@@ -1043,17 +1085,35 @@ const App: React.FC = () => {
                     setPreviousView(View.DUE_DILIGENCE);
                     navigateForward(View.HISTORY);
                   }}
+                  onOpenInterviewRecord={(record: any) => {
+                    const instId = record?.interviewInstId || record?.id;
+                    if (!instId) {
+                      Toast.fail('访谈记录不存在');
+                      return;
+                    }
+
+                    const instTitle = record?.interviewInstTitle || record?.interviewInstName || '访谈记录';
+                    const currentStore = useRecordingStore.getState();
+                    if (currentStore.currentInterviewInstId !== instId) {
+                      currentStore.reset();
+                    }
+
+                    setData({
+                      dealId: currentDeal?.id,
+                      interviewInstId: instId,
+                      title: instTitle,
+                    });
+                    setRecordingBackView(View.DUE_DILIGENCE);
+                    setPreviousView(View.DUE_DILIGENCE);
+                    setViewStack([View.HOME, View.DUE_DILIGENCE]);
+                    navigateForward(View.RECORDING);
+                  }}
                   onPreviewReport={(name, reportUrl, previewUrl, showDownloadButton) => {
                     setPreviewReport({ name, reportUrl, previewUrl, showDownloadButton });
                     setPreviousView(View.DUE_DILIGENCE);
                     navigateForward(View.REPORT_PREVIEW);
                   }}
                   onDealDetailLoaded={(detail) => setCurrentDeal(detail)}
-                  onNavigateToEnterpriseDetail={(data) => {
-                    setEnterpriseDetailData(data);
-                    setPreviousView(View.DUE_DILIGENCE);
-                    navigateForward(View.ENTERPRISE_DETAIL);
-                  }}
                 />
               )}
               {currentView === View.MATERIALS_LIST && (
@@ -1528,7 +1588,7 @@ const App: React.FC = () => {
                      Dialog.confirm({
                         title: '确认生成',
                         message: '重新生成报告将覆盖现有报告，是否继续?',
-                        confirmButtonColor: '#4337F1',
+                        confirmButtonColor: '#C99A3A',
                         cancelButtonColor: '#969799',
                      }).then(async () => {
                         if (!currentDeal?.id) return;
@@ -1736,12 +1796,12 @@ const App: React.FC = () => {
           {/* Global Fixed Bottom Navigation Bar - Only for Home, Management, Reports and Settings */}
           {(currentView === View.HOME || currentView === View.SETTINGS || currentView === View.MANAGEMENT || currentView === View.REPORTS_LIST) && (
             <div
-              className="fixed bottom-0 left-1/2 right-auto w-full max-w-md -translate-x-1/2 bg-white border-t border-[#E5E5E5] z-50 flex items-center justify-around pb-1 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]"
-              style={{ height: 70 }}
+              className="fixed bottom-0 left-1/2 right-auto w-full max-w-md -translate-x-1/2 bg-[#fffefa]/92 backdrop-blur-xl border-t border-[#e8decc] z-50 flex items-center justify-around pb-1 shadow-[0_-6px_18px_rgba(92,74,42,0.055)]"
+              style={{ height: 72 }}
             >
               {/* 首页 */}
               <button
-                className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
+                className="flex flex-col items-center gap-1 min-w-[64px] pt-1 active:scale-95 transition-transform"
                 onClick={() => {
                   if (currentView !== View.HOME) {
                     setHomeTab('ongoing'); // <--- 重置首页 Tab 为“进行中”
@@ -1751,72 +1811,37 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <div 
-                  className="w-6 h-6 mb-0.5"
-                  style={{
-                    backgroundColor: currentView === View.HOME ? '#4337F1' : '#9CA3AF',
-                    WebkitMaskImage: 'url(/talk-assistant/assets/homebt.png)',
-                    WebkitMaskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskImage: 'url(/talk-assistant/assets/homebt.png)',
-                    maskSize: 'contain',
-                    maskRepeat: 'no-repeat',
-                    maskPosition: 'center'
-                  }}
-                />
-                <span className={`text-[10px] font-medium ${currentView === View.HOME ? "text-primary" : "text-gray-400"}`}>首页</span>
+                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.HOME ? 'bg-[#fff8e6] text-[#8b641d] border border-[#eadfca]' : 'text-[#9a9185]'}`}>
+                  <Home size={18} strokeWidth={2.1} />
+                </div>
+                <span className={`text-[10px] font-normal ${currentView === View.HOME ? "text-[#8b641d]" : "text-[#8a8174]"}`}>首页</span>
               </button>
 
               {/* 报告 */}
               <button
-                className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
+                className="flex flex-col items-center gap-1 min-w-[64px] pt-1 active:scale-95 transition-transform"
                 onClick={() => {
                   navigateForward(View.REPORTS_LIST);
                 }}
               >
-                <div 
-                  className="w-6 h-6 mb-0.5"
-                  style={{
-                    backgroundColor: currentView === View.REPORTS_LIST ? '#4337F1' : '#9CA3AF',
-                    WebkitMaskImage: 'url(/talk-assistant/assets/report.png)',
-                    WebkitMaskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskImage: 'url(/talk-assistant/assets/report.png)',
-                    maskSize: 'contain',
-                    maskRepeat: 'no-repeat',
-                    maskPosition: 'center'
-                  }}
-                />
-                <span className={`text-[10px] font-medium ${currentView === View.REPORTS_LIST ? "text-primary" : "text-gray-400"}`}>报告</span>
+                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.REPORTS_LIST ? 'bg-[#fff8e6] text-[#8b641d] border border-[#eadfca]' : 'text-[#9a9185]'}`}>
+                  <FileText size={18} strokeWidth={2.1} />
+                </div>
+                <span className={`text-[10px] font-normal ${currentView === View.REPORTS_LIST ? "text-[#8b641d]" : "text-[#8a8174]"}`}>报告</span>
               </button>
 
-              {/* 中间新增按钮 - Top-Half Only Border & Padding */}
-              {/* 中间新增按钮 - Top-Half Only Border & Padding */}
               <button
-                className="relative w-[64px] h-[64px] -mt-12 z-50 active:scale-95 transition-transform rounded-full flex items-center justify-center"
+                className="relative w-[58px] h-[58px] -mt-9 z-50 active:scale-95 transition-transform rounded-[20px] flex items-center justify-center"
                 onClick={() => setShowCreateModal(true)}
               >
-                {/* Purple Circle Body (Centered, 54px effectively) */}
-                <div className="w-[54px] h-[54px] rounded-full bg-primary shadow-xl shadow-indigo-500/40 flex items-center justify-center z-10">
-                   <Plus size={32} className="text-white" strokeWidth={3} />
-                </div>
-                
-                {/* Top Half White Spacer (The "Padding") with Guillotine Crop */}
-                <div className="absolute top-0 left-0 w-full h-[23px] overflow-hidden pointer-events-none z-0">
-                  <div className="w-[64px] h-[64px] rounded-full border-[5px] border-white box-border" />
-                </div>
-
-                {/* Top Half Gray Border Line with Guillotine Crop */}
-                <div className="absolute top-0 left-0 w-full h-[23px] overflow-hidden pointer-events-none z-20">
-                  <div className="w-[64px] h-[64px] rounded-full border border-[#E5E5E5] box-border" />
+                <div className="w-[50px] h-[50px] rounded-[18px] bg-primary-gradient shadow-[0_8px_18px_rgba(201,154,58,0.18)] flex items-center justify-center z-10 border border-[#d8c8aa]">
+                   <Plus size={27} className="text-[#151515]" strokeWidth={2.4} />
                 </div>
               </button>
 
               {/* 管理 */}
               <button
-                className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
+                className="flex flex-col items-center gap-1 min-w-[64px] pt-1 active:scale-95 transition-transform"
                 onClick={() => {
                   setPreviewReport(null);
                   setTemplateInitialTab('templates'); 
@@ -1825,26 +1850,15 @@ const App: React.FC = () => {
                   setCurrentView(View.MANAGEMENT);
                 }}
               >
-                <div 
-                  className="w-6 h-6 mb-0.5"
-                  style={{
-                    backgroundColor: currentView === View.MANAGEMENT ? '#4337F1' : '#9CA3AF',
-                    WebkitMaskImage: 'url(/talk-assistant/assets/manage.png)',
-                    WebkitMaskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskImage: 'url(/talk-assistant/assets/manage.png)',
-                    maskSize: 'contain',
-                    maskRepeat: 'no-repeat',
-                    maskPosition: 'center'
-                  }}
-                />
-                <span className={`text-[10px] font-medium ${currentView === View.MANAGEMENT ? "text-primary" : "text-gray-400"}`}>管理</span>
+                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.MANAGEMENT ? 'bg-[#fff8e6] text-[#8b641d] border border-[#eadfca]' : 'text-[#9a9185]'}`}>
+                  <Grid2X2 size={18} strokeWidth={2.1} />
+                </div>
+                <span className={`text-[10px] font-normal ${currentView === View.MANAGEMENT ? "text-[#8b641d]" : "text-[#8a8174]"}`}>管理</span>
               </button>
 
               {/* 我的 */}
               <button
-                className="flex flex-col items-center gap-1 min-w-[64px] pt-1"
+                className="flex flex-col items-center gap-1 min-w-[64px] pt-1 active:scale-95 transition-transform"
                 onClick={() => {
                   if (currentView !== View.SETTINGS) {
                     setNavDirection('forward');
@@ -1853,57 +1867,123 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <div 
-                  className="w-6 h-6 mb-0.5"
-                  style={{
-                    backgroundColor: currentView === View.SETTINGS ? '#4337F1' : '#9CA3AF',
-                    WebkitMaskImage: 'url(/talk-assistant/assets/person.png)',
-                    WebkitMaskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskImage: 'url(/talk-assistant/assets/person.png)',
-                    maskSize: 'contain',
-                    maskRepeat: 'no-repeat',
-                    maskPosition: 'center'
-                  }}
-                />
-                <span className={`text-[10px] font-medium ${currentView === View.SETTINGS ? "text-primary" : "text-gray-400"}`}>我的</span>
+                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.SETTINGS ? 'bg-[#fff8e6] text-[#8b641d] border border-[#eadfca]' : 'text-[#9a9185]'}`}>
+                  <UserRound size={18} strokeWidth={2.1} />
+                </div>
+                <span className={`text-[10px] font-normal ${currentView === View.SETTINGS ? "text-[#8b641d]" : "text-[#8a8174]"}`}>我的</span>
               </button>
             </div>
           )}
 
         </div>
 
-      {/* 新建尽调弹框 - Global Render */}
+      {/* 新建尽调底部抽屉 - Global Render */}
       {showCreateModal && (
         <div 
-          className="fixed left-0 right-0 top-0 z-[100] flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed left-0 right-0 top-0 z-[100] flex items-end justify-center overflow-hidden"
           style={{ height: 'var(--viewport-height, 100vh)' }}
         >
-          {/* 半透明背景 */}
           <div 
-            className="absolute inset-0 bg-black/40"
-            onClick={() => {
-              setShowCreateModal(false);
-              setNewCustomerName(""); 
-              setCreditCode("");
-              setCompanyName("");
-              setEnterpriseOptions([]);
-            }}
+            className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"
+            onClick={resetCreateForm}
           />
           
-          {/* 弹框内容 */}
-          <div className="relative bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-fadeIn">
-            {/* 标题 */}
-            <h3 className="text-center text-lg font-bold text-slate-800 mb-6">
-              新建访谈
-            </h3>
+          <div className="relative w-full max-w-md bg-[#fffefa] rounded-t-[30px] border border-[#eadfca] shadow-[0_-18px_48px_rgba(74,56,25,0.18)] animate-[slideUp_0.24s_ease-out] max-h-[88vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+18px)]">
+            <div className="sticky top-0 z-20 bg-[#fffefa]/95 backdrop-blur-md rounded-t-[30px] px-5 pt-3 pb-4 border-b border-[#eadfca]/70">
+              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[#d8cfbf]" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  {showTemplatePicker && (
+                    <button
+                      className="w-9 h-9 rounded-[14px] border border-[#eadfca] bg-[#fffdf8] text-[#8b641d] flex items-center justify-center active:scale-95 transition-transform"
+                      onClick={() => setShowTemplatePicker(false)}
+                      aria-label="返回新建表单"
+                    >
+                      <ArrowLeft size={18} strokeWidth={2.35} />
+                    </button>
+                  )}
+                  <h3 className="text-[20px] leading-[26px] font-semibold text-[#1f2024]">
+                    {showTemplatePicker ? '选择报告模板' : '新建尽调项目'}
+                  </h3>
+                </div>
+                <button
+                  className="w-10 h-10 rounded-[15px] border border-[#eadfca] bg-[#fffdf8] text-[#8b641d] flex items-center justify-center active:scale-95 transition-transform"
+                  onClick={resetCreateForm}
+                  aria-label="关闭"
+                >
+                  <X size={19} strokeWidth={2.25} />
+                </button>
+              </div>
+            </div>
+
+            <div className="px-5 pt-5">
+            {showTemplatePicker ? (
+              <div className="pb-2">
+                <div className="max-h-[56vh] overflow-y-auto pr-0.5 pb-2">
+                  {loadingTemplates ? (
+                    <div className="py-10 flex flex-col items-center justify-center text-[#8a8174]">
+                      <div className="w-6 h-6 border-2 border-[#f2dda0] border-t-[#c99a3a] rounded-full animate-spin mb-3" />
+                      <span className="text-[12px] font-normal">模板加载中</span>
+                    </div>
+                  ) : templateOptions.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {templateOptions.map((tpl) => {
+                        const checked = String(tpl.id) === String(selectedTemplateId);
+                        return (
+                          <button
+                            key={tpl.id}
+                            type="button"
+                            className={`w-full min-h-[70px] px-4 py-3 rounded-[18px] border text-left flex items-center gap-3 active:scale-[0.99] transition-all ${
+                              checked
+                                ? 'bg-[#fff8e6] border-[#d6b25f] shadow-[0_8px_18px_rgba(201,154,58,0.12)]'
+                                : 'bg-[#fffdf8] border-[#eadfca]'
+                            }`}
+                            onClick={() => {
+                              setSelectedTemplateId(tpl.id);
+                              setShowTemplatePicker(false);
+                            }}
+                          >
+                            <div className={`w-10 h-10 rounded-[14px] flex items-center justify-center flex-shrink-0 ${
+                              checked ? 'bg-[#d4aa45] text-[#151515]' : 'bg-[#fbf6eb] text-[#8b641d]'
+                            }`}>
+                              <FileText size={18} strokeWidth={2.15} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[14px] leading-[19px] font-medium text-[#1f2024] truncate">
+                                {tpl.reportTemplateName}
+                              </div>
+                              <div className="mt-1 text-[11px] leading-[15px] font-normal text-[#8a8174] line-clamp-2">
+                                {tpl.reportTemplateDesc || '报告模板'}
+                              </div>
+                            </div>
+                            <div className={`w-6 h-6 rounded-full border flex items-center justify-center flex-shrink-0 ${
+                              checked ? 'bg-[#8b641d] border-[#8b641d] text-white' : 'border-[#d8cfbf] text-transparent'
+                            }`}>
+                              <Check size={14} strokeWidth={2.6} />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="py-10 text-center">
+                      <div className="w-12 h-12 rounded-[18px] bg-[#fbf6eb] text-[#8b641d] border border-[#eadfca] flex items-center justify-center mx-auto mb-3">
+                        <FileText size={22} strokeWidth={2.1} />
+                      </div>
+                      <p className="text-[13px] font-normal text-[#1f2024]">暂无可用模板</p>
+                      <p className="mt-1 text-[11px] font-normal text-[#8a8174]">将使用默认模板创建</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
             
             {/* 访谈对象名 (必填) */}
             <div className="mb-4 relative">
               <div className="flex justify-between items-end mb-2 pl-1">
-                <span className="text-sm text-slate-500 font-medium">访谈对象 <span className="text-red-500">*</span></span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[12px] text-[#7d7467] font-normal">访谈对象 <span className="text-red-500">*</span></span>
+                <span className="text-[11px] text-[#a49a8d]">
                   {newCustomerName.length}/30
                 </span>
               </div>
@@ -1918,17 +1998,44 @@ const App: React.FC = () => {
                 }}
                 maxLength={30}
                 placeholder="请输入访谈对象名称"
-                className="w-full h-12 px-4 bg-gray-50 rounded-xl text-slate-800 border-none focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                className="w-full h-12 px-4 bg-[#fffdf8] rounded-[16px] text-[14px] font-normal text-[#1f2024] border border-[#eadfca] focus:ring-2 focus:ring-[#f2dda0] transition-all outline-none"
                 autoFocus
               />
+            </div>
+
+            {/* 报告模板 */}
+            <div className="mb-4 relative z-30">
+              <div className="flex justify-between items-end mb-2 pl-1">
+                <span className="text-[12px] text-[#7d7467] font-normal">报告模板</span>
+                {loadingTemplates && <span className="text-[11px] text-[#a49a8d]">加载中</span>}
+              </div>
+              <button
+                type="button"
+                className="w-full min-h-[52px] px-4 bg-[#fffdf8] rounded-[16px] border border-[#eadfca] flex items-center justify-between gap-3 active:bg-[#fff8e6] transition-colors"
+                onClick={() => setShowTemplatePicker(true)}
+              >
+                <div className="min-w-0 text-left">
+                  <div className="text-[14px] leading-[18px] font-medium text-[#1f2024] truncate">
+                    {selectedTemplate?.reportTemplateName || '默认报告模板'}
+                  </div>
+                  <div className="mt-1 text-[10.5px] font-normal text-[#8a8174] truncate">
+                    {selectedTemplate?.reportTemplateDesc || '用于生成尽调报告'}
+                  </div>
+                </div>
+                <ChevronDown
+                  size={18}
+                  strokeWidth={2.3}
+                  className="text-[#8b641d] flex-shrink-0"
+                />
+              </button>
             </div>
 
             {/* 企业关联搜索 (选填) */}
             <div className="mb-6 relative">
               <div className="flex justify-between items-end mb-2 pl-1">
                 <div className="flex flex-col items-start">
-                  <span className="text-sm text-slate-500 font-medium">关联企业</span>
-                  <span className="text-[10px] text-slate-400 font-medium leading-none mt-0.5">/ 信用代码(选填)</span>
+                  <span className="text-[12px] text-[#7d7467] font-normal">关联企业</span>
+                  <span className="text-[10px] text-[#a49a8d] font-normal leading-none mt-0.5">信用代码选填</span>
                 </div>
               </div>
               
@@ -1943,16 +2050,16 @@ const App: React.FC = () => {
                     setCreditCode(""); // 手动输入时清除代码
                   }}
                   placeholder="搜索或输入企业全称"
-                  className="w-full h-12 px-4 bg-gray-50 rounded-xl text-slate-800 border-none focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                  className="w-full h-12 px-4 bg-[#fffdf8] rounded-[16px] text-[14px] font-normal text-[#1f2024] border border-[#eadfca] focus:ring-2 focus:ring-[#f2dda0] transition-all outline-none"
                 />
                 
                 {/* 搜索结果下拉列表 */}
                 {enterpriseOptions.length > 0 && (
-                  <div className="absolute top-13 left-0 right-0 bg-white rounded-2xl shadow-xl border border-gray-100 max-h-48 overflow-y-auto z-[110] py-1 animate-in fade-in slide-in-from-top-2">
+                  <div className="absolute top-13 left-0 right-0 bg-[#fffefa] rounded-2xl shadow-xl border border-[#eadfca] max-h-48 overflow-y-auto z-[110] py-1 animate-in fade-in slide-in-from-top-2">
                     {enterpriseOptions.map((item, index) => (
                       <div
                         key={index}
-                        className="px-4 py-3 hover:bg-indigo-50 active:bg-indigo-100 transition-colors cursor-pointer border-b border-gray-50 last:border-none"
+                        className="px-4 py-3 hover:bg-[#fff8e6] active:bg-[#fff3cf] transition-colors cursor-pointer border-b border-[#eadfca]/60 last:border-none"
                         onClick={() => {
                           setCompanyName(item.name || "");
                           setCreditCode(item.creditCode || "");
@@ -1963,8 +2070,8 @@ const App: React.FC = () => {
                           setEnterpriseOptions([]);
                         }}
                       >
-                        <div className="text-[14px] font-bold text-slate-800 truncate mb-0.5">{item.name}</div>
-                        <div className="text-[11px] text-slate-400 font-medium">{item.creditCode}</div>
+                        <div className="text-[14px] font-medium text-[#1f2024] truncate mb-0.5">{item.name}</div>
+                        <div className="text-[11px] text-[#8a8174] font-medium">{item.creditCode}</div>
                       </div>
                     ))}
                   </div>
@@ -1972,7 +2079,7 @@ const App: React.FC = () => {
                 
                 {searching && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="w-4 h-4 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-[#f2dda0] border-t-[#c99a3a] rounded-full animate-spin"></div>
                   </div>
                 )}
               </div>
@@ -1985,14 +2092,8 @@ const App: React.FC = () => {
             {/* 按钮组 */}
             <div className="flex gap-3">
               <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setNewCustomerName("");
-                  setCreditCode("");
-                  setCompanyName("");
-                  setEnterpriseOptions([]);
-                }}
-                className="flex-1 h-11 rounded-full border border-gray-200 text-slate-600 font-medium hover:bg-gray-50 active:scale-95 transition-all"
+                onClick={resetCreateForm}
+                className="flex-1 h-12 rounded-[16px] border border-[#eadfca] text-[#7d7467] font-normal hover:bg-[#fff8e6] active:scale-95 transition-all"
               >
                 取消
               </button>
@@ -2000,12 +2101,16 @@ const App: React.FC = () => {
               <button
                 onClick={handleCreateDeal}
                 disabled={creating}
-                className="flex-1 h-11 rounded-full bg-primary text-white font-medium active:scale-95 transition-all shadow-lg shadow-indigo-500/30 disabled:opacity-70 disabled:active:scale-100"
+                className="flex-[1.35] h-12 rounded-[16px] bg-primary-gradient text-[#151515] font-medium active:scale-95 transition-all shadow-[0_8px_18px_rgba(201,154,58,0.24)] disabled:opacity-70 disabled:active:scale-100"
               >
                 {creating ? "创建中..." : "确定"}
               </button>
             </div>
+              </>
+            )}
+            </div>
           </div>
+
         </div>
       )}
       {/* 录音中断提醒弹窗（受控模式，恢复时可自动关闭） */}
@@ -2015,7 +2120,7 @@ const App: React.FC = () => {
         message={'录音因外部原因（如来电、后台运行）中断，请点击\u201c继续录音\u201d恢复。'}
         showCancelButton={false}
         confirmButtonText="我知道了"
-        confirmButtonColor="#4337F1"
+        confirmButtonColor="#8b641d"
         onConfirm={() => setShowInterruptDialog(false)}
         onClose={() => setShowInterruptDialog(false)}
       />

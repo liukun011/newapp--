@@ -89,25 +89,25 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Search Header - 外层透明(透出页面背景)，输入框白色 */}
-      <div className="px-4 py-2 flex-shrink-0 sticky top-0 z-10">
+    <div className="h-screen flex flex-col xl-page">
+      <div className="px-4 pt-4 pb-2 flex-shrink-0 sticky top-0 z-10 bg-[linear-gradient(180deg,#f7f2e8_0%,rgba(247,242,232,0.96)_100%)]">
+        <h1 className="text-[18px] font-semibold text-[#1f2024] mb-3">报告</h1>
         <div className="relative">
           <input
             type="text"
             placeholder="请搜索报告关键词"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-4 pr-10 py-2.5 bg-white rounded-full text-sm text-gray-700 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full h-10 pl-4 pr-10 bg-[#fffefa]/80 rounded-[14px] text-[13px] text-[#4f463b] placeholder-[#a49a8d] border border-[#eadfca] shadow-[0_3px_10px_rgba(92,74,42,0.04)] focus:outline-none focus:ring-2 focus:ring-[#f2dda0]"
           />
-          <Search size={18} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Search size={18} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#a49a8d]" />
         </div>
       </div>
 
       {/* Reports List */}
       <div className="flex-1 overflow-y-auto px-4 pt-1 pb-40 space-y-3">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-20 text-[#a49a8d]">
             <Loader2 size={32} className="animate-spin mb-2" />
             <span className="text-xs">加载中...</span>
           </div>
@@ -117,58 +117,41 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
               reports.map((report) => (
                 <div
                   key={report.id}
-                  className="bg-white rounded-xl p-4 shadow-sm"
+                  className="xl-card px-3.5 py-3.5"
                 >
-                  {/* Top Section: Icon + Title/Desc */}
-                  <div className="flex items-start gap-3 mb-4">
-                    {/* Icon - 大图标，带装饰背景 */}
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                      <FileText size={20} className="text-blue-500" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-[13px] bg-[#fbf6eb] border border-[#eadfca] flex items-center justify-center flex-shrink-0 text-[#8b641d]">
+                      <FileText size={18} strokeWidth={2.1} />
                     </div>
-
-                    {/* Text Content */}
-                    <div className="flex-1 min-w-0 h-10 flex items-center">
-                      <h3 className="text-base font-bold text-gray-800 line-clamp-2 leading-tight">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-[14.5px] font-medium text-[#1f2024] truncate leading-tight">
                         {formatTitle(report.fileName)}
                       </h3>
-                     {/* <p className="text-[13px] text-gray-400 truncate">
-                        {report.dealSummary || "尽调小总结未生成，请刷新生成"}
-                      </p>*/}
+                      <div className="flex items-center gap-1.5 text-[#7d7467] mt-1.5">
+                        <Clock size={12} />
+                        <span className="text-[11.5px] font-normal">
+                           {report.fileCreateFinishTime 
+                            ? report.fileCreateFinishTime.replace('T', ' ').substring(0, 16) 
+                            : (report.lastModifiedTime || '未知时间')}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Divider */}
-                  <div className="h-px bg-gray-100 my-3 -mx-4"></div>
-
-                  {/* Bottom Section: Time + Actions */}
-                  <div className="flex items-center justify-between">
-                    {/* Timestamp */}
-                    <div className="flex items-center gap-1.5 text-gray-400">
-                      <Clock size={14} />
-                      <span className="text-xs font-medium">
-                         {report.fileCreateFinishTime 
-                          ? report.fileCreateFinishTime.replace('T', ' ').substring(0, 16) 
-                          : (report.lastModifiedTime || '未知时间')}
-                      </span>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         onClick={() => handlePreview(report)}
                         onMouseDown={(e) => e.preventDefault()}
                         tabIndex={-1}
-                        className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-medium hover:bg-indigo-100 transition-colors outline-none"
+                        className="min-h-[34px] px-3 bg-[#fffefa]/80 border border-[#eadfca] text-[#8b641d] rounded-[12px] text-[11.5px] font-normal active:scale-95 transition-transform outline-none"
                       >
-                        预览报告
+                        预览
                       </button>
                       <button
                         onClick={() => handleDetail(report)}
                         onMouseDown={(e) => e.preventDefault()}
                         tabIndex={-1}
-                        className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-medium hover:bg-indigo-100 transition-colors outline-none"
+                        className="min-h-[34px] px-3 bg-[#fff8e6] border border-[#dfcda9] text-[#8b641d] rounded-[12px] text-[11.5px] font-normal active:scale-95 transition-transform outline-none"
                       >
-                        查看详情
+                        详情
                       </button>
                     </div>
                   </div>
@@ -176,10 +159,10 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
               ))
             ) : (
               <div className="text-center py-20">
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                  <FileText size={32} className="text-gray-300" />
+                <div className="w-16 h-16 rounded-[999px] bg-[#f4eee3] flex items-center justify-center mx-auto mb-3">
+                  <FileText size={32} className="text-[#c9bda9]" />
                 </div>
-                <p className="text-gray-400 text-sm">暂无报告数据</p>
+                <p className="text-[#a49a8d] text-sm">暂无报告数据</p>
               </div>
             )}
           </>

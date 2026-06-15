@@ -313,16 +313,25 @@ class MockStore {
   generateReport(dealId: string) {
     const deal = this.deals.find((item) => String(item.id) === String(dealId));
     if (!deal) return null;
-    deal.reportStatus = DealReportStatusEnum.REPORT_GENERATED;
-    deal.status = String(DealStatusEnum.END);
-    deal.report = {
-      id: `report-${deal.id}`,
-      fileName: `${deal.interviewCust || '尽调'}报告.docx`,
-      fileUrl: mockPreviewHtml(`${deal.interviewCust || '尽调'}报告`, '<p>报告已由 mock 引擎生成，适合原型流程演示。</p>'),
-    };
+    deal.reportStatus = DealReportStatusEnum.REPORT_GENERATING;
     deal.lastModifiedDate = now();
     this.rebuildReports();
-    return clone(deal.report);
+
+    setTimeout(() => {
+      const latestDeal = this.deals.find((item) => String(item.id) === String(dealId));
+      if (!latestDeal || latestDeal.reportStatus !== DealReportStatusEnum.REPORT_GENERATING) return;
+      latestDeal.reportStatus = DealReportStatusEnum.REPORT_GENERATED;
+      latestDeal.status = String(DealStatusEnum.END);
+      latestDeal.report = {
+        id: `report-${latestDeal.id}`,
+        fileName: `${latestDeal.interviewCust || '尽调'}报告.docx`,
+        fileUrl: mockPreviewHtml(`${latestDeal.interviewCust || '尽调'}报告`, '<p>报告已由 mock 引擎生成，适合原型流程演示。</p>'),
+      };
+      latestDeal.lastModifiedDate = now();
+      this.rebuildReports();
+    }, 4000);
+
+    return clone(deal.report || null);
   }
 
   generateSummary(dealId: string) {
@@ -561,24 +570,77 @@ class MockStore {
         ratio_before: '46%',
         ratio_after: '42%',
       },
+      {
+        investor_name: '杭州云启合伙企业',
+        change_time: '2024-11-08',
+        ratio_before: '8%',
+        ratio_after: '10%',
+      },
+      {
+        investor_name: '战略投资人',
+        change_time: '2024-03-15',
+        ratio_before: '-',
+        ratio_after: '6%',
+      },
     ];
+    const companyProfiles: Record<string, any> = {
+      'deal-001': {
+        legalPersonName: '王明远',
+        regCapital: '3000万人民币',
+        estiblishTime: '2019-04-12',
+        industry: '软件和信息技术服务业',
+        staffNumRange: '100-299人',
+        regLocation: '浙江省杭州市西湖区文三路 88 号云创中心 12 层',
+        companyOrgType: '有限责任公司（自然人投资或控股）',
+        regInstitute: '杭州市西湖区市场监督管理局',
+        businessScope: '人工智能软件、数据分析平台、企业数字化解决方案的研发、销售及技术服务。',
+        riskTags: ['客户集中度', '应收账款周转', '研发投入转化', '合同验收周期'],
+      },
+      'deal-002': {
+        legalPersonName: '陈知行',
+        regCapital: '8500万人民币',
+        estiblishTime: '2017-09-21',
+        industry: '新能源材料制造',
+        staffNumRange: '300-499人',
+        regLocation: '上海市浦东新区临港新片区海洋一路 168 号',
+        companyOrgType: '股份有限公司（非上市）',
+        regInstitute: '上海市市场监督管理局',
+        businessScope: '新能源电池材料、复合膜材料的研发、生产、销售及相关技术咨询。',
+        riskTags: ['原材料价格波动', '大客户交付周期', '产能爬坡', '环保合规'],
+      },
+      'deal-003': {
+        legalPersonName: '林清',
+        regCapital: '1200万人民币',
+        estiblishTime: '2020-06-18',
+        industry: '供应链管理服务',
+        staffNumRange: '50-99人',
+        regLocation: '深圳市南山区科技园南区高新南七道 6 号',
+        companyOrgType: '有限责任公司',
+        regInstitute: '深圳市市场监督管理局',
+        businessScope: '供应链管理、仓储信息系统、企业采购协同平台及物流数据服务。',
+        riskTags: ['回款周期', '渠道依赖', '仓储履约', '短期负债'],
+      },
+    };
+    const profile = companyProfiles[deal.id] || companyProfiles['deal-001'];
     const basic = {
       name: deal.companyName || deal.interviewCust,
       creditCode: deal.creditCode || '91330000MOCK0000',
       regStatus: '存续',
-      legalPersonName: '王明远',
-      regCapital: '3000万人民币',
-      estiblishTime: '2019-04-12',
-      industry: '软件和信息技术服务业',
-      staffNumRange: '100-299人',
-      regLocation: '浙江省杭州市西湖区 mock 路 88 号',
-      companyOrgType: '有限责任公司',
-      regInstitute: '杭州市市场监督管理局',
+      legalPersonName: profile.legalPersonName,
+      regCapital: profile.regCapital,
+      estiblishTime: profile.estiblishTime,
+      industry: profile.industry,
+      staffNumRange: profile.staffNumRange,
+      regLocation: profile.regLocation,
+      companyOrgType: profile.companyOrgType,
+      regInstitute: profile.regInstitute,
       regNumber: '330100MOCK001',
       orgNumber: 'MA2MOCK001',
       approvedTime: '2026-05-20',
       historyNames: ['杭州云杉数据科技有限公司'],
       equityChange: equityItems,
+      businessScope: profile.businessScope,
+      riskTags: profile.riskTags,
     };
     const equityChange = {
       result: {
@@ -590,8 +652,18 @@ class MockStore {
       ...basic,
       basicInfo: JSON.stringify({ result: basic }),
       equityChange: JSON.stringify(equityChange),
-      riskTags: ['客户集中度', '应收账款周转', '研发投入转化'],
-      businessScope: '人工智能软件、数据分析平台、企业数字化解决方案的研发与销售。',
+      riskTags: profile.riskTags,
+      businessScope: profile.businessScope,
+      shareholders: [
+        { name: '创始团队持股平台', ratio: '42%' },
+        { name: '小狸产业基金', ratio: '18%' },
+        { name: '杭州云启合伙企业', ratio: '10%' },
+      ],
+      operationMetrics: {
+        revenueGrowth: '18.6%',
+        receivableTurnoverDays: '74天',
+        contractBacklog: '约 4200 万',
+      },
     };
   }
 

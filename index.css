@@ -2,6 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --xl-bg: #f7f2e8;
+  --xl-surface: #fffdf8;
+  --xl-card: #fffefa;
+  --xl-ink: #1f2024;
+  --xl-muted: #7d7467;
+  --xl-faint: #a49a8d;
+  --xl-line: #e8decc;
+  --xl-line-strong: #d8c8aa;
+  --xl-gold: #c99a3a;
+  --xl-gold-dark: #8b641d;
+  --xl-gold-soft: #f2dda0;
+  --xl-danger: #dc2626;
+  --xl-shadow: 0 8px 20px rgba(92, 74, 42, 0.055);
+  --rv-primary-color: var(--xl-gold);
+  --rv-blue: var(--xl-gold);
+  --rv-button-primary-background-color: var(--xl-gold);
+  --rv-button-primary-border-color: var(--xl-gold);
+  --rv-button-primary-color: #151515;
+  --rv-tabs-bottom-bar-color: var(--xl-gold);
+  --rv-checkbox-checked-icon-color: var(--xl-gold);
+  --rv-switch-on-background-color: var(--xl-gold);
+  --rv-progress-color: var(--xl-gold);
+  --rv-slider-active-background-color: var(--xl-gold);
+  --rv-step-icon-active-color: var(--xl-gold);
+  --rv-step-icon-finish-color: var(--xl-gold);
+  --rv-radio-checked-icon-color: var(--xl-gold);
+  --rv-dialog-confirm-button-text-color: var(--xl-gold-dark);
+}
+
 @keyframes slideUp {
   from {
     transform: translateY(100%);
@@ -25,6 +55,12 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%; /* Prevent font scaling in landscape */
   text-size-adjust: 100%;
+  background: var(--xl-bg);
+  color: var(--xl-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 #root {
@@ -42,7 +78,7 @@ html, body {
 .markdown-body h2,
 .markdown-body h3,
 .markdown-body h4 {
-  font-weight: 700;
+  font-weight: 620;
   margin-top: 0.5em;
   margin-bottom: 0.25em;
   color: #475569;
@@ -68,12 +104,12 @@ html, body {
 }
 
 .markdown-body strong {
-  font-weight: 700;
+  font-weight: 600;
   color: #1e293b;
 }
 
 .markdown-body blockquote {
-  border-left: 3px solid #4337F1;
+  border-left: 3px solid #C99A3A;
   padding-left: 0.75em;
   margin: 0.5em 0;
   color: #64748b;
@@ -117,7 +153,7 @@ html, body {
 
 .markdown-body th {
   background-color: #f8fafc;
-  font-weight: 600;
+  font-weight: 560;
   color: #1e293b;
 }
 
@@ -169,7 +205,7 @@ html, body {
   backdrop-filter: blur(8px) !important; /* 背景模糊，提升可读性 */
   -webkit-backdrop-filter: blur(8px) !important; /* 兼容 iOS */
   color: #fff !important;
-  font-weight: 500 !important;
+  font-weight: 450 !important;
 }
 
 .rv-toast__text {
@@ -177,6 +213,498 @@ html, body {
   word-break: break-word !important;
   text-align: center !important;
   line-height: 1.5 !important;
+}
+
+.xl-page {
+  background: linear-gradient(180deg, var(--xl-bg) 0%, var(--xl-surface) 42%);
+  color: var(--xl-ink);
+}
+
+.xl-card {
+  background: rgba(255, 254, 250, 0.88);
+  border: 1px solid var(--xl-line);
+  border-radius: 18px;
+  box-shadow: var(--xl-shadow);
+}
+
+.xl-card-flat {
+  background: rgba(255, 254, 250, 0.72);
+  border: 1px solid var(--xl-line);
+  border-radius: 14px;
+}
+
+.xl-icon-btn {
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 14px;
+  border: 1px solid var(--xl-line);
+  background: rgba(255, 254, 250, 0.78);
+  color: var(--xl-gold-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(92, 74, 42, 0.045);
+  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+.xl-icon-btn:active {
+  transform: scale(0.96);
+  background: #fff8e9;
+  border-color: var(--xl-line-strong);
+}
+
+.xl-btn-primary {
+  min-height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #e8d287 0%, #c99a3a 100%);
+  color: #151515;
+  font-weight: 560;
+  box-shadow: 0 6px 14px rgba(201, 154, 58, 0.14);
+}
+
+.xl-btn-ghost {
+  min-height: 44px;
+  border-radius: 14px;
+  border: 1px solid var(--xl-line);
+  background: rgba(255, 254, 250, 0.72);
+  color: var(--xl-gold-dark);
+  font-weight: 520;
+}
+
+.xl-segment {
+  border-radius: 16px;
+  border: 1px solid var(--xl-line);
+  background: rgba(235, 228, 216, 0.72);
+  padding: 3px;
+}
+
+.xl-segment-item {
+  min-height: 38px;
+  border-radius: 13px;
+  color: #8a8174;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.xl-segment-item.is-active {
+  background: rgba(255, 254, 250, 0.9);
+  color: var(--xl-gold-dark);
+  box-shadow: 0 3px 9px rgba(92, 74, 42, 0.06);
+}
+
+.xl-page-title {
+  font-size: 22px;
+  line-height: 1.18;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.xl-section-title {
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 560;
+  letter-spacing: 0;
+}
+
+.xl-card-title {
+  font-size: 15px;
+  line-height: 1.3;
+  font-weight: 540;
+  letter-spacing: 0;
+}
+
+.xl-body {
+  font-size: 12px;
+  line-height: 1.55;
+  font-weight: 400;
+  color: var(--xl-muted);
+}
+
+.xl-meta {
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 450;
+  color: var(--xl-muted);
+}
+
+.xl-pill {
+  min-height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--xl-line-strong);
+  background: rgba(255, 248, 231, 0.76);
+  color: var(--xl-gold-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* 尽调详情页：更紧凑的 App 信息密度 */
+.xl-detail .xl-card {
+  border-radius: 18px;
+  box-shadow: 0 8px 22px rgba(74, 56, 25, 0.06);
+}
+
+.xl-detail .xl-card-flat {
+  border-radius: 14px;
+}
+
+.xl-detail .xl-card.p-4 {
+  padding: 12px;
+}
+
+.xl-detail .xl-card-flat.p-4,
+.xl-detail .xl-card-flat.p-5 {
+  padding: 12px;
+}
+
+.xl-question-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.xl-question-title.is-expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.xl-answer-content {
+  max-height: 72px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.xl-answer-content::-webkit-scrollbar {
+  display: none;
+}
+
+.xl-detail .xl-icon-btn {
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 14px;
+}
+
+.xl-detail .xl-page-title {
+  font-size: 20px;
+  line-height: 1.16;
+  font-weight: 600;
+}
+
+.xl-detail .xl-section-title {
+  font-size: 15px;
+  line-height: 1.22;
+  font-weight: 540;
+}
+
+.xl-detail .xl-card-title {
+  font-size: 13.5px;
+  line-height: 1.25;
+  font-weight: 520;
+}
+
+.xl-detail .xl-body {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.xl-detail .xl-meta {
+  font-size: 10.5px;
+  line-height: 1.28;
+}
+
+.xl-detail .xl-btn-primary,
+.xl-detail .xl-btn-ghost {
+  min-height: 38px;
+  border-radius: 14px;
+  font-size: 12px;
+}
+
+.xl-detail .xl-segment {
+  border-radius: 17px;
+  padding: 4px;
+}
+
+.xl-detail .xl-segment-item {
+  min-height: 36px;
+  border-radius: 13px;
+  font-size: 12px;
+}
+
+.xl-detail .xl-pill {
+  min-height: 24px;
+  padding: 0 8px;
+  font-size: 10.5px;
+}
+
+.xl-detail .xl-report-state {
+  border-radius: 18px;
+  padding: 13px;
+  background: rgba(255, 254, 250, 0.9);
+  border: 1px solid #e8decc;
+  box-shadow: 0 8px 20px rgba(92, 74, 42, 0.055);
+}
+
+.xl-detail .xl-report-state-head {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.xl-detail .xl-report-illu {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff8e9;
+  border: 1px solid #e8decc;
+  color: #8a5f16;
+  box-shadow: none;
+}
+
+.xl-detail .xl-report-illu::after {
+  content: "";
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 17px;
+  height: 17px;
+  border-radius: 999px;
+  background: #62c78b;
+  border: 2px solid #fffdf8;
+  box-shadow: 0 5px 10px rgba(40, 120, 78, 0.2);
+}
+
+.xl-detail .xl-report-state.is-processing .xl-report-illu::after {
+  background: #d1a13d;
+  box-shadow: 0 5px 10px rgba(177, 124, 32, 0.2);
+}
+
+.xl-detail .xl-report-state.is-failed .xl-report-illu::after {
+  background: #d66b5d;
+  box-shadow: 0 5px 10px rgba(182, 66, 66, 0.18);
+}
+
+.xl-detail .xl-report-state h2 {
+  margin: 0;
+  color: #202025;
+  font-size: 16px;
+  line-height: 1.18;
+  font-weight: 600;
+}
+
+.xl-detail .xl-report-state p {
+  margin: 4px 0 0;
+  color: #6f6557;
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 450;
+}
+
+.xl-detail .xl-report-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.xl-detail .xl-report-actions.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.xl-detail .xl-report-actions.two {
+  grid-template-columns: 1fr 1.32fr;
+}
+
+.xl-detail .xl-report-actions.one {
+  grid-template-columns: 1fr;
+}
+
+.xl-detail .xl-report-progress {
+  border: 1px solid #eadfca;
+  border-radius: 14px;
+  background: rgba(255, 248, 231, 0.52);
+  padding: 11px 12px;
+}
+
+.xl-detail .xl-report-progress span {
+  color: #8b641d;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.xl-detail .xl-report-progress strong {
+  color: #1f2024;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 560;
+}
+
+.xl-detail .xl-report-progress-track {
+  margin-top: 9px;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(216, 200, 170, 0.45);
+}
+
+.xl-detail .xl-report-progress-track > div {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #e8d287 0%, #c99a3a 100%);
+  box-shadow: 0 4px 10px rgba(201, 154, 58, 0.18);
+  transition: width 0.28s ease;
+}
+
+.xl-detail .xl-report-btn {
+  min-height: 42px;
+  border-radius: 14px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 540;
+  transition: transform 0.16s ease, background 0.16s ease;
+}
+
+.xl-detail .xl-report-btn:active {
+  transform: scale(0.97);
+}
+
+.xl-detail .xl-report-btn.gold {
+  background: linear-gradient(180deg, #e8d287 0%, #c99a3a 100%);
+  color: #151515;
+  box-shadow: 0 5px 12px rgba(201, 154, 58, 0.13);
+}
+
+.xl-detail .xl-report-btn.soft {
+  min-height: 38px;
+  background: rgba(255, 248, 231, 0.58);
+  border: 1px solid #e6d6b5;
+  color: #8b641d;
+  box-shadow: none;
+}
+
+.xl-detail .xl-report-btn.ghost {
+  border: 1px solid #eadfca;
+  background: rgba(255, 255, 255, 0.72);
+  color: #8b641d;
+}
+
+.xl-detail .xl-report-btn.vertical {
+  min-height: 46px;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  line-height: 1.1;
+}
+
+.rv-dialog__confirm,
+.rv-dialog__confirm:active {
+  color: var(--xl-gold-dark) !important;
+}
+
+.rv-button--primary {
+  background: linear-gradient(180deg, #efd77d 0%, #c99a3a 100%) !important;
+  border-color: #c99a3a !important;
+  color: #151515 !important;
+  font-weight: 560 !important;
+}
+
+/* 全局字体精修：将历史页面里过重的 Tailwind/任意字重统一降档 */
+.font-black,
+.font-extrabold,
+[class*="font-[900]"] {
+  font-weight: 580 !important;
+}
+
+.font-bold,
+[class*="font-[820]"],
+[class*="font-[800]"] {
+  font-weight: 540 !important;
+}
+
+.font-semibold,
+[class*="font-[780]"],
+[class*="font-[760]"],
+[class*="font-[740]"] {
+  font-weight: 500 !important;
+}
+
+[class*="font-[720]"],
+[class*="font-[700]"] {
+  font-weight: 460 !important;
+}
+
+.font-medium,
+[class*="font-[650]"],
+[class*="font-[620]"] {
+  font-weight: 400 !important;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  font-weight: 520;
+}
+
+.xl-page h1,
+.xl-page h2,
+.xl-page h3,
+.xl-page [class*="text-[18px]"],
+.xl-page [class*="text-[20px]"],
+.xl-page [class*="text-[22px]"],
+.xl-page [class*="text-lg"],
+.xl-page [class*="text-xl"] {
+  letter-spacing: -0.01em;
+}
+
+.xl-page p,
+.xl-page span,
+.xl-page div,
+.xl-page button {
+  text-rendering: geometricPrecision;
+}
+
+.rv-tabs__line {
+  background: var(--xl-gold) !important;
+}
+
+.rv-checkbox__icon--checked .rv-icon {
+  background: var(--xl-gold) !important;
+  border-color: var(--xl-gold) !important;
+}
+
+.rv-switch--on,
+.rv-progress__portion,
+.rv-slider__bar {
+  background: var(--xl-gold) !important;
+}
+
+.rv-field:focus-within,
+.rv-input:focus-within,
+input:focus,
+textarea:focus {
+  outline-color: var(--xl-gold) !important;
 }
 
 /* 首页轮播图指示器样式自定义 */
@@ -194,4 +722,3 @@ html, body {
   border-radius: 5px !important;
   background-color: #ffffff !important;
 }
-
