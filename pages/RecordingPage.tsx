@@ -954,8 +954,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                 <em>{prepareSeconds}</em>
               </div>
               <div className="xl-record-prepare-panel-copy">
-                <strong>即将开始录音</strong>
-                <span>请保持周围安静</span>
+                <strong>准备开始访谈</strong>
+                <span>请确认访谈对象已准备好</span>
               </div>
               <div className="xl-record-prepare-bars">
                 <span />
