@@ -90,24 +90,24 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
 
   return (
     <div className="h-screen flex flex-col xl-page">
-      <div className="px-4 pt-4 pb-2 flex-shrink-0 sticky top-0 z-10 bg-[linear-gradient(180deg,#f7f2e8_0%,rgba(247,242,232,0.96)_100%)]">
-        <h1 className="text-[18px] font-semibold text-[#1f2024] mb-3">报告</h1>
+      <div className="px-4 pt-4 pb-2 flex-shrink-0 sticky top-0 z-10 bg-[linear-gradient(180deg,#F7FAFE_0%,rgba(247,250,254,0.96)_100%)]">
+        <h1 className="text-[18px] font-semibold text-[#0F2848] mb-3">报告</h1>
         <div className="relative">
           <input
             type="text"
             placeholder="请搜索报告关键词"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-10 pl-4 pr-10 bg-[#fffefa]/80 rounded-[14px] text-[13px] text-[#4f463b] placeholder-[#a49a8d] border border-[#eadfca] shadow-[0_3px_10px_rgba(92,74,42,0.04)] focus:outline-none focus:ring-2 focus:ring-[#f2dda0]"
+            className="w-full h-10 pl-4 pr-10 bg-[#FFFFFF]/80 rounded-[14px] text-[13px] text-[#476285] placeholder-[#8AA2BF] border border-[#E2EBF5] shadow-[0_3px_10px_rgba(15,40,72,0.04)] focus:outline-none focus:ring-2 focus:ring-[#337DFF]"
           />
-          <Search size={18} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#a49a8d]" />
+          <Search size={18} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#8AA2BF]" />
         </div>
       </div>
 
       {/* Reports List */}
       <div className="flex-1 overflow-y-auto px-4 pt-1 pb-40 space-y-3">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-[#a49a8d]">
+          <div className="flex flex-col items-center justify-center py-20 text-[#8AA2BF]">
             <Loader2 size={32} className="animate-spin mb-2" />
             <span className="text-xs">加载中...</span>
           </div>
@@ -120,14 +120,14 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
                   className="xl-card px-3.5 py-3.5"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-[13px] bg-[#fbf6eb] border border-[#eadfca] flex items-center justify-center flex-shrink-0 text-[#8b641d]">
+                    <div className="w-10 h-10 rounded-[13px] bg-[#F7FAFE] border border-[#E2EBF5] flex items-center justify-center flex-shrink-0 text-[#004ACC]">
                       <FileText size={18} strokeWidth={2.1} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-[14.5px] font-medium text-[#1f2024] truncate leading-tight">
+                      <h3 className="text-[14.5px] font-medium text-[#0F2848] truncate leading-tight">
                         {formatTitle(report.fileName)}
                       </h3>
-                      <div className="flex items-center gap-1.5 text-[#7d7467] mt-1.5">
+                      <div className="flex items-center gap-1.5 text-[#476285] mt-1.5">
                         <Clock size={12} />
                         <span className="text-[11.5px] font-normal">
                            {report.fileCreateFinishTime 
@@ -141,7 +141,7 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
                         onClick={() => handlePreview(report)}
                         onMouseDown={(e) => e.preventDefault()}
                         tabIndex={-1}
-                        className="min-h-[34px] px-3 bg-[#fffefa]/80 border border-[#eadfca] text-[#8b641d] rounded-[12px] text-[11.5px] font-normal active:scale-95 transition-transform outline-none"
+                        className="min-h-[34px] px-3 bg-[#FFFFFF]/80 border border-[#E2EBF5] text-[#004ACC] rounded-[12px] text-[11.5px] font-normal active:scale-95 transition-transform outline-none"
                       >
                         预览
                       </button>
@@ -149,7 +149,7 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
                         onClick={() => handleDetail(report)}
                         onMouseDown={(e) => e.preventDefault()}
                         tabIndex={-1}
-                        className="min-h-[34px] px-3 bg-[#fff8e6] border border-[#dfcda9] text-[#8b641d] rounded-[12px] text-[11.5px] font-normal active:scale-95 transition-transform outline-none"
+                        className="min-h-[34px] px-3 bg-[#004ACC1A] border border-[#E2EBF5] text-[#004ACC] rounded-[12px] text-[11.5px] font-normal active:scale-95 transition-transform outline-none"
                       >
                         详情
                       </button>
@@ -159,10 +159,10 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
               ))
             ) : (
               <div className="text-center py-20">
-                <div className="w-16 h-16 rounded-[999px] bg-[#f4eee3] flex items-center justify-center mx-auto mb-3">
-                  <FileText size={32} className="text-[#c9bda9]" />
+                <div className="w-16 h-16 rounded-[999px] bg-[#F7FAFE] flex items-center justify-center mx-auto mb-3">
+                  <FileText size={32} className="text-[#CBD7E5]" />
                 </div>
-                <p className="text-[#a49a8d] text-sm">暂无报告数据</p>
+                <p className="text-[#8AA2BF] text-sm">暂无报告数据</p>
               </div>
             )}
           </>

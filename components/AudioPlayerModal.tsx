@@ -88,8 +88,8 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({ visible, onClose, a
         const ws = WaveSurfer.create({
           container: containerRef.current,
           waveColor: '#C3D1FD',
-          progressColor: '#C99A3A',
-          cursorColor: '#C99A3A',
+          progressColor: '#004ACC',
+          cursorColor: '#004ACC',
           barWidth: 2,
           barGap: 1,
           barRadius: 2,
@@ -178,43 +178,43 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({ visible, onClose, a
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
       
       {/* Modal Content */}
-      <div className="relative bg-[#fffefa] rounded-[22px] border border-[#eadfca] w-full max-w-sm p-6 shadow-[0_18px_44px_rgba(92,74,42,0.16)] animate-[scaleIn_0.2s_ease-out]">
+      <div className="relative bg-[#FFFFFF] rounded-[22px] border border-[#E2EBF5] w-full max-w-sm p-6 shadow-[0_18px_44px_rgba(15,40,72,0.16)] animate-[scaleIn_0.2s_ease-out]">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex-1 min-w-0">
-            <h3 className="text-[17px] font-semibold text-[#1f2024] truncate pr-2">
+            <h3 className="text-[17px] font-semibold text-[#0F2848] truncate pr-2">
               {fileName || '录音播放'}
             </h3>
-            <p className="text-[11px] text-[#7d7467] mt-0.5">点击波形图可拖动进度</p>
+            <p className="text-[11px] text-[#476285] mt-0.5">点击波形图可拖动进度</p>
           </div>
           <button 
             onClick={onClose} 
-            className="p-2 text-[#a49a8d] hover:text-[#8b641d] rounded-[12px] hover:bg-[#fff8e6] transition-colors"
+            className="p-2 text-[#8AA2BF] hover:text-[#004ACC] rounded-[12px] hover:bg-[#004ACC1A] transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Player Body */}
-        <div className="bg-[#fffdf8] border border-[#eadfca] rounded-[16px] p-5 mb-8 relative">
+        <div className="bg-[#FFFFFF] border border-[#E2EBF5] rounded-[16px] p-5 mb-8 relative">
           {/* Waveform container */}
           <div ref={containerRef} className="w-full h-[60px] cursor-pointer" />
           
           {/* Time Display */}
           <div className="flex justify-between mt-3 px-1">
-            <span className="text-[11px] font-medium text-[#8b641d] tabular-nums">
+            <span className="text-[11px] font-medium text-[#004ACC] tabular-nums">
               {formatTime(currentTime)}
             </span>
-            <span className="text-[11px] font-medium text-[#a49a8d] tabular-nums">
+            <span className="text-[11px] font-medium text-[#8AA2BF] tabular-nums">
               {formatTime(duration)}
             </span>
           </div>
           
           {/* Loading State */}
           {!isReady && !errorMsg && (
-             <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-[#fffdf8]/80 rounded-[16px] z-10">
-               <div className="flex flex-col items-center gap-2 text-[#8b641d]">
-                  <div className="w-5 h-5 border-2 border-[#eadfca] border-t-[#c99a3a] rounded-full animate-spin"></div>
+             <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-[#FFFFFF]/80 rounded-[16px] z-10">
+               <div className="flex flex-col items-center gap-2 text-[#004ACC]">
+                  <div className="w-5 h-5 border-2 border-[#E2EBF5] border-t-[#004ACC] rounded-full animate-spin"></div>
                   <span className="text-[11px] font-medium">音频加载中...</span>
                </div>
              </div>
@@ -235,7 +235,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({ visible, onClose, a
             disabled={!isReady || !!errorMsg}
             className={`w-16 h-16 rounded-full flex items-center justify-center text-white transition-all transform active:scale-90 ${
               isReady && !errorMsg 
-                ? 'bg-gradient-to-tr from-[#C99A3A] to-[#D8B557] shadow-xl shadow-[rgba(201,154,58,0.22)]' 
+                ? 'bg-gradient-to-tr from-[#004ACC] to-[#337DFF] shadow-xl shadow-[rgba(0,74,204,0.22)]' 
                 : 'bg-slate-200 cursor-not-allowed grayscale'
             }`}
           >

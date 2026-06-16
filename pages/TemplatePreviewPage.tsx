@@ -94,29 +94,29 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
   }, [templateId, templateUrl, templateName, skipIdInPreview, onPreviewReport]);
 
   return (
-    <div className="flex flex-col h-screen bg-[#f7f2e8]">
+    <div className="flex flex-col h-screen bg-[#F7FAFE]">
       {/* Header */}
-      <div className="bg-[#fffefa] px-4 py-3 flex items-center gap-3 shadow-[0_3px_10px_rgba(92,74,42,0.04)]">
-        <button onClick={onBack} className="p-2 -ml-2 text-[#4f463b]">
+      <div className="bg-[#FFFFFF] px-4 py-3 flex items-center gap-3 shadow-[0_3px_10px_rgba(15,40,72,0.04)]">
+        <button onClick={onBack} className="p-2 -ml-2 text-[#476285]">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-lg font-medium text-[#1f2024] truncate flex-1">
+        <h1 className="text-lg font-medium text-[#0F2848] truncate flex-1">
           {templateName || '模板预览'}
         </h1>
       </div>
 
       {/* Preview Content */}
-      <div className="flex-1 relative overflow-hidden bg-[#fffefa] mb-[80px]"> 
+      <div className="flex-1 relative overflow-hidden bg-[#FFFFFF] mb-[80px]"> 
         {previewUrl ? (
           <iframe
-            className="absolute inset-0 w-full h-full border-none bg-[#fffefa]"
+            className="absolute inset-0 w-full h-full border-none bg-[#FFFFFF]"
             src={previewHtml ? undefined : previewUrl}
             srcDoc={previewHtml || undefined}
             title={templateName || '模板预览'}
             sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
           />
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-[#a49a8d]">
+          <div className="flex flex-col items-center justify-center h-full text-[#8AA2BF]">
             {loading ? <p>正在加载...</p> : <p>暂无预览内容</p>}
           </div>
         )}
@@ -127,7 +127,7 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
         <div className="fixed bottom-0 left-0 right-0 px-4 pb-3 z-50 safe-area-bottom">
            <button
              onClick={() => onSelect(templateId)}
-             className="w-full py-3 bg-primary-gradient text-[#151515] rounded-[999px] font-medium active:scale-95 transition-transform shadow-[0_6px_14px_rgba(201,154,58,0.14)]"
+             className="w-full py-3 bg-primary-gradient text-[#FFFFFF] rounded-[999px] font-medium active:scale-95 transition-transform shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
            >
              选择此模板
            </button>

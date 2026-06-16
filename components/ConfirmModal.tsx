@@ -42,29 +42,29 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
       />
       
       {/* 弹窗内容 */}
-      <div className="relative bg-[#fffefa] rounded-[22px] border border-[#eadfca] shadow-[0_18px_44px_rgba(92,74,42,0.16)] w-full max-w-[320px] mx-auto overflow-hidden animate-scaleIn">
-        <div className="pt-7 pb-4 px-6 text-center text-[#1f2024]">
+      <div className="relative bg-[#FFFFFF] rounded-[22px] border border-[#E2EBF5] shadow-[0_18px_44px_rgba(15,40,72,0.16)] w-full max-w-[320px] mx-auto overflow-hidden animate-scaleIn">
+        <div className="pt-7 pb-4 px-6 text-center text-[#0F2848]">
           {/* 可选展示 Icon */}
           {icon && (
-            <div className="w-14 h-14 mx-auto mb-4 bg-[#fff8e6] border border-[#eadfca] rounded-[16px] flex items-center justify-center">
+            <div className="w-14 h-14 mx-auto mb-4 bg-[#004ACC1A] border border-[#E2EBF5] rounded-[16px] flex items-center justify-center">
               {icon}
             </div>
           )}
           <h2 className="text-lg font-semibold mb-2">{title}</h2>
-          <p className="text-sm text-[#7d7467] leading-relaxed">{message}</p>
+          <p className="text-sm text-[#476285] leading-relaxed">{message}</p>
         </div>
 
         {/* 按钮组 */}
         <div className="px-6 pb-8 pt-2 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 border border-[#eadfca] text-[#6f665b] text-[14px] font-medium rounded-[14px] hover:bg-[#fff8e6] active:bg-[#fff3cf] transition-colors"
+            className="flex-1 py-3 border border-[#E2EBF5] text-[#476285] text-[14px] font-medium rounded-[14px] hover:bg-[#004ACC1A] active:bg-[#004ACC1A] transition-colors"
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3 text-[14px] font-medium text-[#151515] rounded-[14px] active:scale-95 transition-all bg-confirm-gradient shadow-[0_6px_14px_rgba(201,154,58,0.14)]"
+            className="flex-1 py-3 text-[14px] font-medium text-[#FFFFFF] rounded-[14px] active:scale-95 transition-all bg-confirm-gradient shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
           >
             {confirmText}
           </button>

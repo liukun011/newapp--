@@ -390,7 +390,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     Dialog.confirm({
       title: '确认删除',
       message: '确定要删除该资料吗？此操作无法撤销。',
-      confirmButtonColor: '#C99A3A',
+      confirmButtonColor: '#004ACC',
     })
       .then(async () => {
         try {
@@ -504,13 +504,13 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
     
     Dialog.confirm({
       title: (
-        <span style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '16px', fontWeight: 500, lineHeight: 'normal', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#242424' }}>
+        <span style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '16px', fontWeight: 500, lineHeight: 'normal', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#0F2848' }}>
           {isRegenerate ? '确认重新生成报告？' : '确认立即生成报告？'}
         </span>
       ),
       message: (
         <div>
-          <p style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '14px', fontWeight: 'normal', lineHeight: '22px', textAlign: 'center', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#595959', marginBottom: '10px' }}>
+          <p style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '14px', fontWeight: 'normal', lineHeight: '22px', textAlign: 'center', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#476285', marginBottom: '10px' }}>
             {isRegenerate
               ? '是否确认根据当前尽调资料和访谈录音重新生成报告？原有报告内容将被覆盖'
               : '系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告（由AI自动生成）'}
@@ -522,7 +522,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
       ),
       confirmButtonText: '确认',
       cancelButtonText: '取消',
-      confirmButtonColor: '#C99A3A',
+      confirmButtonColor: '#004ACC',
       className: 'report-confirm-dialog',
     })
     .then(async () => {
@@ -574,7 +574,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#fffefa]">
+    <div className="flex flex-col h-full bg-[#FFFFFF]">
       {/* 隐藏的文件输入框 */}
       <input 
         type="file" 
@@ -599,14 +599,14 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
       />
 
       {/* NavBar */}
-      <div className="flex items-center justify-center px-4 py-3 relative border-b border-[#eadfca]/60">
+      <div className="flex items-center justify-center px-4 py-3 relative border-b border-[#E2EBF5]/60">
         <button 
           onClick={handleBackWithSummary} 
-          className="absolute left-4 p-2 text-[#4f463b] hover:bg-[#fbf7ee] rounded-[999px] active:bg-slate-100 transition-colors"
+          className="absolute left-4 p-2 text-[#476285] hover:bg-[#F7FAFE] rounded-[999px] active:bg-slate-100 transition-colors"
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-lg font-semibold text-[#1f2024]">尽调资料</h1>
+        <h1 className="text-lg font-semibold text-[#0F2848]">尽调资料</h1>
       </div>
 
       {/* Upload Options Grid */}
@@ -620,10 +620,10 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                 onClick={() => handleUploadClick(option.id)}
                 className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
               >
-                <div className="w-14 h-14 rounded-[18px] bg-[#f7f2e8] flex items-center justify-center text-[#8b641d] shadow-[0_3px_10px_rgba(92,74,42,0.04)] border border-[#eadfca]/50">
+                <div className="w-14 h-14 rounded-[18px] bg-[#F7FAFE] flex items-center justify-center text-[#004ACC] shadow-[0_3px_10px_rgba(15,40,72,0.04)] border border-[#E2EBF5]/50">
                   <option.icon size={26} strokeWidth={1.5} />
                 </div>
-                <span className="text-xs font-medium text-[#6f665b]">{option.label}</span>
+                <span className="text-xs font-medium text-[#476285]">{option.label}</span>
               </button>
             ))}
           </div>
@@ -697,11 +697,11 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                     tabIndex={-1}
                     className="flex-1 flex flex-col min-w-0 text-left transition-colors active:scale-[0.98] outline-none justify-center"
                   >
-                    <span className="text-[14px] text-[#1f2024] truncate w-full leading-tight">{resource.fileName}</span>
+                    <span className="text-[14px] text-[#0F2848] truncate w-full leading-tight">{resource.fileName}</span>
                     {resource.fileTags && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {(Array.isArray(resource.fileTags) ? resource.fileTags : String(resource.fileTags).split(',')).map((tag: string, i: number) => tag.trim() && (
-                          <span key={i} className="px-1.5 py-[2px] rounded-[4px] bg-[#FFF8E6] text-[#C99A3A] text-[10px] font-medium truncate max-w-full leading-tight">
+                          <span key={i} className="px-1.5 py-[2px] rounded-[4px] bg-[#004ACC1A] text-[#004ACC] text-[10px] font-medium truncate max-w-full leading-tight">
                             {tag.trim()}
                           </span>
                         ))}
@@ -743,7 +743,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                                     Toast.fail('操作失败，请重试');
                                   }
                                 }}
-                                className="text-[10px] text-[#8b641d] underline font-medium"
+                                className="text-[10px] text-[#004ACC] underline font-medium"
                               >
                                 重新解析
                               </button>
@@ -760,10 +760,10 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                                percentage={Math.round(progressInfo.progress * 100)} 
                                strokeWidth={3}
                                showPivot={false}
-                               color="linear-gradient(to right, #C99A3A, #D8B557)"
+                               color="linear-gradient(to right, #004ACC, #337DFF)"
                              />
                           </div>
-                          <Loader2 size={12} className="text-[#8b641d] animate-spin" />
+                          <Loader2 size={12} className="text-[#004ACC] animate-spin" />
                         </div>
                       );
                     })()}
@@ -774,7 +774,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                         {resource.type !== '4' && (
                           <button 
                             onClick={() => handleOpenRenameModal(resource)}
-                            className="p-1.5 text-[#b8892d] hover:text-[#8b641d] transition-colors"
+                            className="p-1.5 text-[#004ACC] hover:text-[#004ACC] transition-colors"
                           >
                             <Pencil size={18} strokeWidth={2} />
                           </button>
@@ -783,7 +783,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                         {/* Delete Button - Show for all including supplementary */}
                         <button 
                           onClick={() => handleDeleteResourceThrottled(resource.id)}
-                          className="p-1.5 text-[#b8892d] hover:text-[#8b641d] transition-colors"
+                          className="p-1.5 text-[#004ACC] hover:text-[#004ACC] transition-colors"
                         >
                           <MinusCircle size={22} strokeWidth={2} />
                         </button>
@@ -805,7 +805,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
           </div>
 
           {/* Text */}
-          <p className="text-sm text-[#a49a8d] text-center">小狸等你上传资料哦</p>
+          <p className="text-sm text-[#8AA2BF] text-center">小狸等你上传资料哦</p>
         </div>
       )}
 
@@ -821,7 +821,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                 className={`w-full h-12 rounded-[999px] font-medium text-lg transition-transform flex items-center justify-center gap-2 text-white shadow-lg ${
                   isGenerating 
                     ? 'bg-gray-400 cursor-not-allowed opacity-70' 
-                    : 'bg-[#C99A3A] active:scale-95'
+                    : 'bg-[#004ACC] active:scale-95'
                 }`}
               >
                 {isGenerating ? (
@@ -870,8 +870,8 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
           />
           
           {/* Modal Content */}
-          <div className="relative bg-[#fffefa] rounded-[18px] w-[85%] max-w-sm p-6 shadow-[0_14px_34px_rgba(92,74,42,0.12)]">
-            <h3 className="text-center text-lg font-medium text-[#1f2024] mb-6">文件重命名</h3>
+          <div className="relative bg-[#FFFFFF] rounded-[18px] w-[85%] max-w-sm p-6 shadow-[0_14px_34px_rgba(15,40,72,0.12)]">
+            <h3 className="text-center text-lg font-medium text-[#0F2848] mb-6">文件重命名</h3>
             
             {/* Input */}
             <div className="relative mb-8">
@@ -889,7 +889,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
                   setNewFileName(val);
                 }}
                 maxLength={30}
-                className="w-full px-4 py-3 text-base text-[#1f2024] border border-[#eadfca] rounded-[999px] focus:outline-none focus:border-[#dfcda9] focus:ring-2 focus:ring-[#f2dda0] transition-all"
+                className="w-full px-4 py-3 text-base text-[#0F2848] border border-[#E2EBF5] rounded-[999px] focus:outline-none focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#337DFF] transition-all"
                 placeholder="请输入文件名"
               />
             </div>
@@ -898,7 +898,7 @@ const MaterialsListPage: React.FC<MaterialsListPageProps> = ({
             <div className="flex gap-3">
               <button
                 onClick={() => setRenameModalVisible(false)}
-                className="flex-1 py-3 text-base font-medium text-[#6f665b] bg-[#f4eee3] rounded-[999px] hover:bg-gray-200 transition-colors"
+                className="flex-1 py-3 text-base font-medium text-[#476285] bg-[#F7FAFE] rounded-[999px] hover:bg-gray-200 transition-colors"
               >
                 取消
               </button>

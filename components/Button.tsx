@@ -22,13 +22,13 @@ const Button: React.FC<ButtonProps> = ({
   
   let variantStyles = "";
   if (variant === 'primary') {
-    variantStyles = `bg-primary-gradient text-[#151515] shadow-[0_6px_14px_rgba(201,154,58,0.14)]`;
+    variantStyles = `bg-primary-gradient text-[#FFFFFF] shadow-[0_6px_14px_rgba(0,74,204,0.14)]`;
   } else if (variant === 'secondary') {
-    variantStyles = "bg-[#fffefa]/80 text-[#1f2024] border border-[#eadfca] shadow-[0_3px_10px_rgba(116,89,39,0.04)]";
+    variantStyles = "bg-[#FFFFFF]/80 text-[#0F2848] border border-[#E2EBF5] shadow-[0_3px_10px_rgba(15,40,72,0.04)]";
   } else if (variant === 'outline') {
-    variantStyles = "bg-transparent border border-[#dfcda9] text-[#8b641d]";
+    variantStyles = "bg-transparent border border-[#E2EBF5] text-[#004ACC]";
   } else if (variant === 'text') {
-    variantStyles = "bg-transparent text-[#8b641d] p-0 h-auto min-h-0";
+    variantStyles = "bg-transparent text-[#004ACC] p-0 h-auto min-h-0";
   }
 
   let sizeStyles = "";

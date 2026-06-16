@@ -215,13 +215,13 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
   const handleBackThrottled = useThrottleFn(onBack, 1000);
 
   return (
-    <div className="fixed inset-0 h-full w-full overflow-hidden flex flex-col bg-[#f7f2e8]">
+    <div className="fixed inset-0 h-full w-full overflow-hidden flex flex-col bg-[#F7FAFE]">
       {/* NavBar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#fffefa] sticky top-0 z-10 border-b border-[#eadfca]/60">
-        <button onClick={handleBackThrottled} className="p-2 -ml-2 text-[#4f463b] hover:bg-[#fbf7ee] rounded-[999px] transition-colors">
+      <div className="flex items-center justify-between px-4 py-3 bg-[#FFFFFF] sticky top-0 z-10 border-b border-[#E2EBF5]/60">
+        <button onClick={handleBackThrottled} className="p-2 -ml-2 text-[#476285] hover:bg-[#F7FAFE] rounded-[999px] transition-colors">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-lg font-semibold text-[#1f2024] tracking-[-0.01em]">编辑访谈资料</h1>
+        <h1 className="text-lg font-semibold text-[#0F2848] tracking-[-0.01em]">编辑访谈资料</h1>
         <div className="w-8"></div>
       </div>
 
@@ -234,7 +234,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
         {/* Logo Preview */}
         <div className="mt-4 mb-8 flex flex-col items-center justify-center shrink-0">
             <div
-                className="w-24 h-24 rounded-[999px] bg-[#fffefa] flex flex-col items-center justify-center text-[#8b641d] mb-2 shadow-md border-4 border-white active:scale-95 transition-transform overflow-hidden cursor-pointer relative group"
+                className="w-24 h-24 rounded-[999px] bg-[#FFFFFF] flex flex-col items-center justify-center text-[#004ACC] mb-2 shadow-md border-4 border-white active:scale-95 transition-transform overflow-hidden cursor-pointer relative group"
                 onClick={() => nativeBridge?.openPhotoLibrary?.()}
             >
                 {logoUrl ? (
@@ -245,12 +245,12 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
                         </div>
                     </>
                 ) : (
-                    <div className="bg-[#fff8e6] w-full h-full flex flex-col items-center justify-center">
+                    <div className="bg-[#004ACC1A] w-full h-full flex flex-col items-center justify-center">
                         <Plus size={32} strokeWidth={2.5} />
                     </div>
                 )}
             </div>
-            <span className="text-[11px] font-normal mt-1 text-[#a49a8d]">点击上传企业/访谈照片</span>
+            <span className="text-[11px] font-normal mt-1 text-[#8AA2BF]">点击上传企业/访谈照片</span>
         </div>
 
         {/* Form Fields */}
@@ -258,10 +258,10 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
             {/* Interview Cust */}
             <div className="w-full">
                 <div className="flex justify-between items-end mb-2 pl-1">
-                    <span className="text-sm text-[#7d7467] font-medium">访谈对象 <span className="text-red-500">*</span></span>
-                    <span className="text-[11px] text-[#a49a8d] font-normal">{interviewCust.length}/30</span>
+                    <span className="text-sm text-[#476285] font-medium">访谈对象 <span className="text-red-500">*</span></span>
+                    <span className="text-[11px] text-[#8AA2BF] font-normal">{interviewCust.length}/30</span>
                 </div>
-                <div className="bg-[#fffefa] rounded-[18px] p-4 shadow-[0_3px_10px_rgba(92,74,42,0.04)] border border-transparent focus-within:border-[#eadfca] transition-all">
+                <div className="bg-[#FFFFFF] rounded-[18px] p-4 shadow-[0_3px_10px_rgba(15,40,72,0.04)] border border-transparent focus-within:border-[#E2EBF5] transition-all">
                     <input
                         type="text"
                         value={interviewCust}
@@ -271,7 +271,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
                             val = val.replace(/([\\\|\/\?\*\<\>]|\.\.|[\r\n])/g, '');
                             setInterviewCust(val);
                         }}
-                        className="w-full text-[16px] text-[#1f2024] font-normal outline-none bg-transparent placeholder-gray-300"
+                        className="w-full text-[16px] text-[#0F2848] font-normal outline-none bg-transparent placeholder-gray-300"
                         placeholder="请输入人员名称/访谈单位"
                     />
                 </div>
@@ -280,35 +280,35 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
             {/* Enterprise Search Section */}
             <div className="w-full">
                 <div className="flex items-center gap-1.5 mb-2 pl-1">
-                    <span className="text-sm text-[#7d7467] font-medium">关联企业资料</span>
+                    <span className="text-sm text-[#476285] font-medium">关联企业资料</span>
                 </div>
 
-                <div className="bg-[#fffefa] rounded-[18px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#eadfca]/60 overflow-hidden">
+                <div className="bg-[#FFFFFF] rounded-[18px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#E2EBF5]/60 overflow-hidden">
                     {/* Search Input Part */}
-                    <div className="p-4 flex items-center gap-3 active:bg-[#fbf7ee] transition-colors">
-                        <Search size={18} className="text-[#c9bda9] shrink-0" />
+                    <div className="p-4 flex items-center gap-3 active:bg-[#F7FAFE] transition-colors">
+                        <Search size={18} className="text-[#CBD7E5] shrink-0" />
                         <input
                             type="text"
                             value={companyName}
                             onChange={(e) => onSearchInputChange(e.target.value)}
                             onFocus={() => { if (enterpriseOptions.length > 0) setShowOptions(true); }}
-                            className="flex-1 text-[15px] text-[#1f2024] font-normal outline-none bg-transparent placeholder-slate-300"
+                            className="flex-1 text-[15px] text-[#0F2848] font-normal outline-none bg-transparent placeholder-slate-300"
                             placeholder="搜索企业全称或信用代码"
                         />
-                        {searching && <Loader2 size={16} className="animate-spin text-[#b8892d] shrink-0" />}
+                        {searching && <Loader2 size={16} className="animate-spin text-[#004ACC] shrink-0" />}
                     </div>
 
                     {/* Credit Code Result (Only shows if search results are not open) */}
                     {creditCode && !showOptions && (
                         <div className="px-4 pb-4 animate-fadeIn">
-                             <div className="bg-[#fff8e6]/40 rounded-[14px] p-2.5 flex items-center justify-between border border-[#eadfca]/30">
+                             <div className="bg-[#004ACC1A]/40 rounded-[14px] p-2.5 flex items-center justify-between border border-[#E2EBF5]/30">
                                 <div className="flex flex-col">
-                                    <span className="text-[9px] text-[#dfcda9] font-medium uppercase tracking-widest leading-none mb-1">信用代码(CREDIT CODE)</span>
-                                    <span className="text-[13px] text-[#8b641d] font-mono font-medium tracking-tight leading-none">{creditCode}</span>
+                                    <span className="text-[9px] text-[#E2EBF5] font-medium uppercase tracking-widest leading-none mb-1">信用代码(CREDIT CODE)</span>
+                                    <span className="text-[13px] text-[#004ACC] font-mono font-medium tracking-tight leading-none">{creditCode}</span>
                                 </div>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setCreditCode(''); setCompanyName(''); }}
-                                    className="text-[11px] text-[#b8892d] font-medium px-2 py-1.5 rounded-lg active:bg-[#fff3cf] transition-colors"
+                                    className="text-[11px] text-[#004ACC] font-medium px-2 py-1.5 rounded-lg active:bg-[#004ACC1A] transition-colors"
                                 >
                                     清除
                                 </button>
@@ -319,17 +319,17 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
                     {/* Dropdown Options (Inside the card or floating) */}
                     {showOptions && enterpriseOptions.length > 0 && (
                         <div
-                            className="border-t border-[#eadfca]/50 max-h-52 overflow-y-auto bg-[#fbf7ee]/30"
+                            className="border-t border-[#E2EBF5]/50 max-h-52 overflow-y-auto bg-[#F7FAFE]/30"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {enterpriseOptions.map((ent, idx) => (
                                 <div
                                     key={idx}
-                                    className="px-4 py-3 hover:bg-[#fffefa] active:bg-[#fff8e6] transition-colors cursor-pointer border-b border-[#eadfca]/50 last:border-none"
+                                    className="px-4 py-3 hover:bg-[#FFFFFF] active:bg-[#004ACC1A] transition-colors cursor-pointer border-b border-[#E2EBF5]/50 last:border-none"
                                     onClick={() => selectEnterprise(ent)}
                                 >
-                                    <div className="text-[13px] font-medium text-[#4f463b] line-clamp-1">{ent.name}</div>
-                                    <div className="text-[10px] text-[#a49a8d] font-medium mt-0.5">代码: {ent.creditCode || '无'}</div>
+                                    <div className="text-[13px] font-medium text-[#476285] line-clamp-1">{ent.name}</div>
+                                    <div className="text-[10px] text-[#8AA2BF] font-medium mt-0.5">代码: {ent.creditCode || '无'}</div>
                                 </div>
                             ))}
                         </div>
@@ -344,10 +344,10 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
         className="absolute bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-6 z-30 flex gap-4"
         style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
       >
-         <Button variant="secondary" block className="flex-1 !rounded-[999px] !bg-[#fffefa] !border-[#eadfca] !text-[#a49a8d] !h-12 !text-[16px] !font-medium" onClick={handleBackThrottled}>
+         <Button variant="secondary" block className="flex-1 !rounded-[999px] !bg-[#FFFFFF] !border-[#E2EBF5] !text-[#8AA2BF] !h-12 !text-[16px] !font-medium" onClick={handleBackThrottled}>
             取消
          </Button>
-         <Button variant="primary" block className="flex-1 !rounded-[999px] !h-12 !text-[16px] !font-medium shadow-[0_6px_14px_rgba(201,154,58,0.14)]" onClick={handleSaveThrottled} loading={loading} disabled={loading}>
+         <Button variant="primary" block className="flex-1 !rounded-[999px] !h-12 !text-[16px] !font-medium shadow-[0_6px_14px_rgba(0,74,204,0.14)]" onClick={handleSaveThrottled} loading={loading} disabled={loading}>
             保存
          </Button>
       </div>

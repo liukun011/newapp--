@@ -506,7 +506,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       message: '确定要结束当前的访谈吗？结束将停止录音并保存记录。',
       confirmButtonText: '确定结束',
       cancelButtonText: '继续访谈',
-      confirmButtonColor: '#C99A3A',
+      confirmButtonColor: '#004ACC',
     })
       .then(async () => {
         if (!interviewInstId) {
@@ -828,15 +828,15 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         </button>
         <div className="flex-1 min-w-0 text-center px-3">
           {showTimeTitle ? (
-            <div className="inline-flex bg-[#fff3cf] border border-[#eadfca] px-4 py-1.5 rounded-full items-center gap-2 animate-fadeIn">
-              <Clock size={15} className="text-[#8b641d]" />
-              <span className="text-[#1f2024] font-mono text-[15px] leading-none mb-[1px]">
+            <div className="inline-flex bg-[#004ACC1A] border border-[#E2EBF5] px-4 py-1.5 rounded-full items-center gap-2 animate-fadeIn">
+              <Clock size={15} className="text-[#004ACC]" />
+              <span className="text-[#0F2848] font-mono text-[15px] leading-none mb-[1px]">
                 {formatTime(seconds)}
               </span>
             </div>
           ) : (
             <>
-              <h1 className="text-[20px] leading-[24px] font-medium tracking-[-0.01em] text-[#1f2024] truncate">{localTitle}</h1>
+              <h1 className="text-[20px] leading-[24px] font-medium tracking-[-0.01em] text-[#0F2848] truncate">{localTitle}</h1>
             </>
           )}
         </div>
@@ -855,20 +855,20 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                 aria-label="关闭更多菜单"
                 onClick={() => setShowMoreMenu(false)}
               />
-              <div className="absolute right-0 top-12 z-30 w-[148px] overflow-hidden rounded-[16px] border border-[#eadfca] bg-[#fffefa] shadow-[0_14px_34px_rgba(74,56,25,0.16)]">
+              <div className="absolute right-0 top-12 z-30 w-[148px] overflow-hidden rounded-[16px] border border-[#E2EBF5] bg-[#FFFFFF] shadow-[0_14px_34px_rgba(15,40,72,0.16)]">
                 <button
-                  className="w-full min-h-[44px] px-3.5 flex items-center gap-2.5 text-[13px] font-normal text-[#1f2024] active:bg-[#fff8e6]"
+                  className="w-full min-h-[44px] px-3.5 flex items-center gap-2.5 text-[13px] font-normal text-[#0F2848] active:bg-[#004ACC1A]"
                   onClick={() => {
                     setShowMoreMenu(false);
                     setRenameValue(localTitle);
                     setShowRenameModal(true);
                   }}
                 >
-                  <Pencil size={15} strokeWidth={2.1} className="text-[#8b641d]" />
+                  <Pencil size={15} strokeWidth={2.1} className="text-[#004ACC]" />
                   <span>名称编辑</span>
                 </button>
                 <button
-                  className="w-full min-h-[44px] px-3.5 flex items-center gap-2.5 text-[13px] font-normal text-[#dc2626] border-t border-[#eadfca]/70 active:bg-red-50"
+                  className="w-full min-h-[44px] px-3.5 flex items-center gap-2.5 text-[13px] font-normal text-[#dc2626] border-t border-[#E2EBF5]/70 active:bg-red-50"
                   onClick={handleDeleteInterview}
                 >
                   <Trash2 size={15} strokeWidth={2.1} />
@@ -885,7 +885,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
       <div 
         ref={scrollContainerRef}
-        className="flex-1 relative min-h-0 bg-[#f7f2e8] scroll-smooth overflow-y-auto"
+        className="flex-1 relative min-h-0 bg-[#F7FAFE] scroll-smooth overflow-y-auto"
         style={{ WebkitOverflowScrolling: 'touch' }}
         onScroll={handleScroll}
       >
@@ -893,8 +893,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
           <div className="xl-card px-3.5 py-2.5">
             <div className="grid grid-cols-[auto_minmax(44px,1fr)_auto] items-center gap-2.5 min-h-[54px]">
               <div className="min-w-0 flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${isRecording ? 'bg-[#c99a3a] animate-pulse' : seconds > 0 ? 'bg-[#a49a8d]' : 'bg-[#eadfca]'}`} />
-                <div className="font-mono text-[20px] leading-none font-medium text-[#1f2024] tracking-normal whitespace-nowrap">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${isRecording ? 'bg-[#004ACC] animate-pulse' : seconds > 0 ? 'bg-[#8AA2BF]' : 'bg-[#E2EBF5]'}`} />
+                <div className="font-mono text-[20px] leading-none font-medium text-[#0F2848] tracking-normal whitespace-nowrap">
                   {formatTime(seconds)}
                 </div>
               </div>
@@ -905,7 +905,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                 {seconds > 0 ? (
                   <>
                     <button
-                      className="w-9 h-9 rounded-[13px] border border-[#e4d5b9] bg-[#fffefa]/82 text-[#8b641d] shadow-[0_4px_10px_rgba(92,74,42,0.04)] flex items-center justify-center active:scale-95 transition-transform"
+                      className="w-9 h-9 rounded-[13px] border border-[#E2EBF5] bg-[#FFFFFF]/82 text-[#004ACC] shadow-[0_4px_10px_rgba(15,40,72,0.04)] flex items-center justify-center active:scale-95 transition-transform"
                       onClick={handleToggleWrapperThrottled}
                       aria-label={isRecording ? '暂停录音' : '继续录音'}
                     >
@@ -928,7 +928,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         </div>
         {/* Tabs */}
         {/* Tabs */}
-        <div className="sticky top-0 z-40 px-4 pb-3 bg-[linear-gradient(180deg,#f8f3e8_0%,rgba(248,243,232,0.96)_100%)] transition-all">
+        <div className="sticky top-0 z-40 px-4 pb-3 bg-[linear-gradient(180deg,#F7FAFE_0%,rgba(247,250,254,0.96)_100%)] transition-all">
           <div className="xl-segment flex">
             <button
               className={`flex-1 xl-segment-item transition-all ${activeTab === 'questions' ? 'is-active' : ''}`}
@@ -954,8 +954,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                 <em>{prepareSeconds}</em>
               </div>
               <div className="xl-record-prepare-panel-copy">
-                <strong>准备录音</strong>
-                <span>请保持安静，录音即将开始</span>
+                <strong>即将开始录音</strong>
+                <span>请保持周围安静</span>
               </div>
               <div className="xl-record-prepare-bars">
                 <span />
@@ -975,7 +975,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                     className="flex items-center justify-between cursor-pointer py-0.5"
                     onClick={() => q.details && setExpandedQuestion(expandedQuestion === q.id ? null : q.id)}
                   >
-                    <h3 className={`xl-question-title flex-1 text-[12.5px] leading-[18px] font-normal pr-3 ${expandedQuestion === q.id ? 'is-expanded' : ''} ${q.isAnswered ? 'text-[#1f2024]' : 'text-[#7d7467]'}`}>
+                    <h3 className={`xl-question-title flex-1 text-[12.5px] leading-[18px] font-normal pr-3 ${expandedQuestion === q.id ? 'is-expanded' : ''} ${q.isAnswered ? 'text-[#0F2848]' : 'text-[#476285]'}`}>
                       {q.text}
                     </h3>
 
@@ -988,7 +988,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
                       <div className="min-w-[20px]">
                         {q.isAnswered ? (
-                          <div className="text-[#c99a3a]">
+                          <div className="text-[#004ACC]">
                             <CheckCircle size={22} fill="white" />
                           </div>
                         ) : (
@@ -999,17 +999,17 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                   </div>
 
                   {expandedQuestion === q.id && q.details && (
-                    <div className="mt-2.5 rounded-[14px] border border-[#eadfca]/70 bg-[#fbf7ee]/58 px-3 py-2.5">
+                    <div className="mt-2.5 rounded-[14px] border border-[#E2EBF5]/70 bg-[#F7FAFE]/58 px-3 py-2.5">
                       <div className="flex items-start gap-2.5">
-                        <span className="mt-0.5 shrink-0 rounded-[999px] border border-[#dfcda9] bg-[#fffefa] px-2 py-0.5 text-[10px] leading-[14px] font-normal text-[#8b641d]">
+                        <span className="mt-0.5 shrink-0 rounded-[999px] border border-[#E2EBF5] bg-[#FFFFFF] px-2 py-0.5 text-[10px] leading-[14px] font-normal text-[#004ACC]">
                           参考答案
                         </span>
-                        <p className="xl-answer-content min-w-0 flex-1 pr-1 text-[12px] leading-[18px] font-normal text-[#6f665b]">
+                        <p className="xl-answer-content min-w-0 flex-1 pr-1 text-[12px] leading-[18px] font-normal text-[#476285]">
                           {q.details}
                         </p>
                       </div>
                       {q.answerTime && (
-                        <div className="mt-2 text-right text-[10px] leading-none font-normal text-[#a49a8d]">
+                        <div className="mt-2 text-right text-[10px] leading-none font-normal text-[#8AA2BF]">
                           {(() => {
                             try {
                               const date = new Date(q.answerTime);
@@ -1059,7 +1059,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                       {/* 右侧：标签与操作 */}
                       <div className="flex items-center gap-1.5 whitespace-nowrap ml-auto shrink-0">
                         {/* 智能精修标签 */}
-                        <div className="flex items-center gap-1 bg-[#fff8e6] text-[#8b641d] px-1.5 py-0.5 rounded text-[10px] font-normal border border-[#eadfca]">
+                        <div className="flex items-center gap-1 bg-[#004ACC1A] text-[#004ACC] px-1.5 py-0.5 rounded text-[10px] font-normal border border-[#E2EBF5]">
                            <img 
                              src={fixIcon} 
                              alt="fix"
@@ -1089,8 +1089,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                           return (
                             <div key={item.id || index} className="flex gap-3 flex-row">
                               {/* Avatar */}
-                              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-[#fff8e6] border border-[#eadfca]">
-                                <User size={16} className="text-[#8b641d]" fill="currentColor" />
+                              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-[#004ACC1A] border border-[#E2EBF5]">
+                                <User size={16} className="text-[#004ACC]" fill="currentColor" />
                               </div>
 
                               <div className="flex-1 flex flex-col items-start min-w-0">
@@ -1100,8 +1100,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                                     {item.contentType || `访谈对象${item.roleId || index + 1}`}
                                   </span>
                                   {isRecognizing && (
-                                    <span className="inline-flex items-center gap-0.5 text-[10px] text-[#8b641d] bg-[#fff8e6] px-1.5 py-0.5 rounded">
-                                      <span className="w-1 h-1 bg-[#c99a3a] rounded-full animate-bounce"></span>
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] text-[#004ACC] bg-[#004ACC1A] px-1.5 py-0.5 rounded">
+                                      <span className="w-1 h-1 bg-[#004ACC] rounded-full animate-bounce"></span>
                                       识别中
                                     </span>
                                   )}
@@ -1110,7 +1110,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                                 {/* Chat Bubble */}
                                 <div className={`p-3.5 rounded-2xl rounded-tl-sm text-[14px] leading-relaxed w-full shadow-[0_2px_8px_rgba(0,0,0,0.02)]
                                   ${isRecognizing
-                                    ? 'bg-[#fff8e6]/50 text-[#1f2024] border border-[#eadfca]'
+                                    ? 'bg-[#004ACC1A]/50 text-[#0F2848] border border-[#E2EBF5]'
                                     : 'bg-slate-50 text-slate-700 border border-slate-100'
                                   }`}
                                 >
@@ -1145,8 +1145,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                   return (
                     <div className="py-2">
                        {/* 容器的装饰头部（时间显示） */}
-                       <div className="inline-flex items-center gap-2 text-xs text-slate-500 bg-[#F2F3F5] border border-transparent px-3 py-1.5 rounded-full mb-3 ml-1">
-                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="text-slate-400">
+                       <div className="inline-flex items-center gap-2 text-xs text-[#476285] bg-[#FFFFFF] border border-[#E2EBF5] px-3 py-1.5 rounded-full mb-3 ml-1 shadow-[0_3px_10px_rgba(15,40,72,0.04)]">
+                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="text-[#8AA2BF]">
                           <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
                           <path d="M7 3.5V7L9.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                         </svg>
@@ -1156,27 +1156,29 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
                       </div>
 
                       {/* 深度转写中容器 */}
-                      <div className="bg-gradient-to-br from-[#fff8e6] via-white to-[#fff3cf] rounded-2xl p-6 border border-[#eadfca]/60 shadow-[0_4px_12px_rgba(201,154,58,0.06)]">
+                      <div className="relative overflow-hidden bg-[#FFFFFF] rounded-2xl p-5 border border-[#D5E2F2] shadow-[0_8px_22px_rgba(15,40,72,0.08)]">
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#337DFF] to-[#004ACC]" />
+                        <div className="absolute -right-10 -top-10 w-28 h-28 rounded-full bg-[#004ACC14]" />
                         <div className="text-center">
                           {/* 标题 */}
-                          <div className="text-[#8b641d] font-medium mb-5 flex items-center justify-center gap-2.5">
+                          <div className="relative text-[#0F2848] font-medium mb-5 flex items-center justify-center gap-2.5">
                             <span className="relative flex h-3 w-3">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#d3a640] opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#c99a3a]"></span>
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#337DFF] opacity-60"></span>
+                              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#004ACC]"></span>
                             </span>
-                            <span className="tracking-wide text-sm">深度转写中...</span>
+                            <span className="tracking-wide text-[14px]">深度转写中...</span>
                           </div>
 
                           {/* 进度条 */}
-                          <div className="relative w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-4 mx-auto max-w-[80%]">
+                          <div className="relative w-full h-2 bg-[#EAF2FF] rounded-full overflow-hidden mb-4 mx-auto max-w-[78%]">
                             <div 
-                              className="absolute inset-0 bg-gradient-to-r from-[#e8d287] via-[#c99a3a] to-[#c99a3a] transition-all duration-1000 ease-linear"
+                              className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#337DFF] to-[#004ACC] transition-all duration-1000 ease-linear rounded-full"
                               style={{ width: `${progressPercent}%` }}
                             />
                           </div>
 
                           {/* 提示文字 */}
-                          <p className="text-xs text-slate-400 font-light tracking-wider scale-90">
+                          <p className="text-[12px] text-[#476285] font-normal tracking-wide">
                             正在进行语义对齐与降噪优化
                           </p>
                         </div>
@@ -1196,7 +1198,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
       </div>
 
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-4 pt-3 z-30 bg-gradient-to-t from-[#fffdf8] via-[#fffdf8]/95 to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-4 pt-3 z-30 bg-gradient-to-t from-[#FFFFFF] via-[#FFFFFF]/95 to-transparent">
         <div className="flex gap-3 items-center justify-between">
           {seconds === 0 ? (
             <Button
@@ -1229,25 +1231,25 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
             aria-label="关闭名称编辑"
             onClick={() => setShowRenameModal(false)}
           />
-          <div className="relative w-full max-w-md rounded-t-[26px] border border-[#eadfca] bg-[#fffefa] px-5 pt-4 pb-[calc(env(safe-area-inset-bottom)+20px)] shadow-[0_-18px_44px_rgba(74,56,25,0.18)] animate-slide-up">
-            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[#d8cfbf]" />
-            <h2 className="text-[18px] font-semibold text-[#1f2024]">名称编辑</h2>
+          <div className="relative w-full max-w-md rounded-t-[26px] border border-[#E2EBF5] bg-[#FFFFFF] px-5 pt-4 pb-[calc(env(safe-area-inset-bottom)+20px)] shadow-[0_-18px_44px_rgba(15,40,72,0.18)] animate-slide-up">
+            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[#CBD7E5]" />
+            <h2 className="text-[18px] font-semibold text-[#0F2848]">名称编辑</h2>
             <input
               value={renameValue}
               onChange={(event) => setRenameValue(event.target.value.slice(0, 30))}
-              className="mt-4 w-full h-12 rounded-[16px] border border-[#eadfca] bg-[#fffdf8] px-4 text-[15px] font-normal text-[#1f2024] outline-none focus:ring-2 focus:ring-[#f2dda0]"
+              className="mt-4 w-full h-12 rounded-[16px] border border-[#E2EBF5] bg-[#FFFFFF] px-4 text-[15px] font-normal text-[#0F2848] outline-none focus:ring-2 focus:ring-[#337DFF]"
               placeholder="请输入访谈名称"
               autoFocus
             />
             <div className="mt-5 flex gap-3">
               <button
-                className="flex-1 h-12 rounded-[16px] border border-[#eadfca] bg-[#fffefa] text-[14px] font-normal text-[#7d7467] active:bg-[#fff8e6]"
+                className="flex-1 h-12 rounded-[16px] border border-[#E2EBF5] bg-[#FFFFFF] text-[14px] font-normal text-[#476285] active:bg-[#004ACC1A]"
                 onClick={() => setShowRenameModal(false)}
               >
                 取消
               </button>
               <button
-                className="flex-1 h-12 rounded-[16px] bg-primary-gradient text-[14px] font-normal text-[#151515] shadow-[0_6px_14px_rgba(201,154,58,0.14)] active:scale-95 transition-transform"
+                className="flex-1 h-12 rounded-[16px] bg-primary-gradient text-[14px] font-normal text-[#FFFFFF] shadow-[0_6px_14px_rgba(0,74,204,0.14)] active:scale-95 transition-transform"
                 onClick={handleRenameInterview}
               >
                 保存

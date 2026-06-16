@@ -1588,7 +1588,7 @@ const App: React.FC = () => {
                      Dialog.confirm({
                         title: '确认生成',
                         message: '重新生成报告将覆盖现有报告，是否继续?',
-                        confirmButtonColor: '#C99A3A',
+                        confirmButtonColor: '#004ACC',
                         cancelButtonColor: '#969799',
                      }).then(async () => {
                         if (!currentDeal?.id) return;
@@ -1796,7 +1796,7 @@ const App: React.FC = () => {
           {/* Global Fixed Bottom Navigation Bar - Only for Home, Management, Reports and Settings */}
           {(currentView === View.HOME || currentView === View.SETTINGS || currentView === View.MANAGEMENT || currentView === View.REPORTS_LIST) && (
             <div
-              className="fixed bottom-0 left-1/2 right-auto w-full max-w-md -translate-x-1/2 bg-[#fffefa]/92 backdrop-blur-xl border-t border-[#e8decc] z-50 flex items-center justify-around pb-1 shadow-[0_-6px_18px_rgba(92,74,42,0.055)]"
+              className="fixed bottom-0 left-1/2 right-auto w-full max-w-md -translate-x-1/2 bg-[#FFFFFF]/92 backdrop-blur-xl border-t border-[#E2EBF5] z-50 flex items-center justify-around pb-1 shadow-[0_-6px_18px_rgba(15,40,72,0.055)]"
               style={{ height: 72 }}
             >
               {/* 首页 */}
@@ -1811,10 +1811,10 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.HOME ? 'bg-[#fff8e6] text-[#8b641d] border border-[#eadfca]' : 'text-[#9a9185]'}`}>
+                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.HOME ? 'bg-[#004ACC1A] text-[#004ACC] border border-[#E2EBF5]' : 'text-[#8AA2BF]'}`}>
                   <Home size={18} strokeWidth={2.1} />
                 </div>
-                <span className={`text-[10px] font-normal ${currentView === View.HOME ? "text-[#8b641d]" : "text-[#8a8174]"}`}>首页</span>
+                <span className={`text-[10px] font-normal ${currentView === View.HOME ? "text-[#004ACC]" : "text-[#476285]"}`}>首页</span>
               </button>
 
               {/* 报告 */}
@@ -1824,18 +1824,21 @@ const App: React.FC = () => {
                   navigateForward(View.REPORTS_LIST);
                 }}
               >
-                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.REPORTS_LIST ? 'bg-[#fff8e6] text-[#8b641d] border border-[#eadfca]' : 'text-[#9a9185]'}`}>
+                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.REPORTS_LIST ? 'bg-[#004ACC1A] text-[#004ACC] border border-[#E2EBF5]' : 'text-[#8AA2BF]'}`}>
                   <FileText size={18} strokeWidth={2.1} />
                 </div>
-                <span className={`text-[10px] font-normal ${currentView === View.REPORTS_LIST ? "text-[#8b641d]" : "text-[#8a8174]"}`}>报告</span>
+                <span className={`text-[10px] font-normal ${currentView === View.REPORTS_LIST ? "text-[#004ACC]" : "text-[#476285]"}`}>报告</span>
               </button>
 
               <button
                 className="relative w-[58px] h-[58px] -mt-9 z-50 active:scale-95 transition-transform rounded-[20px] flex items-center justify-center"
                 onClick={() => setShowCreateModal(true)}
               >
-                <div className="w-[50px] h-[50px] rounded-[18px] bg-primary-gradient shadow-[0_8px_18px_rgba(201,154,58,0.18)] flex items-center justify-center z-10 border border-[#d8c8aa]">
-                   <Plus size={27} className="text-[#151515]" strokeWidth={2.4} />
+                <div
+                  className="w-[50px] h-[50px] rounded-[18px] shadow-[0_8px_18px_rgba(0,74,204,0.18)] flex items-center justify-center z-10 border border-[#CBD7E5]"
+                  style={{ background: 'linear-gradient(180deg, #337DFF 0%, #004ACC 100%)' }}
+                >
+                   <Plus size={27} className="text-[#FFFFFF]" strokeWidth={2.4} />
                 </div>
               </button>
 
@@ -1850,10 +1853,10 @@ const App: React.FC = () => {
                   setCurrentView(View.MANAGEMENT);
                 }}
               >
-                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.MANAGEMENT ? 'bg-[#fff8e6] text-[#8b641d] border border-[#eadfca]' : 'text-[#9a9185]'}`}>
+                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.MANAGEMENT ? 'bg-[#004ACC1A] text-[#004ACC] border border-[#E2EBF5]' : 'text-[#8AA2BF]'}`}>
                   <Grid2X2 size={18} strokeWidth={2.1} />
                 </div>
-                <span className={`text-[10px] font-normal ${currentView === View.MANAGEMENT ? "text-[#8b641d]" : "text-[#8a8174]"}`}>管理</span>
+                <span className={`text-[10px] font-normal ${currentView === View.MANAGEMENT ? "text-[#004ACC]" : "text-[#476285]"}`}>管理</span>
               </button>
 
               {/* 我的 */}
@@ -1867,10 +1870,10 @@ const App: React.FC = () => {
                   }
                 }}
               >
-                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.SETTINGS ? 'bg-[#fff8e6] text-[#8b641d] border border-[#eadfca]' : 'text-[#9a9185]'}`}>
+                <div className={`w-8 h-8 rounded-[11px] flex items-center justify-center ${currentView === View.SETTINGS ? 'bg-[#004ACC1A] text-[#004ACC] border border-[#E2EBF5]' : 'text-[#8AA2BF]'}`}>
                   <UserRound size={18} strokeWidth={2.1} />
                 </div>
-                <span className={`text-[10px] font-normal ${currentView === View.SETTINGS ? "text-[#8b641d]" : "text-[#8a8174]"}`}>我的</span>
+                <span className={`text-[10px] font-normal ${currentView === View.SETTINGS ? "text-[#004ACC]" : "text-[#476285]"}`}>我的</span>
               </button>
             </div>
           )}
@@ -1888,26 +1891,26 @@ const App: React.FC = () => {
             onClick={resetCreateForm}
           />
           
-          <div className="relative w-full max-w-md bg-[#fffefa] rounded-t-[30px] border border-[#eadfca] shadow-[0_-18px_48px_rgba(74,56,25,0.18)] animate-[slideUp_0.24s_ease-out] max-h-[88vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+18px)]">
-            <div className="sticky top-0 z-20 bg-[#fffefa]/95 backdrop-blur-md rounded-t-[30px] px-5 pt-3 pb-4 border-b border-[#eadfca]/70">
-              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[#d8cfbf]" />
+          <div className="relative w-full max-w-md bg-[#FFFFFF] rounded-t-[30px] border border-[#E2EBF5] shadow-[0_-18px_48px_rgba(15,40,72,0.18)] animate-[slideUp_0.24s_ease-out] max-h-[88vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+18px)]">
+            <div className="sticky top-0 z-20 bg-[#FFFFFF]/95 backdrop-blur-md rounded-t-[30px] px-5 pt-3 pb-4 border-b border-[#E2EBF5]/70">
+              <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[#CBD7E5]" />
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   {showTemplatePicker && (
                     <button
-                      className="w-9 h-9 rounded-[14px] border border-[#eadfca] bg-[#fffdf8] text-[#8b641d] flex items-center justify-center active:scale-95 transition-transform"
+                      className="w-9 h-9 rounded-[14px] border border-[#E2EBF5] bg-[#FFFFFF] text-[#004ACC] flex items-center justify-center active:scale-95 transition-transform"
                       onClick={() => setShowTemplatePicker(false)}
                       aria-label="返回新建表单"
                     >
                       <ArrowLeft size={18} strokeWidth={2.35} />
                     </button>
                   )}
-                  <h3 className="text-[20px] leading-[26px] font-semibold text-[#1f2024]">
+                  <h3 className="text-[20px] leading-[26px] font-semibold text-[#0F2848]">
                     {showTemplatePicker ? '选择报告模板' : '新建尽调项目'}
                   </h3>
                 </div>
                 <button
-                  className="w-10 h-10 rounded-[15px] border border-[#eadfca] bg-[#fffdf8] text-[#8b641d] flex items-center justify-center active:scale-95 transition-transform"
+                  className="w-10 h-10 rounded-[15px] border border-[#E2EBF5] bg-[#FFFFFF] text-[#004ACC] flex items-center justify-center active:scale-95 transition-transform"
                   onClick={resetCreateForm}
                   aria-label="关闭"
                 >
@@ -1921,8 +1924,8 @@ const App: React.FC = () => {
               <div className="pb-2">
                 <div className="max-h-[56vh] overflow-y-auto pr-0.5 pb-2">
                   {loadingTemplates ? (
-                    <div className="py-10 flex flex-col items-center justify-center text-[#8a8174]">
-                      <div className="w-6 h-6 border-2 border-[#f2dda0] border-t-[#c99a3a] rounded-full animate-spin mb-3" />
+                    <div className="py-10 flex flex-col items-center justify-center text-[#476285]">
+                      <div className="w-6 h-6 border-2 border-[#337DFF] border-t-[#004ACC] rounded-full animate-spin mb-3" />
                       <span className="text-[12px] font-normal">模板加载中</span>
                     </div>
                   ) : templateOptions.length > 0 ? (
@@ -1935,8 +1938,8 @@ const App: React.FC = () => {
                             type="button"
                             className={`w-full min-h-[70px] px-4 py-3 rounded-[18px] border text-left flex items-center gap-3 active:scale-[0.99] transition-all ${
                               checked
-                                ? 'bg-[#fff8e6] border-[#d6b25f] shadow-[0_8px_18px_rgba(201,154,58,0.12)]'
-                                : 'bg-[#fffdf8] border-[#eadfca]'
+                                ? 'bg-[#004ACC1A] border-[#337DFF] shadow-[0_8px_18px_rgba(0,74,204,0.12)]'
+                                : 'bg-[#FFFFFF] border-[#E2EBF5]'
                             }`}
                             onClick={() => {
                               setSelectedTemplateId(tpl.id);
@@ -1944,20 +1947,20 @@ const App: React.FC = () => {
                             }}
                           >
                             <div className={`w-10 h-10 rounded-[14px] flex items-center justify-center flex-shrink-0 ${
-                              checked ? 'bg-[#d4aa45] text-[#151515]' : 'bg-[#fbf6eb] text-[#8b641d]'
+                              checked ? 'bg-[#004ACC] text-[#FFFFFF]' : 'bg-[#F7FAFE] text-[#004ACC]'
                             }`}>
                               <FileText size={18} strokeWidth={2.15} />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="text-[14px] leading-[19px] font-medium text-[#1f2024] truncate">
+                              <div className="text-[14px] leading-[19px] font-medium text-[#0F2848] truncate">
                                 {tpl.reportTemplateName}
                               </div>
-                              <div className="mt-1 text-[11px] leading-[15px] font-normal text-[#8a8174] line-clamp-2">
+                              <div className="mt-1 text-[11px] leading-[15px] font-normal text-[#476285] line-clamp-2">
                                 {tpl.reportTemplateDesc || '报告模板'}
                               </div>
                             </div>
                             <div className={`w-6 h-6 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                              checked ? 'bg-[#8b641d] border-[#8b641d] text-white' : 'border-[#d8cfbf] text-transparent'
+                              checked ? 'bg-[#004ACC] border-[#004ACC] text-white' : 'border-[#CBD7E5] text-transparent'
                             }`}>
                               <Check size={14} strokeWidth={2.6} />
                             </div>
@@ -1967,11 +1970,11 @@ const App: React.FC = () => {
                     </div>
                   ) : (
                     <div className="py-10 text-center">
-                      <div className="w-12 h-12 rounded-[18px] bg-[#fbf6eb] text-[#8b641d] border border-[#eadfca] flex items-center justify-center mx-auto mb-3">
+                      <div className="w-12 h-12 rounded-[18px] bg-[#F7FAFE] text-[#004ACC] border border-[#E2EBF5] flex items-center justify-center mx-auto mb-3">
                         <FileText size={22} strokeWidth={2.1} />
                       </div>
-                      <p className="text-[13px] font-normal text-[#1f2024]">暂无可用模板</p>
-                      <p className="mt-1 text-[11px] font-normal text-[#8a8174]">将使用默认模板创建</p>
+                      <p className="text-[13px] font-normal text-[#0F2848]">暂无可用模板</p>
+                      <p className="mt-1 text-[11px] font-normal text-[#476285]">将使用默认模板创建</p>
                     </div>
                   )}
                 </div>
@@ -1982,8 +1985,8 @@ const App: React.FC = () => {
             {/* 访谈对象名 (必填) */}
             <div className="mb-4 relative">
               <div className="flex justify-between items-end mb-2 pl-1">
-                <span className="text-[12px] text-[#7d7467] font-normal">访谈对象 <span className="text-red-500">*</span></span>
-                <span className="text-[11px] text-[#a49a8d]">
+                <span className="text-[12px] text-[#476285] font-normal">访谈对象 <span className="text-red-500">*</span></span>
+                <span className="text-[11px] text-[#8AA2BF]">
                   {newCustomerName.length}/30
                 </span>
               </div>
@@ -1998,7 +2001,7 @@ const App: React.FC = () => {
                 }}
                 maxLength={30}
                 placeholder="请输入访谈对象名称"
-                className="w-full h-12 px-4 bg-[#fffdf8] rounded-[16px] text-[14px] font-normal text-[#1f2024] border border-[#eadfca] focus:ring-2 focus:ring-[#f2dda0] transition-all outline-none"
+                className="w-full h-12 px-4 bg-[#FFFFFF] rounded-[16px] text-[14px] font-normal text-[#0F2848] border border-[#E2EBF5] focus:ring-2 focus:ring-[#337DFF] transition-all outline-none"
                 autoFocus
               />
             </div>
@@ -2006,26 +2009,26 @@ const App: React.FC = () => {
             {/* 报告模板 */}
             <div className="mb-4 relative z-30">
               <div className="flex justify-between items-end mb-2 pl-1">
-                <span className="text-[12px] text-[#7d7467] font-normal">报告模板</span>
-                {loadingTemplates && <span className="text-[11px] text-[#a49a8d]">加载中</span>}
+                <span className="text-[12px] text-[#476285] font-normal">报告模板</span>
+                {loadingTemplates && <span className="text-[11px] text-[#8AA2BF]">加载中</span>}
               </div>
               <button
                 type="button"
-                className="w-full min-h-[52px] px-4 bg-[#fffdf8] rounded-[16px] border border-[#eadfca] flex items-center justify-between gap-3 active:bg-[#fff8e6] transition-colors"
+                className="w-full min-h-[52px] px-4 bg-[#FFFFFF] rounded-[16px] border border-[#E2EBF5] flex items-center justify-between gap-3 active:bg-[#004ACC1A] transition-colors"
                 onClick={() => setShowTemplatePicker(true)}
               >
                 <div className="min-w-0 text-left">
-                  <div className="text-[14px] leading-[18px] font-medium text-[#1f2024] truncate">
+                  <div className="text-[14px] leading-[18px] font-medium text-[#0F2848] truncate">
                     {selectedTemplate?.reportTemplateName || '默认报告模板'}
                   </div>
-                  <div className="mt-1 text-[10.5px] font-normal text-[#8a8174] truncate">
+                  <div className="mt-1 text-[10.5px] font-normal text-[#476285] truncate">
                     {selectedTemplate?.reportTemplateDesc || '用于生成尽调报告'}
                   </div>
                 </div>
                 <ChevronDown
                   size={18}
                   strokeWidth={2.3}
-                  className="text-[#8b641d] flex-shrink-0"
+                  className="text-[#004ACC] flex-shrink-0"
                 />
               </button>
             </div>
@@ -2034,8 +2037,8 @@ const App: React.FC = () => {
             <div className="mb-6 relative">
               <div className="flex justify-between items-end mb-2 pl-1">
                 <div className="flex flex-col items-start">
-                  <span className="text-[12px] text-[#7d7467] font-normal">关联企业</span>
-                  <span className="text-[10px] text-[#a49a8d] font-normal leading-none mt-0.5">信用代码选填</span>
+                  <span className="text-[12px] text-[#476285] font-normal">关联企业</span>
+                  <span className="text-[10px] text-[#8AA2BF] font-normal leading-none mt-0.5">信用代码选填</span>
                 </div>
               </div>
               
@@ -2050,16 +2053,16 @@ const App: React.FC = () => {
                     setCreditCode(""); // 手动输入时清除代码
                   }}
                   placeholder="搜索或输入企业全称"
-                  className="w-full h-12 px-4 bg-[#fffdf8] rounded-[16px] text-[14px] font-normal text-[#1f2024] border border-[#eadfca] focus:ring-2 focus:ring-[#f2dda0] transition-all outline-none"
+                  className="w-full h-12 px-4 bg-[#FFFFFF] rounded-[16px] text-[14px] font-normal text-[#0F2848] border border-[#E2EBF5] focus:ring-2 focus:ring-[#337DFF] transition-all outline-none"
                 />
                 
                 {/* 搜索结果下拉列表 */}
                 {enterpriseOptions.length > 0 && (
-                  <div className="absolute top-13 left-0 right-0 bg-[#fffefa] rounded-2xl shadow-xl border border-[#eadfca] max-h-48 overflow-y-auto z-[110] py-1 animate-in fade-in slide-in-from-top-2">
+                  <div className="absolute top-13 left-0 right-0 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E2EBF5] max-h-48 overflow-y-auto z-[110] py-1 animate-in fade-in slide-in-from-top-2">
                     {enterpriseOptions.map((item, index) => (
                       <div
                         key={index}
-                        className="px-4 py-3 hover:bg-[#fff8e6] active:bg-[#fff3cf] transition-colors cursor-pointer border-b border-[#eadfca]/60 last:border-none"
+                        className="px-4 py-3 hover:bg-[#004ACC1A] active:bg-[#004ACC1A] transition-colors cursor-pointer border-b border-[#E2EBF5]/60 last:border-none"
                         onClick={() => {
                           setCompanyName(item.name || "");
                           setCreditCode(item.creditCode || "");
@@ -2070,8 +2073,8 @@ const App: React.FC = () => {
                           setEnterpriseOptions([]);
                         }}
                       >
-                        <div className="text-[14px] font-medium text-[#1f2024] truncate mb-0.5">{item.name}</div>
-                        <div className="text-[11px] text-[#8a8174] font-medium">{item.creditCode}</div>
+                        <div className="text-[14px] font-medium text-[#0F2848] truncate mb-0.5">{item.name}</div>
+                        <div className="text-[11px] text-[#476285] font-medium">{item.creditCode}</div>
                       </div>
                     ))}
                   </div>
@@ -2079,7 +2082,7 @@ const App: React.FC = () => {
                 
                 {searching && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="w-4 h-4 border-2 border-[#f2dda0] border-t-[#c99a3a] rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-[#337DFF] border-t-[#004ACC] rounded-full animate-spin"></div>
                   </div>
                 )}
               </div>
@@ -2093,7 +2096,7 @@ const App: React.FC = () => {
             <div className="flex gap-3">
               <button
                 onClick={resetCreateForm}
-                className="flex-1 h-12 rounded-[16px] border border-[#eadfca] text-[#7d7467] font-normal hover:bg-[#fff8e6] active:scale-95 transition-all"
+                className="flex-1 h-12 rounded-[16px] border border-[#E2EBF5] text-[#476285] font-normal hover:bg-[#004ACC1A] active:scale-95 transition-all"
               >
                 取消
               </button>
@@ -2101,7 +2104,7 @@ const App: React.FC = () => {
               <button
                 onClick={handleCreateDeal}
                 disabled={creating}
-                className="flex-[1.35] h-12 rounded-[16px] bg-primary-gradient text-[#151515] font-medium active:scale-95 transition-all shadow-[0_8px_18px_rgba(201,154,58,0.24)] disabled:opacity-70 disabled:active:scale-100"
+                className="flex-[1.35] h-12 rounded-[16px] bg-primary-gradient text-[#FFFFFF] font-medium active:scale-95 transition-all shadow-[0_8px_18px_rgba(0,74,204,0.24)] disabled:opacity-70 disabled:active:scale-100"
               >
                 {creating ? "创建中..." : "确定"}
               </button>
@@ -2120,7 +2123,7 @@ const App: React.FC = () => {
         message={'录音因外部原因（如来电、后台运行）中断，请点击\u201c继续录音\u201d恢复。'}
         showCancelButton={false}
         confirmButtonText="我知道了"
-        confirmButtonColor="#8b641d"
+        confirmButtonColor="#004ACC"
         onConfirm={() => setShowInterruptDialog(false)}
         onClose={() => setShowInterruptDialog(false)}
       />

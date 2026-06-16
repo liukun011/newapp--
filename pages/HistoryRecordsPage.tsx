@@ -128,30 +128,30 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#f7f2e8] relative">
+    <div className="flex flex-col h-full bg-[#F7FAFE] relative">
       {/* NavBar */}
-      <div className="bg-[#fffefa] px-4 py-3 flex items-center justify-center relative shadow-[0_3px_10px_rgba(92,74,42,0.04)] z-10 shrink-0">
+      <div className="bg-[#FFFFFF] px-4 py-3 flex items-center justify-center relative shadow-[0_3px_10px_rgba(15,40,72,0.04)] z-10 shrink-0">
         <button
           onClick={onBack}
-          className="absolute left-4 p-2 -ml-2 text-[#4f463b] active:scale-95 transition-transform"
+          className="absolute left-4 p-2 -ml-2 text-[#476285] active:scale-95 transition-transform"
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-[17px] font-medium text-[#1f2024]">历史访谈</h1>
+        <h1 className="text-[17px] font-medium text-[#0F2848]">历史访谈</h1>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 scroll-smooth">
         {loading && records.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-[#eadfca] border-t-[#c99a3a] rounded-[999px] animate-spin"></div>
+            <div className="w-8 h-8 border-2 border-[#E2EBF5] border-t-[#004ACC] rounded-[999px] animate-spin"></div>
           </div>
         ) : records.length > 0 ? (
           <div className="space-y-3">
             {records.map((record) => (
               <div
                 key={record.interviewInstId || record.id}
-                className="bg-[#fffefa] p-4 rounded-[14px] shadow-[0_3px_10px_rgba(92,74,42,0.04)] border border-[#eadfca]/50 active:scale-[0.99] transition-transform flex items-center gap-4 cursor-pointer"
+                className="bg-[#FFFFFF] p-4 rounded-[14px] shadow-[0_3px_10px_rgba(15,40,72,0.04)] border border-[#E2EBF5]/50 active:scale-[0.99] transition-transform flex items-center gap-4 cursor-pointer"
                 onClick={() => {
                   // Only allow navigation if recordStatus is '2' (Merged/Ready)
                   if (record.recordStatus !== '2') {
@@ -169,10 +169,10 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
 
                 {/* Text Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-[#1f2024] font-medium text-[15px] mb-1 truncate">
+                  <h3 className="text-[#0F2848] font-medium text-[15px] mb-1 truncate">
                     {record.interviewInstTitle || '访谈记录'}
                   </h3>
-                  <div className="text-xs text-[#a49a8d] font-light">
+                  <div className="text-xs text-[#8AA2BF] font-light">
                     {formatTimeDisplay(record)}
                   </div>
                 </div>
@@ -185,7 +185,7 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
                       e.stopPropagation();
                       handleEditClick(record);
                     }}
-                    className="p-2 text-[#a49a8d] hover:text-[#6f665b] active:scale-90 transition-all"
+                    className="p-2 text-[#8AA2BF] hover:text-[#476285] active:scale-90 transition-all"
                   >
                     <Edit2 size={18} strokeWidth={1.5} />
                   </button>
@@ -204,12 +204,12 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
       </div>
 
       {/* Bottom Button */}
-      {/* <div className="p-6 pb-12 w-full bg-[#f7f2e8] relative z-10 shrink-0">
+      {/* <div className="p-6 pb-12 w-full bg-[#F7FAFE] relative z-10 shrink-0">
          <Button 
            block 
            size="large" 
            onClick={onStartInterview} 
-           className="!rounded-[999px] !bg-[#C99A3A] !h-[50px] !text-[16px] shadow-[0_6px_14px_rgba(201,154,58,0.14)]"
+           className="!rounded-[999px] !bg-[#004ACC] !h-[50px] !text-[16px] shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
          >
            去访谈
          </Button>
@@ -227,7 +227,7 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
           <input
             value={currentEditTitle}
             onChange={(e) => setCurrentEditTitle(e.target.value)}
-            className="w-full bg-[#f7f2e8] border border-[#eadfca] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#c99a3a] transition-colors"
+            className="w-full bg-[#F7FAFE] border border-[#E2EBF5] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#004ACC] transition-colors"
             placeholder="请输入访谈名称"
             autoFocus
           />

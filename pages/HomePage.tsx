@@ -575,12 +575,12 @@ const HomePage: React.FC<HomePageProps> = ({
               value={searchTerm}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              className="w-full h-[40px] pl-9 pr-3 bg-[#fffefa]/80 rounded-[14px] text-[13px] text-[#1f2024] placeholder-[#a49a8d] shadow-[0_3px_10px_rgba(92,74,42,0.045)] focus:outline-none focus:ring-2 focus:ring-[#f2dda0] transition-all border border-[#eadfca]"
+              className="w-full h-[40px] pl-9 pr-3 bg-[#FFFFFF]/80 rounded-[14px] text-[13px] text-[#0F2848] placeholder-[#8AA2BF] shadow-[0_3px_10px_rgba(15,40,72,0.045)] focus:outline-none focus:ring-2 focus:ring-[#337DFF] transition-all border border-[#E2EBF5]"
               style={{ outline: 'none', WebkitTapHighlightColor: 'transparent', WebkitAppearance: 'none' }}
             />
             <button
               onClick={handleSearch}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 p-1 text-[#a49a8d] hover:text-[#8b641d] active:scale-95 transition-all"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8AA2BF] hover:text-[#004ACC] active:scale-95 transition-all"
             >
               <Search size={18} />
             </button>
@@ -603,7 +603,7 @@ const HomePage: React.FC<HomePageProps> = ({
       >
           <div className="px-4 mt-2.5">
             <div className="xl-card px-3 py-3">
-              <div className="grid grid-cols-3 divide-x divide-[#eadfca]">
+              <div className="grid grid-cols-3 divide-x divide-[#E2EBF5]">
                 {[
                   { label: '尽调项目', value: projectCount, Icon: Briefcase },
                   { label: '生成报告', value: generatedCount, Icon: FileText },
@@ -611,8 +611,8 @@ const HomePage: React.FC<HomePageProps> = ({
                 ].map(({ label, value, Icon }) => (
                   <div key={label} className="px-2.5">
                     <div className="flex items-center gap-1.5">
-                      <Icon size={16} strokeWidth={2} className="shrink-0 text-[#8b641d]" />
-                      <div className="text-[22px] leading-none font-medium text-[#1f2024]">{value}</div>
+                      <Icon size={16} strokeWidth={2} className="shrink-0 text-[#004ACC]" />
+                      <div className="text-[22px] leading-none font-medium text-[#0F2848]">{value}</div>
                     </div>
                     <div className="xl-meta mt-2">{label}</div>
                   </div>
@@ -621,7 +621,7 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
           </div>
 
-          <div className="sticky top-0 z-40 pt-2.5 pb-2 px-4 bg-[linear-gradient(180deg,#f7f2e8_0%,rgba(247,242,232,0.96)_100%)]">
+          <div className="sticky top-0 z-40 pt-2.5 pb-2 px-4 bg-[linear-gradient(180deg,#F7FAFE_0%,rgba(247,250,254,0.96)_100%)]">
             <div className="xl-segment flex">
               <button
                 className={`flex-1 xl-segment-item transition-all ${activeTab === "ongoing" ? "is-active" : ""}`}
@@ -656,15 +656,15 @@ const HomePage: React.FC<HomePageProps> = ({
           <div className="px-4">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-12 h-12 border-4 border-[#f2dda0] border-t-[#c99a3a] rounded-full animate-spin"></div>
-                <p className="text-[#8a8174] text-sm mt-4">加载中...</p>
+                <div className="w-12 h-12 border-4 border-[#337DFF] border-t-[#004ACC] rounded-full animate-spin"></div>
+                <p className="text-[#476285] text-sm mt-4">加载中...</p>
               </div>
             ) : deals.length === 0 ? (
               <div className="min-h-[40vh] flex flex-col items-center justify-center opacity-80">
-                 <div className="w-14 h-14 rounded-[20px] bg-[#fff3cf] text-[#8b641d] flex items-center justify-center mb-3 border border-[#eadfca]">
+                 <div className="w-14 h-14 rounded-[20px] bg-[#004ACC1A] text-[#004ACC] flex items-center justify-center mb-3 border border-[#E2EBF5]">
                    <FileText size={26} strokeWidth={2.2} />
                  </div>
-                 <p className="text-xs text-[#8a8174]">{loadError || (activeTab === 'archived' ? '暂无归档项目' : '暂无尽调项目')}</p>
+                 <p className="text-xs text-[#476285]">{loadError || (activeTab === 'archived' ? '暂无归档项目' : '暂无尽调项目')}</p>
                  {loadError && (
                    <button
                      className="mt-3 xl-btn-ghost px-4 min-h-[36px] text-[12px]"
@@ -701,29 +701,29 @@ const HomePage: React.FC<HomePageProps> = ({
                           }`}
                         >
                           <div className="grid grid-cols-[42px_minmax(0,1fr)_60px] gap-3 p-3 min-h-[88px]">
-                            <div className="w-[42px] h-[42px] rounded-[14px] flex-shrink-0 flex items-center justify-center bg-[#fbf6eb] text-[#9a6f21] border border-[#eadfca] self-center">
+                            <div className="w-[42px] h-[42px] rounded-[14px] flex-shrink-0 flex items-center justify-center bg-[#F7FAFE] text-[#004ACC] border border-[#E2EBF5] self-center">
                               <ProjectIcon size={19} strokeWidth={2.05} />
                             </div>
 
                             <div className="min-w-0 self-stretch flex flex-col justify-center pr-1">
-                              <h3 className="text-[14.5px] leading-[19px] font-medium text-[#1f2024] truncate whitespace-nowrap">
+                              <h3 className="text-[14.5px] leading-[19px] font-medium text-[#0F2848] truncate whitespace-nowrap">
                                 {item.interviewCust}
                               </h3>
-                              <div className="flex items-center gap-1.5 text-[#7d7467] mt-1.5">
+                              <div className="flex items-center gap-1.5 text-[#476285] mt-1.5">
                                 <Clock size={12} />
                                 <span className="text-[11.5px] font-normal leading-none">{formatTime(item.lastModifiedDate)}</span>
                               </div>
                             </div>
                             <div className="self-stretch flex flex-col items-end justify-between min-w-[60px]">
                               {(currentDealId === item.id) ? (
-                                <span className="min-h-[24px] px-2 rounded-full bg-[#e8f8ef] border border-[#bfe6cd] text-[#25784a] text-[10px] font-normal flex items-center whitespace-nowrap">录音中</span>
+                                <span className="min-h-[24px] px-2 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#10B981] text-[10px] font-normal flex items-center whitespace-nowrap">录音中</span>
                               ) : (
-                                <span className="min-h-[24px] px-2 rounded-full bg-[#fff8e6] border border-[#dfcda9] text-[#8b641d] text-[10px] font-normal flex items-center whitespace-nowrap">
+                                <span className="min-h-[24px] px-2 rounded-full bg-[#004ACC1A] border border-[#E2EBF5] text-[#004ACC] text-[10px] font-normal flex items-center whitespace-nowrap">
                                   {String(item.reportStatus) === DealReportStatusEnum.REPORT_GENERATED || item.report?.id ? '已生成' : '未生成'}
                                 </span>
                               )}
                               <button
-                                className="w-9 h-9 rounded-[13px] border border-[#eadfca] bg-[#fffefa]/80 text-[#8b641d] flex items-center justify-center active:scale-95 transition-transform"
+                                className="w-9 h-9 rounded-[13px] border border-[#E2EBF5] bg-[#FFFFFF]/80 text-[#004ACC] flex items-center justify-center active:scale-95 transition-transform"
                                 onClick={(e) => {
                                   if (activeTab === 'archived') {
                                     handleCancelArchive(e, item.id);
@@ -747,7 +747,7 @@ const HomePage: React.FC<HomePageProps> = ({
               {loadingMore && (
                 <div className="flex items-center justify-center py-4">
                   <div className="flex items-center gap-2 text-gray-400">
-                    <div className="w-4 h-4 border-2 border-gray-300 border-t-[#c99a3a] rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-[#004ACC] rounded-full animate-spin"></div>
                     <span className="text-xs">加载中...</span>
                   </div>
                 </div>
@@ -785,8 +785,8 @@ const HomePage: React.FC<HomePageProps> = ({
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
                 <Trash2 size={32} className="text-red-500" />
               </div>
-              <h3 className="text-xl font-medium text-[#1f2024] mb-2">确认删除？</h3>
-              <p className="text-[#7d7467] text-center text-[14px] leading-relaxed">
+              <h3 className="text-xl font-medium text-[#0F2848] mb-2">确认删除？</h3>
+              <p className="text-[#476285] text-center text-[14px] leading-relaxed">
                 删除后该尽调记录下的所有附件、转写及报告将无法找回，请谨慎操作。
               </p>
             </div>
@@ -794,7 +794,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <div className="flex gap-3 mt-2">
               <button
                 onClick={cancelDelete}
-                className="flex-1 h-12 rounded-[16px] border border-[#eadfca] text-[#7d7467] font-normal hover:bg-[#fff8e6] active:scale-95 transition-all"
+                className="flex-1 h-12 rounded-[16px] border border-[#E2EBF5] text-[#476285] font-normal hover:bg-[#004ACC1A] active:scale-95 transition-all"
               >
                 取消
               </button>
@@ -819,14 +819,14 @@ const HomePage: React.FC<HomePageProps> = ({
         closeOnClickOverlay
         className="!bg-transparent"
       >
-        <div className="mx-2 mb-2 overflow-hidden rounded-t-[22px] border border-[#eadfca] bg-[#fffefa] shadow-[0_-18px_42px_rgba(58,47,30,0.18)]">
-          <div className="mx-auto mt-4 h-1 w-10 rounded-full bg-[#e9eef7]" />
+        <div className="mx-2 mb-2 overflow-hidden rounded-t-[22px] border border-[#E2EBF5] bg-[#FFFFFF] shadow-[0_-18px_42px_rgba(15,40,72,0.18)]">
+          <div className="mx-auto mt-4 h-1 w-10 rounded-full bg-[#E2EBF5]" />
           {/* Modal Header */}
           <div className="px-4 pb-2 pt-6 flex items-center justify-between flex-shrink-0">
-            <h3 className="text-[14px] leading-none font-medium text-[#c9bda9]">切换组织</h3>
+            <h3 className="text-[14px] leading-none font-medium text-[#CBD7E5]">切换组织</h3>
             <button
               onClick={() => setShowTenantModal(false)}
-              className="h-8 min-w-8 rounded-full border border-[#eadfca] bg-[#fffefa] px-2.5 text-[12px] text-[#8b641d]"
+              className="h-8 min-w-8 rounded-full border border-[#E2EBF5] bg-[#FFFFFF] px-2.5 text-[12px] text-[#004ACC]"
             >
               关闭
             </button>
@@ -836,13 +836,13 @@ const HomePage: React.FC<HomePageProps> = ({
           <div className="max-h-[42vh] overflow-y-auto px-3 pb-5 pt-2 space-y-2">
             {tenantsLoading ? (
               <div className="flex flex-col items-center justify-center py-8">
-                <div className="w-7 h-7 border-2 border-[#f2dda0] border-t-[#c99a3a] rounded-full animate-spin mb-3" />
-                <p className="text-[#a49a8d] text-xs">加载中...</p>
+                <div className="w-7 h-7 border-2 border-[#337DFF] border-t-[#004ACC] rounded-full animate-spin mb-3" />
+                <p className="text-[#8AA2BF] text-xs">加载中...</p>
               </div>
             ) : tenants.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 opacity-70">
-                <Building2 size={34} className="text-[#d8c8aa] mb-3" />
-                <p className="text-[#a49a8d] text-xs">暂无可选组织</p>
+                <Building2 size={34} className="text-[#CBD7E5] mb-3" />
+                <p className="text-[#8AA2BF] text-xs">暂无可选组织</p>
               </div>
             ) : (
               tenants.map((tenant) => {
@@ -853,13 +853,13 @@ const HomePage: React.FC<HomePageProps> = ({
                     onClick={() => handleSwitchTenant(tenant)}
                     className={`flex min-h-[60px] items-center gap-3 rounded-[14px] border transition-all active:scale-[0.99] ${
                       isActive 
-                        ? 'bg-[#fff8e6] border-[#e5c97e] px-3 py-2.5 shadow-[0_4px_12px_rgba(201,154,58,0.05)]' 
-                        : 'bg-[#fffefa] border-[#eee5d5] px-3 py-2.5'
+                        ? 'bg-[#004ACC1A] border-[#337DFF] px-3 py-2.5 shadow-[0_4px_12px_rgba(0,74,204,0.05)]' 
+                        : 'bg-[#FFFFFF] border-[#E2EBF5] px-3 py-2.5'
                     }`}
                   >
                     {/* Organization Icon */}
                     <div className={`w-9 h-9 rounded-[9px] flex items-center justify-center flex-shrink-0 ${
-                      isActive ? 'bg-[#dfbd56] text-[#6f4e15] shadow-[0_5px_12px_rgba(201,154,58,0.10)]' : 'bg-[#f7f3eb] text-[#a49a8d]'
+                      isActive ? 'bg-[#337DFF] text-[#004ACC] shadow-[0_5px_12px_rgba(0,74,204,0.10)]' : 'bg-[#F7FAFE] text-[#8AA2BF]'
                     }`}>
                       <Building2 size={18} strokeWidth={2} />
                     </div>
@@ -867,12 +867,12 @@ const HomePage: React.FC<HomePageProps> = ({
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-3 mb-0.5">
-                        <h4 className={`text-[14px] leading-[18px] font-medium truncate ${isActive ? 'text-[#c99a3a]' : 'text-[#1f2024]'}`}>
+                        <h4 className={`text-[14px] leading-[18px] font-medium truncate ${isActive ? 'text-[#004ACC]' : 'text-[#0F2848]'}`}>
                           {tenant.name}
                         </h4>
-                        {isActive && <Check size={16} className="text-[#c99a3a] shrink-0" strokeWidth={2.6} />}
+                        {isActive && <Check size={16} className="text-[#004ACC] shrink-0" strokeWidth={2.6} />}
                       </div>
-                      <p className={`text-[11px] leading-none font-normal ${isActive ? 'text-[#8b641d]/62' : 'text-[#a49a8d]'}`}>
+                      <p className={`text-[11px] leading-none font-normal ${isActive ? 'text-[#004ACC]/62' : 'text-[#8AA2BF]'}`}>
                         {(tenant.tenantAdmin || (currentUserId && String(tenant.createdBy) === String(currentUserId))) ? '管理员' : '成员'}
                       </p>
                     </div>

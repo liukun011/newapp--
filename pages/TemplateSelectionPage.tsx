@@ -111,10 +111,10 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#f7f2e8]">
+    <div className="flex flex-col h-screen bg-[#F7FAFE]">
       {/* Header */}
-      <div className="bg-[#fffefa] px-4 py-3 flex items-center gap-3">
-        <button onClick={onBack} className="p-2 -ml-2 text-[#4f463b]">
+      <div className="bg-[#FFFFFF] px-4 py-3 flex items-center gap-3">
+        <button onClick={onBack} className="p-2 -ml-2 text-[#476285]">
           <ArrowLeft size={24} />
         </button>
         
@@ -125,9 +125,9 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
             placeholder="请输入模板名称"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-10 px-4 pr-10 bg-[#f7f2e8] rounded-[999px] text-sm text-[#1f2024] placeholder-gray-400 focus:outline-none focus:bg-[#f4eee3] transition-colors"
+            className="w-full h-10 px-4 pr-10 bg-[#F7FAFE] rounded-[999px] text-sm text-[#0F2848] placeholder-gray-400 focus:outline-none focus:bg-[#F7FAFE] transition-colors"
           />
-          <Search size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#a49a8d]" />
+          <Search size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8AA2BF]" />
         </div>
       </div>
 
@@ -135,8 +135,8 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-[#eadfca] border-t-[#c99a3a] rounded-[999px] animate-spin"></div>
-            <p className="text-[#a49a8d] text-sm mt-4">加载中...</p>
+            <div className="w-12 h-12 border-4 border-[#E2EBF5] border-t-[#004ACC] rounded-[999px] animate-spin"></div>
+            <p className="text-[#8AA2BF] text-sm mt-4">加载中...</p>
           </div>
         ) : (
           <div className="p-4 space-y-0">
@@ -144,16 +144,16 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
               <div
                 key={template.id}
                 onClick={() => handleSelect(template)}
-                className="bg-[#fffefa] p-4 flex items-center gap-3 border-b border-[#eadfca]/60 last:border-b-0 active:bg-[#f7f2e8] transition-colors cursor-pointer"
+                className="bg-[#FFFFFF] p-4 flex items-center gap-3 border-b border-[#E2EBF5]/60 last:border-b-0 active:bg-[#F7FAFE] transition-colors cursor-pointer"
               >
                 {/* Icon */}
-                <div className="w-12 h-12 rounded-lg bg-[#E8F8F0] flex items-center justify-center flex-shrink-0 text-[#07C160]">
+                <div className="w-12 h-12 rounded-lg bg-[#E8F8F0] flex items-center justify-center flex-shrink-0 text-[#10B981]">
                   <FileSpreadsheet size={24} strokeWidth={1.5} />
                 </div>
 
                 {/* Template Name */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-[15px] font-medium text-[#1f2024] truncate">
+                  <h3 className="text-[15px] font-medium text-[#0F2848] truncate">
                     {template.reportTemplateName}
                   </h3>
                 </div>
@@ -161,7 +161,7 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
                 {/* Actions */}
                 <div className="flex items-center gap-3">
                   <button 
-                    className="p-2 text-[#a49a8d] hover:text-[#6f665b]"
+                    className="p-2 text-[#8AA2BF] hover:text-[#476285]"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (template.viewTemplateUrl) {
@@ -177,7 +177,7 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
                   {/* Radio Button */}
                   <div className={`w-6 h-6 rounded-[999px] border-2 flex items-center justify-center ${
                     selectedId === template.id 
-                      ? 'border-[#c99a3a] bg-[#c99a3a]' 
+                      ? 'border-[#004ACC] bg-[#004ACC]' 
                       : 'border-gray-300'
                   }`}>
                     {selectedId === template.id && (
@@ -191,7 +191,7 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
             ))}
 
             {filteredTemplates.length === 0 && !loading && (
-              <div className="text-center py-20 text-[#a49a8d] text-sm">
+              <div className="text-center py-20 text-[#8AA2BF] text-sm">
                 暂无模板
               </div>
             )}

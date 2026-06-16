@@ -622,13 +622,13 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     const isRegenerate = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED;
     Dialog.confirm({
       title: (
-        <span style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '16px', fontWeight: 500, lineHeight: 'normal', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#242424' }}>
+        <span style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '16px', fontWeight: 500, lineHeight: 'normal', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#0F2848' }}>
           {isRegenerate ? '确认重新生成报告?' : '确认生成报告?'}
         </span>
       ),
       message: (
         <div>
-          <p style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '14px', fontWeight: 'normal', lineHeight: '22px', textAlign: 'center', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#595959', marginBottom: '10px' }}>
+          <p style={{ fontFamily: "'PingFang SC', sans-serif", fontSize: '14px', fontWeight: 'normal', lineHeight: '22px', textAlign: 'center', letterSpacing: '0em', fontVariationSettings: '"opsz" auto', color: '#476285', marginBottom: '10px' }}>
             {isRegenerate 
               ? '是否确认根据当前尽调资料和访谈录音重新生成报告？原有报告内容将被覆盖'
               : '系统将根据当前尽调资料、访谈录音和报告模板生成尽调报告（由AI自动生成）'}
@@ -640,7 +640,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       ),
       confirmButtonText: '确认',
       cancelButtonText: '取消',
-      confirmButtonColor: '#C99A3A',
+      confirmButtonColor: '#004ACC',
     }).then(async () => {
       if (!currentDeal?.id) {
         Toast.fail('尽调信息不存在');
@@ -802,7 +802,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       message: '请确认所有访谈工作已完成。归档后仅支持查看和导出报告，不再支持编辑。',
       cancelButtonText: '暂不归档',
       confirmButtonText: '确认归档',
-      confirmButtonColor: '#C99A3A',
+      confirmButtonColor: '#004ACC',
     }).then(async () => {
       if (!currentDeal?.id) {
         Toast.fail('尽调信息不存在');
@@ -985,9 +985,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               <MoreHorizontal size={21} />
             </button>
             {showMoreMenu && (
-              <div className="absolute right-0 top-12 w-36 rounded-[18px] bg-[#fffefa] border border-[#eadfca] shadow-[0_16px_36px_rgba(74,56,25,0.14)] overflow-hidden z-[60]">
+              <div className="absolute right-0 top-12 w-36 rounded-[18px] bg-[#FFFFFF] border border-[#E2EBF5] shadow-[0_16px_36px_rgba(15,40,72,0.14)] overflow-hidden z-[60]">
                 <button
-                  className="w-full h-11 px-4 flex items-center gap-2 text-[13px] font-normal text-[#1f2024] active:bg-[#fff8e6]"
+                  className="w-full h-11 px-4 flex items-center gap-2 text-[13px] font-normal text-[#0F2848] active:bg-[#004ACC1A]"
                   onClick={() => {
                     setShowMoreMenu(false);
                     handleEditInfoThrottled();
@@ -997,7 +997,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 </button>
                 {!isDemo && (
                   <button
-                    className="w-full h-11 px-4 flex items-center gap-2 text-[13px] font-normal text-[#1f2024] active:bg-[#fff8e6]"
+                    className="w-full h-11 px-4 flex items-center gap-2 text-[13px] font-normal text-[#0F2848] active:bg-[#004ACC1A]"
                     onClick={() => {
                       setShowMoreMenu(false);
                       currentDeal?.status === '5' ? handleCancelArchiveThrottled() : handleArchiveThrottled();
@@ -1026,7 +1026,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             <>
               {reportCardState === 'loading' ? (
                 <div className="xl-report-state min-h-[136px] flex items-center justify-center">
-                  <div className="w-6 h-6 border-2 border-[#eadfca] border-t-[#C99A3A] rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-[#E2EBF5] border-t-[#004ACC] rounded-full animate-spin" />
                 </div>
               ) : (
                 <div className={`xl-report-state ${reportCardState === 'generating' ? 'is-processing' : ''} ${reportCardState === 'failed' || reportCardState === 'notStarted' ? 'is-failed' : ''}`}>
@@ -1055,7 +1055,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       !isReadOnly && (
                         <button
                           onClick={handleGenerateReportThrottled}
-                          className={`xl-report-btn ${isGenerated ? 'soft' : 'gold'} w-full`}
+                          className={`xl-report-btn ${isGenerated ? 'soft' : 'primary'} w-full`}
                         >
                           <FileText size={15} />
                           <span>{isGenerated ? '重新生成报告' : '立即生成报告'}</span>
@@ -1108,7 +1108,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             </>
           )}
 
-          <div className="sticky top-0 z-40 -mx-1 px-1 py-1.5 bg-[linear-gradient(180deg,#f8f3e8_0%,rgba(248,243,232,0.96)_100%)]">
+          <div className="sticky top-0 z-40 -mx-1 px-1 py-1.5 bg-[linear-gradient(180deg,#F7FAFE_0%,rgba(247,250,254,0.96)_100%)]">
             <div className="xl-segment flex">
               {[
                 ['interview', '访谈'],
@@ -1175,7 +1175,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               <div className="space-y-2">
                 {questionList.map((q, idx) => (
                   <div key={idx} className="xl-card-flat p-3">
-                    <p className="text-[12px] leading-[17px] font-normal text-[#1f2024]">{q.questionName}</p>
+                    <p className="text-[12px] leading-[17px] font-normal text-[#0F2848]">{q.questionName}</p>
                   </div>
                 ))}
                 {questionList.length === 0 && <div className="xl-card-flat p-4 text-center xl-body">暂无问题条目</div>}
@@ -1194,9 +1194,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       [Upload, '文件', () => fileInputRef.current?.click()],
                       [Mic, '语音录入', () => setVoiceModalVisible(true)],
                     ].map(([Icon, label, action]: any) => (
-                      <button key={label} onClick={action} className="min-h-[62px] rounded-[15px] bg-[#fbfaf6] border border-[#eadfca] flex flex-col items-center justify-center gap-1.5 text-[#334155] active:scale-95 transition-transform">
+                      <button key={label} onClick={action} className="min-h-[62px] rounded-[15px] bg-[#FFFFFF] border border-[#E2EBF5] flex flex-col items-center justify-center gap-1.5 text-[#334155] active:scale-95 transition-transform">
                         <Icon size={19} />
-                        <span className="text-[10.5px] font-normal text-[#6f665b]">{label}</span>
+                        <span className="text-[10.5px] font-normal text-[#476285]">{label}</span>
                       </button>
                     ))}
                   </div>
@@ -1208,8 +1208,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     ...(currentDeal?.resources || []),
                     ...(Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary : []),
                   ].map((item: any, idx: number) => (
-                    <div key={idx} className="flex items-center gap-3 py-2.5 border-b border-[#eadfca]/70 last:border-b-0">
-                      <div className="w-9 h-9 rounded-[12px] bg-[#f0eadf] text-[#8b641d] flex items-center justify-center text-[11px] font-semibold">
+                    <div key={idx} className="flex items-center gap-3 py-2.5 border-b border-[#E2EBF5]/70 last:border-b-0">
+                      <div className="w-9 h-9 rounded-[12px] bg-[#F7FAFE] text-[#004ACC] flex items-center justify-center text-[11px] font-semibold">
                         {(item.fileName || item.name || 'PDF').split('.').pop()?.slice(0, 3).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -1266,7 +1266,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 </div>
                 <div className="xl-card-flat p-3 col-span-2">
                   <p className="xl-meta mb-1.5">注册地址</p>
-                  <p className="text-[12px] leading-[17px] font-normal text-[#1f2024]">{basicInfo.regLocation || '待补充'}</p>
+                  <p className="text-[12px] leading-[17px] font-normal text-[#0F2848]">{basicInfo.regLocation || '待补充'}</p>
                 </div>
                 <div className="xl-card-flat p-3 col-span-2">
                   <p className="xl-meta mb-2">风险标签</p>
@@ -1298,11 +1298,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 </div>
                 <div className="xl-card-flat p-3 col-span-2">
                   <p className="xl-meta mb-1.5">公司类型</p>
-                  <p className="text-[12px] leading-[17px] font-normal text-[#1f2024]">{basicInfo.companyOrgType || '待补充'}</p>
+                  <p className="text-[12px] leading-[17px] font-normal text-[#0F2848]">{basicInfo.companyOrgType || '待补充'}</p>
                 </div>
                 <div className="xl-card-flat p-3 col-span-2">
                   <p className="xl-meta mb-1.5">登记机关</p>
-                  <p className="text-[12px] leading-[17px] font-normal text-[#1f2024]">{basicInfo.regInstitute || '待补充'}</p>
+                  <p className="text-[12px] leading-[17px] font-normal text-[#0F2848]">{basicInfo.regInstitute || '待补充'}</p>
                 </div>
                 <div className="xl-card-flat p-3">
                   <p className="xl-meta mb-1.5">注册号</p>
@@ -1318,8 +1318,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     <div className="space-y-2">
                       {enterpriseShareholders.map((holder: any, idx: number) => (
                         <div key={`${holder.name}-${idx}`} className="flex items-center justify-between gap-3 text-[12px]">
-                          <span className="font-normal text-[#1f2024] truncate">{holder.name}</span>
-                          <span className="shrink-0 text-[#8b641d] font-semibold">{holder.ratio}</span>
+                          <span className="font-normal text-[#0F2848] truncate">{holder.name}</span>
+                          <span className="shrink-0 text-[#004ACC] font-semibold">{holder.ratio}</span>
                         </div>
                       ))}
                     </div>
@@ -1332,19 +1332,19 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   {enterpriseEquityChanges.length > 0 ? (
                     <div className="space-y-2.5">
                       {enterpriseEquityChanges.map((change: any, idx: number) => (
-                        <div key={`${change.investor_name}-${idx}`} className="rounded-[12px] bg-[#fffdf8] border border-[#eadfca]/70 p-2.5">
+                        <div key={`${change.investor_name}-${idx}`} className="rounded-[12px] bg-[#FFFFFF] border border-[#E2EBF5]/70 p-2.5">
                           <div className="flex items-start justify-between gap-3">
-                            <span className="text-[12px] font-medium text-[#1f2024] leading-[17px]">{change.investor_name || '股权变更'}</span>
-                            <span className="text-[10.5px] text-[#a49a8d] font-normal shrink-0">{change.change_time || '-'}</span>
+                            <span className="text-[12px] font-medium text-[#0F2848] leading-[17px]">{change.investor_name || '股权变更'}</span>
+                            <span className="text-[10.5px] text-[#8AA2BF] font-normal shrink-0">{change.change_time || '-'}</span>
                           </div>
                           <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
-                            <div className="rounded-[10px] bg-[#f7f2e8] px-2 py-1.5">
-                              <span className="text-[#a49a8d]">变更前 </span>
-                              <span className="font-medium text-[#6f665b]">{change.ratio_before || '-'}</span>
+                            <div className="rounded-[10px] bg-[#F7FAFE] px-2 py-1.5">
+                              <span className="text-[#8AA2BF]">变更前 </span>
+                              <span className="font-medium text-[#476285]">{change.ratio_before || '-'}</span>
                             </div>
-                            <div className="rounded-[10px] bg-[#fff8e6] px-2 py-1.5">
-                              <span className="text-[#8b641d]">变更后 </span>
-                              <span className="font-semibold text-[#8b641d]">{change.ratio_after || '-'}</span>
+                            <div className="rounded-[10px] bg-[#004ACC1A] px-2 py-1.5">
+                              <span className="text-[#004ACC]">变更后 </span>
+                              <span className="font-semibold text-[#004ACC]">{change.ratio_after || '-'}</span>
                             </div>
                           </div>
                         </div>
@@ -1356,7 +1356,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 </div>
                 <div className="xl-card-flat p-3 col-span-2">
                   <p className="xl-meta mb-1.5">经营范围</p>
-                  <p className="text-[12px] leading-[18px] font-normal text-[#1f2024]">{basicInfo.businessScope || '待补充'}</p>
+                  <p className="text-[12px] leading-[18px] font-normal text-[#0F2848]">{basicInfo.businessScope || '待补充'}</p>
                 </div>
               </div>
             </div>

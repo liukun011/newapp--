@@ -228,14 +228,14 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
   const skipForwardThrottled = useThrottleFn(skipForward, 500);
 
   return (
-    <div className="flex flex-col h-screen relative bg-[#f7f2e8]">
+    <div className="flex flex-col h-screen relative bg-[#F7FAFE]">
       
       {/* NavBar */}
-      <div className="bg-[#fffefa] px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-[0_3px_10px_rgba(92,74,42,0.04)]">
-        <button onClick={handleBackThrottled} className="p-2 -ml-2 text-[#4f463b]">
+      <div className="bg-[#FFFFFF] px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-[0_3px_10px_rgba(15,40,72,0.04)]">
+        <button onClick={handleBackThrottled} className="p-2 -ml-2 text-[#476285]">
           <ArrowLeft size={22} />
         </button>
-        <h1 className="text-lg font-medium text-[#1f2024] flex-1 text-center truncate mx-4">
+        <h1 className="text-lg font-medium text-[#0F2848] flex-1 text-center truncate mx-4">
           {effectiveInterviewInstTitle}
         </h1>
         <div className="w-10" /> 
@@ -250,7 +250,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
       />
 
       {/* Audio Player Header */}
-      <div className="bg-[#fffefa] pt-6 pb-4 text-center z-10 px-8">
+      <div className="bg-[#FFFFFF] pt-6 pb-4 text-center z-10 px-8">
         {/* Progress Bar - 使用 range input 实现可拖动进度条 */}
         <div className="relative mb-4">
           <input
@@ -265,15 +265,15 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
                 audioRef.current.currentTime = (newProgress / 100) * audioRef.current.duration;
               }
             }}
-            className="w-full h-1 bg-gray-200 rounded-[999px] appearance-none cursor-pointer accent-[#c99a3a]"
+            className="w-full h-1 bg-gray-200 rounded-[999px] appearance-none cursor-pointer accent-[#004ACC]"
             style={{
-              background: `linear-gradient(to right, #C99A3A 0%, #C99A3A ${progress}%, #e5e7eb ${progress}%, #e5e7eb 100%)`
+              background: `linear-gradient(to right, #004ACC 0%, #004ACC ${progress}%, #e5e7eb ${progress}%, #e5e7eb 100%)`
             }}
           />
         </div>
         
         {/* Time Display */}
-        <div className="flex justify-between text-xs text-[#7d7467] font-mono mb-6">
+        <div className="flex justify-between text-xs text-[#476285] font-mono mb-6">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
@@ -281,7 +281,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
         {/* Controls */}
         <div className="flex items-center justify-center gap-10">
           <button 
-            className="text-[#8b641d] p-2 active:opacity-70"
+            className="text-[#004ACC] p-2 active:opacity-70"
             onClick={skipBackwardThrottled}
           >
             <div className="relative">
@@ -291,14 +291,14 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
           </button>
 
           <button 
-            className="w-14 h-14 rounded-[999px] border-2 border-[#c99a3a] flex items-center justify-center text-[#8b641d] shadow-md active:scale-95 transition-transform"
+            className="w-14 h-14 rounded-[999px] border-2 border-[#004ACC] flex items-center justify-center text-[#004ACC] shadow-md active:scale-95 transition-transform"
             onClick={togglePlayThrottled}
           >
             {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
           </button>
 
           <button 
-            className="text-[#8b641d] p-2 active:opacity-70"
+            className="text-[#004ACC] p-2 active:opacity-70"
             onClick={skipForwardThrottled}
           >
              <div className="relative">
@@ -310,24 +310,24 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="bg-[#fffefa] mt-1 border-t border-[#eadfca]/60 z-10 sticky top-[60px]">
+      <div className="bg-[#FFFFFF] mt-1 border-t border-[#E2EBF5]/60 z-10 sticky top-[60px]">
         <div className="flex">
           <button 
-            className={`flex-1 py-3 text-sm font-medium relative transition-colors ${activeTab === 'questions' ? 'text-[#8b641d]' : 'text-[#7d7467]'}`}
+            className={`flex-1 py-3 text-sm font-medium relative transition-colors ${activeTab === 'questions' ? 'text-[#004ACC]' : 'text-[#476285]'}`}
             onClick={() => setActiveTab('questions')}
           >
             问题清单
             {activeTab === 'questions' && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-[#c99a3a] rounded-t-full" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-[#004ACC] rounded-t-full" />
             )}
           </button>
           <button 
-            className={`flex-1 py-3 text-sm font-medium relative transition-colors ${activeTab === 'transcription' ? 'text-[#8b641d]' : 'text-[#7d7467]'}`}
+            className={`flex-1 py-3 text-sm font-medium relative transition-colors ${activeTab === 'transcription' ? 'text-[#004ACC]' : 'text-[#476285]'}`}
             onClick={() => setActiveTab('transcription')}
           >
             录音转写
             {activeTab === 'transcription' && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-[#c99a3a] rounded-t-full" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-[#004ACC] rounded-t-full" />
             )}
           </button>
         </div>
@@ -337,27 +337,27 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
       <div ref={scrollContainerRef} onScroll={handleContentScroll} className="flex-1 overflow-y-auto p-4 scroll-smooth">
         {activeTab === 'questions' ? (
           <div className="space-y-3">
-             <div className="text-xs text-[#a49a8d] mb-2 pl-1">已自动匹配 {questions.filter(q => q.isAnswered).length} / {questions.length} 项</div>
+             <div className="text-xs text-[#8AA2BF] mb-2 pl-1">已自动匹配 {questions.filter(q => q.isAnswered).length} / {questions.length} 项</div>
              {questions.map((q, index) => (
-               <div key={q.id} className="bg-[#fffefa] rounded-[14px] px-4 py-3 shadow-[0_3px_10px_rgba(92,74,42,0.04)] border border-[#eadfca]/50 transition-all">
+               <div key={q.id} className="bg-[#FFFFFF] rounded-[14px] px-4 py-3 shadow-[0_3px_10px_rgba(15,40,72,0.04)] border border-[#E2EBF5]/50 transition-all">
                  <div 
                    className="flex items-center justify-between cursor-pointer py-1"
                    onClick={() => q.details && setExpandedQuestion(expandedQuestion === q.id ? null : q.id)}
                  >
-                   <h3 className={`flex-1 text-[15px] leading-snug font-medium pr-3 ${q.isAnswered ? 'text-[#1f2024]' : 'text-[#7d7467]'}`}>
+                   <h3 className={`flex-1 text-[15px] leading-snug font-medium pr-3 ${q.isAnswered ? 'text-[#0F2848]' : 'text-[#476285]'}`}>
                      {index + 1}. {q.text}
                    </h3>
                    
                    <div className="flex items-center gap-3">
                       {q.details && (
-                        <div className="text-[#a49a8d]">
+                        <div className="text-[#8AA2BF]">
                           {expandedQuestion === q.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                         </div>
                       )}
 
                       <div className="min-w-[20px]">
                         {q.isAnswered ? (
-                          <div className="text-[#8b641d]">
+                          <div className="text-[#004ACC]">
                             <CheckCircle size={22} fill="white" />
                           </div>
                         ) : (
@@ -368,8 +368,8 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
                  </div>
 
                  {expandedQuestion === q.id && q.details && (
-                   <div className="mt-3 text-sm text-[#6f665b] leading-relaxed bg-[#fbf7ee] p-3 rounded-lg border border-[#eadfca]/70 flex gap-2">
-                     <span className="text-[#8b641d] font-medium shrink-0">A:</span>
+                   <div className="mt-3 text-sm text-[#476285] leading-relaxed bg-[#F7FAFE] p-3 rounded-lg border border-[#E2EBF5]/70 flex gap-2">
+                     <span className="text-[#004ACC] font-medium shrink-0">A:</span>
                      <span>{q.details}</span>
                    </div>
                  )}
@@ -384,13 +384,13 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
                transcriptionList.map((item, index) => (
                  <div key={index} className="flex gap-3">
                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
-                     <div className="w-8 h-8 bg-[#f2dda0] rounded-[999px] flex items-center justify-center">
-                        <User size={16} className="text-[#a87a22]" fill="currentColor" />
+                     <div className="w-8 h-8 bg-[#337DFF] rounded-[999px] flex items-center justify-center">
+                        <User size={16} className="text-[#004ACC]" fill="currentColor" />
                      </div>
                    </div>
                    
                    <div className="flex-1">
-                     <div className="text-xs text-[#7d7467] mb-1.5 ml-1 font-medium">
+                     <div className="text-xs text-[#476285] mb-1.5 ml-1 font-medium">
                        {item.contentType || `访谈对象${item.roleId || item.id || ''}`}
                      </div>
                      <div 
@@ -407,7 +407,7 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
                           }
                         }}
                         */
-                        className="bg-[#FFF8E6] p-3.5 rounded-[18px] rounded-tl-sm text-[15px] text-[#4f463b] leading-relaxed shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-colors"
+                        className="bg-[#004ACC1A] p-3.5 rounded-[18px] rounded-tl-sm text-[15px] text-[#476285] leading-relaxed shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-colors"
                       >
                        {item.content || '暂无内容'}
                      </div>
@@ -415,18 +415,18 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
                  </div>
                ))
              ) : (
-               <div className="flex flex-col items-center justify-center py-12 text-[#a49a8d]">
+               <div className="flex flex-col items-center justify-center py-12 text-[#8AA2BF]">
                  <p className="text-sm">暂无转写记录</p>
                </div>
              )}
              {/* 加载更多提示 */}
              {loadingMoreTranscription && (
                <div className="flex justify-center py-4">
-                 <div className="w-5 h-5 border-2 border-[#eadfca] border-t-[#c99a3a] rounded-[999px] animate-spin"></div>
+                 <div className="w-5 h-5 border-2 border-[#E2EBF5] border-t-[#004ACC] rounded-[999px] animate-spin"></div>
                </div>
              )}
              {!hasMoreTranscription && transcriptionList.length > 0 && (
-               <div className="text-center text-xs text-[#a49a8d] py-3">没有更多了</div>
+               <div className="text-center text-xs text-[#8AA2BF] py-3">没有更多了</div>
              )}
              {/* iOS 兼容：使用实际 DOM 元素作为底部占位，确保滚动区域正确 */}
              <div style={{ height: 120, flexShrink: 0 }} />
@@ -435,11 +435,11 @@ const HistoryDetailPage: React.FC<HistoryDetailPageProps> = ({
       </div>
 
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 px-4 py-3 z-30 flex gap-4 items-center justify-between bg-[#fffefa] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.04)]">
-        <div className="absolute top-0 left-4 right-4 h-[1px] bg-[#E0E7FF]" />
+      <div className="fixed bottom-0 left-0 right-0 px-4 py-3 z-30 flex gap-4 items-center justify-between bg-[#FFFFFF] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.04)]">
+        <div className="absolute top-0 left-4 right-4 h-[1px] bg-[#E2EBF5]" />
         <Button 
           disabled
-          className="flex-1 rounded-[999px] border border-[#eadfca] bg-[#fffefa] text-[#a49a8d] font-medium shadow-none"
+          className="flex-1 rounded-[999px] border border-[#E2EBF5] bg-[#FFFFFF] text-[#8AA2BF] font-medium shadow-none"
           variant="secondary"
         >
            已结束

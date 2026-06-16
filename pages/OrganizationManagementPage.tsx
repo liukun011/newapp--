@@ -249,7 +249,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
       message: `确认切换为 ${tenant.name} 吗？`,
       cancelButtonText: '取 消',
       confirmButtonText: '确 定',
-      confirmButtonColor: '#C99A3A',
+      confirmButtonColor: '#004ACC',
       onConfirm: async () => {
         try {
           Toast.loading({ message: '切换中...', duration: 0 });
@@ -377,7 +377,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
   return (
     <div className="flex flex-col h-screen xl-page">
       {/* Header */}
-      <div className="bg-[linear-gradient(180deg,#f7f2e8_0%,rgba(247,242,232,0.96)_100%)] px-4 py-3 flex items-center justify-between relative flex-shrink-0">
+      <div className="bg-[linear-gradient(180deg,#F7FAFE_0%,rgba(247,250,254,0.96)_100%)] px-4 py-3 flex items-center justify-between relative flex-shrink-0">
         <button onClick={onBack} className="xl-icon-btn !min-w-10 !min-h-10">
           <ChevronLeft size={21} />
         </button>
@@ -392,7 +392,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                   onChange={(e) => setEditValue(e.target.value)}
                   onBlur={handleSave}
                   onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                  className="text-center text-[18px] font-medium text-[#1f2024] bg-[#fbf7ee] border-2 border-[#C99A3A] rounded-[12px] px-4 py-1.5 focus:outline-none min-w-[180px] max-w-[280px]"
+                  className="text-center text-[18px] font-medium text-[#0F2848] bg-[#F7FAFE] border-2 border-[#004ACC] rounded-[12px] px-4 py-1.5 focus:outline-none min-w-[180px] max-w-[280px]"
                 />
               </div>
             ) : (
@@ -403,10 +403,10 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                   fetchTenants();
                 }}
               >
-                  <h1 className="text-[18px] font-medium text-[#1f2024]">{tenantName}</h1>
+                  <h1 className="text-[18px] font-medium text-[#0F2848]">{tenantName}</h1>
                   {/* Icons container positioned to the right to maintain text centering */}
                   <div className="flex items-center gap-1 ml-0.5 whitespace-nowrap">
-                    <ChevronDown size={18} className="text-[#a49a8d]" />
+                    <ChevronDown size={18} className="text-[#8AA2BF]" />
                     {isAdmin && (
                       <div 
                         className="p-1 -mr-1" 
@@ -415,13 +415,13 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                           setIsEditing(true);
                         }}
                       >
-                        <Edit2 size={14} className="text-[#c9bda9]" />
+                        <Edit2 size={14} className="text-[#CBD7E5]" />
                       </div>
                     )}
                   </div>
               </div>
             )}
-            <span className="text-[11px] text-[#7d7467] font-medium mt-0.5">组织管理</span>
+            <span className="text-[11px] text-[#476285] font-medium mt-0.5">组织管理</span>
         </div>
 
         <div className="w-10" />
@@ -430,19 +430,19 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
       <div className="flex-1 overflow-y-auto px-6 py-6">
         {!isAdmin ? (
           <div className="h-full flex flex-col items-center justify-center -mt-20">
-            <div className="w-40 h-40 bg-[#fbf7ee]/50 rounded-[999px] flex items-center justify-center mb-2">
+            <div className="w-40 h-40 bg-[#F7FAFE]/50 rounded-[999px] flex items-center justify-center mb-2">
               <ShieldAlert size={80} className="text-slate-200" strokeWidth={1.2} />
             </div>
-            <h2 className="text-[18px] font-semibold text-[#1f2024] mb-2">暂无管理权限</h2>
-            <p className="text-[13px] text-[#a49a8d] font-medium text-center leading-relaxed max-w-[260px] px-2">
-              您当前在 <span className="text-[#7d7467] font-medium">{tenantName}</span> 的身份为成员，仅管理员可进行组织管理操作。
+            <h2 className="text-[18px] font-semibold text-[#0F2848] mb-2">暂无管理权限</h2>
+            <p className="text-[13px] text-[#8AA2BF] font-medium text-center leading-relaxed max-w-[260px] px-2">
+              您当前在 <span className="text-[#476285] font-medium">{tenantName}</span> 的身份为成员，仅管理员可进行组织管理操作。
             </p>
           </div>
         ) : (
           <div className="space-y-5">
             {/* Invite Button */}
             <button 
-                className="w-full bg-primary-gradient active:scale-[0.98] transition-all text-[#151515] py-3 rounded-[14px] flex items-center justify-center gap-2 shadow-[0_6px_14px_rgba(201,154,58,0.14)]"
+                className="w-full bg-primary-gradient active:scale-[0.98] transition-all text-[#FFFFFF] py-3 rounded-[14px] flex items-center justify-center gap-2 shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
                 onClick={() => fetchInviteCode()}
             >
               <UserPlus size={18} strokeWidth={2.5} />
@@ -451,7 +451,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
 
             {/* Section Header & Search */}
             <div className="flex items-center justify-between">
-                <h2 className="text-[14px] font-medium text-[#c9bda9] uppercase tracking-widest px-1">
+                <h2 className="text-[14px] font-medium text-[#CBD7E5] uppercase tracking-widest px-1">
                     组织人员 ({members.length})
                 </h2>
                 <div className="relative w-40">
@@ -460,9 +460,9 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                         placeholder="搜索..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-9 pl-8 pr-3 bg-[#fffefa] border border-[#eadfca]/70 rounded-[999px] text-[13px] text-[#6f665b] placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-[#f2dda0] transition-all shadow-[0_3px_10px_rgba(92,74,42,0.04)]"
+                        className="w-full h-9 pl-8 pr-3 bg-[#FFFFFF] border border-[#E2EBF5]/70 rounded-[999px] text-[13px] text-[#476285] placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-[#337DFF] transition-all shadow-[0_3px_10px_rgba(15,40,72,0.04)]"
                     />
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#c9bda9]" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#CBD7E5]" />
                 </div>
             </div>
 
@@ -471,37 +471,37 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                 <List
                   finished={finished}
                   onLoad={onLoad}
-                  finishedText={<span className="text-[12px] text-[#c9bda9]">没有更多了</span>}
-                  loadingText={<div className="flex items-center justify-center gap-2"><Loading size="14px" /><span className="text-[12px] text-[#c9bda9]">加载中...</span></div>}
+                  finishedText={<span className="text-[12px] text-[#CBD7E5]">没有更多了</span>}
+                  loadingText={<div className="flex items-center justify-center gap-2"><Loading size="14px" /><span className="text-[12px] text-[#CBD7E5]">加载中...</span></div>}
                 >
                   {membersLoading && members.length === 0 ? (
                       <div className="flex-1 flex flex-col items-center justify-center py-16 opacity-40">
-                          <Loading type="spinner" color="#C99A3A" size="28px" />
-                          <p className="text-[#a49a8d] text-[13px] mt-3">正在加载成员...</p>
+                          <Loading type="spinner" color="#004ACC" size="28px" />
+                          <p className="text-[#8AA2BF] text-[13px] mt-3">正在加载成员...</p>
                       </div>
                   ) : (
                     <>
                       {filteredMembers.map((member: Member, index: number) => (
                         <div 
                             key={member.id} 
-                            className={`flex items-center gap-3.5 p-3.5 ${index !== filteredMembers.length - 1 ? 'border-b border-[#eadfca]/60' : ''} active:bg-[#fff8e6] transition-colors cursor-pointer`}
+                            className={`flex items-center gap-3.5 p-3.5 ${index !== filteredMembers.length - 1 ? 'border-b border-[#E2EBF5]/60' : ''} active:bg-[#004ACC1A] transition-colors cursor-pointer`}
                         >
-                            <div className="w-10 h-10 rounded-[13px] overflow-hidden bg-[#f4eee3] flex-shrink-0 border border-[#eadfca]/60">
+                            <div className="w-10 h-10 rounded-[13px] overflow-hidden bg-[#F7FAFE] flex-shrink-0 border border-[#E2EBF5]/60">
                                 {member.avatar ? (
                                   <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-[#fff8e6] text-[#dfcda9]">
+                                  <div className="w-full h-full flex items-center justify-center bg-[#004ACC1A] text-[#E2EBF5]">
                                     <Building2 size={24} />
                                   </div>
                                 )}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[14.5px] font-medium text-[#151515] truncate tracking-tight">
+                                    <span className="text-[14.5px] font-medium text-[#0F2848] truncate tracking-tight">
                                         {member.isAdmin ? maskPhoneNumber(member.phone || member.name) : maskPhoneNumber(member.name)}
                                     </span>
                                     {member.isAdmin && (
-                                        <span className="px-1.5 py-0.5 bg-[#fff8e6] text-[#C99A3A] text-[9px] font-medium rounded-md border border-[#eadfca]/50">管理员</span>
+                                        <span className="px-1.5 py-0.5 bg-[#004ACC1A] text-[#004ACC] text-[9px] font-medium rounded-md border border-[#E2EBF5]/50">管理员</span>
                                     )}
                                 </div>
                                 <span className="text-[12.5px] text-[#A5B3C2] font-medium mt-0.5 block min-h-[18px]">
@@ -514,7 +514,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                       {!membersLoading && filteredMembers.length === 0 && (
                           <div className="py-16 flex flex-col items-center justify-center opacity-30 flex-1">
                               <Search size={40} className="text-slate-200 mb-2" />
-                              <p className="text-[#a49a8d] text-[13px]">未找到相关成员</p>
+                              <p className="text-[#8AA2BF] text-[13px]">未找到相关成员</p>
                           </div>
                       )}
                     </>
@@ -531,50 +531,50 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
         onClose={() => setShowTenantModal(false)}
         position="bottom"
         round
-        className="bg-[#fffefa]"
+        className="bg-[#FFFFFF]"
       >
         <div className="flex flex-col max-h-[70vh] p-5 pb-8">
             <div className="w-12 h-1.5 bg-slate-100 rounded-[999px] self-center mb-5" />
             
-            <h2 className="text-[14px] font-medium text-[#c9bda9] uppercase tracking-widest mb-4 px-1">
+            <h2 className="text-[14px] font-medium text-[#CBD7E5] uppercase tracking-widest mb-4 px-1">
                 切换组织
             </h2>
             
             <div className="space-y-2 overflow-y-auto">
                 {tenantsLoading && tenants.length === 0 ? (
-                    <div className="py-10 flex justify-center text-[#a49a8d]">加载中...</div>
+                    <div className="py-10 flex justify-center text-[#8AA2BF]">加载中...</div>
                 ) : (
                     tenants.map((item) => (
                         <div 
                             key={item.id}
                             className={`flex items-center gap-3 p-3 rounded-[14px] transition-all active:scale-[0.98] cursor-pointer ${
                                 String(item.id) === String(tenantId) 
-                                ? 'bg-[#fff8e6] border border-[#dfcda9]' 
-                                : 'bg-[#fffefa] border border-[#eadfca]/60'
+                                ? 'bg-[#004ACC1A] border border-[#E2EBF5]' 
+                                : 'bg-[#FFFFFF] border border-[#E2EBF5]/60'
                             }`}
                             onClick={() => handleSwitchTenant(item)}
                         >
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                                 String(item.id) === String(tenantId) 
-                                ? 'bg-primary-gradient text-[#151515]' 
-                                : 'bg-[#fbf7ee] text-[#a49a8d]'
+                                ? 'bg-primary-gradient text-[#FFFFFF]' 
+                                : 'bg-[#F7FAFE] text-[#8AA2BF]'
                             }`}>
                                 <Building2 size={20} />
                             </div>
                             
                             <div className="flex-1 min-w-0">
                                 <h3 className={`text-[15px] font-medium truncate ${
-                                    String(item.id) === String(tenantId) ? 'text-[#C99A3A]' : 'text-[#1f2024]'
+                                    String(item.id) === String(tenantId) ? 'text-[#004ACC]' : 'text-[#0F2848]'
                                 }`}>
                                     {item.name}
                                 </h3>
-                                <p className="text-[11px] text-[#a49a8d] font-medium leading-none mt-1">
+                                <p className="text-[11px] text-[#8AA2BF] font-medium leading-none mt-1">
                                     {hasTenantAdminPermission(item, currentUserId) ? '管理员' : '成员'}
                                 </p>
                             </div>
                             
                             {String(item.id) === String(tenantId) && (
-                                <Check size={18} className="text-[#C99A3A]" strokeWidth={3} />
+                                <Check size={18} className="text-[#004ACC]" strokeWidth={3} />
                             )}
                         </div>
                     ))
@@ -591,33 +591,33 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
         round
         style={{ width: '85%', maxWidth: '320px', borderRadius: '32px', overflow: 'hidden' }}
       >
-        <div className="bg-[#fffefa] p-4 flex flex-col items-center relative overflow-hidden">
+        <div className="bg-[#FFFFFF] p-4 flex flex-col items-center relative overflow-hidden">
             {/* 装饰性背景 */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-[#fff8e6]/50 rounded-[999px] blur-2xl -mr-12 -mt-12" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#004ACC1A]/50 rounded-[999px] blur-2xl -mr-12 -mt-12" />
             <div className="absolute top-8 right-0 opacity-[0.03] rotate-12">
-                <Users size={120} className="text-[#a87a22]" />
+                <Users size={120} className="text-[#004ACC]" />
             </div>
 
             {/* 图标 */}
-            <div className="w-12 h-12 bg-[#fff8e6] border border-[#eadfca] rounded-[15px] flex items-center justify-center mb-3 relative z-10">
-                <UserPlus size={23} className="text-[#8b641d]" strokeWidth={2.3} />
+            <div className="w-12 h-12 bg-[#004ACC1A] border border-[#E2EBF5] rounded-[15px] flex items-center justify-center mb-3 relative z-10">
+                <UserPlus size={23} className="text-[#004ACC]" strokeWidth={2.3} />
             </div>
 
             {/* 标题文案 */}
-            <h3 className="text-[17px] font-semibold text-[#1f2024] mb-1 relative z-10">邀请成员加入</h3>
-            <p className="text-[12px] text-[#a49a8d] font-medium mb-3 relative z-10 text-center">
+            <h3 className="text-[17px] font-semibold text-[#0F2848] mb-1 relative z-10">邀请成员加入</h3>
+            <p className="text-[12px] text-[#8AA2BF] font-medium mb-3 relative z-10 text-center">
                 分享邀请链接让成员快速加入组织
             </p>
 
             {/* 链接容器 */}
-            <div className="w-full bg-[#fffdf8] rounded-[20px] p-3 mb-3 relative z-10 border border-[#eadfca]/50 flex flex-col justify-center">
-                <p className="text-[10px] text-[#c9bda9] font-semibold mb-2 text-center uppercase tracking-wider">组织邀请链接</p>
+            <div className="w-full bg-[#FFFFFF] rounded-[20px] p-3 mb-3 relative z-10 border border-[#E2EBF5]/50 flex flex-col justify-center">
+                <p className="text-[10px] text-[#CBD7E5] font-semibold mb-2 text-center uppercase tracking-wider">组织邀请链接</p>
                 {inviteUrl ? (
                     <div
-                        className="bg-[#fffefa] border border-[#eadfca]/70 rounded-[12px] px-2 py-1 overflow-y-auto"
+                        className="bg-[#FFFFFF] border border-[#E2EBF5]/70 rounded-[12px] px-2 py-1 overflow-y-auto"
                         style={{ maxHeight: '100px' }}
                     >
-                        <span className="text-[12px] text-[#7d7467] font-medium break-all leading-snug select-all">
+                        <span className="text-[12px] text-[#476285] font-medium break-all leading-snug select-all">
                             {inviteUrl}
                         </span>
                     </div>
@@ -630,7 +630,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
 
             {/* 复制按钮 */}
             <button
-                className={`w-full h-10 bg-primary-gradient text-[#151515] rounded-[14px] text-[14px] font-medium active:scale-95 transition-all relative z-10 shadow-[0_6px_14px_rgba(201,154,58,0.14)] ${
+                className={`w-full h-10 bg-primary-gradient text-[#FFFFFF] rounded-[14px] text-[14px] font-medium active:scale-95 transition-all relative z-10 shadow-[0_6px_14px_rgba(0,74,204,0.14)] ${
                     !inviteUrl ? 'opacity-50 pointer-events-none' : ''
                 }`}
                 onClick={async () => {

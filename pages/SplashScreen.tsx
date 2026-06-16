@@ -16,10 +16,10 @@ const SplashScreen: React.FC = () => {
       <div className="flex flex-col items-center justify-center">
         {/* Logo and Title */}
         <div className="text-center mb-4 animate-fadeIn z-10">
-          <h1 className="text-5xl font-medium text-[#8b641d] mb-6">
+          <h1 className="text-5xl font-medium text-[#004ACC] mb-6">
             小狸报告
           </h1>
-          <div className="text-xl text-[#8b641d] font-medium">
+          <div className="text-xl text-[#004ACC] font-medium">
             更高效率、更多自由
           </div>
         </div>
@@ -36,9 +36,9 @@ const SplashScreen: React.FC = () => {
 
         {/* Loading indicator */}
         <div className="mt-8 flex gap-2 z-10">
-          <div className="w-2 h-2 rounded-full bg-[#c99a3a] animate-bounce" style={{ animationDelay: '0ms' }} />
-          <div className="w-2 h-2 rounded-full bg-[#c99a3a] animate-bounce" style={{ animationDelay: '150ms' }} />
-          <div className="w-2 h-2 rounded-full bg-[#c99a3a] animate-bounce" style={{ animationDelay: '300ms' }} />
+          <div className="w-2 h-2 rounded-full bg-[#004ACC] animate-bounce" style={{ animationDelay: '0ms' }} />
+          <div className="w-2 h-2 rounded-full bg-[#004ACC] animate-bounce" style={{ animationDelay: '150ms' }} />
+          <div className="w-2 h-2 rounded-full bg-[#004ACC] animate-bounce" style={{ animationDelay: '300ms' }} />
         </div>
       </div>
     </div>

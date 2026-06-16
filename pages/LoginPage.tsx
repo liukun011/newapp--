@@ -234,7 +234,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   if (pageLoading) {
     return (
       <div className="fixed inset-0 bg-white z-[999] flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#eadfca] border-t-[#c99a3a] rounded-full animate-spin mb-4"></div>
+        <div className="w-12 h-12 border-4 border-[#E2EBF5] border-t-[#004ACC] rounded-full animate-spin mb-4"></div>
         <p className="text-gray-400 text-sm">资源加载中...</p>
       </div>
     );
@@ -339,7 +339,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
              欢迎使用“小狸报告”（简称“本平台”）。作为一款专注于线下访谈与调研场景的效率工具，通过“录音转写 + 自动报告生成”双核心能力，帮助业务人员突破时空限制，显著提升现场信息整理与调研报告输出效率，为后续分析与决策提供清晰可靠的信息支持。本平台由北京零壹视界科技有限公司（简称“我们”）提供服务或运营控制。
            </p>
            <p className="text-[15px] leading-relaxed mb-8 text-justify text-slate-600">
-             本隐私政策旨在向您说明我们在提供服务过程中如何收集、使用、存储及保护您的个人信息，并告知您所享有的权利。请在使用我们的产品或服务前仔细阅读并理解本隐私政策的所有内容。如果您对本隐私政策有任何疑问，请通过Email：<a href="mailto:support@binarysee.com" className="text-[#8b641d] underline">support@binarysee.com</a>与我们联系。
+             本隐私政策旨在向您说明我们在提供服务过程中如何收集、使用、存储及保护您的个人信息，并告知您所享有的权利。请在使用我们的产品或服务前仔细阅读并理解本隐私政策的所有内容。如果您对本隐私政策有任何疑问，请通过Email：<a href="mailto:support@binarysee.com" className="text-[#004ACC] underline">support@binarysee.com</a>与我们联系。
            </p>
 
            <h2 className="text-xl font-medium mb-4">2. 信息收集</h2>
@@ -424,8 +424,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                    <li>地理位置及基站信息：用于判定模糊位置信息，选择就近推送服务节点。</li>
                  </ul>
                </li>
-               <li><strong>隐私政策：</strong><a href="https://www.jiguang.cn/license/privacy" target="_blank" rel="noopener noreferrer" className="text-[#8b641d] break-all">https://www.jiguang.cn/license/privacy</a></li>
-               <li><strong>官网链接：</strong><a href="https://www.jiguang.cn/" target="_blank" rel="noopener noreferrer" className="text-[#8b641d] break-all">https://www.jiguang.cn/</a></li>
+               <li><strong>隐私政策：</strong><a href="https://www.jiguang.cn/license/privacy" target="_blank" rel="noopener noreferrer" className="text-[#004ACC] break-all">https://www.jiguang.cn/license/privacy</a></li>
+               <li><strong>官网链接：</strong><a href="https://www.jiguang.cn/" target="_blank" rel="noopener noreferrer" className="text-[#004ACC] break-all">https://www.jiguang.cn/</a></li>
              </ul>
            </div>
         </div>
@@ -493,7 +493,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     console.error('Send SMS error:', error);
                   }
                 }}
-                className={`text-[15px] min-w-[5em] ${forgotCountdown > 0 ? 'text-gray-400' : 'text-[#A87A22] hover:text-[#8b641d]'}`}
+                className={`text-[15px] min-w-[5em] ${forgotCountdown > 0 ? 'text-gray-400' : 'text-[#004ACC] hover:text-[#004ACC]'}`}
               >
                 {forgotCountdown > 0 ? `${forgotCountdown}s` : '获取验证码'}
               </button>
@@ -586,13 +586,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const slide = LOGIN_SLIDES[currentSlide];
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col bg-gradient-to-b from-[#f8f3e8] to-[#fffdf8] relative overflow-x-hidden overflow-y-auto">
+    <div className="min-h-[100dvh] w-full flex flex-col bg-gradient-to-b from-[#F7FAFE] to-[#FFFFFF] relative overflow-x-hidden overflow-y-auto">
       {/* Top Carousel Area - Hide when keyboard is open to give more room for inputs on Android */}
       {!isKeyboardOpen && (
         <div className="relative z-10 flex-1 flex flex-col pt-16 min-h-0 w-full">
           {/* Text Content */}
           <div className="mb-2 flex flex-col justify-center items-center px-8 z-20 shrink-0">
-            <h2 className="text-[22px] font-medium mb-3 leading-snug text-[#C99A3A] text-center">
+            <h2 className="text-[22px] font-medium mb-3 leading-snug text-[#004ACC] text-center">
               {slide.title}
             </h2>
             <p className="text-[#64748B] text-[14px] leading-relaxed text-center font-medium max-w-[280px]">
@@ -621,7 +621,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           >
             手机号登录
             {!isPasswordMode && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[4px] bg-[#C99A3A] rounded-full" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[4px] bg-[#004ACC] rounded-full" />
             )}
           </button>
           <button 
@@ -630,7 +630,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           >
             密码登录
             {isPasswordMode && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[4px] bg-[#C99A3A] rounded-full" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[4px] bg-[#004ACC] rounded-full" />
             )}
           </button>
         </div>
@@ -638,7 +638,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         {/* Form Inputs */}
         <div className="space-y-4">
           {/* Phone Input */}
-          <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#C99A3A] focus-within:ring-1 focus-within:ring-[#C99A3A] ${phone ? 'border-[#C99A3A] ring-1 ring-[#C99A3A]' : 'border-[#EADFCB]'}`}>
+          <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#004ACC] focus-within:ring-1 focus-within:ring-[#004ACC] ${phone ? 'border-[#004ACC] ring-1 ring-[#004ACC]' : 'border-[#E2EBF5]'}`}>
             <span className="text-slate-800 font-medium mr-4">+86</span>
             <input 
               type="tel"
@@ -653,7 +653,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
           {!isPasswordMode ? (
             /* SMS Code Input */
-            <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#C99A3A] focus-within:ring-1 focus-within:ring-[#C99A3A] ${code ? 'border-[#C99A3A] ring-1 ring-[#C99A3A]' : 'border-[#EADFCB]'}`}>
+            <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#004ACC] focus-within:ring-1 focus-within:ring-[#004ACC] ${code ? 'border-[#004ACC] ring-1 ring-[#004ACC]' : 'border-[#E2EBF5]'}`}>
               <input 
                 type="number"
                 placeholder="请输入验证码"
@@ -675,14 +675,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     console.error('Send SMS error:', e);
                   }
                 }}
-                className={`text-[14px] font-medium min-w-[5em] ${countdown > 0 ? 'text-slate-400' : 'text-[#C99A3A]'}`}
+                className={`text-[14px] font-medium min-w-[5em] ${countdown > 0 ? 'text-slate-400' : 'text-[#004ACC]'}`}
               >
                 {countdown > 0 ? `${countdown}s` : (smsSent ? '重新获取验证码' : '获取验证码')}
               </button>
             </div>
           ) : (
             /* Password Input */
-            <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#C99A3A] focus-within:ring-1 focus-within:ring-[#C99A3A] ${password ? 'border-[#C99A3A] ring-1 ring-[#C99A3A]' : 'border-[#EADFCB]'}`}>
+            <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#004ACC] focus-within:ring-1 focus-within:ring-[#004ACC] ${password ? 'border-[#004ACC] ring-1 ring-[#004ACC]' : 'border-[#E2EBF5]'}`}>
               <input 
                 type={showPassword ? "text" : "password"}
                 placeholder="请输入密码"
@@ -707,7 +707,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <div className="w-full flex justify-end">
               <button 
                 onClick={() => setViewState('FORGOT_PASSWORD')}
-                className="text-[12px] text-[#C99A3A]"
+                className="text-[12px] text-[#004ACC]"
               >
                 重置密码
               </button>
@@ -718,26 +718,26 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         {/* Agreement */}
         {!isKeyboardOpen && (
           <label className="mt-1 mb-3 min-h-[22px] flex items-center justify-center space-x-2 text-[12px] text-[#8C93A3] cursor-pointer">
-            <div className="relative flex items-center justify-center w-[15px] h-[15px] rounded-full border border-[#C99A3A] shrink-0">
+            <div className="relative flex items-center justify-center w-[15px] h-[15px] rounded-full border border-[#004ACC] shrink-0">
               <input
                 type="checkbox"
                 className="appearance-none absolute inset-0 w-full h-full opacity-0 cursor-pointer peer z-10"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
               />
-              <div className={`absolute pointer-events-none rounded-full transition-transform ${agreed ? 'w-[9px] h-[9px] bg-[#C99A3A] scale-100' : 'w-[9px] h-[9px] bg-transparent scale-0'}`} />
+              <div className={`absolute pointer-events-none rounded-full transition-transform ${agreed ? 'w-[9px] h-[9px] bg-[#004ACC] scale-100' : 'w-[9px] h-[9px] bg-transparent scale-0'}`} />
             </div>
             <span>
               我已阅读并同意
               <span
-                className="text-[#C99A3A] mx-1 active:opacity-70"
+                className="text-[#004ACC] mx-1 active:opacity-70"
                 onClick={(e) => { e.preventDefault(); openLegalView('AGREEMENT'); }}
               >
                 用户协议
               </span>
               和
               <span
-                className="text-[#C99A3A] mx-1 active:opacity-70"
+                className="text-[#004ACC] mx-1 active:opacity-70"
                 onClick={(e) => { e.preventDefault(); openLegalView('PRIVACY'); }}
               >
                 隐私政策
@@ -752,7 +752,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           size="large" 
           onClick={handleMainLogin}
           disabled={!phone || (!isPasswordMode ? !code : !password)}
-          className="rounded-full !bg-[#C99A3A] active:!bg-[#8B641D] h-12 text-[16px]"
+          className="rounded-full !bg-[#004ACC] active:!bg-[#004ACC] h-12 text-[16px]"
         >
           登 录
         </Button> 
@@ -767,7 +767,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <p className="text-[14px] text-slate-600 leading-relaxed text-center mb-6">
               为保障你的合法权益，请阅读并同意
               <span 
-                className="text-[#8b641d] cursor-pointer mx-1"
+                className="text-[#004ACC] cursor-pointer mx-1"
                 onClick={() => { 
                   setShowAgreementModal(false); 
                   setReturnToModal(true); 
@@ -778,7 +778,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               </span>
               和
               <span 
-                className="text-[#8b641d] cursor-pointer mx-1"
+                className="text-[#004ACC] cursor-pointer mx-1"
                 onClick={() => { 
                   setShowAgreementModal(false); 
                   setReturnToModal(true); 
@@ -793,7 +793,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <div className="w-full space-y-3">
               <Button 
                 block 
-                className="!bg-[#C99A3A] !rounded-full !h-11 !text-[16px] shadow-[0_6px_14px_rgba(201,154,58,0.14)]"
+                className="!bg-[#004ACC] !rounded-full !h-11 !text-[16px] shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
                 onClick={handleAgreementConfirm}
               >
                 同意并继续

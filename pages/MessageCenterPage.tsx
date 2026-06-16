@@ -75,20 +75,20 @@ const MessageCenterPage: React.FC<MessageCenterPageProps> = ({ onBack }) => {
       case 'report':
         return (
           <div className="w-10 h-10 rounded-[999px] bg-[#E8F8F0] flex items-center justify-center flex-shrink-0">
-             <div className="w-5 h-5 rounded-[999px] bg-[#07C160] flex items-center justify-center">
+             <div className="w-5 h-5 rounded-[999px] bg-[#10B981] flex items-center justify-center">
                 <Check size={12} className="text-white" strokeWidth={3} />
              </div>
           </div>
         ); 
       case 'compliance':
         return (
-           <div className="w-10 h-10 rounded-[999px] bg-[#FFF4E5] flex items-center justify-center flex-shrink-0">
-             <ShieldAlert className="text-[#FF9F2F]" size={20} />
+           <div className="w-10 h-10 rounded-[999px] bg-[#EAF2FF] flex items-center justify-center flex-shrink-0">
+             <ShieldAlert className="text-[#337DFF]" size={20} />
            </div>
         );
       case 'assistant':
         return (
-           <div className="w-10 h-10 rounded-[999px] bg-[#F2F1FF] flex items-center justify-center flex-shrink-0">
+           <div className="w-10 h-10 rounded-[999px] bg-[#EAF2FF] flex items-center justify-center flex-shrink-0">
              <MessageSquare className="text-primary" size={20} />
            </div>
         );
@@ -96,19 +96,19 @@ const MessageCenterPage: React.FC<MessageCenterPageProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="h-screen bg-[#f7f2e8] flex flex-col">
+    <div className="h-screen bg-[#F7FAFE] flex flex-col">
       {/* Header */}
-      <div className="bg-[#fffefa] px-4 py-3 flex items-center justify-between relative shadow-[0_3px_10px_rgba(92,74,42,0.04)] z-10">
+      <div className="bg-[#FFFFFF] px-4 py-3 flex items-center justify-between relative shadow-[0_3px_10px_rgba(15,40,72,0.04)] z-10">
         <button 
           onClick={onBack}
-          className="p-2 -ml-2 text-[#4f463b] active:bg-[#f7f2e8] rounded-[999px] transition-colors"
+          className="p-2 -ml-2 text-[#476285] active:bg-[#F7FAFE] rounded-[999px] transition-colors"
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-[17px] font-medium text-[#1f2024] absolute left-1/2 -translate-x-1/2">消息中心</h1>
+        <h1 className="text-[17px] font-medium text-[#0F2848] absolute left-1/2 -translate-x-1/2">消息中心</h1>
         <button 
           onClick={handleMarkAllRead}
-          className="text-[14px] text-slate-500 active:text-[#1f2024] transition-colors font-medium"
+          className="text-[14px] text-slate-500 active:text-[#0F2848] transition-colors font-medium"
         >
           全部已读
         </button>
@@ -120,7 +120,7 @@ const MessageCenterPage: React.FC<MessageCenterPageProps> = ({ onBack }) => {
           <div 
             key={msg.id}
             onClick={() => handleMessageClick(msg.id)}
-            className="flex gap-3 px-4 py-4 bg-[#fffefa] border-b border-gray-50 active:bg-[#f7f2e8] transition-colors"
+            className="flex gap-3 px-4 py-4 bg-[#FFFFFF] border-b border-gray-50 active:bg-[#F7FAFE] transition-colors"
           >
             {/* Icon */}
             {getIcon(msg.type)}
@@ -128,11 +128,11 @@ const MessageCenterPage: React.FC<MessageCenterPageProps> = ({ onBack }) => {
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start mb-1">
-                 <h3 className="text-[16px] font-medium text-[#1f2024]">{msg.title}</h3>
-                 <span className="text-[12px] text-[#a49a8d]">{msg.time}</span>
+                 <h3 className="text-[16px] font-medium text-[#0F2848]">{msg.title}</h3>
+                 <span className="text-[12px] text-[#8AA2BF]">{msg.time}</span>
               </div>
               <div className="relative">
-                 <p className="text-[13px] text-[#7d7467] leading-snug line-clamp-1 pr-4">
+                 <p className="text-[13px] text-[#476285] leading-snug line-clamp-1 pr-4">
                    {msg.content}
                  </p>
                  {/* Red Dot - Aligned to the right end or just after text? Screenshot shows it at far right vertically centered or near text. 
@@ -146,7 +146,7 @@ const MessageCenterPage: React.FC<MessageCenterPageProps> = ({ onBack }) => {
         ))}
 
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-[#a49a8d]">
+          <div className="flex flex-col items-center justify-center py-20 text-[#8AA2BF]">
              <span>暂无消息</span>
           </div>
         )}

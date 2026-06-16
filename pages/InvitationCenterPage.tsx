@@ -98,7 +98,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
         backgroundSize: '100% 100%',
         backgroundPosition: 'top center',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: '#f7f2e8'
+        backgroundColor: '#F7FAFE'
       }}
     >
 
@@ -136,7 +136,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
             letterSpacing: '0em',
             fontVariationSettings: '"opsz" auto',
             fontFeatureSettings: '"kern" on',
-            color: '#C99A3A',
+            color: '#004ACC',
           }}
           className="ml-4"
         >
@@ -163,20 +163,20 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
       <div className="px-4 pb-2 space-y-4 pb-safe relative z-10">
         
         {/* Card 1: Share Code */}
-        <div className="bg-[#fffefa] rounded-[20px] p-5 shadow-[0_3px_10px_rgba(92,74,42,0.04)] space-y-4">
-          <h2 className="text-[15px] font-medium text-[#1f2024] tracking-wide">
+        <div className="bg-[#FFFFFF] rounded-[20px] p-5 shadow-[0_3px_10px_rgba(15,40,72,0.04)] space-y-4">
+          <h2 className="text-[15px] font-medium text-[#0F2848] tracking-wide">
             分享邀请码，邀请好友体验小狸报告
           </h2>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-12 bg-[#F5F6F8] rounded-[14px] flex items-center px-4 overflow-hidden">
-              <span className={`leading-none select-all truncate uppercase ${inviteCode ? 'text-[20px] text-[#C99A3A] font-medium' : 'text-[14px] text-[#a49a8d] font-normal'}`}>
+              <span className={`leading-none select-all truncate uppercase ${inviteCode ? 'text-[20px] text-[#004ACC] font-medium' : 'text-[14px] text-[#8AA2BF] font-normal'}`}>
                 {isGenerating || isLoading ? '...' : (inviteCode || 'WAITING...')}
               </span>
             </div>
             <button
               onClick={inviteCode ? copyInviteCode : generateInviteCode}
               disabled={isLoading || isGenerating}
-              className="h-12 px-5 bg-primary-gradient text-[#151515] text-[14px] font-medium rounded-[14px] active:scale-95 transition-transform disabled:opacity-80 flex-shrink-0"
+              className="h-12 px-5 bg-primary-gradient text-[#FFFFFF] text-[14px] font-medium rounded-[14px] active:scale-95 transition-transform disabled:opacity-80 flex-shrink-0"
             >
               {inviteCode ? '复制邀请码' : (isLoading || isGenerating ? '生成中...' : '生成邀请码')}
             </button>
@@ -184,8 +184,8 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
         </div>
 
         {/* Card 2: Steps */}
-        <div className="bg-[#fffefa] rounded-[20px] p-5 shadow-[0_3px_10px_rgba(92,74,42,0.04)] space-y-5">
-          <h2 className="text-[15px] font-medium text-[#1f2024] tracking-wide">
+        <div className="bg-[#FFFFFF] rounded-[20px] p-5 shadow-[0_3px_10px_rgba(15,40,72,0.04)] space-y-5">
+          <h2 className="text-[15px] font-medium text-[#0F2848] tracking-wide">
             邀请步骤
           </h2>
           <div className="pt-1 px-1">
@@ -201,13 +201,13 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
                 )}
                 
                 {/* Dot */}
-                <div className="relative z-10 flex-shrink-0 mt-1 w-[11px] h-[11px] rounded-[999px] border-[2.5px] border-[#CBD1FF] bg-[#fffefa] flex items-center justify-center">
-                  <div className="w-[4px] h-[4px] bg-[#C99A3A] rounded-[999px]" />
+                <div className="relative z-10 flex-shrink-0 mt-1 w-[11px] h-[11px] rounded-[999px] border-[2.5px] border-[#CBD1FF] bg-[#FFFFFF] flex items-center justify-center">
+                  <div className="w-[4px] h-[4px] bg-[#004ACC] rounded-[999px]" />
                 </div>
                 
                 {/* Icon & Text */}
                 <div className={`flex-1 flex gap-3.5 items-center ${idx !== arr.length - 1 ? 'pb-8' : ''}`}>
-                  <step.icon size={20} className="text-[#4f463b] flex-shrink-0" strokeWidth={1.5} />
+                  <step.icon size={20} className="text-[#476285] flex-shrink-0" strokeWidth={1.5} />
                   <span className="text-[14px] text-slate-600 leading-snug">
                     {step.text}
                   </span>
@@ -218,8 +218,8 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
         </div>
 
         {/* Card 3: Fill Friend Code */}
-        <div className="bg-[#fffefa] rounded-[20px] p-5 shadow-[0_3px_10px_rgba(92,74,42,0.04)] space-y-4">
-          <h2 className="text-[15px] font-medium text-[#1f2024] tracking-wide">
+        <div className="bg-[#FFFFFF] rounded-[20px] p-5 shadow-[0_3px_10px_rgba(15,40,72,0.04)] space-y-4">
+          <h2 className="text-[15px] font-medium text-[#0F2848] tracking-wide">
             填写好友邀请码
           </h2>
           <div className="flex items-center gap-3">
@@ -248,14 +248,14 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
                 placeholder="请输入邀请码"
                 inputMode="email"
                 maxLength={10}
-                className="w-full h-12 bg-[#F5F6F8] border-none rounded-[14px] px-4 text-[15px] text-[#1f2024] placeholder:text-[#a49a8d] focus:outline-none focus:ring-1 focus:ring-[#f2dda0] uppercase"
+                className="w-full h-12 bg-[#F5F6F8] border-none rounded-[14px] px-4 text-[15px] text-[#0F2848] placeholder:text-[#8AA2BF] focus:outline-none focus:ring-1 focus:ring-[#337DFF] uppercase"
               />
             </div>
             <button 
               onClick={handleConfirmFriendCode}
               disabled={!friendCode.trim()}
               className={`h-12 w-24 text-white text-[15px] font-medium rounded-[14px] active:scale-95 transition-all flex-shrink-0 ${
-                friendCode.trim() ? 'bg-[#C99A3A]' : 'bg-[#EADFCB]'
+                friendCode.trim() ? 'bg-[#004ACC]' : 'bg-[#E2EBF5]'
               }`}
             >
               确定

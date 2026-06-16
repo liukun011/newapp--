@@ -207,7 +207,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
     >
       <div 
-        className="w-full bg-[#fffefa] rounded-t-3xl animate-slide-up"
+        className="w-full bg-[#FFFFFF] rounded-t-3xl animate-slide-up"
         style={{ 
           maxHeight: '80vh',
           // animation handled by class
@@ -215,7 +215,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4">
-          <h2 className="text-lg font-medium text-[#1f2024]">补充信息</h2>
+          <h2 className="text-lg font-medium text-[#0F2848]">补充信息</h2>
           
           <div className="flex items-center gap-3">
             <button 
@@ -250,7 +250,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             onChange={(e) => setContent(e.target.value)}
             placeholder="请输入需要补充的文字信息，或点击录音按钮进行语音输入..."
             readOnly={readOnly}
-            className="w-full h-48 p-4 pb-16 bg-[#f7f2e8] rounded-[18px] text-sm text-[#4f463b] placeholder-gray-400 resize-none border border-[#eadfca] outline-none focus:border-[#dfcda9] focus:ring-2 focus:ring-[#f2dda0] disabled:bg-[#f4eee3] disabled:text-[#7d7467]"
+            className="w-full h-48 p-4 pb-16 bg-[#F7FAFE] rounded-[18px] text-sm text-[#476285] placeholder-gray-400 resize-none border border-[#E2EBF5] outline-none focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#337DFF] disabled:bg-[#F7FAFE] disabled:text-[#476285]"
           />
           
           {/* Voice Record Button - positioned on bottom border */}
@@ -266,12 +266,12 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
                   ? 'bg-gray-300 cursor-not-allowed'
                   : isLocalRecording 
                     ? 'bg-red-500 animate-pulse active:scale-95' 
-                    : 'bg-[#c99a3a] hover:bg-[#c99a3a] active:scale-95'
+                    : 'bg-[#004ACC] hover:bg-[#004ACC] active:scale-95'
               }`}
             >
               <Mic size={24} className="text-white" />
             </button>
-            <span className="mt-2 text-sm text-[#7d7467]">
+            <span className="mt-2 text-sm text-[#476285]">
               {isLocalRecording ? '录音中...' : '点击录音转写'}
             </span>
           </div>
