@@ -722,3 +722,182 @@ textarea:focus {
   border-radius: 5px !important;
   background-color: #ffffff !important;
 }
+
+.xl-record-prepare {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 132px;
+  height: 42px;
+  padding: 5px 12px 5px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(234, 223, 202, 0.98);
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(255, 247, 224, 0.88));
+  box-shadow: 0 6px 18px rgba(92, 74, 42, 0.08);
+  color: #8b641d;
+}
+
+.xl-record-prepare-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(201, 154, 58, 0.62);
+  animation: xlPrepareSoftPulse 1.4s ease-in-out infinite;
+}
+
+.xl-record-prepare-ring {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(201, 154, 58, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(201, 154, 58, 0.26);
+  animation: xlPrepareRingBreath 1s ease-in-out infinite;
+}
+
+.xl-record-prepare-ring em {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-style: normal;
+  font-size: 17px;
+  font-weight: 560;
+  line-height: 1;
+  color: #8b641d;
+}
+
+.xl-record-prepare-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.xl-record-prepare-copy strong {
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 560;
+  color: #1f2024;
+  white-space: nowrap;
+}
+
+.xl-record-prepare-copy span {
+  margin-top: 1px;
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 400;
+  color: #8b8173;
+  white-space: nowrap;
+}
+
+.xl-record-prepare-dot {
+  display: inline-block;
+  margin-right: 8px;
+  background: rgba(31, 32, 36, 0.42);
+}
+
+.xl-record-prepare-panel {
+  min-height: 330px;
+  border-radius: 22px;
+  border: 1px solid rgba(234, 223, 202, 0.98);
+  background:
+    radial-gradient(circle at 50% 28%, rgba(239, 215, 125, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(251, 247, 238, 0.94));
+  box-shadow: 0 12px 34px rgba(92, 74, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 34px 22px;
+}
+
+.xl-record-prepare-ring.large {
+  width: 82px;
+  height: 82px;
+  background: rgba(201, 154, 58, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(201, 154, 58, 0.28), 0 0 0 8px rgba(201, 154, 58, 0.06);
+}
+
+.xl-record-prepare-ring.large em {
+  font-size: 36px;
+  font-weight: 560;
+}
+
+.xl-record-prepare-panel-copy {
+  text-align: center;
+}
+
+.xl-record-prepare-panel-copy strong {
+  display: block;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 540;
+  color: #1f2024;
+}
+
+.xl-record-prepare-panel-copy span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+  color: #8b8173;
+}
+
+.xl-record-prepare-bars {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  margin-top: 2px;
+}
+
+.xl-record-prepare-bars span {
+  width: 4px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(201, 154, 58, 0.45);
+  animation: xlPrepareBars 1.15s ease-in-out infinite;
+}
+
+.xl-record-prepare-bars span:nth-child(2) {
+  animation-delay: 0.14s;
+}
+
+.xl-record-prepare-bars span:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+@keyframes xlPrepareSoftPulse {
+  0%, 100% {
+    opacity: 0.34;
+    transform: scale(0.88);
+  }
+  50% {
+    opacity: 0.86;
+    transform: scale(1);
+  }
+}
+
+@keyframes xlPrepareRingBreath {
+  0%, 100% {
+    transform: scale(0.96);
+    box-shadow: inset 0 0 0 1px rgba(201, 154, 58, 0.24), 0 0 0 0 rgba(201, 154, 58, 0.18);
+  }
+  50% {
+    transform: scale(1);
+    box-shadow: inset 0 0 0 1px rgba(201, 154, 58, 0.36), 0 0 0 5px rgba(201, 154, 58, 0.08);
+  }
+}
+
+@keyframes xlPrepareBars {
+  0%, 100% {
+    opacity: 0.36;
+    transform: scaleY(0.72);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scaleY(1.2);
+  }
+}

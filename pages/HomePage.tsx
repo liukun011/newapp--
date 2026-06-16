@@ -604,18 +604,19 @@ const HomePage: React.FC<HomePageProps> = ({
           <div className="px-4 mt-2.5">
             <div className="xl-card px-3 py-3">
               <div className="grid grid-cols-3 divide-x divide-[#eadfca]">
-                <div className="px-2">
-                  <div className="text-[22px] leading-none font-semibold text-[#1f2024]">{interviewCount}</div>
-                  <div className="xl-meta mt-2">访谈记录</div>
-                </div>
-                <div className="px-3">
-                  <div className="text-[22px] leading-none font-semibold text-[#1f2024]">{generatedCount}</div>
-                  <div className="xl-meta mt-2">生成报告</div>
-                </div>
-                <div className="px-3">
-                  <div className="text-[22px] leading-none font-semibold text-[#1f2024]">{projectCount}</div>
-                  <div className="xl-meta mt-2">尽调项目</div>
-                </div>
+                {[
+                  { label: '尽调项目', value: projectCount, Icon: Briefcase },
+                  { label: '生成报告', value: generatedCount, Icon: FileText },
+                  { label: '访谈记录', value: interviewCount, Icon: Mic },
+                ].map(({ label, value, Icon }) => (
+                  <div key={label} className="px-2.5">
+                    <div className="flex items-center gap-1.5">
+                      <Icon size={16} strokeWidth={2} className="shrink-0 text-[#8b641d]" />
+                      <div className="text-[22px] leading-none font-medium text-[#1f2024]">{value}</div>
+                    </div>
+                    <div className="xl-meta mt-2">{label}</div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

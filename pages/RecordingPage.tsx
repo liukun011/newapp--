@@ -70,6 +70,9 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameValue, setRenameValue] = useState(localTitle);
+  const [isPreparingRecord, setIsPreparingRecord] = useState(false);
+  const [prepareSeconds, setPrepareSeconds] = useState(3);
+  const prepareTimerRef = React.useRef<number | null>(null);
 
   // Scroll container ref
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -81,6 +84,14 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     setLocalTitle(nextTitle);
     setRenameValue(nextTitle);
   }, [interviewInstTitle, deal?.interviewCust]);
+
+  useEffect(() => {
+    return () => {
+      if (prepareTimerRef.current) {
+        window.clearInterval(prepareTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleScroll = () => {
     if (scrollContainerRef.current && headerRef.current) {
@@ -551,7 +562,33 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
 
 
+  const startRecordAfterPreparation = () => {
+    if (isPreparingRecord) return;
+    setIsPreparingRecord(true);
+    setPrepareSeconds(3);
+
+    let nextSecond = 3;
+    prepareTimerRef.current = window.setInterval(() => {
+      nextSecond -= 1;
+
+      if (nextSecond <= 0) {
+        if (prepareTimerRef.current) {
+          window.clearInterval(prepareTimerRef.current);
+          prepareTimerRef.current = null;
+        }
+        setIsPreparingRecord(false);
+        setPrepareSeconds(3);
+        startNativeRecord();
+        return;
+      }
+
+      setPrepareSeconds(nextSecond);
+    }, 1000);
+  };
+
   const handleToggleWrapper = async () => {
+    if (isPreparingRecord) return;
+
     if (isRecording) {
       // 停止录音（暂停）
       console.log("[H5] calling stopRecord...");
@@ -574,7 +611,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
 
     } else {
       if (seconds === 0) {
-        startNativeRecord();
+        startRecordAfterPreparation();
       } else {
         // 继续录音
         startNativeRecord();
@@ -911,6 +948,23 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
         {/* Scrollable Content Area */}
         {/* Scrollable Content Area Wrapper */}
         <div className="px-4 pb-0 pt-1 relative">
+          {isPreparingRecord ? (
+            <div className="xl-record-prepare-panel" aria-live="polite">
+              <div className="xl-record-prepare-ring large">
+                <em>{prepareSeconds}</em>
+              </div>
+              <div className="xl-record-prepare-panel-copy">
+                <strong>准备录音</strong>
+                <span>请保持安静，录音即将开始</span>
+              </div>
+              <div className="xl-record-prepare-bars">
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+          ) : (
+          <>
 
           {/* Question List Tab */}
           <div className={activeTab === 'questions' ? 'block' : 'hidden'}>
@@ -1135,6 +1189,8 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
               {/* Dummy element for auto-scroll removed */}
             </div>
           </div>
+          </>
+          )}
         </div>
 
       </div>
@@ -1146,9 +1202,19 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
             <Button
               variant="primary"
               onClick={handleToggleWrapperThrottled}
+              disabled={isPreparingRecord}
               className="w-full min-h-[50px] rounded-[16px]"
             >
-              <Mic size={18} className="mr-2" /> 开始录音
+              {isPreparingRecord ? (
+                <>
+                  <span className="xl-record-prepare-dot" />
+                  准备中 {prepareSeconds}
+                </>
+              ) : (
+                <>
+                  <Mic size={18} className="mr-2" /> 开始录音
+                </>
+              )}
             </Button>
           ) : (
             <div className="h-0 w-full" />
