@@ -27,7 +27,7 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
           onClick={onNavigateToTemplates}
         >
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-[13px] bg-[#F7FAFE] border border-[#E2EBF5] flex items-center justify-center text-[#004ACC]">
+            <div className="w-10 h-10 rounded-[13px] bg-[linear-gradient(135deg,#FFF7ED_0%,#FFE8C7_100%)] border border-[#FFE3BD] flex items-center justify-center text-[#F97316] shadow-[0_8px_18px_rgba(249,115,22,0.10)]">
               <FileText size={19} strokeWidth={2.1} />
             </div>
             <div className="flex flex-col">
@@ -48,7 +48,7 @@ const ManagementPage: React.FC<ManagementPageProps> = ({
           }}
         >
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-[13px] bg-[#F7FAFE] border border-[#E2EBF5] flex items-center justify-center text-[#004ACC]">
+            <div className="w-10 h-10 rounded-[13px] bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)] border border-[#E9D5FF] flex items-center justify-center text-[#7C3AED] shadow-[0_8px_18px_rgba(124,58,237,0.10)]">
               <ListChecks size={19} strokeWidth={2.1} />
             </div>
             <div className="flex flex-col">

@@ -1132,7 +1132,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               {!isReadOnly && (
                 <div className="xl-card p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <div>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-[13px] bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)] border border-[#E9D5FF] text-[#7C3AED] flex items-center justify-center shrink-0 shadow-[0_8px_18px_rgba(124,58,237,0.10)]">
+                        <Mic size={18} strokeWidth={2.15} />
+                      </div>
                       <h3 className="xl-section-title">开始新的访谈</h3>
                     </div>
                     <button onClick={handleRecordingClickThrottled} className="xl-btn-primary min-w-[116px] px-3 flex items-center justify-center gap-1.5">
@@ -1150,9 +1153,14 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     className="w-full xl-card-flat p-4 text-left flex items-center justify-between gap-3 active:scale-[0.99] transition-transform min-h-[58px]"
                     onClick={() => onOpenInterviewRecord?.(record)}
                   >
-                    <div className="min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-[12px] bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)] border border-[#E9D5FF] text-[#7C3AED] flex items-center justify-center shrink-0">
+                        <Mic size={16} strokeWidth={2.15} />
+                      </div>
+                      <div className="min-w-0">
                       <h3 className="xl-card-title truncate">{record.interviewInstName || record.interviewInstTitle || '访谈记录'}</h3>
                       <p className="xl-meta mt-1">{record.createTime || record.lastModifiedTime || '可查看'}</p>
+                      </div>
                     </div>
                     <span className="xl-pill">可查看</span>
                   </button>
@@ -1174,7 +1182,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               </div>
               <div className="space-y-2">
                 {questionList.map((q, idx) => (
-                  <div key={idx} className="xl-card-flat p-3">
+                  <div key={idx} className="xl-card-flat p-3 flex items-start gap-2.5">
+                    <span className="mt-0.5 w-5 h-5 rounded-[8px] bg-[linear-gradient(135deg,#FFF7ED_0%,#FFE8C7_100%)] border border-[#FFE3BD] text-[#F97316] text-[10px] leading-none font-medium flex items-center justify-center shrink-0">
+                      {idx + 1}
+                    </span>
                     <p className="text-[12px] leading-[17px] font-normal text-[#0F2848]">{q.questionName}</p>
                   </div>
                 ))}
@@ -1189,13 +1200,15 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 <div className="xl-card p-4">
                   <div className="grid grid-cols-4 gap-2.5 text-center">
                     {[
-                      [Camera, '相机', () => cameraInputRef.current?.click()],
-                      [Image, '相册', () => galleryInputRef.current?.click()],
-                      [Upload, '文件', () => fileInputRef.current?.click()],
-                      [Mic, '语音录入', () => setVoiceModalVisible(true)],
-                    ].map(([Icon, label, action]: any) => (
+                      [Camera, '相机', () => cameraInputRef.current?.click(), 'bg-[linear-gradient(135deg,#EAF2FF_0%,#DCE9FF_100%)] border-[#DCE8FF] text-[#004ACC]'],
+                      [Image, '相册', () => galleryInputRef.current?.click(), 'bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)] border-[#E9D5FF] text-[#7C3AED]'],
+                      [Upload, '文件', () => fileInputRef.current?.click(), 'bg-[linear-gradient(135deg,#FFF7ED_0%,#FFE8C7_100%)] border-[#FFE3BD] text-[#F97316]'],
+                      [Mic, '语音录入', () => setVoiceModalVisible(true), 'bg-[linear-gradient(135deg,#ECFDF5_0%,#D1FAE5_100%)] border-[#A7F3D0] text-[#10B981]'],
+                    ].map(([Icon, label, action, colorClass]: any) => (
                       <button key={label} onClick={action} className="min-h-[62px] rounded-[15px] bg-[#FFFFFF] border border-[#E2EBF5] flex flex-col items-center justify-center gap-1.5 text-[#334155] active:scale-95 transition-transform">
-                        <Icon size={19} />
+                        <span className={`w-8 h-8 rounded-[11px] border flex items-center justify-center ${colorClass}`}>
+                          <Icon size={17} />
+                        </span>
                         <span className="text-[10.5px] font-normal text-[#476285]">{label}</span>
                       </button>
                     ))}
@@ -1207,9 +1220,15 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   {[
                     ...(currentDeal?.resources || []),
                     ...(Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary : []),
-                  ].map((item: any, idx: number) => (
+                  ].map((item: any, idx: number) => {
+                    const fileTileClass = idx % 3 === 0
+                      ? 'bg-[linear-gradient(135deg,#EAF2FF_0%,#DCE9FF_100%)] text-[#004ACC] border-[#DCE8FF]'
+                      : idx % 3 === 1
+                        ? 'bg-[linear-gradient(135deg,#FFF7ED_0%,#FFE8C7_100%)] text-[#F97316] border-[#FFE3BD]'
+                        : 'bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)] text-[#7C3AED] border-[#E9D5FF]';
+                    return (
                     <div key={idx} className="flex items-center gap-3 py-2.5 border-b border-[#E2EBF5]/70 last:border-b-0">
-                      <div className="w-9 h-9 rounded-[12px] bg-[#F7FAFE] text-[#004ACC] flex items-center justify-center text-[11px] font-semibold">
+                      <div className={`w-9 h-9 rounded-[12px] border flex items-center justify-center text-[11px] font-semibold ${fileTileClass}`}>
                         {(item.fileName || item.name || 'PDF').split('.').pop()?.slice(0, 3).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -1218,7 +1237,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       </div>
                       <span className="xl-pill">可用</span>
                     </div>
-                  ))}
+                    );
+                  })}
                   {materialCount === 0 && <div className="xl-card-flat p-4 text-center xl-body">暂无资料</div>}
                 </div>
               </div>
@@ -1235,7 +1255,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="xl-enterprise-grid grid grid-cols-2 gap-3">
                 <div className="xl-card-flat p-3 col-span-2">
                   <p className="xl-meta mb-1.5">企业名称</p>
                   <p className="xl-card-title truncate">{basicInfo.name || currentDeal?.companyName || '待补充'}</p>

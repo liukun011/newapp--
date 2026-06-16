@@ -120,7 +120,7 @@ const ReportsListPage: React.FC<ReportsListPageProps> = ({ onBack, onPreviewRepo
                   className="xl-card px-3.5 py-3.5"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-[13px] bg-[#F7FAFE] border border-[#E2EBF5] flex items-center justify-center flex-shrink-0 text-[#004ACC]">
+                    <div className="w-10 h-10 rounded-[13px] bg-[linear-gradient(135deg,#EAF2FF_0%,#DCE9FF_100%)] border border-[#DCE8FF] flex items-center justify-center flex-shrink-0 text-[#004ACC] shadow-[0_8px_18px_rgba(0,74,204,0.08)]">
                       <FileText size={18} strokeWidth={2.1} />
                     </div>
                     <div className="flex-1 min-w-0">

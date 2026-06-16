@@ -479,10 +479,11 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                 return (
                   <div key={template.id} className="bg-[#FFFFFF] rounded-[16px] overflow-hidden border border-[#E2EBF5]/60 shadow-[0_3px_10px_rgba(15,40,72,0.04)] p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-[#337DFF] to-[#004ACC] flex items-center justify-center flex-shrink-0 shadow-[0_3px_10px_rgba(15,40,72,0.04)]">
+                      <div className="w-10 h-10 rounded-[12px] bg-[linear-gradient(135deg,#EAF2FF_0%,#DCE9FF_100%)] border border-[#DCE8FF] flex items-center justify-center flex-shrink-0 shadow-[0_8px_18px_rgba(0,74,204,0.08)]">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.4142 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" fill="white" fillOpacity="0.9" />
-                          <text x="12" y="16" fontSize="8" fill="#004ACC" fontWeight="800" textAnchor="middle">W</text>
+                          <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.4142 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" fill="#004ACC" fillOpacity="0.14" />
+                          <path d="M14 2V8H20" stroke="#004ACC" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                          <text x="12" y="16" fontSize="8" fill="#004ACC" fontWeight="700" textAnchor="middle">W</text>
                         </svg>
                       </div>
 

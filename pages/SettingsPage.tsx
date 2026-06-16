@@ -247,28 +247,28 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         icon: Building2, 
         label: '组织管理', 
         color: 'text-[#004ACC]', 
-        bg: 'bg-[#004ACC1A]', 
+        bg: 'bg-[linear-gradient(135deg,#EAF2FF_0%,#DCE9FF_100%)] border-[#DCE8FF]', 
         onClick: () => onNavigateToOrganizationManagement ? onNavigateToOrganizationManagement() : Toast.info('功能开发中')
     },
     { 
         icon: FileCheck, 
         label: '用户协议', 
-        color: 'text-[#004ACC]', 
-        bg: 'bg-[#004ACC1A]', 
+        color: 'text-[#10B981]', 
+        bg: 'bg-[linear-gradient(135deg,#ECFDF5_0%,#D1FAE5_100%)] border-[#A7F3D0]', 
         onClick: () => onNavigateToUserAgreement ? onNavigateToUserAgreement() : Toast.info('暂无')
     },
     { 
         icon: Shield, 
         label: '隐私政策', 
-        color: 'text-[#004ACC]', 
-        bg: 'bg-[#004ACC1A]', 
+        color: 'text-[#7C3AED]', 
+        bg: 'bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)] border-[#E9D5FF]', 
         onClick: () => onNavigateToPrivacyPolicy ? onNavigateToPrivacyPolicy() : Toast.info('暂无')
     },
     { 
         icon: Gift, 
         label: '分享应用', 
-        color: 'text-[#004ACC]', 
-        bg: 'bg-[#004ACC1A]', 
+        color: 'text-[#F97316]', 
+        bg: 'bg-[linear-gradient(135deg,#FFF7ED_0%,#FFE8C7_100%)] border-[#FFE3BD]', 
         onClick: () => onNavigateToShareApp ? onNavigateToShareApp() : Toast.info('功能开发中')
     },
     // { icon: Layers, label: '问题清单', color: 'text-green-500', bg: 'bg-green-50', onClick: () => Toast.info('功能开发中，敬请期待！') },
@@ -290,7 +290,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         }`}
     >
       <div className="flex items-center gap-3">
-        <div className={`w-9 h-9 rounded-[12px] ${item.bg} border border-[#E2EBF5]/60 flex items-center justify-center`}>
+        <div className={`w-9 h-9 rounded-[12px] ${item.bg} flex items-center justify-center shadow-[0_6px_14px_rgba(15,40,72,0.045)]`}>
           <item.icon size={16} className={item.color} strokeWidth={2.1} />
         </div>
         <span className="text-[14px] text-[#0F2848] font-normal">{item.label}</span>
@@ -443,7 +443,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         <div className="mx-2 mb-2 overflow-hidden rounded-t-[22px] border border-[#E2EBF5] bg-[#FFFFFF] shadow-[0_-18px_42px_rgba(15,40,72,0.18)]">
           <div className="mx-auto mt-4 h-1 w-10 rounded-full bg-[#E2EBF5]" />
           <div className="px-4 pb-2 pt-6 flex items-center justify-between">
-            <h3 className="text-[14px] leading-none font-medium text-[#CBD7E5]">切换组织</h3>
+            <h3 className="text-[15px] leading-none font-medium text-[#0F2848]">切换组织</h3>
             <button
               onClick={() => setShowTenantDrawer(false)}
               className="h-8 min-w-8 rounded-full border border-[#E2EBF5] bg-[#FFFFFF] px-2.5 text-[12px] text-[#004ACC]"
@@ -472,12 +472,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                     onClick={() => handleSwitchTenant(tenant)}
                     className={`flex min-h-[60px] w-full items-center gap-3 rounded-[14px] border text-left transition-all active:scale-[0.99] ${
                       isActive
-                        ? 'bg-[#004ACC1A] border-[#337DFF] px-3 py-2.5 shadow-[0_4px_12px_rgba(0,74,204,0.05)]'
+                        ? 'bg-[#EAF2FF] border-[#337DFF] px-3 py-2.5 shadow-[0_6px_16px_rgba(0,74,204,0.10)]'
                         : 'bg-[#FFFFFF] border-[#E2EBF5] px-3 py-2.5'
                     }`}
                   >
                     <div className={`w-9 h-9 rounded-[9px] flex items-center justify-center shrink-0 ${
-                      isActive ? 'bg-[#337DFF] text-[#004ACC]' : 'bg-[#F7FAFE] text-[#8AA2BF]'
+                      isActive ? 'bg-[#004ACC] text-[#FFFFFF]' : 'bg-[#F7FAFE] text-[#8AA2BF]'
                     }`}>
                       <Building2 size={18} strokeWidth={2} />
                     </div>
@@ -528,7 +528,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                     }}
                   />
                 </div>
-                <span className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#FFFFFF] bg-[#337DFF] text-[#004ACC] shadow-[0_4px_10px_rgba(15,40,72,0.12)]">
+                <span className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#FFFFFF] bg-[#004ACC] text-[#FFFFFF] shadow-[0_4px_10px_rgba(15,40,72,0.12)]">
                   <Camera size={14} strokeWidth={2.2} />
                 </span>
               </button>

@@ -8,7 +8,7 @@
 }
 
 :root {
-  --xl-bg: #F7FAFE;
+  --xl-bg: #F5F8FD;
   --xl-surface: #FFFFFF;
   --xl-card: #FFFFFF;
   --xl-ink: #0F2848;
@@ -19,9 +19,15 @@
   --xl-primary: #004ACC;
   --xl-primary-hover: #337DFF;
   --xl-primary-soft: #004ACC1A;
+  --xl-blue-soft: #EAF2FF;
+  --xl-orange: #F97316;
+  --xl-orange-soft: #FFF7ED;
+  --xl-purple: #7C3AED;
+  --xl-purple-soft: #F5F3FF;
+  --xl-green-soft: #ECFDF5;
   --xl-danger: #DC2626;
   --xl-success: #10B981;
-  --xl-shadow: 0 2px 12px rgba(15, 40, 72, 0.06);
+  --xl-shadow: 0 8px 24px rgba(15, 40, 72, 0.065);
   --rv-primary-color: var(--xl-primary);
   --rv-blue: var(--xl-primary);
   --rv-button-primary-background-color: var(--xl-primary);
@@ -222,20 +228,23 @@ html, body {
 }
 
 .xl-page {
-  background: linear-gradient(180deg, var(--xl-bg) 0%, var(--xl-surface) 42%);
+  background:
+    radial-gradient(circle at 16% 4%, rgba(51, 125, 255, 0.11) 0, rgba(51, 125, 255, 0) 30%),
+    radial-gradient(circle at 92% 16%, rgba(124, 58, 237, 0.065) 0, rgba(124, 58, 237, 0) 28%),
+    linear-gradient(180deg, #F7FAFE 0%, #FFFFFF 46%);
   color: var(--xl-ink);
 }
 
 .xl-card {
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid var(--xl-line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 251, 255, 0.94) 100%);
+  border: 1px solid rgba(210, 224, 243, 0.94);
   border-radius: 18px;
   box-shadow: var(--xl-shadow);
 }
 
 .xl-card-flat {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid var(--xl-line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 251, 255, 0.72));
+  border: 1px solid rgba(226, 235, 245, 0.86);
   border-radius: 14px;
 }
 
@@ -243,44 +252,44 @@ html, body {
   min-width: 42px;
   min-height: 42px;
   border-radius: 14px;
-  border: 1px solid var(--xl-line);
-  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid #DCE8FF;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F7FAFF 100%);
   color: var(--xl-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(15, 40, 72, 0.045);
+  box-shadow: 0 6px 16px rgba(15, 40, 72, 0.06);
   transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
 }
 
 .xl-icon-btn:active {
   transform: scale(0.96);
-  background: #004ACC1A;
-  border-color: var(--xl-line-strong);
+  background: #EAF2FF;
+  border-color: #BFD4F6;
 }
 
 .xl-btn-primary {
   min-height: 44px;
   border-radius: 14px;
-  background: linear-gradient(180deg, #337DFF 0%, #004ACC 100%);
+  background: linear-gradient(180deg, #3B82F6 0%, #004ACC 100%);
   color: #FFFFFF;
   font-weight: 560;
-  box-shadow: 0 6px 14px rgba(0, 74, 204, 0.14);
+  box-shadow: 0 8px 18px rgba(0, 74, 204, 0.18);
 }
 
 .xl-btn-ghost {
   min-height: 44px;
   border-radius: 14px;
-  border: 1px solid var(--xl-line);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #DCE8FF;
+  background: rgba(255, 255, 255, 0.82);
   color: var(--xl-primary);
   font-weight: 520;
 }
 
 .xl-segment {
   border-radius: 16px;
-  border: 1px solid var(--xl-line);
-  background: rgba(226, 235, 245, 0.72);
+  border: 1px solid rgba(210, 224, 243, 0.94);
+  background: linear-gradient(180deg, #EAF2FF 0%, #F5F8FD 100%);
   padding: 3px;
 }
 
@@ -293,9 +302,9 @@ html, body {
 }
 
 .xl-segment-item.is-active {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.96);
   color: var(--xl-primary);
-  box-shadow: 0 3px 9px rgba(15, 40, 72, 0.06);
+  box-shadow: 0 5px 14px rgba(15, 40, 72, 0.075);
 }
 
 .xl-page-title {
@@ -336,8 +345,8 @@ html, body {
 .xl-pill {
   min-height: 28px;
   border-radius: 999px;
-  border: 1px solid var(--xl-line-strong);
-  background: rgba(0, 74, 204, 0.08);
+  border: 1px solid #DCE8FF;
+  background: linear-gradient(180deg, #FFFFFF 0%, #EAF2FF 100%);
   color: var(--xl-primary);
   display: inline-flex;
   align-items: center;
@@ -347,10 +356,35 @@ html, body {
   font-weight: 500;
 }
 
+.xl-soft-blue {
+  background: linear-gradient(135deg, #EAF2FF 0%, #DCE9FF 100%);
+  color: #004ACC;
+}
+
+.xl-soft-orange {
+  background: linear-gradient(135deg, #FFF7ED 0%, #FFE8C7 100%);
+  color: #F97316;
+}
+
+.xl-soft-purple {
+  background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+  color: #7C3AED;
+}
+
+.xl-soft-green {
+  background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+  color: #10B981;
+}
+
+.xl-enterprise-grid > .xl-card-flat {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F2F6FE 100%);
+  border-color: #DCE8FF;
+}
+
 /* 尽调详情页：更紧凑的 App 信息密度 */
 .xl-detail .xl-card {
   border-radius: 18px;
-  box-shadow: 0 8px 22px rgba(15, 40, 72, 0.06);
+  box-shadow: 0 8px 22px rgba(15, 40, 72, 0.065);
 }
 
 .xl-detail .xl-card-flat {
@@ -451,9 +485,11 @@ html, body {
 .xl-detail .xl-report-state {
   border-radius: 18px;
   padding: 13px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #E2EBF5;
-  box-shadow: 0 8px 20px rgba(15, 40, 72, 0.055);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(124, 58, 237, 0.06), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.94));
+  border: 1px solid rgba(210, 224, 243, 0.96);
+  box-shadow: 0 10px 24px rgba(15, 40, 72, 0.065);
 }
 
 .xl-detail .xl-report-state-head {
@@ -472,10 +508,10 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #004ACC1A;
-  border: 1px solid #E2EBF5;
+  background: linear-gradient(135deg, #EAF2FF 0%, #DCE9FF 100%);
+  border: 1px solid #CFE0FB;
   color: #004ACC;
-  box-shadow: none;
+  box-shadow: 0 8px 18px rgba(0, 74, 204, 0.08);
 }
 
 .xl-detail .xl-report-illu::after {
@@ -492,8 +528,8 @@ html, body {
 }
 
 .xl-detail .xl-report-state.is-processing .xl-report-illu::after {
-  background: #337DFF;
-  box-shadow: 0 5px 10px rgba(0, 74, 204, 0.18);
+  background: #F97316;
+  box-shadow: 0 5px 10px rgba(249, 115, 22, 0.2);
 }
 
 .xl-detail .xl-report-state.is-failed .xl-report-illu::after {
@@ -535,9 +571,11 @@ html, body {
 }
 
 .xl-detail .xl-report-progress {
-  border: 1px solid #E2EBF5;
+  border: 1px solid #DCE8FF;
   border-radius: 14px;
-  background: rgba(0, 74, 204, 0.08);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(51, 125, 255, 0.12), transparent 42%),
+    linear-gradient(180deg, #FFFFFF 0%, #F2F6FE 100%);
   padding: 11px 12px;
 }
 
@@ -560,13 +598,13 @@ html, body {
   height: 7px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(203, 215, 229, 0.45);
+  background: rgba(203, 215, 229, 0.5);
 }
 
 .xl-detail .xl-report-progress-track > div {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #337DFF 0%, #004ACC 100%);
+  background: linear-gradient(90deg, #3B82F6 0%, #004ACC 70%, #7C3AED 100%);
   box-shadow: 0 4px 10px rgba(0, 74, 204, 0.18);
   transition: width 0.28s ease;
 }
@@ -589,22 +627,22 @@ html, body {
 }
 
 .xl-detail .xl-report-btn.primary {
-  background: linear-gradient(180deg, #337DFF 0%, #004ACC 100%);
+  background: linear-gradient(180deg, #3B82F6 0%, #004ACC 100%);
   color: #FFFFFF;
-  box-shadow: 0 5px 12px rgba(0, 74, 204, 0.13);
+  box-shadow: 0 7px 16px rgba(0, 74, 204, 0.16);
 }
 
 .xl-detail .xl-report-btn.soft {
   min-height: 38px;
-  background: rgba(0, 74, 204, 0.08);
-  border: 1px solid #E2EBF5;
+  background: linear-gradient(180deg, #FFFFFF 0%, #EAF2FF 100%);
+  border: 1px solid #DCE8FF;
   color: #004ACC;
   box-shadow: none;
 }
 
 .xl-detail .xl-report-btn.ghost {
-  border: 1px solid #E2EBF5;
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #DCE8FF;
+  background: rgba(255, 255, 255, 0.86);
   color: #004ACC;
 }
 
@@ -622,7 +660,7 @@ html, body {
 }
 
 .rv-button--primary {
-  background: linear-gradient(180deg, #337DFF 0%, #004ACC 100%) !important;
+  background: linear-gradient(180deg, #3B82F6 0%, #004ACC 100%) !important;
   border-color: #004ACC !important;
   color: #FFFFFF !important;
   font-weight: 560 !important;
@@ -738,17 +776,21 @@ textarea:focus {
   height: 42px;
   padding: 5px 12px 5px 6px;
   border-radius: 999px;
-  border: 1px solid rgba(226, 235, 245, 0.98);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 250, 254, 0.92));
-  box-shadow: 0 6px 18px rgba(15, 40, 72, 0.08);
+  border: 1px solid rgba(207, 224, 251, 0.98);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(51, 125, 255, 0.16), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.94));
+  box-shadow: 0 8px 20px rgba(0, 74, 204, 0.09);
   color: #004ACC;
 }
 
 .xl-record-prepare-dot {
   width: 6px;
   height: 6px;
+  display: inline-block;
+  margin-right: 8px;
   border-radius: 999px;
-  background: rgba(0, 74, 204, 0.62);
+  background: rgba(0, 74, 204, 0.42);
   animation: xlPrepareSoftPulse 1.4s ease-in-out infinite;
 }
 
@@ -758,8 +800,8 @@ textarea:focus {
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: rgba(0, 74, 204, 0.14);
-  box-shadow: inset 0 0 0 1px rgba(0, 74, 204, 0.26);
+  background: linear-gradient(180deg, #EAF2FF 0%, #FFFFFF 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 74, 204, 0.28), 0 4px 10px rgba(0, 74, 204, 0.08);
   animation: xlPrepareRingBreath 1s ease-in-out infinite;
 }
 
@@ -796,74 +838,104 @@ textarea:focus {
   white-space: nowrap;
 }
 
-.xl-record-prepare-dot {
-  display: inline-block;
-  margin-right: 8px;
-  background: rgba(0, 74, 204, 0.42);
-}
-
 .xl-record-prepare-panel {
-  min-height: 330px;
-  border-radius: 22px;
-  border: 1px solid rgba(226, 235, 245, 0.98);
+  position: relative;
+  min-height: 318px;
+  border-radius: 26px;
+  border: 1px solid rgba(213, 226, 242, 0.96);
   background:
-    radial-gradient(circle at 50% 28%, rgba(51, 125, 255, 0.12), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 254, 0.94));
-  box-shadow: 0 12px 34px rgba(15, 40, 72, 0.08);
+    radial-gradient(circle at 50% 22%, rgba(51, 125, 255, 0.18), transparent 30%),
+    radial-gradient(circle at 86% 18%, rgba(124, 58, 237, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(247, 250, 254, 0.97) 100%);
+  box-shadow: 0 16px 40px rgba(15, 40, 72, 0.085);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 34px 22px;
+  gap: 16px;
+  padding: 32px 22px;
+  overflow: hidden;
+}
+
+.xl-record-prepare-panel::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  pointer-events: none;
+}
+
+.xl-record-prepare-panel::after {
+  content: "";
+  position: absolute;
+  top: 26px;
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(138, 162, 191, 0.18);
 }
 
 .xl-record-prepare-ring.large {
-  width: 82px;
-  height: 82px;
-  background: rgba(0, 74, 204, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(0, 74, 204, 0.28), 0 0 0 8px rgba(0, 74, 204, 0.06);
+  position: relative;
+  z-index: 1;
+  width: 88px;
+  height: 88px;
+  background: linear-gradient(180deg, rgba(51, 125, 255, 0.22) 0%, rgba(255, 255, 255, 0.9) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 74, 204, 0.22),
+    0 0 0 9px rgba(0, 74, 204, 0.045),
+    0 12px 28px rgba(0, 74, 204, 0.12);
 }
 
 .xl-record-prepare-ring.large em {
-  font-size: 36px;
-  font-weight: 560;
+  font-size: 38px;
+  font-weight: 520;
 }
 
 .xl-record-prepare-panel-copy {
+  position: relative;
+  z-index: 1;
   text-align: center;
 }
 
 .xl-record-prepare-panel-copy strong {
   display: block;
-  font-size: 18px;
-  line-height: 24px;
-  font-weight: 540;
+  font-size: 17px;
+  line-height: 23px;
+  font-weight: 520;
   color: #0F2848;
 }
 
 .xl-record-prepare-panel-copy span {
   display: block;
-  margin-top: 4px;
-  font-size: 12px;
+  margin-top: 5px;
+  font-size: 12.5px;
   line-height: 18px;
   font-weight: 400;
-  color: #8AA2BF;
+  color: #476285;
 }
 
 .xl-record-prepare-bars {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 20px;
-  margin-top: 2px;
+  justify-content: center;
+  gap: 4px;
+  height: 22px;
+  margin-top: 0;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(234, 242, 255, 0.96), rgba(255, 255, 255, 0.82));
+  border: 1px solid rgba(207, 224, 251, 0.72);
 }
 
 .xl-record-prepare-bars span {
-  width: 4px;
-  height: 12px;
+  width: 3px;
+  height: 11px;
   border-radius: 999px;
-  background: rgba(0, 74, 204, 0.45);
+  background: linear-gradient(180deg, #7C3AED, #004ACC);
   animation: xlPrepareBars 1.15s ease-in-out infinite;
 }
 
