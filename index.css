@@ -573,9 +573,9 @@ html, body {
   width: 17px;
   height: 17px;
   border-radius: 999px;
-  background: var(--primary);
+  background: var(--success);
   border: 2px solid #FFFFFF;
-  box-shadow: 0 5px 10px rgba(37, 99, 235, 0.16);
+  box-shadow: 0 5px 10px rgba(16, 185, 129, 0.18);
 }
 
 .xl-detail .xl-report-state.is-processing .xl-report-illu::after {
