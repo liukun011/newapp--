@@ -132,7 +132,7 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
   const renderSection = (title: string, icon: React.ReactNode, items: { label: string, value: string }[]) => (
     <div className="bg-[#FFFFFF] rounded-[16px] p-3 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#E2EBF5]/60 mb-3">
       <div className="flex items-center gap-1.5 mb-3 px-1">
-        <div className="text-[#004ACC] scale-90">{icon}</div>
+        <div className="text-[#2563EB] scale-90">{icon}</div>
         <h2 className="text-[13px] font-medium text-[#0F2848]">{title}</h2>
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -143,7 +143,7 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
               key={index} 
               className={`bg-[#FFFFFF] rounded-[10px] p-2.5 border border-white flex flex-col gap-0.5 ${isFullWidth ? 'col-span-2' : 'col-span-1'}`}
             >
-              <div className="text-[10px] text-[#94A3B8] font-medium tracking-tight">{item.label}</div>
+              <div className="text-[10px] text-[#8AA2BF] font-medium tracking-tight">{item.label}</div>
               <div className="text-[12px] font-medium text-[#476285] leading-tight break-all">
                 {item.value}
               </div>
@@ -173,7 +173,7 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
         {/* 股权变更明细 */}
         <div className="bg-[#FFFFFF] rounded-[16px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#E2EBF5]/60 mb-3">
           <div className="flex items-center gap-1.5 mb-4 px-1">
-            <div className="text-orange-500 scale-90"><History size={16} /></div>
+            <div className="text-[#2563EB] scale-90"><History size={16} /></div>
             <h2 className="text-[13px] font-medium text-[#0F2848]">股权变更明细</h2>
           </div>
           <div className="flex flex-col gap-3">
@@ -182,7 +182,7 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
                 <div key={idx} className="bg-[#FFFFFF] rounded-[10px] p-3 border border-white flex flex-col gap-2">
                    {/* 第一行：投资人 + 日期 */}
                    <div className="flex justify-between items-start">
-                     <div className="text-[12px] font-semibold text-[#1E293B]">{change.investor_name || '股权变更'}</div>
+                     <div className="text-[12px] font-semibold text-[#0F2848]">{change.investor_name || '股权变更'}</div>
                      <div className="text-[10px] text-[#8AA2BF] font-medium">{formatChangeDate(change.change_time)}</div>
                    </div>
                    {/* 两栏：变更前 vs 变更后 */}
@@ -192,8 +192,8 @@ const EnterpriseDetailPage: React.FC<EnterpriseDetailPageProps> = ({ data, onBac
                         <div className="text-[12px] text-[#476285] font-medium">{change.ratio_before || '-'}</div>
                      </div>
                      <div className="flex flex-col gap-1">
-                        <div className="text-[9px] font-medium text-[#004ACC] uppercase tracking-tighter">持股比例(后)</div>
-                        <div className="text-[13px] text-[#004ACC] font-semibold">{change.ratio_after || '-'}</div>
+                        <div className="text-[9px] font-medium text-[#2563EB] uppercase tracking-tighter">持股比例(后)</div>
+                        <div className="text-[13px] text-[#2563EB] font-semibold">{change.ratio_after || '-'}</div>
                      </div>
                    </div>
                 </div>

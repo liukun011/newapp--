@@ -232,7 +232,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
           title: '提交成功',
           message: message,
           confirmButtonText: '我知道了',
-          confirmButtonColor: '#004ACC',
+          confirmButtonColor: '#2563EB',
           onConfirm: () => {
             setShowSuccess(true);
             onSubmit?.();
@@ -306,7 +306,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
           {/* View List Button */}
           <button
             onClick={onViewList}
-            className="mt-12 w-64 h-14 bg-gradient-to-r from-[#337DFF] to-[#004ACC] text-white text-base font-semibold rounded-[999px] shadow-[0_6px_14px_rgba(0,74,204,0.14)] hover:shadow-[0_14px_34px_rgba(15,40,72,0.12)] hover:shadow-[rgba(0,74,204,0.24)] active:scale-95 transition-all"
+            className="mt-12 w-64 h-14 bg-[#2563EB] text-white text-base font-semibold rounded-[999px] shadow-[0_6px_14px_rgba(37, 99, 235,0.14)] hover:shadow-[0_14px_34px_rgba(15,40,72,0.12)] hover:shadow-[rgba(37, 99, 235,0.24)] active:scale-95 transition-all"
           >
             查看列表
           </button>
@@ -339,7 +339,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
             <button
               type="button"
               onClick={() => setShowCategoryPicker(!showCategoryPicker)}
-              className="w-full px-4 py-3 bg-[#FFFFFF] border border-[#E2EBF5] rounded-[14px] text-sm text-[#0F2848] focus:outline-none focus:border-[#E2EBF5] focus:ring-1 focus:ring-[#337DFF] transition-colors flex items-center justify-between"
+              className="w-full px-4 py-3 bg-[#FFFFFF] border border-[#E2EBF5] rounded-[14px] text-sm text-[#0F2848] focus:outline-none focus:border-[#E2EBF5] focus:ring-1 focus:ring-[#4C8BF5] transition-colors flex items-center justify-between"
             >
               <span>{TEMPLATE_CATEGORY_OPTIONS.find((o) => o.id === templateCategory)?.title || '请选择模板分类'}</span>
               <ChevronDown size={18} className={`text-[#8AA2BF] transition-transform ${showCategoryPicker ? 'rotate-180' : ''}`} />
@@ -354,7 +354,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
                       setShowCategoryPicker(false);
                     }}
                     className={`px-4 py-3 text-sm cursor-pointer active:bg-[#F7FAFE] transition-colors ${
-                      templateCategory === opt.id ? 'text-[#004ACC] font-medium bg-[#004ACC1A]' : 'text-[#476285]'
+                      templateCategory === opt.id ? 'text-[#2563EB] font-medium bg-[#2563EB1A]' : 'text-[#476285]'
                     }`}
                   >
                     {opt.title}
@@ -383,7 +383,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
             placeholder={`请输入模板名称，最多${TEMPLATE_NAME_MAX_LENGTH}个字符`}
             maxLength={TEMPLATE_NAME_MAX_LENGTH}
             rows={2}
-            className="w-full px-4 py-3 bg-[#FFFFFF] border border-[#E2EBF5] rounded-[14px] text-sm text-[#0F2848] placeholder-gray-400 focus:outline-none focus:border-[#E2EBF5] focus:ring-1 focus:ring-[#337DFF] transition-colors resize-none"
+            className="w-full px-4 py-3 bg-[#FFFFFF] border border-[#E2EBF5] rounded-[14px] text-sm text-[#0F2848] placeholder-gray-400 focus:outline-none focus:border-[#E2EBF5] focus:ring-1 focus:ring-[#4C8BF5] transition-colors resize-none"
           />
           <div className="text-right text-xs text-[#8AA2BF] mt-1">
             {templateName.length}/{TEMPLATE_NAME_MAX_LENGTH}
@@ -405,7 +405,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
             placeholder={`请输入模板描述，最多${TEMPLATE_DESC_MAX_LENGTH}个字符`}
             maxLength={TEMPLATE_DESC_MAX_LENGTH}
             rows={3}
-            className="w-full px-4 py-3 bg-[#FFFFFF] border border-[#E2EBF5] rounded-[14px] text-sm text-[#0F2848] placeholder-gray-400 focus:outline-none focus:border-[#E2EBF5] focus:ring-1 focus:ring-[#337DFF] transition-colors resize-none"
+            className="w-full px-4 py-3 bg-[#FFFFFF] border border-[#E2EBF5] rounded-[14px] text-sm text-[#0F2848] placeholder-gray-400 focus:outline-none focus:border-[#E2EBF5] focus:ring-1 focus:ring-[#4C8BF5] transition-colors resize-none"
           />
           <div className="text-right text-xs text-[#8AA2BF] mt-1">
             {templateDesc.length}/{TEMPLATE_DESC_MAX_LENGTH}

@@ -106,7 +106,7 @@ const RecordingFloatBubble: React.FC<RecordingFloatBubbleProps> = ({
                         letterSpacing: '0em',
                         fontVariationSettings: '"opsz" auto',
                         fontFeatureSettings: '"kern" on',
-                        color: isRecording ? '#00A8A8' : '#EF4444'
+                        color: isRecording ? '#00A8A8' : '#DC2626'
                     }}
                     className="leading-none"
                 >

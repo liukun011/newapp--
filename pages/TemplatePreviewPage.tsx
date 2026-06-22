@@ -127,7 +127,7 @@ const TemplatePreviewPage: React.FC<TemplatePreviewPageProps> = ({
         <div className="fixed bottom-0 left-0 right-0 px-4 pb-3 z-50 safe-area-bottom">
            <button
              onClick={() => onSelect(templateId)}
-             className="w-full py-3 bg-primary-gradient text-[#FFFFFF] rounded-[999px] font-medium active:scale-95 transition-transform shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
+             className="w-full py-3 bg-primary-gradient text-[#FFFFFF] rounded-[999px] font-medium active:scale-95 transition-transform shadow-[0_6px_14px_rgba(37, 99, 235,0.14)]"
            >
              选择此模板
            </button>

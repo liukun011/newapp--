@@ -250,7 +250,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
             onChange={(e) => setContent(e.target.value)}
             placeholder="请输入需要补充的文字信息，或点击录音按钮进行语音输入..."
             readOnly={readOnly}
-            className="w-full h-48 p-4 pb-16 bg-[#F7FAFE] rounded-[18px] text-sm text-[#476285] placeholder-gray-400 resize-none border border-[#E2EBF5] outline-none focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#337DFF] disabled:bg-[#F7FAFE] disabled:text-[#476285]"
+            className="w-full h-48 p-4 pb-16 bg-[#F7FAFE] rounded-[18px] text-sm text-[#476285] placeholder-gray-400 resize-none border border-[#E2EBF5] outline-none focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#4C8BF5] disabled:bg-[#F7FAFE] disabled:text-[#476285]"
           />
           
           {/* Voice Record Button - positioned on bottom border */}
@@ -266,7 +266,7 @@ const VoiceInputModal: React.FC<VoiceInputModalProps> = ({
                   ? 'bg-gray-300 cursor-not-allowed'
                   : isLocalRecording 
                     ? 'bg-red-500 animate-pulse active:scale-95' 
-                    : 'bg-[#004ACC] hover:bg-[#004ACC] active:scale-95'
+                    : 'bg-[#2563EB] hover:bg-[#2563EB] active:scale-95'
               }`}
             >
               <Mic size={24} className="text-white" />

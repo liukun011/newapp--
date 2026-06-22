@@ -234,7 +234,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
         {/* Logo Preview */}
         <div className="mt-4 mb-8 flex flex-col items-center justify-center shrink-0">
             <div
-                className="w-24 h-24 rounded-[999px] bg-[#FFFFFF] flex flex-col items-center justify-center text-[#004ACC] mb-2 shadow-md border-4 border-white active:scale-95 transition-transform overflow-hidden cursor-pointer relative group"
+                className="w-24 h-24 rounded-[999px] bg-[#FFFFFF] flex flex-col items-center justify-center text-[#2563EB] mb-2 shadow-md border-4 border-white active:scale-95 transition-transform overflow-hidden cursor-pointer relative group"
                 onClick={() => nativeBridge?.openPhotoLibrary?.()}
             >
                 {logoUrl ? (
@@ -245,7 +245,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
                         </div>
                     </>
                 ) : (
-                    <div className="bg-[#004ACC1A] w-full h-full flex flex-col items-center justify-center">
+                    <div className="bg-[#2563EB1A] w-full h-full flex flex-col items-center justify-center">
                         <Plus size={32} strokeWidth={2.5} />
                     </div>
                 )}
@@ -286,29 +286,29 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
                 <div className="bg-[#FFFFFF] rounded-[18px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#E2EBF5]/60 overflow-hidden">
                     {/* Search Input Part */}
                     <div className="p-4 flex items-center gap-3 active:bg-[#F7FAFE] transition-colors">
-                        <Search size={18} className="text-[#CBD7E5] shrink-0" />
+                        <Search size={18} className="text-[#8AA2BF] shrink-0" />
                         <input
                             type="text"
                             value={companyName}
                             onChange={(e) => onSearchInputChange(e.target.value)}
                             onFocus={() => { if (enterpriseOptions.length > 0) setShowOptions(true); }}
-                            className="flex-1 text-[15px] text-[#0F2848] font-normal outline-none bg-transparent placeholder-slate-300"
+                            className="flex-1 text-[15px] text-[#0F2848] font-normal outline-none bg-transparent placeholder-[#8AA2BF]"
                             placeholder="搜索企业全称或信用代码"
                         />
-                        {searching && <Loader2 size={16} className="animate-spin text-[#004ACC] shrink-0" />}
+                        {searching && <Loader2 size={16} className="animate-spin text-[#2563EB] shrink-0" />}
                     </div>
 
                     {/* Credit Code Result (Only shows if search results are not open) */}
                     {creditCode && !showOptions && (
                         <div className="px-4 pb-4 animate-fadeIn">
-                             <div className="bg-[#004ACC1A]/40 rounded-[14px] p-2.5 flex items-center justify-between border border-[#E2EBF5]/30">
+                             <div className="bg-[#2563EB1A]/40 rounded-[14px] p-2.5 flex items-center justify-between border border-[#E2EBF5]/30">
                                 <div className="flex flex-col">
-                                    <span className="text-[9px] text-[#E2EBF5] font-medium uppercase tracking-widest leading-none mb-1">信用代码(CREDIT CODE)</span>
-                                    <span className="text-[13px] text-[#004ACC] font-mono font-medium tracking-tight leading-none">{creditCode}</span>
+                                    <span className="text-[9px] text-[#8AA2BF] font-medium uppercase tracking-widest leading-none mb-1">信用代码(CREDIT CODE)</span>
+                                    <span className="text-[13px] text-[#2563EB] font-mono font-medium tracking-tight leading-none">{creditCode}</span>
                                 </div>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setCreditCode(''); setCompanyName(''); }}
-                                    className="text-[11px] text-[#004ACC] font-medium px-2 py-1.5 rounded-lg active:bg-[#004ACC1A] transition-colors"
+                                    className="text-[11px] text-[#2563EB] font-medium px-2 py-1.5 rounded-lg active:bg-[#2563EB1A] transition-colors"
                                 >
                                     清除
                                 </button>
@@ -325,7 +325,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
                             {enterpriseOptions.map((ent, idx) => (
                                 <div
                                     key={idx}
-                                    className="px-4 py-3 hover:bg-[#FFFFFF] active:bg-[#004ACC1A] transition-colors cursor-pointer border-b border-[#E2EBF5]/50 last:border-none"
+                                    className="px-4 py-3 hover:bg-[#FFFFFF] active:bg-[#2563EB1A] transition-colors cursor-pointer border-b border-[#E2EBF5]/50 last:border-none"
                                     onClick={() => selectEnterprise(ent)}
                                 >
                                     <div className="text-[13px] font-medium text-[#476285] line-clamp-1">{ent.name}</div>
@@ -347,7 +347,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
          <Button variant="secondary" block className="flex-1 !rounded-[999px] !bg-[#FFFFFF] !border-[#E2EBF5] !text-[#8AA2BF] !h-12 !text-[16px] !font-medium" onClick={handleBackThrottled}>
             取消
          </Button>
-         <Button variant="primary" block className="flex-1 !rounded-[999px] !h-12 !text-[16px] !font-medium shadow-[0_6px_14px_rgba(0,74,204,0.14)]" onClick={handleSaveThrottled} loading={loading} disabled={loading}>
+         <Button variant="primary" block className="flex-1 !rounded-[999px] !h-12 !text-[16px] !font-medium shadow-[0_6px_14px_rgba(37, 99, 235,0.14)]" onClick={handleSaveThrottled} loading={loading} disabled={loading}>
             保存
          </Button>
       </div>

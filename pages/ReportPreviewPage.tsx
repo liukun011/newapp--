@@ -119,7 +119,7 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
           {showDownloadButton ? (
             <button
               onClick={handleDownloadThrottled}
-              className="w-full py-3 bg-primary-gradient text-[#FFFFFF] rounded-[999px] font-medium flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
+              className="w-full py-3 bg-primary-gradient text-[#FFFFFF] rounded-[999px] font-medium flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-[0_6px_14px_rgba(37, 99, 235,0.14)]"
             >
               <Download size={20} />
               立即下载
@@ -127,7 +127,7 @@ const ReportPreviewPage: React.FC<ReportPreviewPageProps> = ({
           ) : (
             <button
               onClick={handleActionThrottled}
-              className="w-full py-3 bg-primary-gradient text-[#FFFFFF] rounded-[999px] font-medium flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
+              className="w-full py-3 bg-primary-gradient text-[#FFFFFF] rounded-[999px] font-medium flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-[0_6px_14px_rgba(37, 99, 235,0.14)]"
             >
               {actionButtonText}
             </button>

@@ -85,13 +85,13 @@ const ShareAppPage: React.FC<ShareAppPageProps> = ({ onBack }) => {
         {/* Main Share Card */}
         <div className="relative bg-[#FFFFFF] rounded-[26px] p-4 shadow-[0_8px_24px_rgba(15,40,72,0.05)] border border-[#E2EBF5] flex flex-col items-center overflow-hidden">
             {/* Decorative background elements */}
-            <div className="absolute -top-12 -right-12 w-44 h-44 bg-[#337DFF]/10 rounded-[999px] blur-3xl" />
-            <div className="absolute -bottom-14 -left-12 w-44 h-44 bg-[#004ACC]/8 rounded-[999px] blur-3xl" />
+            <div className="absolute -top-12 -right-12 w-44 h-44 bg-[#4C8BF5]/10 rounded-[999px] blur-3xl" />
+            <div className="absolute -bottom-14 -left-12 w-44 h-44 bg-[#2563EB]/8 rounded-[999px] blur-3xl" />
             
             {/* Share Plan Badge */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#004ACC1A] border border-[#E2EBF5] rounded-[999px] mb-1.5 mt-1 relative z-10">
-                <Gift size={13} className="text-[#004ACC]" />
-                <span className="text-[11px] font-medium text-[#004ACC]">分享计划</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#2563EB1A] border border-[#E2EBF5] rounded-[999px] mb-1.5 mt-1 relative z-10">
+                <Gift size={13} className="text-[#2563EB]" />
+                <span className="text-[11px] font-medium text-[#2563EB]">分享计划</span>
             </div>
 
             {/* Title Text */}
@@ -106,7 +106,7 @@ const ShareAppPage: React.FC<ShareAppPageProps> = ({ onBack }) => {
                     <p className="text-[11px] text-[#8AA2BF] font-medium">您的专属分享链接</p>
                     <button
                         onClick={handleCopy}
-                        className="h-8 flex items-center gap-1.5 px-3 bg-[#FFFFFF] rounded-[11px] text-[#004ACC] shadow-[0_3px_10px_rgba(15,40,72,0.04)] border border-[#E2EBF5] active:scale-95 transition-transform"
+                        className="h-8 flex items-center gap-1.5 px-3 bg-[#FFFFFF] rounded-[11px] text-[#2563EB] shadow-[0_3px_10px_rgba(15,40,72,0.04)] border border-[#E2EBF5] active:scale-95 transition-transform"
                     >
                         <Copy size={13} />
                         <span className="text-[11px] font-medium">复制</span>
@@ -124,10 +124,10 @@ const ShareAppPage: React.FC<ShareAppPageProps> = ({ onBack }) => {
 
             {/* 立即分享按钮由于暂未接入系统原生分享，先下线处理
             <button
-                className="w-full h-10 bg-[#004ACC] text-white rounded-[16px] flex items-center justify-center gap-2 shadow-[0_6px_16px_rgba(37,99,235,0.2)] active:scale-[0.98] transition-all relative z-10 overflow-hidden group"
+                className="w-full h-10 bg-[#2563EB] text-white rounded-[16px] flex items-center justify-center gap-2 shadow-[0_6px_16px_rgba(37, 99, 235,0.2)] active:scale-[0.98] transition-all relative z-10 overflow-hidden group"
                 onClick={() => Toast.info('系统分享组件唤起中...')}
             >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#004ACC] to-[#337DFF] opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-[#2563EB] opacity-0 group-hover:opacity-100 transition-opacity" />
                 <Share2 size={18} className="relative z-10" />
                 <span className="text-[15px] font-medium relative z-10">立即分享给好友</span>
             </button>
@@ -137,10 +137,10 @@ const ShareAppPage: React.FC<ShareAppPageProps> = ({ onBack }) => {
         {/* Invited Friends Header */}
         <div className="flex items-center justify-between px-1 mt-1">
             <div className="flex items-center gap-2">
-                <Users size={18} className="text-[#004ACC]" />
+                <Users size={18} className="text-[#2563EB]" />
                 <h3 className="text-[14px] font-medium text-[#476285]">已成功邀请的好友</h3>
             </div>
-            <div className="bg-[#FFFFFF] text-[#004ACC] h-6 px-2.5 flex items-center justify-center rounded-[999px] text-[12px] font-medium border border-[#E2EBF5]">
+            <div className="bg-[#FFFFFF] text-[#2563EB] h-6 px-2.5 flex items-center justify-center rounded-[999px] text-[12px] font-medium border border-[#E2EBF5]">
                 {invitedFriends.length}
             </div>
         </div>
@@ -169,7 +169,7 @@ const ShareAppPage: React.FC<ShareAppPageProps> = ({ onBack }) => {
                                 {friend.avatar ? (
                                     <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-[#004ACC1A] text-[#004ACC]">
+                                    <div className="w-full h-full flex items-center justify-center bg-[#2563EB1A] text-[#2563EB]">
                                         <Users size={24} />
                                     </div>
                                 )}
@@ -187,7 +187,7 @@ const ShareAppPage: React.FC<ShareAppPageProps> = ({ onBack }) => {
                             <p className="text-[12px] text-[#8AA2BF] font-normal mt-0.5">加入时间: {friend.joinDate}</p>
                         </div>
 
-                        <div className="bg-[#ECFDF5] px-3 py-1.5 rounded-[14px] border border-[#A7F3D0] flex items-center justify-center">
+                        <div className="bg-[#ECFDF5] px-3 py-1.5 rounded-[14px] border border-[#E2EBF5] flex items-center justify-center">
                             <span className="text-[12px] text-[#10B981] font-medium">已关联</span>
                         </div>
                     </div>

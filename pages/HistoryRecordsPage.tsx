@@ -144,7 +144,7 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
       <div className="flex-1 overflow-y-auto px-4 py-4 scroll-smooth">
         {loading && records.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-[#E2EBF5] border-t-[#004ACC] rounded-[999px] animate-spin"></div>
+            <div className="w-8 h-8 border-2 border-[#E2EBF5] border-t-[#2563EB] rounded-[999px] animate-spin"></div>
           </div>
         ) : records.length > 0 ? (
           <div className="space-y-3">
@@ -209,7 +209,7 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
            block 
            size="large" 
            onClick={onStartInterview} 
-           className="!rounded-[999px] !bg-[#004ACC] !h-[50px] !text-[16px] shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
+           className="!rounded-[999px] !bg-[#2563EB] !h-[50px] !text-[16px] shadow-[0_6px_14px_rgba(37, 99, 235,0.14)]"
          >
            去访谈
          </Button>
@@ -227,7 +227,7 @@ const HistoryRecordsPage: React.FC<HistoryRecordsPageProps> = ({ onBack, dealId,
           <input
             value={currentEditTitle}
             onChange={(e) => setCurrentEditTitle(e.target.value)}
-            className="w-full bg-[#F7FAFE] border border-[#E2EBF5] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#004ACC] transition-colors"
+            className="w-full bg-[#F7FAFE] border border-[#E2EBF5] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#2563EB] transition-colors"
             placeholder="请输入访谈名称"
             autoFocus
           />

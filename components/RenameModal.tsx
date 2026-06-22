@@ -53,7 +53,7 @@ const RenameModal: React.FC<RenameModalProps> = ({ isOpen, initialValue, onClose
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
             autoFocus
-            className="w-full px-4 py-4 bg-[#FFFFFF] border border-[#E2EBF5] rounded-[14px] text-[15px] text-[#0F2848] placeholder-[#8AA2BF] focus:outline-none focus:ring-2 focus:ring-[#337DFF] transition-all"
+            className="w-full px-4 py-4 bg-[#FFFFFF] border border-[#E2EBF5] rounded-[14px] text-[15px] text-[#0F2848] placeholder-[#8AA2BF] focus:outline-none focus:ring-2 focus:ring-[#4C8BF5] transition-all"
             placeholder="请输入模板名称"
           />
         </div>
@@ -62,14 +62,14 @@ const RenameModal: React.FC<RenameModalProps> = ({ isOpen, initialValue, onClose
         <div className="px-6 pb-8 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3.5 bg-[#FFFFFF] border border-[#E2EBF5] text-[#476285] text-[14px] font-medium rounded-[14px] hover:bg-[#004ACC1A] active:bg-[#004ACC1A] transition-colors"
+            className="flex-1 px-6 py-3.5 bg-[#FFFFFF] border border-[#E2EBF5] text-[#476285] text-[14px] font-medium rounded-[14px] hover:bg-[#2563EB1A] active:bg-[#2563EB1A] transition-colors"
           >
             取消
           </button>
           <button
             onClick={handleConfirm}
             disabled={!inputValue.trim()}
-            className="flex-1 px-6 py-3.5 text-[#FFFFFF] text-[14px] font-medium rounded-[14px] transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-confirm-gradient shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
+            className="flex-1 px-6 py-3.5 text-[#FFFFFF] text-[14px] font-medium rounded-[14px] transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-confirm-gradient shadow-[0_6px_14px_rgba(37, 99, 235,0.14)]"
           >
             确认
           </button>

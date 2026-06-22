@@ -15,7 +15,6 @@ import {
   ClipboardList,
   Briefcase,
   UsersRound,
-  TrendingUp,
 } from "lucide-react";
 import { SwipeCell, PullRefresh, Toast, Popup, Dialog } from "react-vant";
 
@@ -45,29 +44,29 @@ const projectCardIcons = [
 
 const projectCardStyles = [
   {
-    iconBg: 'bg-[linear-gradient(135deg,#EAF2FF_0%,#DCE9FF_100%)]',
-    iconText: 'text-[#004ACC]',
-    iconShadow: 'shadow-[0_8px_18px_rgba(0,74,204,0.10)]',
-  },
-  {
-    iconBg: 'bg-[linear-gradient(135deg,#EFF6FF_0%,#DBEAFE_100%)]',
+    iconBg: 'bg-[#2563EB1A]',
     iconText: 'text-[#2563EB]',
-    iconShadow: 'shadow-[0_8px_18px_rgba(37,99,235,0.10)]',
+    iconShadow: 'shadow-[0_8px_18px_rgba(37, 99, 235,0.10)]',
   },
   {
-    iconBg: 'bg-[linear-gradient(135deg,#F8FBFF_0%,#EAF2FF_100%)]',
-    iconText: 'text-[#004ACC]',
-    iconShadow: 'shadow-[0_8px_18px_rgba(0,74,204,0.08)]',
+    iconBg: 'bg-[#F4F7FA]',
+    iconText: 'text-[#4C8BF5]',
+    iconShadow: 'shadow-[0_8px_18px_rgba(37, 99, 235,0.10)]',
   },
   {
-    iconBg: 'bg-[linear-gradient(135deg,#EEF5FF_0%,#DCE9FF_100%)]',
-    iconText: 'text-[#1D4ED8]',
+    iconBg: 'bg-[#2563EB1A]',
+    iconText: 'text-[#2563EB]',
+    iconShadow: 'shadow-[0_8px_18px_rgba(37, 99, 235,0.08)]',
+  },
+  {
+    iconBg: 'bg-[#EEF5FF]',
+    iconText: 'text-[#2563EB]',
     iconShadow: 'shadow-[0_8px_18px_rgba(29,78,216,0.09)]',
   },
   {
-    iconBg: 'bg-[linear-gradient(135deg,#EFF6FF_0%,#DBEAFE_100%)]',
-    iconText: 'text-[#2563EB]',
-    iconShadow: 'shadow-[0_8px_18px_rgba(37,99,235,0.10)]',
+    iconBg: 'bg-[#F4F7FA]',
+    iconText: 'text-[#4C8BF5]',
+    iconShadow: 'shadow-[0_8px_18px_rgba(37, 99, 235,0.10)]',
   },
 ];
 
@@ -605,12 +604,12 @@ const HomePage: React.FC<HomePageProps> = ({
               value={searchTerm}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              className="w-full h-[40px] pl-9 pr-3 bg-[#FFFFFF]/80 rounded-[14px] text-[13px] text-[#0F2848] placeholder-[#8AA2BF] shadow-[0_3px_10px_rgba(15,40,72,0.045)] focus:outline-none focus:ring-2 focus:ring-[#337DFF] transition-all border border-[#E2EBF5]"
+              className="w-full h-[40px] pl-9 pr-3 bg-[#FFFFFF]/80 rounded-[14px] text-[13px] text-[#0F2848] placeholder-[#8AA2BF] shadow-[0_3px_10px_rgba(15,40,72,0.045)] focus:outline-none focus:ring-2 focus:ring-[#4C8BF5] transition-all border border-[#E2EBF5]"
               style={{ outline: 'none', WebkitTapHighlightColor: 'transparent', WebkitAppearance: 'none' }}
             />
             <button
               onClick={handleSearch}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8AA2BF] hover:text-[#004ACC] active:scale-95 transition-all"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 p-1 text-[#8AA2BF] hover:text-[#2563EB] active:scale-95 transition-all"
             >
               <Search size={18} />
             </button>
@@ -635,7 +634,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <div className="xl-card px-3.5 py-3">
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-[11px] bg-[#004ACC1A] text-[#004ACC] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-[11px] bg-[#2563EB1A] text-[#2563EB] flex items-center justify-center">
                     <BarChart3 size={17} strokeWidth={2.35} />
                   </div>
                   <div>
@@ -651,47 +650,31 @@ const HomePage: React.FC<HomePageProps> = ({
                     label: '尽调项目',
                     value: projectCount,
                     Icon: Briefcase,
-                    card: 'bg-[linear-gradient(145deg,#F8FBFF_0%,#EEF5FF_100%)] border-[#DCE8FF]',
-                    icon: 'bg-[linear-gradient(135deg,#337DFF_0%,#004ACC_100%)] text-white shadow-[0_8px_18px_rgba(0,74,204,0.20)]',
-                    pill: 'bg-[#EAF2FF] text-[#004ACC]',
-                    trend: '+1',
                   },
                   {
                     label: '生成报告',
                     value: generatedCount,
                     Icon: FileText,
-                    card: 'bg-[linear-gradient(145deg,#FFFDF8_0%,#FFF3E4_100%)] border-[#FFE3BD]',
-                    icon: 'bg-[linear-gradient(135deg,#FDBA74_0%,#F97316_100%)] text-white shadow-[0_8px_18px_rgba(249,115,22,0.18)]',
-                    pill: 'bg-[#FFF7ED] text-[#F97316]',
-                    trend: '+1',
                   },
                   {
                     label: '访谈记录',
                     value: interviewCount,
                     Icon: Mic,
-                    card: 'bg-[linear-gradient(145deg,#FCFAFF_0%,#F3EDFF_100%)] border-[#E9D5FF]',
-                    icon: 'bg-[linear-gradient(135deg,#A855F7_0%,#7C3AED_100%)] text-white shadow-[0_8px_18px_rgba(124,58,237,0.18)]',
-                    pill: 'bg-[#F5F3FF] text-[#7C3AED]',
-                    trend: '+2',
                   },
-                ].map(({ label, value, Icon, card, icon, pill, trend }) => (
-                  <div key={label} className={`relative min-h-[76px] rounded-[16px] border px-2.5 py-2.5 overflow-hidden ${card}`}>
+                ].map(({ label, value, Icon }) => (
+                  <div key={label} className="relative min-h-[76px] rounded-[16px] border border-[#E2EBF5] bg-[#F7FAFE] px-2.5 py-2.5 overflow-hidden">
                     <div className="absolute right-2 top-2 grid grid-cols-2 gap-[2px] opacity-30">
                       <span className="w-1 h-1 rounded-full bg-[#8AA2BF]" />
                       <span className="w-1 h-1 rounded-full bg-[#8AA2BF]" />
                       <span className="w-1 h-1 rounded-full bg-[#8AA2BF]" />
                       <span className="w-1 h-1 rounded-full bg-[#8AA2BF]" />
                     </div>
-                    <div className={`w-8 h-8 rounded-[12px] flex items-center justify-center mb-1.5 ${icon}`}>
+                    <div className="w-8 h-8 rounded-[12px] flex items-center justify-center mb-1.5 bg-[#2563EB] text-white shadow-[0_8px_18px_rgba(37,99,235,0.16)]">
                       <Icon size={16} strokeWidth={2.2} />
                     </div>
                     <div className="flex items-end gap-1.5">
                       <div className="text-[21px] leading-none font-medium text-[#0F2848]">{value}</div>
                       <div className="text-[10.5px] leading-[13px] font-medium text-[#0F2848] pb-[1px]">{label}</div>
-                    </div>
-                    <div className="mt-1.5 flex items-center justify-between border-t border-white/70 pt-1.5">
-                      <span className={`h-4 px-1.5 rounded-full text-[9px] font-medium flex items-center ${pill}`}>较昨日 {trend}</span>
-                      <TrendingUp size={12} className={pill.includes('F97316') ? 'text-[#F97316]' : pill.includes('7C3AED') ? 'text-[#7C3AED]' : 'text-[#004ACC]'} />
                     </div>
                   </div>
                 ))}
@@ -699,7 +682,7 @@ const HomePage: React.FC<HomePageProps> = ({
             </div>
           </div>
 
-          <div className="sticky top-0 z-40 pt-2.5 pb-2 px-4 bg-[linear-gradient(180deg,#F7FAFE_0%,rgba(247,250,254,0.96)_100%)]">
+          <div className="sticky top-0 z-40 pt-2.5 pb-2 px-4 bg-[#F7FAFE]">
             <div className="xl-segment flex">
               <button
                 className={`flex-1 xl-segment-item transition-all ${activeTab === "ongoing" ? "is-active" : ""}`}
@@ -734,12 +717,12 @@ const HomePage: React.FC<HomePageProps> = ({
           <div className="px-4">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-12 h-12 border-4 border-[#337DFF] border-t-[#004ACC] rounded-full animate-spin"></div>
+                <div className="w-12 h-12 border-4 border-[#4C8BF5] border-t-[#2563EB] rounded-full animate-spin"></div>
                 <p className="text-[#476285] text-sm mt-4">加载中...</p>
               </div>
             ) : deals.length === 0 ? (
               <div className="min-h-[40vh] flex flex-col items-center justify-center opacity-80">
-                 <div className="w-14 h-14 rounded-[20px] bg-[#004ACC1A] text-[#004ACC] flex items-center justify-center mb-3 border border-[#E2EBF5]">
+                 <div className="w-14 h-14 rounded-[20px] bg-[#2563EB1A] text-[#2563EB] flex items-center justify-center mb-3 border border-[#E2EBF5]">
                    <FileText size={26} strokeWidth={2.2} />
                  </div>
                  <p className="text-xs text-[#476285]">{loadError || (activeTab === 'archived' ? '暂无归档项目' : '暂无尽调项目')}</p>
@@ -795,14 +778,14 @@ const HomePage: React.FC<HomePageProps> = ({
                             </div>
                             <div className="self-stretch flex flex-col items-end justify-between min-w-[60px]">
                               {(currentDealId === item.id) ? (
-                                <span className="min-h-[24px] px-2 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#10B981] text-[10px] font-normal flex items-center whitespace-nowrap">录音中</span>
+                                <span className="min-h-[24px] px-2 rounded-full bg-[#ECFDF5] border border-[#E2EBF5] text-[#10B981] text-[10px] font-normal flex items-center whitespace-nowrap">录音中</span>
                               ) : (
-                                <span className="min-h-[24px] px-2 rounded-full bg-[#EAF2FF] border border-[#DCE8FF] text-[#004ACC] text-[10px] font-normal flex items-center whitespace-nowrap">
+                                <span className="min-h-[24px] px-2 rounded-full bg-[#2563EB1A] border border-[#E2EBF5] text-[#2563EB] text-[10px] font-normal flex items-center whitespace-nowrap">
                                   {String(item.reportStatus) === DealReportStatusEnum.REPORT_GENERATED || item.report?.id ? '已生成' : '未生成'}
                                 </span>
                               )}
                               <button
-                                className="w-9 h-9 rounded-[13px] border border-[#DCE8FF] bg-[#F8FBFF] text-[#004ACC] flex items-center justify-center active:scale-95 transition-transform shadow-[0_4px_12px_rgba(0,74,204,0.06)]"
+                                className="w-9 h-9 rounded-[13px] border border-[#E2EBF5] bg-[#2563EB1A] text-[#2563EB] flex items-center justify-center active:scale-95 transition-transform shadow-[0_4px_12px_rgba(37, 99, 235,0.06)]"
                                 onClick={(e) => {
                                   if (activeTab === 'archived') {
                                     handleCancelArchive(e, item.id);
@@ -826,7 +809,7 @@ const HomePage: React.FC<HomePageProps> = ({
               {loadingMore && (
                 <div className="flex items-center justify-center py-4">
                   <div className="flex items-center gap-2 text-gray-400">
-                    <div className="w-4 h-4 border-2 border-gray-300 border-t-[#004ACC] rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-[#2563EB] rounded-full animate-spin"></div>
                     <span className="text-xs">加载中...</span>
                   </div>
                 </div>
@@ -873,7 +856,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <div className="flex gap-3 mt-2">
               <button
                 onClick={cancelDelete}
-                className="flex-1 h-12 rounded-[16px] border border-[#E2EBF5] text-[#476285] font-normal hover:bg-[#004ACC1A] active:scale-95 transition-all"
+                className="flex-1 h-12 rounded-[16px] border border-[#E2EBF5] text-[#476285] font-normal hover:bg-[#2563EB1A] active:scale-95 transition-all"
               >
                 取消
               </button>
@@ -905,7 +888,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <h3 className="text-[15px] leading-none font-medium text-[#0F2848]">切换组织</h3>
             <button
               onClick={() => setShowTenantModal(false)}
-              className="h-8 min-w-8 rounded-full border border-[#E2EBF5] bg-[#FFFFFF] px-2.5 text-[12px] text-[#004ACC]"
+              className="h-8 min-w-8 rounded-full border border-[#E2EBF5] bg-[#FFFFFF] px-2.5 text-[12px] text-[#2563EB]"
             >
               关闭
             </button>
@@ -915,12 +898,12 @@ const HomePage: React.FC<HomePageProps> = ({
           <div className="max-h-[42vh] overflow-y-auto px-3 pb-5 pt-2 space-y-2">
             {tenantsLoading ? (
               <div className="flex flex-col items-center justify-center py-8">
-                <div className="w-7 h-7 border-2 border-[#337DFF] border-t-[#004ACC] rounded-full animate-spin mb-3" />
+                <div className="w-7 h-7 border-2 border-[#4C8BF5] border-t-[#2563EB] rounded-full animate-spin mb-3" />
                 <p className="text-[#8AA2BF] text-xs">加载中...</p>
               </div>
             ) : tenants.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 opacity-70">
-                <Building2 size={34} className="text-[#CBD7E5] mb-3" />
+                <Building2 size={34} className="text-[#8AA2BF] mb-3" />
                 <p className="text-[#8AA2BF] text-xs">暂无可选组织</p>
               </div>
             ) : (
@@ -932,13 +915,13 @@ const HomePage: React.FC<HomePageProps> = ({
                     onClick={() => handleSwitchTenant(tenant)}
                     className={`flex min-h-[60px] items-center gap-3 rounded-[14px] border transition-all active:scale-[0.99] ${
                       isActive 
-                        ? 'bg-[#EAF2FF] border-[#337DFF] px-3 py-2.5 shadow-[0_6px_16px_rgba(0,74,204,0.10)]' 
+                        ? 'bg-[#2563EB1A] border-[#4C8BF5] px-3 py-2.5 shadow-[0_6px_16px_rgba(37, 99, 235,0.10)]' 
                         : 'bg-[#FFFFFF] border-[#E2EBF5] px-3 py-2.5'
                     }`}
                   >
                     {/* Organization Icon */}
                     <div className={`w-9 h-9 rounded-[9px] flex items-center justify-center flex-shrink-0 ${
-                      isActive ? 'bg-[#004ACC] text-[#FFFFFF] shadow-[0_5px_12px_rgba(0,74,204,0.10)]' : 'bg-[#F7FAFE] text-[#8AA2BF]'
+                      isActive ? 'bg-[#2563EB] text-[#FFFFFF] shadow-[0_5px_12px_rgba(37, 99, 235,0.10)]' : 'bg-[#F7FAFE] text-[#8AA2BF]'
                     }`}>
                       <Building2 size={18} strokeWidth={2} />
                     </div>
@@ -946,12 +929,12 @@ const HomePage: React.FC<HomePageProps> = ({
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-3 mb-0.5">
-                        <h4 className={`text-[14px] leading-[18px] font-medium truncate ${isActive ? 'text-[#004ACC]' : 'text-[#0F2848]'}`}>
+                        <h4 className={`text-[14px] leading-[18px] font-medium truncate ${isActive ? 'text-[#2563EB]' : 'text-[#0F2848]'}`}>
                           {tenant.name}
                         </h4>
-                        {isActive && <Check size={16} className="text-[#004ACC] shrink-0" strokeWidth={2.6} />}
+                        {isActive && <Check size={16} className="text-[#2563EB] shrink-0" strokeWidth={2.6} />}
                       </div>
-                      <p className={`text-[11px] leading-none font-normal ${isActive ? 'text-[#004ACC]/62' : 'text-[#8AA2BF]'}`}>
+                      <p className={`text-[11px] leading-none font-normal ${isActive ? 'text-[#2563EB]/62' : 'text-[#8AA2BF]'}`}>
                         {(tenant.tenantAdmin || (currentUserId && String(tenant.createdBy) === String(currentUserId))) ? '管理员' : '成员'}
                       </p>
                     </div>

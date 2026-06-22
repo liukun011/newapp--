@@ -71,7 +71,7 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-5 top-5 w-9 h-9 flex items-center justify-center bg-[#004ACC1A] border border-[#E2EBF5] rounded-[12px] text-[#004ACC] active:bg-[#004ACC1A] z-20 transition-colors"
+          className="absolute right-5 top-5 w-9 h-9 flex items-center justify-center bg-[#2563EB1A] border border-[#E2EBF5] rounded-[12px] text-[#2563EB] active:bg-[#2563EB1A] z-20 transition-colors"
         >
           <X size={18} />
         </button>
@@ -87,7 +87,7 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
         <div className="flex-1 overflow-y-auto px-5 pb-8 scroll-smooth">
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-3">
-              <Loader2 size={24} className="text-[#004ACC] animate-spin" />
+              <Loader2 size={24} className="text-[#2563EB] animate-spin" />
               <span className="text-[14px] text-[#8AA2BF] font-medium tracking-wide">加载中...</span>
             </div>
           ) : templates.length === 0 ? (
@@ -108,14 +108,14 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
                     onClick={() => toggle(tpl.id)}
                     className={`
                       flex items-center justify-between
-                      relative rounded-[14px] px-4 py-3.5 transition-all border cursor-pointer active:scale-[0.98] active:bg-[#004ACC1A]
+                      relative rounded-[14px] px-4 py-3.5 transition-all border cursor-pointer active:scale-[0.98] active:bg-[#2563EB1A]
                       ${isChecked
-                        ? 'bg-[#004ACC1A] border-[#E2EBF5]'
+                        ? 'bg-[#2563EB1A] border-[#E2EBF5]'
                         : 'bg-[#FFFFFF] border-[#E2EBF5]/70'}
                     `}
                   >
                     <div className="flex-1 pr-2">
-                      <h3 className={`text-[14.5px] font-medium mb-1 leading-tight ${isChecked ? 'text-[#004ACC]' : 'text-[#0F2848]'}`}>
+                      <h3 className={`text-[14.5px] font-medium mb-1 leading-tight ${isChecked ? 'text-[#2563EB]' : 'text-[#0F2848]'}`}>
                         {tpl.templateName}
                       </h3>
                       <p className="text-[12px] font-medium text-[#476285]">
@@ -126,7 +126,7 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
                     {/* Checkbox */}
                     <div className={`w-5 h-5 rounded-[4px] flex items-center justify-center transition-all ${
                       isChecked
-                        ? 'bg-[#004ACC] border-[#004ACC]'
+                        ? 'bg-[#2563EB] border-[#2563EB]'
                         : 'border-2 border-[#E2EBF5] bg-[#FFFFFF]'
                     }`}>
                       {isChecked && <Check size={12} className="text-white" strokeWidth={3} />}
@@ -147,7 +147,7 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
               w-full h-11 rounded-full font-medium text-[15px] flex items-center justify-center gap-2 transition-all
               ${submitting || tempSelectedIds.length === 0
                 ? 'bg-[#F7FAFE] text-[#8AA2BF] cursor-not-allowed'
-                : 'bg-primary-gradient text-[#FFFFFF] active:scale-95 shadow-[0_6px_14px_rgba(0,74,204,0.14)]'}
+                : 'bg-primary-gradient text-[#FFFFFF] active:scale-95 shadow-[0_6px_14px_rgba(37, 99, 235,0.14)]'}
             `}
           >
             {submitting ? (

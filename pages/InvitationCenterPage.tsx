@@ -130,13 +130,13 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
         <div 
           style={{
             fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
-            fontSize: '34px',
-            fontWeight: 800,
+            fontSize: '28px',
+            fontWeight: 560,
             lineHeight: 'normal',
             letterSpacing: '0em',
             fontVariationSettings: '"opsz" auto',
             fontFeatureSettings: '"kern" on',
-            color: '#004ACC',
+            color: '#2563EB',
           }}
           className="ml-4"
         >
@@ -145,8 +145,8 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
         <div 
           style={{
             fontFamily: "'Alibaba PuHuiTi 2.0', sans-serif",
-            fontSize: '34px',
-            fontWeight: 800,
+            fontSize: '28px',
+            fontWeight: 560,
             lineHeight: 'normal',
             letterSpacing: '0em',
             fontVariationSettings: '"opsz" auto',
@@ -169,7 +169,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
           </h2>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-12 bg-[#F5F6F8] rounded-[14px] flex items-center px-4 overflow-hidden">
-              <span className={`leading-none select-all truncate uppercase ${inviteCode ? 'text-[20px] text-[#004ACC] font-medium' : 'text-[14px] text-[#8AA2BF] font-normal'}`}>
+              <span className={`leading-none select-all truncate uppercase ${inviteCode ? 'text-[20px] text-[#2563EB] font-medium' : 'text-[14px] text-[#8AA2BF] font-normal'}`}>
                 {isGenerating || isLoading ? '...' : (inviteCode || 'WAITING...')}
               </span>
             </div>
@@ -202,7 +202,7 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
                 
                 {/* Dot */}
                 <div className="relative z-10 flex-shrink-0 mt-1 w-[11px] h-[11px] rounded-[999px] border-[2.5px] border-[#CBD1FF] bg-[#FFFFFF] flex items-center justify-center">
-                  <div className="w-[4px] h-[4px] bg-[#004ACC] rounded-[999px]" />
+                  <div className="w-[4px] h-[4px] bg-[#2563EB] rounded-[999px]" />
                 </div>
                 
                 {/* Icon & Text */}
@@ -248,14 +248,14 @@ const InvitationCenterPage: React.FC<InvitationCenterPageProps> = ({ onBack }) =
                 placeholder="请输入邀请码"
                 inputMode="email"
                 maxLength={10}
-                className="w-full h-12 bg-[#F5F6F8] border-none rounded-[14px] px-4 text-[15px] text-[#0F2848] placeholder:text-[#8AA2BF] focus:outline-none focus:ring-1 focus:ring-[#337DFF] uppercase"
+                className="w-full h-12 bg-[#F5F6F8] border-none rounded-[14px] px-4 text-[15px] text-[#0F2848] placeholder:text-[#8AA2BF] focus:outline-none focus:ring-1 focus:ring-[#4C8BF5] uppercase"
               />
             </div>
             <button 
               onClick={handleConfirmFriendCode}
               disabled={!friendCode.trim()}
               className={`h-12 w-24 text-white text-[15px] font-medium rounded-[14px] active:scale-95 transition-all flex-shrink-0 ${
-                friendCode.trim() ? 'bg-[#004ACC]' : 'bg-[#E2EBF5]'
+                friendCode.trim() ? 'bg-[#2563EB]' : 'bg-[#E2EBF5]'
               }`}
             >
               确定

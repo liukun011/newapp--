@@ -18,17 +18,17 @@ const Button: React.FC<ButtonProps> = ({
   children,
   ...props
 }) => {
-  const baseStyles = "relative flex items-center justify-center font-medium transition-active active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed rounded-[14px] no-tap-highlight";
+  const baseStyles = "relative flex items-center justify-center font-medium transition-active active:scale-[0.98] disabled:cursor-not-allowed disabled:!bg-[#CBD7E5] disabled:!text-[#8AA2BF] disabled:!shadow-none rounded-[12px] no-tap-highlight";
   
   let variantStyles = "";
   if (variant === 'primary') {
-    variantStyles = `bg-primary-gradient text-[#FFFFFF] shadow-[0_6px_14px_rgba(0,74,204,0.14)]`;
+    variantStyles = `bg-primary-gradient text-[#FFFFFF] shadow-[0_5px_14px_rgba(37, 99, 235,0.16)]`;
   } else if (variant === 'secondary') {
-    variantStyles = "bg-[#FFFFFF]/80 text-[#0F2848] border border-[#E2EBF5] shadow-[0_3px_10px_rgba(15,40,72,0.04)]";
+    variantStyles = "bg-[#FFFFFF] text-[#0F2848] border border-[#E2EBF5] shadow-[0_1px_2px_rgba(17,24,39,0.04)]";
   } else if (variant === 'outline') {
-    variantStyles = "bg-transparent border border-[#E2EBF5] text-[#004ACC]";
+    variantStyles = "bg-transparent border border-[#E2EBF5] text-[#2563EB]";
   } else if (variant === 'text') {
-    variantStyles = "bg-transparent text-[#004ACC] p-0 h-auto min-h-0";
+    variantStyles = "bg-transparent text-[#2563EB] p-0 h-auto min-h-0";
   }
 
   let sizeStyles = "";

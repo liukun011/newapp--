@@ -226,8 +226,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     // {
     //   icon: FileText,
     //   label: '模板管理',
-    //   color: 'text-[#004ACC]',
-    //   bg: 'bg-[#004ACC1A]',
+    //   color: 'text-[#2563EB]',
+    //   bg: 'bg-[#2563EB1A]',
     //   onClick: () => {
     //     if (onNavigateToTemplates) {
     //       onNavigateToTemplates();
@@ -239,45 +239,45 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     /* { 
         icon: Users, 
         label: '邀请中心', 
-        color: 'text-[#004ACC]', 
-        bg: 'bg-[#004ACC1A]', 
+        color: 'text-[#2563EB]', 
+        bg: 'bg-[#2563EB1A]', 
         onClick: () => onNavigateToInvitationCenter ? onNavigateToInvitationCenter() : Toast.info('功能开发中')
     }, */
     { 
         icon: Building2, 
         label: '组织管理', 
-        color: 'text-[#004ACC]', 
-        bg: 'bg-[linear-gradient(135deg,#EAF2FF_0%,#DCE9FF_100%)] border-[#DCE8FF]', 
+        color: 'text-[#2563EB]', 
+        bg: 'bg-[#2563EB1A] border-[#E2EBF5]', 
         onClick: () => onNavigateToOrganizationManagement ? onNavigateToOrganizationManagement() : Toast.info('功能开发中')
     },
     { 
         icon: FileCheck, 
         label: '用户协议', 
         color: 'text-[#10B981]', 
-        bg: 'bg-[linear-gradient(135deg,#ECFDF5_0%,#D1FAE5_100%)] border-[#A7F3D0]', 
+        bg: 'bg-[#F0FCFA] border-[#E2EBF5]', 
         onClick: () => onNavigateToUserAgreement ? onNavigateToUserAgreement() : Toast.info('暂无')
     },
     { 
         icon: Shield, 
         label: '隐私政策', 
-        color: 'text-[#7C3AED]', 
-        bg: 'bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)] border-[#E9D5FF]', 
+        color: 'text-[#476285]', 
+        bg: 'bg-[#F7FAFE] border-[#E2EBF5]', 
         onClick: () => onNavigateToPrivacyPolicy ? onNavigateToPrivacyPolicy() : Toast.info('暂无')
     },
     { 
         icon: Gift, 
         label: '分享应用', 
-        color: 'text-[#F97316]', 
-        bg: 'bg-[linear-gradient(135deg,#FFF7ED_0%,#FFE8C7_100%)] border-[#FFE3BD]', 
+        color: 'text-[#2563EB]', 
+        bg: 'bg-[#F7FAFE] border-[#E2EBF5]', 
         onClick: () => onNavigateToShareApp ? onNavigateToShareApp() : Toast.info('功能开发中')
     },
     // { icon: Layers, label: '问题清单', color: 'text-green-500', bg: 'bg-green-50', onClick: () => Toast.info('功能开发中，敬请期待！') },
   ];
 
   const menuItemsGroup2: any[] = [
-    // { icon: PenTool, label: '小狸共创官', color: 'text-orange-500', bg: 'bg-orange-50', onClick: () => Toast.info('功能开发中，敬请期待！') },
-    // { icon: HelpCircle, label: '帮助与反馈', color: 'text-[#004ACC]', bg: 'bg-[#004ACC1A]', onClick: () => Toast.info('功能开发中，敬请期待！') },
-    // { icon: Settings, label: '通用设置', color: 'text-[#004ACC]', bg: 'bg-[#004ACC1A]', onClick: () => Toast.info('功能开发中，敬请期待！') },
+    // { icon: PenTool, label: '小狸共创官', color: 'text-[#2563EB]', bg: 'bg-[#F7FAFE]', onClick: () => Toast.info('功能开发中，敬请期待！') },
+    // { icon: HelpCircle, label: '帮助与反馈', color: 'text-[#2563EB]', bg: 'bg-[#2563EB1A]', onClick: () => Toast.info('功能开发中，敬请期待！') },
+    // { icon: Settings, label: '通用设置', color: 'text-[#2563EB]', bg: 'bg-[#2563EB1A]', onClick: () => Toast.info('功能开发中，敬请期待！') },
   ];
 
   const renderMenuItem = (item: any, index: number, total: number) => (
@@ -286,22 +286,22 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       onClick={item.onClick}
       onMouseDown={(e) => e.preventDefault()}
       tabIndex={-1}
-      className={`w-full flex items-center justify-between px-3.5 py-3.5 transition-colors outline-none active:bg-[#004ACC1A] ${index !== total - 1 ? 'border-b border-[#E2EBF5]/55' : ''
+      className={`w-full flex items-center justify-between px-4 py-3.5 transition-colors outline-none bg-[#FFFFFF] active:bg-[#F7FAFE] ${index !== total - 1 ? 'border-b border-[#E2EBF5]/70' : ''
         }`}
     >
       <div className="flex items-center gap-3">
-        <div className={`w-9 h-9 rounded-[12px] ${item.bg} flex items-center justify-center shadow-[0_6px_14px_rgba(15,40,72,0.045)]`}>
+        <div className={`w-9 h-9 rounded-[12px] ${item.bg} flex items-center justify-center border shadow-none`}>
           <item.icon size={16} className={item.color} strokeWidth={2.1} />
         </div>
         <span className="text-[14px] text-[#0F2848] font-normal">{item.label}</span>
       </div>
-      <ChevronRight size={18} className="text-[#CBD7E5]" />
+      <ChevronRight size={18} className="text-[#8AA2BF]" />
     </button>
   );
 
 
   return (
-    <div className="h-full xl-page flex flex-col overflow-y-auto pb-32">
+      <div className="h-full xl-page flex flex-col overflow-y-auto pb-32">
       {/* Hidden File Input */}
       <input
         type="file"
@@ -312,8 +312,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       />
 
       {/* Header */}
-      <div className="bg-[linear-gradient(180deg,#F7FAFE_0%,rgba(247,250,254,0.96)_100%)] px-4 py-4 flex items-center justify-center relative">
-        <h1 className="text-[18px] font-semibold text-[#0F2848]">我的</h1>
+      <div className="bg-[#F7FAFE] px-4 py-4 flex items-center justify-center relative">
+        <h1 className="text-[18px] font-medium text-[#0F2848]">我的</h1>
       </div>
 
       {/* Profile */}
@@ -321,7 +321,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         {/* <div className="relative mb-3 cursor-pointer" onClick={handleAvatarClick}> */}
         <div className="flex items-center gap-3">
           <div className="relative shrink-0">
-            <div className="w-14 h-14 rounded-[18px] bg-[#F7FAFE] flex items-center justify-center overflow-hidden border border-[#E2EBF5]/60">
+            <div className="w-14 h-14 rounded-[14px] bg-[#F7FAFE] flex items-center justify-center overflow-hidden border border-[#E2EBF5]">
               <img
                 src={userAvatar || "/talk-assistant/assets/xiaoliavatar.png"}
                 alt="User Avatar"
@@ -340,7 +340,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
               </h2>
               <button
                 onClick={openProfileEditor}
-                className="shrink-0 w-8 h-8 flex items-center justify-center hover:bg-[#F7FAFE] rounded-[999px] text-[#8AA2BF] active:bg-gray-200 transition-colors"
+                className="shrink-0 w-8 h-8 flex items-center justify-center rounded-[10px] text-[#8AA2BF] active:bg-[#2563EB1A] transition-colors"
               >
                 <Edit2 size={16} />
               </button>
@@ -352,10 +352,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
         <button
           onClick={handleOpenTenantDrawer}
-          className="mt-3 flex w-full items-center justify-between rounded-[14px] border border-[#E2EBF5]/80 bg-[#F7FAFE]/72 px-3 py-2.5 active:scale-[0.99] transition-transform"
+          className="mt-3 flex w-full items-center justify-between rounded-[12px] border border-[#E2EBF5] bg-[#F7FAFE] px-3 py-2.5 active:scale-[0.99] transition-transform"
         >
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[11px] border border-[#E2EBF5]/80 bg-[#FFFFFF] text-[#004ACC]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border border-[#E2EBF5] bg-[#FFFFFF] text-[#2563EB]">
               <Building2 size={16} strokeWidth={2.1} />
             </div>
             <div className="min-w-0 text-left">
@@ -363,7 +363,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
               <p className="mt-0.5 text-[11px] leading-none text-[#8AA2BF]">当前组织</p>
             </div>
           </div>
-          <div className="ml-3 flex shrink-0 items-center gap-1 text-[12px] text-[#004ACC]">
+          <div className="ml-3 flex shrink-0 items-center gap-1 text-[12px] text-[#2563EB]">
             切换组织
             <ChevronRight size={15} />
           </div>
@@ -413,7 +413,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         isOpen={showLogoutDialog}
         title="退出登录"
         message="确定要退出当前账号吗？退出后需要重新登录才能使用。"
-        icon={<LogOut size={28} className="text-[#004ACC]" />}
+        icon={<LogOut size={28} className="text-[#2563EB]" />}
         confirmText="确认退出"
         cancelText="取消"
         onClose={() => setShowLogoutDialog(false)}
@@ -427,7 +427,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         message="注销后，您的所有数据（包括录音、报告等）将被永久删除且无法恢复。确定要继续吗？"
         icon={<Trash2 size={28} className="text-red-500" />}
         confirmText="确认注销"
-        confirmButtonColor="#EF4444" 
+        confirmButtonColor="#DC2626" 
         cancelText="取消"
         onClose={() => setShowDeleteAccountDialog(false)}
         onConfirm={handleDeleteAccount}
@@ -446,7 +446,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
             <h3 className="text-[15px] leading-none font-medium text-[#0F2848]">切换组织</h3>
             <button
               onClick={() => setShowTenantDrawer(false)}
-              className="h-8 min-w-8 rounded-full border border-[#E2EBF5] bg-[#FFFFFF] px-2.5 text-[12px] text-[#004ACC]"
+              className="h-8 min-w-8 rounded-full border border-[#E2EBF5] bg-[#FFFFFF] px-2.5 text-[12px] text-[#2563EB]"
             >
               关闭
             </button>
@@ -455,12 +455,12 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
           <div className="max-h-[42vh] overflow-y-auto px-3 pb-5 pt-2 space-y-2">
             {tenantsLoading ? (
               <div className="flex flex-col items-center justify-center py-8">
-                <div className="w-7 h-7 border-2 border-[#337DFF] border-t-[#004ACC] rounded-full animate-spin mb-3" />
+                <div className="w-7 h-7 border-2 border-[#4C8BF5] border-t-[#2563EB] rounded-full animate-spin mb-3" />
                 <p className="text-[#8AA2BF] text-xs">加载中...</p>
               </div>
             ) : tenants.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 opacity-70">
-                <Building2 size={34} className="text-[#CBD7E5] mb-3" />
+                <Building2 size={34} className="text-[#8AA2BF] mb-3" />
                 <p className="text-[#8AA2BF] text-xs">暂无可选组织</p>
               </div>
             ) : (
@@ -472,23 +472,23 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                     onClick={() => handleSwitchTenant(tenant)}
                     className={`flex min-h-[60px] w-full items-center gap-3 rounded-[14px] border text-left transition-all active:scale-[0.99] ${
                       isActive
-                        ? 'bg-[#EAF2FF] border-[#337DFF] px-3 py-2.5 shadow-[0_6px_16px_rgba(0,74,204,0.10)]'
+                        ? 'bg-[#2563EB1A] border-[#4C8BF5] px-3 py-2.5 shadow-[0_6px_16px_rgba(37, 99, 235,0.10)]'
                         : 'bg-[#FFFFFF] border-[#E2EBF5] px-3 py-2.5'
                     }`}
                   >
                     <div className={`w-9 h-9 rounded-[9px] flex items-center justify-center shrink-0 ${
-                      isActive ? 'bg-[#004ACC] text-[#FFFFFF]' : 'bg-[#F7FAFE] text-[#8AA2BF]'
+                      isActive ? 'bg-[#2563EB] text-[#FFFFFF]' : 'bg-[#F7FAFE] text-[#8AA2BF]'
                     }`}>
                       <Building2 size={18} strokeWidth={2} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-3 mb-0.5">
-                        <h4 className={`truncate text-[14px] leading-[18px] font-medium ${isActive ? 'text-[#004ACC]' : 'text-[#0F2848]'}`}>
+                        <h4 className={`truncate text-[14px] leading-[18px] font-medium ${isActive ? 'text-[#2563EB]' : 'text-[#0F2848]'}`}>
                           {tenant.name}
                         </h4>
-                        {isActive && <Check size={16} className="text-[#004ACC] shrink-0" strokeWidth={2.6} />}
+                        {isActive && <Check size={16} className="text-[#2563EB] shrink-0" strokeWidth={2.6} />}
                       </div>
-                      <p className={`text-[11px] leading-none font-normal ${isActive ? 'text-[#004ACC]/62' : 'text-[#8AA2BF]'}`}>
+                      <p className={`text-[11px] leading-none font-normal ${isActive ? 'text-[#2563EB]/62' : 'text-[#8AA2BF]'}`}>
                         {tenant.tenantAdmin ? '管理员' : '成员'}
                       </p>
                     </div>
@@ -528,7 +528,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                     }}
                   />
                 </div>
-                <span className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#FFFFFF] bg-[#004ACC] text-[#FFFFFF] shadow-[0_4px_10px_rgba(15,40,72,0.12)]">
+                <span className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#FFFFFF] bg-[#2563EB] text-[#FFFFFF] shadow-[0_4px_10px_rgba(15,40,72,0.12)]">
                   <Camera size={14} strokeWidth={2.2} />
                 </span>
               </button>
@@ -558,7 +558,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                   setNewNickName(val);
                 }}
                 maxLength={50}
-                className="w-full px-4 py-3 text-[14px] text-[#0F2848] border border-[#E2EBF5] rounded-[14px] focus:outline-none focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#337DFF] transition-all"
+                className="w-full px-4 py-3 text-[14px] text-[#0F2848] border border-[#E2EBF5] rounded-[14px] focus:outline-none focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#4C8BF5] transition-all"
                 placeholder="请输入昵称"
               />
               <div className="text-right text-xs text-[#8AA2BF] mt-1">

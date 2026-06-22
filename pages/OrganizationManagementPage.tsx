@@ -249,7 +249,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
       message: `确认切换为 ${tenant.name} 吗？`,
       cancelButtonText: '取 消',
       confirmButtonText: '确 定',
-      confirmButtonColor: '#004ACC',
+      confirmButtonColor: '#2563EB',
       onConfirm: async () => {
         try {
           Toast.loading({ message: '切换中...', duration: 0 });
@@ -377,7 +377,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
   return (
     <div className="flex flex-col h-screen xl-page">
       {/* Header */}
-      <div className="bg-[linear-gradient(180deg,#F7FAFE_0%,rgba(247,250,254,0.96)_100%)] px-4 py-3 flex items-center justify-between relative flex-shrink-0">
+      <div className="bg-[#F7FAFE] px-4 py-3 flex items-center justify-between relative flex-shrink-0">
         <button onClick={onBack} className="xl-icon-btn !min-w-10 !min-h-10">
           <ChevronLeft size={21} />
         </button>
@@ -392,7 +392,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                   onChange={(e) => setEditValue(e.target.value)}
                   onBlur={handleSave}
                   onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                  className="text-center text-[18px] font-medium text-[#0F2848] bg-[#F7FAFE] border-2 border-[#004ACC] rounded-[12px] px-4 py-1.5 focus:outline-none min-w-[180px] max-w-[280px]"
+                  className="text-center text-[18px] font-medium text-[#0F2848] bg-[#F7FAFE] border-2 border-[#2563EB] rounded-[12px] px-4 py-1.5 focus:outline-none min-w-[180px] max-w-[280px]"
                 />
               </div>
             ) : (
@@ -415,7 +415,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                           setIsEditing(true);
                         }}
                       >
-                        <Edit2 size={14} className="text-[#CBD7E5]" />
+                        <Edit2 size={14} className="text-[#8AA2BF]" />
                       </div>
                     )}
                   </div>
@@ -442,7 +442,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
           <div className="space-y-5">
             {/* Invite Button */}
             <button 
-                className="w-full bg-primary-gradient active:scale-[0.98] transition-all text-[#FFFFFF] py-3 rounded-[14px] flex items-center justify-center gap-2 shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
+                className="w-full bg-primary-gradient active:scale-[0.98] transition-all text-[#FFFFFF] py-3 rounded-[14px] flex items-center justify-center gap-2 shadow-[0_6px_14px_rgba(37, 99, 235,0.14)]"
                 onClick={() => fetchInviteCode()}
             >
               <UserPlus size={18} strokeWidth={2.5} />
@@ -451,7 +451,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
 
             {/* Section Header & Search */}
             <div className="flex items-center justify-between">
-                <h2 className="text-[14px] font-medium text-[#CBD7E5] uppercase tracking-widest px-1">
+                <h2 className="text-[14px] font-medium text-[#476285] uppercase tracking-widest px-1">
                     组织人员 ({members.length})
                 </h2>
                 <div className="relative w-40">
@@ -460,9 +460,9 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                         placeholder="搜索..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-9 pl-8 pr-3 bg-[#FFFFFF] border border-[#E2EBF5]/70 rounded-[999px] text-[13px] text-[#476285] placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-[#337DFF] transition-all shadow-[0_3px_10px_rgba(15,40,72,0.04)]"
+                        className="w-full h-9 pl-8 pr-3 bg-[#FFFFFF] border border-[#E2EBF5]/70 rounded-[999px] text-[13px] text-[#0F2848] placeholder:text-[#8AA2BF] focus:outline-none focus:ring-1 focus:ring-[#4C8BF5] transition-all shadow-[0_3px_10px_rgba(15,40,72,0.04)]"
                     />
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#CBD7E5]" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8AA2BF]" />
                 </div>
             </div>
 
@@ -471,12 +471,12 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                 <List
                   finished={finished}
                   onLoad={onLoad}
-                  finishedText={<span className="text-[12px] text-[#CBD7E5]">没有更多了</span>}
-                  loadingText={<div className="flex items-center justify-center gap-2"><Loading size="14px" /><span className="text-[12px] text-[#CBD7E5]">加载中...</span></div>}
+                  finishedText={<span className="text-[12px] text-[#8AA2BF]">没有更多了</span>}
+                  loadingText={<div className="flex items-center justify-center gap-2"><Loading size="14px" /><span className="text-[12px] text-[#8AA2BF]">加载中...</span></div>}
                 >
                   {membersLoading && members.length === 0 ? (
                       <div className="flex-1 flex flex-col items-center justify-center py-16 opacity-40">
-                          <Loading type="spinner" color="#004ACC" size="28px" />
+                          <Loading type="spinner" color="#2563EB" size="28px" />
                           <p className="text-[#8AA2BF] text-[13px] mt-3">正在加载成员...</p>
                       </div>
                   ) : (
@@ -484,13 +484,13 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                       {filteredMembers.map((member: Member, index: number) => (
                         <div 
                             key={member.id} 
-                            className={`flex items-center gap-3.5 p-3.5 ${index !== filteredMembers.length - 1 ? 'border-b border-[#E2EBF5]/60' : ''} active:bg-[#004ACC1A] transition-colors cursor-pointer`}
+                            className={`flex items-center gap-3.5 p-3.5 ${index !== filteredMembers.length - 1 ? 'border-b border-[#E2EBF5]/60' : ''} active:bg-[#2563EB1A] transition-colors cursor-pointer`}
                         >
                             <div className="w-10 h-10 rounded-[13px] overflow-hidden bg-[#F7FAFE] flex-shrink-0 border border-[#E2EBF5]/60">
                                 {member.avatar ? (
                                   <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-[#004ACC1A] text-[#E2EBF5]">
+                                  <div className="w-full h-full flex items-center justify-center bg-[#2563EB1A] text-[#2563EB]">
                                     <Building2 size={24} />
                                   </div>
                                 )}
@@ -501,10 +501,10 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                                         {member.isAdmin ? maskPhoneNumber(member.phone || member.name) : maskPhoneNumber(member.name)}
                                     </span>
                                     {member.isAdmin && (
-                                        <span className="px-1.5 py-0.5 bg-[#004ACC1A] text-[#004ACC] text-[9px] font-medium rounded-md border border-[#E2EBF5]/50">管理员</span>
+                                        <span className="px-1.5 py-0.5 bg-[#2563EB1A] text-[#2563EB] text-[9px] font-medium rounded-md border border-[#E2EBF5]/50">管理员</span>
                                     )}
                                 </div>
-                                <span className="text-[12.5px] text-[#A5B3C2] font-medium mt-0.5 block min-h-[18px]">
+                                <span className="text-[12.5px] text-[#8AA2BF] font-medium mt-0.5 block min-h-[18px]">
                                     {/* 加入时间暂时隐藏 */}
                                     {/* {member.isAdmin ? "" : `加入时间：${member.createdTime}`} */}
                                 </span>
@@ -536,7 +536,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
         <div className="flex flex-col max-h-[70vh] p-5 pb-8">
             <div className="w-12 h-1.5 bg-slate-100 rounded-[999px] self-center mb-5" />
             
-            <h2 className="text-[14px] font-medium text-[#CBD7E5] uppercase tracking-widest mb-4 px-1">
+            <h2 className="text-[14px] font-medium text-[#476285] uppercase tracking-widest mb-4 px-1">
                 切换组织
             </h2>
             
@@ -549,7 +549,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                             key={item.id}
                             className={`flex items-center gap-3 p-3 rounded-[14px] transition-all active:scale-[0.98] cursor-pointer ${
                                 String(item.id) === String(tenantId) 
-                                ? 'bg-[#004ACC1A] border border-[#E2EBF5]' 
+                                ? 'bg-[#2563EB1A] border border-[#E2EBF5]' 
                                 : 'bg-[#FFFFFF] border border-[#E2EBF5]/60'
                             }`}
                             onClick={() => handleSwitchTenant(item)}
@@ -564,7 +564,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                             
                             <div className="flex-1 min-w-0">
                                 <h3 className={`text-[15px] font-medium truncate ${
-                                    String(item.id) === String(tenantId) ? 'text-[#004ACC]' : 'text-[#0F2848]'
+                                    String(item.id) === String(tenantId) ? 'text-[#2563EB]' : 'text-[#0F2848]'
                                 }`}>
                                     {item.name}
                                 </h3>
@@ -574,7 +574,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                             </div>
                             
                             {String(item.id) === String(tenantId) && (
-                                <Check size={18} className="text-[#004ACC]" strokeWidth={3} />
+                                <Check size={18} className="text-[#2563EB]" strokeWidth={3} />
                             )}
                         </div>
                     ))
@@ -593,14 +593,14 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
       >
         <div className="bg-[#FFFFFF] p-4 flex flex-col items-center relative overflow-hidden">
             {/* 装饰性背景 */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-[#004ACC1A]/50 rounded-[999px] blur-2xl -mr-12 -mt-12" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#2563EB1A]/50 rounded-[999px] blur-2xl -mr-12 -mt-12" />
             <div className="absolute top-8 right-0 opacity-[0.03] rotate-12">
-                <Users size={120} className="text-[#004ACC]" />
+                <Users size={120} className="text-[#2563EB]" />
             </div>
 
             {/* 图标 */}
-            <div className="w-12 h-12 bg-[#004ACC1A] border border-[#E2EBF5] rounded-[15px] flex items-center justify-center mb-3 relative z-10">
-                <UserPlus size={23} className="text-[#004ACC]" strokeWidth={2.3} />
+            <div className="w-12 h-12 bg-[#2563EB1A] border border-[#E2EBF5] rounded-[15px] flex items-center justify-center mb-3 relative z-10">
+                <UserPlus size={23} className="text-[#2563EB]" strokeWidth={2.3} />
             </div>
 
             {/* 标题文案 */}
@@ -611,7 +611,7 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
 
             {/* 链接容器 */}
             <div className="w-full bg-[#FFFFFF] rounded-[20px] p-3 mb-3 relative z-10 border border-[#E2EBF5]/50 flex flex-col justify-center">
-                <p className="text-[10px] text-[#CBD7E5] font-semibold mb-2 text-center uppercase tracking-wider">组织邀请链接</p>
+                <p className="text-[10px] text-[#8AA2BF] font-semibold mb-2 text-center uppercase tracking-wider">组织邀请链接</p>
                 {inviteUrl ? (
                     <div
                         className="bg-[#FFFFFF] border border-[#E2EBF5]/70 rounded-[12px] px-2 py-1 overflow-y-auto"
@@ -623,14 +623,14 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                     </div>
                 ) : (
                     <div className="flex justify-center py-2">
-                        <Loading size="20px" type="spinner" color="#94A3B8" />
+                        <Loading size="20px" type="spinner" color="#8AA2BF" />
                     </div>
                 )}
             </div>
 
             {/* 复制按钮 */}
             <button
-                className={`w-full h-10 bg-primary-gradient text-[#FFFFFF] rounded-[14px] text-[14px] font-medium active:scale-95 transition-all relative z-10 shadow-[0_6px_14px_rgba(0,74,204,0.14)] ${
+                className={`w-full h-10 bg-primary-gradient text-[#FFFFFF] rounded-[14px] text-[14px] font-medium active:scale-95 transition-all relative z-10 shadow-[0_6px_14px_rgba(37, 99, 235,0.14)] ${
                     !inviteUrl ? 'opacity-50 pointer-events-none' : ''
                 }`}
                 onClick={async () => {

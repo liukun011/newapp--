@@ -82,13 +82,13 @@ const MessageCenterPage: React.FC<MessageCenterPageProps> = ({ onBack }) => {
         ); 
       case 'compliance':
         return (
-           <div className="w-10 h-10 rounded-[999px] bg-[#EAF2FF] flex items-center justify-center flex-shrink-0">
-             <ShieldAlert className="text-[#337DFF]" size={20} />
+           <div className="w-10 h-10 rounded-[999px] bg-[#2563EB1A] flex items-center justify-center flex-shrink-0">
+             <ShieldAlert className="text-[#4C8BF5]" size={20} />
            </div>
         );
       case 'assistant':
         return (
-           <div className="w-10 h-10 rounded-[999px] bg-[#EAF2FF] flex items-center justify-center flex-shrink-0">
+           <div className="w-10 h-10 rounded-[999px] bg-[#2563EB1A] flex items-center justify-center flex-shrink-0">
              <MessageSquare className="text-primary" size={20} />
            </div>
         );

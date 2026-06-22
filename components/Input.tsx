@@ -19,8 +19,8 @@ const Input: React.FC<InputProps> = ({
   const baseClasses = "flex items-center w-full transition-colors";
   
   const variantClasses = variant === 'outlined' 
-    ? "border border-[#E2EBF5] rounded-[14px] px-4 py-3 bg-[#FFFFFF] focus-within:border-[#004ACC] focus-within:ring-1 focus-within:ring-[#337DFF]"
-    : "border-b border-[#E2EBF5]/60 py-4";
+    ? "border border-[#E2EBF5] rounded-[12px] px-4 py-3 bg-[#FFFFFF] focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB]/20"
+    : "border-b border-[#E2EBF5]/70 py-4";
 
   return (
     <div className={`${baseClasses} ${variantClasses} ${containerClass}`}>
@@ -39,7 +39,7 @@ const Input: React.FC<InputProps> = ({
         />
       </div>
       {suffix && (
-        <div className={`ml-3 pl-3 ${variant === 'flushed' ? 'border-l border-[#E2EBF5]/60' : ''}`}>
+        <div className={`ml-3 pl-3 ${variant === 'flushed' ? 'border-l border-[#E2EBF5]/70' : ''}`}>
           {suffix}
         </div>
       )}

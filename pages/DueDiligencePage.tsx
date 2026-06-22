@@ -640,7 +640,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       ),
       confirmButtonText: '确认',
       cancelButtonText: '取消',
-      confirmButtonColor: '#004ACC',
+      confirmButtonColor: '#2563EB',
     }).then(async () => {
       if (!currentDeal?.id) {
         Toast.fail('尽调信息不存在');
@@ -802,7 +802,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       message: '请确认所有访谈工作已完成。归档后仅支持查看和导出报告，不再支持编辑。',
       cancelButtonText: '暂不归档',
       confirmButtonText: '确认归档',
-      confirmButtonColor: '#004ACC',
+      confirmButtonColor: '#2563EB',
     }).then(async () => {
       if (!currentDeal?.id) {
         Toast.fail('尽调信息不存在');
@@ -987,7 +987,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             {showMoreMenu && (
               <div className="absolute right-0 top-12 w-36 rounded-[18px] bg-[#FFFFFF] border border-[#E2EBF5] shadow-[0_16px_36px_rgba(15,40,72,0.14)] overflow-hidden z-[60]">
                 <button
-                  className="w-full h-11 px-4 flex items-center gap-2 text-[13px] font-normal text-[#0F2848] active:bg-[#004ACC1A]"
+                  className="w-full h-11 px-4 flex items-center gap-2 text-[13px] font-normal text-[#0F2848] active:bg-[#2563EB1A]"
                   onClick={() => {
                     setShowMoreMenu(false);
                     handleEditInfoThrottled();
@@ -997,7 +997,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 </button>
                 {!isDemo && (
                   <button
-                    className="w-full h-11 px-4 flex items-center gap-2 text-[13px] font-normal text-[#0F2848] active:bg-[#004ACC1A]"
+                    className="w-full h-11 px-4 flex items-center gap-2 text-[13px] font-normal text-[#0F2848] active:bg-[#2563EB1A]"
                     onClick={() => {
                       setShowMoreMenu(false);
                       currentDeal?.status === '5' ? handleCancelArchiveThrottled() : handleArchiveThrottled();
@@ -1026,7 +1026,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             <>
               {reportCardState === 'loading' ? (
                 <div className="xl-report-state min-h-[136px] flex items-center justify-center">
-                  <div className="w-6 h-6 border-2 border-[#E2EBF5] border-t-[#004ACC] rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-[#E2EBF5] border-t-[#2563EB] rounded-full animate-spin" />
                 </div>
               ) : (
                 <div className={`xl-report-state ${reportCardState === 'generating' ? 'is-processing' : ''} ${reportCardState === 'failed' || reportCardState === 'notStarted' ? 'is-failed' : ''}`}>
@@ -1108,7 +1108,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             </>
           )}
 
-          <div className="sticky top-0 z-40 -mx-1 px-1 py-1.5 bg-[linear-gradient(180deg,#F7FAFE_0%,rgba(247,250,254,0.96)_100%)]">
+          <div className="sticky top-0 z-40 -mx-1 px-1 py-1.5 bg-transparent">
             <div className="xl-segment flex">
               {[
                 ['interview', '访谈'],
@@ -1133,7 +1133,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 <div className="xl-card p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-[13px] bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)] border border-[#E9D5FF] text-[#7C3AED] flex items-center justify-center shrink-0 shadow-[0_8px_18px_rgba(124,58,237,0.10)]">
+                      <div className="w-10 h-10 rounded-[13px] bg-[#2563EB1A] border border-[#E2EBF5] text-[#2563EB] flex items-center justify-center shrink-0 shadow-[0_8px_18px_rgba(37,99,235,0.10)]">
                         <Mic size={18} strokeWidth={2.15} />
                       </div>
                       <h3 className="xl-section-title">开始新的访谈</h3>
@@ -1154,7 +1154,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     onClick={() => onOpenInterviewRecord?.(record)}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-[12px] bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)] border border-[#E9D5FF] text-[#7C3AED] flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-[12px] bg-[#2563EB1A] border border-[#E2EBF5] text-[#2563EB] flex items-center justify-center shrink-0">
                         <Mic size={16} strokeWidth={2.15} />
                       </div>
                       <div className="min-w-0">
@@ -1183,7 +1183,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               <div className="space-y-2">
                 {questionList.map((q, idx) => (
                   <div key={idx} className="xl-card-flat p-3 flex items-start gap-2.5">
-                    <span className="mt-0.5 w-5 h-5 rounded-[8px] bg-[linear-gradient(135deg,#FFF7ED_0%,#FFE8C7_100%)] border border-[#FFE3BD] text-[#F97316] text-[10px] leading-none font-medium flex items-center justify-center shrink-0">
+                    <span className="mt-0.5 w-5 h-5 rounded-[8px] bg-[#F7FAFE] border border-[#E2EBF5] text-[#2563EB] text-[10px] leading-none font-medium flex items-center justify-center shrink-0">
                       {idx + 1}
                     </span>
                     <p className="text-[12px] leading-[17px] font-normal text-[#0F2848]">{q.questionName}</p>
@@ -1200,12 +1200,12 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 <div className="xl-card p-4">
                   <div className="grid grid-cols-4 gap-2.5 text-center">
                     {[
-                      [Camera, '相机', () => cameraInputRef.current?.click(), 'bg-[linear-gradient(135deg,#EAF2FF_0%,#DCE9FF_100%)] border-[#DCE8FF] text-[#004ACC]'],
-                      [Image, '相册', () => galleryInputRef.current?.click(), 'bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)] border-[#E9D5FF] text-[#7C3AED]'],
-                      [Upload, '文件', () => fileInputRef.current?.click(), 'bg-[linear-gradient(135deg,#FFF7ED_0%,#FFE8C7_100%)] border-[#FFE3BD] text-[#F97316]'],
-                      [Mic, '语音录入', () => setVoiceModalVisible(true), 'bg-[linear-gradient(135deg,#ECFDF5_0%,#D1FAE5_100%)] border-[#A7F3D0] text-[#10B981]'],
+                      [Camera, '相机', () => cameraInputRef.current?.click(), 'bg-[#2563EB1A] border-[#E2EBF5] text-[#2563EB]'],
+                      [Image, '相册', () => galleryInputRef.current?.click(), 'bg-[#2563EB1A] border-[#E2EBF5] text-[#2563EB]'],
+                      [Upload, '文件', () => fileInputRef.current?.click(), 'bg-[#2563EB1A] border-[#E2EBF5] text-[#2563EB]'],
+                      [Mic, '语音录入', () => setVoiceModalVisible(true), 'bg-[#2563EB1A] border-[#E2EBF5] text-[#2563EB]'],
                     ].map(([Icon, label, action, colorClass]: any) => (
-                      <button key={label} onClick={action} className="min-h-[62px] rounded-[15px] bg-[#FFFFFF] border border-[#E2EBF5] flex flex-col items-center justify-center gap-1.5 text-[#334155] active:scale-95 transition-transform">
+                      <button key={label} onClick={action} className="min-h-[62px] rounded-[15px] bg-[#FFFFFF] border border-[#E2EBF5] flex flex-col items-center justify-center gap-1.5 text-[#0F2848] active:scale-95 transition-transform">
                         <span className={`w-8 h-8 rounded-[11px] border flex items-center justify-center ${colorClass}`}>
                           <Icon size={17} />
                         </span>
@@ -1222,10 +1222,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     ...(Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary : []),
                   ].map((item: any, idx: number) => {
                     const fileTileClass = idx % 3 === 0
-                      ? 'bg-[linear-gradient(135deg,#EAF2FF_0%,#DCE9FF_100%)] text-[#004ACC] border-[#DCE8FF]'
+                      ? 'bg-[#2563EB1A] text-[#2563EB] border-[#E2EBF5]'
                       : idx % 3 === 1
-                        ? 'bg-[linear-gradient(135deg,#FFF7ED_0%,#FFE8C7_100%)] text-[#F97316] border-[#FFE3BD]'
-                        : 'bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)] text-[#7C3AED] border-[#E9D5FF]';
+                        ? 'bg-[#F7FAFE] text-[#2563EB] border-[#E2EBF5]'
+                        : 'bg-[#2563EB1A] text-[#2563EB] border-[#E2EBF5]';
                     return (
                     <div key={idx} className="flex items-center gap-3 py-2.5 border-b border-[#E2EBF5]/70 last:border-b-0">
                       <div className={`w-9 h-9 rounded-[12px] border flex items-center justify-center text-[11px] font-semibold ${fileTileClass}`}>
@@ -1339,7 +1339,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       {enterpriseShareholders.map((holder: any, idx: number) => (
                         <div key={`${holder.name}-${idx}`} className="flex items-center justify-between gap-3 text-[12px]">
                           <span className="font-normal text-[#0F2848] truncate">{holder.name}</span>
-                          <span className="shrink-0 text-[#004ACC] font-semibold">{holder.ratio}</span>
+                          <span className="shrink-0 text-[#2563EB] font-semibold">{holder.ratio}</span>
                         </div>
                       ))}
                     </div>
@@ -1362,9 +1362,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                               <span className="text-[#8AA2BF]">变更前 </span>
                               <span className="font-medium text-[#476285]">{change.ratio_before || '-'}</span>
                             </div>
-                            <div className="rounded-[10px] bg-[#004ACC1A] px-2 py-1.5">
-                              <span className="text-[#004ACC]">变更后 </span>
-                              <span className="font-semibold text-[#004ACC]">{change.ratio_after || '-'}</span>
+                            <div className="rounded-[10px] bg-[#2563EB1A] px-2 py-1.5">
+                              <span className="text-[#2563EB]">变更后 </span>
+                              <span className="font-semibold text-[#2563EB]">{change.ratio_after || '-'}</span>
                             </div>
                           </div>
                         </div>

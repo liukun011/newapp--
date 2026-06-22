@@ -135,7 +135,7 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-[#E2EBF5] border-t-[#004ACC] rounded-[999px] animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#E2EBF5] border-t-[#2563EB] rounded-[999px] animate-spin"></div>
             <p className="text-[#8AA2BF] text-sm mt-4">加载中...</p>
           </div>
         ) : (
@@ -177,7 +177,7 @@ const TemplateSelectionPage: React.FC<TemplateSelectionPageProps> = ({
                   {/* Radio Button */}
                   <div className={`w-6 h-6 rounded-[999px] border-2 flex items-center justify-center ${
                     selectedId === template.id 
-                      ? 'border-[#004ACC] bg-[#004ACC]' 
+                      ? 'border-[#2563EB] bg-[#2563EB]' 
                       : 'border-gray-300'
                   }`}>
                     {selectedId === template.id && (

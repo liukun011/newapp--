@@ -72,7 +72,7 @@ const config = {
 // 调试日志
 if (typeof window !== 'undefined') {
   setTimeout(() => {
-    console.log(`%c🌟 [Config Center] Final API URL: ${config.apiBaseUrl}`, "color: #4338CA; font-weight: bold;");
+    console.log(`%c🌟 [Config Center] Final API URL: ${config.apiBaseUrl}`, "color: #4F46E5; font-weight: bold;");
   }, 1000);
 }
 

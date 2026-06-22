@@ -78,7 +78,7 @@ const AiGenerationPage: React.FC<AiGenerationPageProps> = ({ onBack, onConfirm }
         </div>
         
         {/* Loading Bar */}
-        <div className="w-64 h-1.5 bg-[#004ACC1A] rounded-[999px] overflow-hidden mb-6">
+        <div className="w-64 h-1.5 bg-[#2563EB1A] rounded-[999px] overflow-hidden mb-6">
            <div 
              className="h-full rounded-[999px] animate-[width_2s_ease-in-out_infinite] bg-primary" 
              style={{ width: '50%', animationName: 'shimmer', animationDuration: '2s', animationIterationCount: 'infinite' }} 
@@ -144,7 +144,7 @@ const AiGenerationPage: React.FC<AiGenerationPageProps> = ({ onBack, onConfirm }
             variant="primary" 
             block 
             onClick={handleInitialConfirm} 
-            className="!rounded-[999px] !h-12 !text-[16px] shadow-[rgba(0,74,204,0.18)] bg-primary"
+            className="!rounded-[999px] !h-12 !text-[16px] shadow-[rgba(37, 99, 235,0.18)] bg-primary"
          >
             确认
          </Button>

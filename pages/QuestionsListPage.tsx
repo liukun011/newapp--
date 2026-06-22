@@ -287,7 +287,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#F8FAFF]">
+    <div className="flex flex-col h-screen bg-[#2563EB1A]">
       {/* Header */}
       <div className="bg-[#FFFFFF] px-4 py-3 flex items-center justify-between border-b border-[#E2EBF5]/50 shrink-0 z-10">
         <button onClick={handleBack} className="p-2 -ml-2 text-[#476285] active:bg-[#F7FAFE] rounded-[999px]"><ArrowLeft size={24} /></button>
@@ -308,7 +308,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                 <button 
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-1.5 rounded-[18px] text-[12px] font-medium transition-all flex items-center gap-1.5 shrink-0 ${isActive ? 'bg-primary-gradient text-[#FFFFFF] shadow-[0_4px_12px_rgba(0,74,204,0.18)]' : 'bg-[#FFFFFF] text-[#8AA2BF] border border-[#E2EBF5]/50'}`}
+                  className={`px-4 py-1.5 rounded-[18px] text-[12px] font-medium transition-all flex items-center gap-1.5 shrink-0 ${isActive ? 'bg-primary-gradient text-[#FFFFFF] shadow-[0_4px_12px_rgba(37, 99, 235,0.18)]' : 'bg-[#FFFFFF] text-[#8AA2BF] border border-[#E2EBF5]/50'}`}
                 >
                   {tab === 'PENDING' && <Cpu size={12} />}
                   {labels[tab]}
@@ -357,11 +357,11 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                       <div className="flex-1">
                         <div className="flex items-center gap-1.5 mb-1">
                           {String(item.questionType) === '3' ? (
-                            <span className="text-[9px] font-medium text-[#004ACC] bg-[#004ACC1A] px-1.5 py-0.5 rounded">
+                            <span className="text-[9px] font-medium text-[#2563EB] bg-[#2563EB1A] px-1.5 py-0.5 rounded">
                               手动添加问题
                             </span>
                           ) : (
-                            <span className={`text-[9px] font-medium uppercase px-1.5 py-0.5 rounded ${isAiSource ? 'bg-[#004ACC1A] text-[#004ACC]' : 'bg-[#004ACC1A] text-[#004ACC]'}`}>
+                            <span className={`text-[9px] font-medium uppercase px-1.5 py-0.5 rounded ${isAiSource ? 'bg-[#2563EB1A] text-[#2563EB]' : 'bg-[#2563EB1A] text-[#2563EB]'}`}>
                               {isAiSource ? 'AI 洞察问题' : '清单添加问题'}
                             </span>
                           )}
@@ -369,12 +369,12 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                         </div>
                         
                         <div className="flex items-start gap-1.5">
-                          {activeTab === 'ALL' && <span className="text-[14px] font-medium text-[#004ACC] mt-[1px]">{index + 1}.</span>}
-                          <p className={`flex-1 text-[14px] font-medium leading-[1.5] ${isChecked ? 'text-[#004ACC]' : 'text-[#476285]'}`}>
+                          {activeTab === 'ALL' && <span className="text-[14px] font-medium text-[#2563EB] mt-[1px]">{index + 1}.</span>}
+                          <p className={`flex-1 text-[14px] font-medium leading-[1.5] ${isChecked ? 'text-[#2563EB]' : 'text-[#476285]'}`}>
                             {qName}
                           </p>
                           {!isAiRaw && item.questionAnswer && (
-                              <div className="shrink-0 text-[#004ACC] mt-0.5">
+                              <div className="shrink-0 text-[#2563EB] mt-0.5">
                                 {expandedIds[item.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                               </div>
                           )}
@@ -394,13 +394,13 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                         <div className="shrink-0 flex items-center gap-1">
                           <button
                             onClick={(e) => { e.stopPropagation(); handleEditQuestion(item); }}
-                            className="p-1.5 text-[#CBD7E5] hover:text-[#004ACC] transition-colors"
+                            className="p-1.5 text-[#8AA2BF] hover:text-[#2563EB] transition-colors"
                           >
                             <Pencil size={14} />
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); handleDeleteQuestion(item); }}
-                            className="p-1.5 text-[#CBD7E5] hover:text-[#004ACC] transition-colors"
+                            className="p-1.5 text-[#8AA2BF] hover:text-[#2563EB] transition-colors"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -411,7 +411,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                     {!isAiRaw && expandedIds[item.id] && item.questionAnswer && (
                       <div className="mt-2.5 pt-2.5 border-t border-[#E2EBF5]/50 animate-in fade-in slide-in-from-top-1 duration-200">
                         <div className="flex items-center gap-1.5 mb-1.5">
-                          <div className="w-1.5 h-1.5 rounded-[999px] bg-[#004ACC]" />
+                          <div className="w-1.5 h-1.5 rounded-[999px] bg-[#2563EB]" />
                           <span className="text-[11px] font-medium text-[#8AA2BF] uppercase tracking-wider">访谈回答</span>
                         </div>
                         <p className="text-[13px] text-[#476285] leading-relaxed bg-[#F7FAFE]/50 p-2.5 rounded-[14px] border border-white">
@@ -439,7 +439,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
               <textarea
                 value={editedQuestionName}
                 onChange={(e) => setEditedQuestionName(e.target.value)}
-                className="w-full min-h-[120px] p-4 text-base text-[#476285] bg-[#F7FAFE] rounded-[14px] border border-[#E2EBF5] focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#337DFF] outline-none resize-none transition-all"
+                className="w-full min-h-[120px] p-4 text-base text-[#476285] bg-[#F7FAFE] rounded-[14px] border border-[#E2EBF5] focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#4C8BF5] outline-none resize-none transition-all"
                 placeholder="请输入问题内容"
               />
             </div>
@@ -461,8 +461,8 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
           <div className="absolute inset-0 bg-black/50" onClick={() => setQuestionDeleteModalVisible(false)} />
           <div className="relative bg-[#FFFFFF] rounded-[18px] w-[85%] max-w-[320px] shadow-[0_14px_34px_rgba(15,40,72,0.12)] animate-fadeIn overflow-hidden">
             <div className="pt-6 pb-4 px-6 text-center">
-              <div className="w-14 h-14 mx-auto mb-4 bg-[#004ACC1A] rounded-[999px] flex items-center justify-center">
-                <Trash2 size={24} className="text-[#004ACC]" />
+              <div className="w-14 h-14 mx-auto mb-4 bg-[#2563EB1A] rounded-[999px] flex items-center justify-center">
+                <Trash2 size={24} className="text-[#2563EB]" />
               </div>
               <h3 className="text-lg font-semibold text-[#0F2848] mb-2">删除问题</h3>
               <p className="text-sm text-[#476285] leading-relaxed">确定要删除该问题吗？删除后无法恢复。</p>
@@ -472,7 +472,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
                 className="flex-1 py-4 text-center text-[#476285] font-medium hover:bg-[#F7FAFE] transition-colors"
               >取消</button>
               <button onClick={handleConfirmDelete}
-                className="flex-1 py-4 text-center text-white font-medium bg-[#004ACC] hover:bg-[#004ACC] transition-colors"
+                className="flex-1 py-4 text-center text-white font-medium bg-[#2563EB] hover:bg-[#2563EB] transition-colors"
               >确认删除</button>
             </div>
           </div>
@@ -491,7 +491,7 @@ const QuestionsListPage: React.FC<QuestionsListPageProps> = ({
               <textarea
                 value={newQuestionName}
                 onChange={(e) => setNewQuestionName(e.target.value)}
-                className="w-full min-h-[120px] p-4 text-base text-[#476285] bg-[#F7FAFE] rounded-[14px] border border-[#E2EBF5] focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#337DFF] outline-none resize-none transition-all"
+                className="w-full min-h-[120px] p-4 text-base text-[#476285] bg-[#F7FAFE] rounded-[14px] border border-[#E2EBF5] focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#4C8BF5] outline-none resize-none transition-all"
                 placeholder="请输入问题内容"
               />
             </div>

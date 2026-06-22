@@ -88,8 +88,8 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({ visible, onClose, a
         const ws = WaveSurfer.create({
           container: containerRef.current,
           waveColor: '#C3D1FD',
-          progressColor: '#004ACC',
-          cursorColor: '#004ACC',
+          progressColor: '#2563EB',
+          cursorColor: '#2563EB',
           barWidth: 2,
           barGap: 1,
           barRadius: 2,
@@ -189,7 +189,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({ visible, onClose, a
           </div>
           <button 
             onClick={onClose} 
-            className="p-2 text-[#8AA2BF] hover:text-[#004ACC] rounded-[12px] hover:bg-[#004ACC1A] transition-colors"
+            className="p-2 text-[#8AA2BF] hover:text-[#2563EB] rounded-[12px] hover:bg-[#2563EB1A] transition-colors"
           >
             <X size={20} />
           </button>
@@ -202,7 +202,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({ visible, onClose, a
           
           {/* Time Display */}
           <div className="flex justify-between mt-3 px-1">
-            <span className="text-[11px] font-medium text-[#004ACC] tabular-nums">
+            <span className="text-[11px] font-medium text-[#2563EB] tabular-nums">
               {formatTime(currentTime)}
             </span>
             <span className="text-[11px] font-medium text-[#8AA2BF] tabular-nums">
@@ -213,8 +213,8 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({ visible, onClose, a
           {/* Loading State */}
           {!isReady && !errorMsg && (
              <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-[#FFFFFF]/80 rounded-[16px] z-10">
-               <div className="flex flex-col items-center gap-2 text-[#004ACC]">
-                  <div className="w-5 h-5 border-2 border-[#E2EBF5] border-t-[#004ACC] rounded-full animate-spin"></div>
+               <div className="flex flex-col items-center gap-2 text-[#2563EB]">
+                  <div className="w-5 h-5 border-2 border-[#E2EBF5] border-t-[#2563EB] rounded-full animate-spin"></div>
                   <span className="text-[11px] font-medium">音频加载中...</span>
                </div>
              </div>
@@ -235,7 +235,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({ visible, onClose, a
             disabled={!isReady || !!errorMsg}
             className={`w-16 h-16 rounded-full flex items-center justify-center text-white transition-all transform active:scale-90 ${
               isReady && !errorMsg 
-                ? 'bg-gradient-to-tr from-[#004ACC] to-[#337DFF] shadow-xl shadow-[rgba(0,74,204,0.22)]' 
+                ? 'bg-[#2563EB] shadow-xl shadow-[rgba(37, 99, 235,0.22)]' 
                 : 'bg-slate-200 cursor-not-allowed grayscale'
             }`}
           >

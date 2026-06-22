@@ -480,7 +480,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
     Dialog.confirm({
       title: '确认删除',
       message: '确定要删除该资料吗？此操作无法撤销。',
-      confirmButtonColor: '#004ACC',
+      confirmButtonColor: '#2563EB',
     })
       .then(async () => {
         try {
@@ -912,7 +912,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
             >
               {tab}
               {isActive && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-[3px] bg-[#004ACC] rounded-[999px]" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-[3px] bg-[#2563EB] rounded-[999px]" />
               )}
             </button>
           );
@@ -949,9 +949,9 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
             {/* AI Analysis Card - Temporarily Hidden */}
             {/* <div
-              className="mx-4 rounded-[18px] p-4 flex items-center justify-between relative overflow-hidden shadow-[0_3px_10px_rgba(15,40,72,0.04)] bg-gradient-to-r from-[#004ACC1A] to-[#004ACC1A]">
+              className="mx-4 rounded-[18px] p-4 flex items-center justify-between relative overflow-hidden shadow-[0_3px_10px_rgba(15,40,72,0.04)] bg-[#2563EB1A]">
               <div className="flex items-center gap-4 relative z-10">
-                <div className="w-12 h-12 rounded-[14px] bg-[#FFFFFF] flex items-center justify-center shadow-[0_3px_10px_rgba(15,40,72,0.04)] text-[#004ACC]">
+                <div className="w-12 h-12 rounded-[14px] bg-[#FFFFFF] flex items-center justify-center shadow-[0_3px_10px_rgba(15,40,72,0.04)] text-[#2563EB]">
                   <Sparkles size={28} fill="currentColor" className="opacity-90" />
                 </div>
                 <div>
@@ -960,7 +960,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                 </div>
               </div>
               <button
-                className="px-4 py-1.5 bg-[#FFFFFF] text-[#004ACC] text-xs font-medium rounded-[999px] shadow-[0_3px_10px_rgba(15,40,72,0.04)] active:scale-95 transition-transform z-10"
+                className="px-4 py-1.5 bg-[#FFFFFF] text-[#2563EB] text-xs font-medium rounded-[999px] shadow-[0_3px_10px_rgba(15,40,72,0.04)] active:scale-95 transition-transform z-10"
                 onClick={onGenerateAI}
               >
                 去生成
@@ -1002,7 +1002,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                           {resource.fileTags && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {(Array.isArray(resource.fileTags) ? resource.fileTags : String(resource.fileTags).split(',')).map((tag: string, i: number) => tag.trim() && (
-                                <span key={i} className="px-1.5 py-[2px] rounded-[4px] bg-[#004ACC1A] text-[#004ACC] text-[10px] font-medium truncate max-w-full leading-tight">
+                                <span key={i} className="px-1.5 py-[2px] rounded-[4px] bg-[#2563EB1A] text-[#2563EB] text-[10px] font-medium truncate max-w-full leading-tight">
                                   {tag.trim()}
                                 </span>
                               ))}
@@ -1043,7 +1043,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                                         Toast.fail('操作失败，请重试');
                                       }
                                     }}
-                                    className="text-[10px] text-[#004ACC] underline font-medium"
+                                    className="text-[10px] text-[#2563EB] underline font-medium"
                                   >
                                     重新解析
                                   </button>
@@ -1059,10 +1059,10 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                                      percentage={Math.round(progressInfo.progress * 100)} 
                                      strokeWidth={3}
                                      showPivot={false}
-                                     color="linear-gradient(to right, #004ACC, #337DFF)"
+                                     color="linear-gradient(to right, #2563EB, #4C8BF5)"
                                    />
                                 </div>
-                                <Loader2 size={12} className="text-[#004ACC] animate-spin" />
+                                <Loader2 size={12} className="text-[#2563EB] animate-spin" />
                               </div>
                             );
                           })()}
@@ -1070,7 +1070,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                           {resource.type !== '4' && (
                             <button
                               onClick={() => handleOpenRenameModalThrottled(resource)}
-                              className="p-1.5 text-[#004ACC] hover:text-[#004ACC] transition-colors"
+                              className="p-1.5 text-[#2563EB] hover:text-[#2563EB] transition-colors"
                             >
                               <Pencil size={16} strokeWidth={2} />
                             </button>
@@ -1078,7 +1078,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
 
                           <button
                             onClick={() => handleDeleteResourceThrottled(resource.id)}
-                            className="p-1.5 text-[#004ACC] hover:text-[#004ACC] transition-colors"
+                            className="p-1.5 text-[#2563EB] hover:text-[#2563EB] transition-colors"
                           >
                             <MinusCircle size={20} strokeWidth={2} />
                           </button>
@@ -1140,7 +1140,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                     <Button
                       variant="primary"
                       size="small"
-                      className="!h-8 !px-4 !rounded-[999px] !shadow-[rgba(0,74,204,0.14)] !font-normal bg-[#004ACC]"
+                      className="!h-8 !px-4 !rounded-[999px] !shadow-[rgba(37, 99, 235,0.14)] !font-normal bg-[#2563EB]"
                       onClick={onChangeTemplate}
                     >
                       <RefreshCw size={14} className="mr-1.5" /> 更换
@@ -1165,7 +1165,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setTemplateModalVisible(true)}
-                className="flex-1 h-12 rounded-[14px] bg-[#FFFFFF] border border-[#E2EBF5] text-[#004ACC] font-medium text-[14px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all shadow-[0_3px_10px_rgba(15,40,72,0.04)]"
+                className="flex-1 h-12 rounded-[14px] bg-[#FFFFFF] border border-[#E2EBF5] text-[#2563EB] font-medium text-[14px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all shadow-[0_3px_10px_rgba(15,40,72,0.04)]"
               >
                 <Plus size={18} strokeWidth={2.5} />
                 添加清单
@@ -1196,7 +1196,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                         className="flex items-center py-3 px-4 gap-2"
                       >
                         {/* Question Index */}
-                        <span className="text-sm font-medium text-[#004ACC] flex-shrink-0 w-6">
+                        <span className="text-sm font-medium text-[#2563EB] flex-shrink-0 w-6">
                           {question.questionIndex}.
                         </span>
 
@@ -1214,7 +1214,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                               setEditedQuestionName(question.questionName);
                               setQuestionEditModalVisible(true);
                             }}
-                            className="p-2 text-[#CBD7E5] hover:text-[#004ACC] transition-colors"
+                            className="p-2 text-[#8AA2BF] hover:text-[#2563EB] transition-colors"
                           >
                             <Pencil size={14} />
                           </button>
@@ -1224,7 +1224,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                               setDeletingQuestion(question);
                               setQuestionDeleteModalVisible(true);
                             }}
-                            className="p-2 text-[#CBD7E5] hover:text-[#004ACC] transition-colors"
+                            className="p-2 text-[#8AA2BF] hover:text-[#2563EB] transition-colors"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -1254,7 +1254,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         <Button
           variant="secondary"
           block
-          className="flex-1 !rounded-[999px] !bg-[#FFFFFF] !border-[#E2EBF5] !text-[#004ACC] !h-12 !text-[16px] shadow-[0_5px_12px_rgba(0,74,204,0.10)]"
+          className="flex-1 !rounded-[999px] !bg-[#FFFFFF] !border-[#E2EBF5] !text-[#2563EB] !h-12 !text-[16px] shadow-[0_5px_12px_rgba(37, 99, 235,0.10)]"
           onClick={handleConfirmThrottled}
         >
           <Check size={18} className="mr-2" /> 确定
@@ -1263,7 +1263,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
         <Button
           variant="primary"
           block
-          className="flex-1 !rounded-[999px] !h-12 !text-[16px] shadow-[0_6px_14px_rgba(0,74,204,0.14)]"
+          className="flex-1 !rounded-[999px] !h-12 !text-[16px] shadow-[0_6px_14px_rgba(37, 99, 235,0.14)]"
           onClick={handleStartInterviewThrottled}
         >
           <Mic size={18} className="mr-2" /> 开启访谈
@@ -1316,7 +1316,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
                   setNewFileName(val);
                 }}
                 maxLength={30}
-                className="w-full px-4 py-3 text-base text-[#0F2848] border border-[#E2EBF5] rounded-[999px] focus:outline-none focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#337DFF] transition-all"
+                className="w-full px-4 py-3 text-base text-[#0F2848] border border-[#E2EBF5] rounded-[999px] focus:outline-none focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#4C8BF5] transition-all"
                 placeholder="请输入文件名"
               />
             </div>
@@ -1331,7 +1331,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               </button>
               <button
                 onClick={handleConfirmRenameThrottled}
-                className="flex-1 py-3 text-base font-medium text-white rounded-[999px] transition-colors shadow-[0_6px_14px_rgba(0,74,204,0.14)] active:scale-95 transition-transform bg-confirm-gradient"
+                className="flex-1 py-3 text-base font-medium text-white rounded-[999px] transition-colors shadow-[0_6px_14px_rgba(37, 99, 235,0.14)] active:scale-95 transition-transform bg-confirm-gradient"
               >
                 确认
               </button>
@@ -1355,7 +1355,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               <textarea
                 value={editedQuestionName}
                 onChange={(e) => setEditedQuestionName(e.target.value)}
-                className="w-full min-h-[120px] p-4 text-base text-[#476285] bg-[#F7FAFE] rounded-[14px] border border-[#E2EBF5] focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#337DFF] outline-none resize-none transition-all"
+                className="w-full min-h-[120px] p-4 text-base text-[#476285] bg-[#F7FAFE] rounded-[14px] border border-[#E2EBF5] focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#4C8BF5] outline-none resize-none transition-all"
                 placeholder="请输入问题内容"
               />
             </div>
@@ -1386,8 +1386,8 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
           />
           <div className="relative bg-[#FFFFFF] rounded-[18px] w-[85%] max-w-[320px] shadow-[0_14px_34px_rgba(15,40,72,0.12)] animate-fadeIn overflow-hidden">
             <div className="pt-6 pb-4 px-6 text-center">
-              <div className="w-14 h-14 mx-auto mb-4 bg-[#004ACC1A] rounded-[999px] flex items-center justify-center">
-                <Trash2 size={24} className="text-[#004ACC]" />
+              <div className="w-14 h-14 mx-auto mb-4 bg-[#2563EB1A] rounded-[999px] flex items-center justify-center">
+                <Trash2 size={24} className="text-[#2563EB]" />
               </div>
               <h3 className="text-lg font-semibold text-[#0F2848] mb-2">删除问题</h3>
               <p className="text-sm text-[#476285] leading-relaxed">
@@ -1403,7 +1403,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               </button>
               <button
                 onClick={handleDeleteQuestionConfirmThrottled}
-                className="flex-1 py-4 text-center text-white font-medium bg-[#004ACC] hover:bg-[#004ACC] transition-colors"
+                className="flex-1 py-4 text-center text-white font-medium bg-[#2563EB] hover:bg-[#2563EB] transition-colors"
               >
                 确认删除
               </button>
@@ -1427,7 +1427,7 @@ const MaterialUploadPage: React.FC<MaterialUploadPageProps> = ({
               <textarea
                 value={newQuestionName}
                 onChange={(e) => setNewQuestionName(e.target.value)}
-                className="w-full min-h-[120px] p-4 text-base text-[#476285] bg-[#F7FAFE] rounded-[14px] border border-[#E2EBF5] focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#337DFF] outline-none resize-none transition-all"
+                className="w-full min-h-[120px] p-4 text-base text-[#476285] bg-[#F7FAFE] rounded-[14px] border border-[#E2EBF5] focus:border-[#E2EBF5] focus:ring-2 focus:ring-[#4C8BF5] outline-none resize-none transition-all"
                 placeholder="请输入问题内容"
               />
             </div>
