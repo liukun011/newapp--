@@ -50,7 +50,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
     }
   }, [initialData]);
 
-  // 选择文件后，如果模板名称为空，自动用文件名（去掉后缀）填充
+  // 选择文件后，如果样例名称为空，自动用文件名（去掉后缀）填充
   useEffect(() => {
     if (selectedFile && !templateName) {
       const nameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, '');
@@ -193,12 +193,12 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
 
   const handleSubmit = async () => {
     if (!templateName.trim()) {
-      Toast.info('请输入模板名称');
+      Toast.info('请输入样例名称');
       return;
     }
 
     if (!selectedFile) {
-      Toast.info('请上传模板文件');
+      Toast.info('请上传报告样例文件');
       return;
     }
 
@@ -225,8 +225,8 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
 
       if (res.success) {
         const message = isAdmin 
-          ? '您是组织的管理员，模板通过后会共享给组织成员。' 
-          : '您是组织的成员，模板通过后不会共享。';
+          ? '您是组织的管理员，报告样例通过后会共享给组织成员。' 
+          : '您是组织的成员，报告样例通过后不会共享。';
         
         Dialog.alert({
           title: '提交成功',
@@ -299,8 +299,8 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
 
           <p className="text-sm text-[#476285] text-center leading-relaxed max-w-sm">
             {isAdmin 
-              ? '您是组织的管理员，模板通过后会共享给组织成员。' 
-              : '您是组织的成员，模板通过后不会共享。'}
+              ? '您是组织的管理员，报告样例通过后会共享给组织成员。' 
+              : '您是组织的成员，报告样例通过后不会共享。'}
           </p>
 
           {/* View List Button */}
@@ -325,7 +325,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
         >
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-lg font-semibold text-[#0F2848]">{initialData ? '更换访谈模板' : '上传访谈模板'}</h1>
+        <h1 className="text-lg font-semibold text-[#0F2848]">{initialData ? '更换报告样例' : '上传报告样例'}</h1>
       </div>
 
       {/* Form Content */}
@@ -333,7 +333,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
         {/* Template Category */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-[#476285] mb-2 px-1">
-            模板分类 <span className="text-red-500">*</span>
+            样例分类 <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <button
@@ -341,7 +341,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
               onClick={() => setShowCategoryPicker(!showCategoryPicker)}
               className="w-full px-4 py-3 bg-[#FFFFFF] border border-[#E2EBF5] rounded-[14px] text-sm text-[#0F2848] focus:outline-none focus:border-[#E2EBF5] focus:ring-1 focus:ring-[#4C8BF5] transition-colors flex items-center justify-between"
             >
-              <span>{TEMPLATE_CATEGORY_OPTIONS.find((o) => o.id === templateCategory)?.title || '请选择模板分类'}</span>
+              <span>{TEMPLATE_CATEGORY_OPTIONS.find((o) => o.id === templateCategory)?.title || '请选择样例分类'}</span>
               <ChevronDown size={18} className={`text-[#8AA2BF] transition-transform ${showCategoryPicker ? 'rotate-180' : ''}`} />
             </button>
             {showCategoryPicker && (
@@ -371,7 +371,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
         {/* Template Name */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-[#476285] mb-2 px-1">
-            模板名称 <span className="text-red-500">*</span>
+            样例名称 <span className="text-red-500">*</span>
           </label>
           <textarea
             value={templateName}
@@ -380,7 +380,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
               if (val.length > TEMPLATE_NAME_MAX_LENGTH) val = val.slice(0, TEMPLATE_NAME_MAX_LENGTH);
               setTemplateName(val);
             }}
-            placeholder={`请输入模板名称，最多${TEMPLATE_NAME_MAX_LENGTH}个字符`}
+            placeholder={`请输入样例名称，最多${TEMPLATE_NAME_MAX_LENGTH}个字符`}
             maxLength={TEMPLATE_NAME_MAX_LENGTH}
             rows={2}
             className="w-full px-4 py-3 bg-[#FFFFFF] border border-[#E2EBF5] rounded-[14px] text-sm text-[#0F2848] placeholder-gray-400 focus:outline-none focus:border-[#E2EBF5] focus:ring-1 focus:ring-[#4C8BF5] transition-colors resize-none"
@@ -393,7 +393,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
         {/* Template Description */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-[#476285] mb-2 px-1">
-            模板描述
+            样例描述
           </label>
           <textarea
             value={templateDesc}
@@ -402,7 +402,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
               if (val.length > TEMPLATE_DESC_MAX_LENGTH) val = val.slice(0, TEMPLATE_DESC_MAX_LENGTH);
               setTemplateDesc(val);
             }}
-            placeholder={`请输入模板描述，最多${TEMPLATE_DESC_MAX_LENGTH}个字符`}
+            placeholder={`请输入样例描述，最多${TEMPLATE_DESC_MAX_LENGTH}个字符`}
             maxLength={TEMPLATE_DESC_MAX_LENGTH}
             rows={3}
             className="w-full px-4 py-3 bg-[#FFFFFF] border border-[#E2EBF5] rounded-[14px] text-sm text-[#0F2848] placeholder-gray-400 focus:outline-none focus:border-[#E2EBF5] focus:ring-1 focus:ring-[#4C8BF5] transition-colors resize-none"
@@ -415,7 +415,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
         {/* Upload Template */}
         <div>
           <label className="block text-sm font-medium text-[#476285] mb-2 px-1">
-            上传模板 <span className="text-red-500">*</span>
+            上传报告样例 <span className="text-red-500">*</span>
           </label>
             <div
               className="bg-[#FFFFFF] rounded-[14px] border border-dashed border-gray-300 p-8 flex flex-col items-center justify-center min-h-[200px] hover:border-[#E2EBF5] transition-colors cursor-pointer active:bg-[#F7FAFE]"
@@ -430,7 +430,7 @@ const UploadTemplatePage: React.FC<UploadTemplatePageProps> = ({
                   <p className="text-xs text-[#476285]">点击重新选择</p>
                 </div>
               ) : (
-                <p className="text-sm text-[#8AA2BF]">请上传.docx格式的模板附件</p>
+                <p className="text-sm text-[#8AA2BF]">请上传 .docx 格式的报告样例</p>
               )}
             </div>
         </div>

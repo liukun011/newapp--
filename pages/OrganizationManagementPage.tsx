@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, UserPlus, Search, Edit2, ChevronDown, Building2, Check, ShieldAlert, Users } from 'lucide-react';
+import { ChevronLeft, UserPlus, Search, Edit2, ChevronDown, Building2, Check, ShieldAlert, Users, Plus, Briefcase } from 'lucide-react';
 import { copyWithToast } from '@/utils/copyUtils';
 import { Toast, Popup, Dialog, List, Loading } from 'react-vant';
 import { authService } from '../services/authService';
@@ -17,6 +17,7 @@ interface Member {
 
 interface OrganizationManagementPageProps {
   onBack: () => void;
+  onNavigateJoinOrganization: () => void;
 }
 
 // 手机号掩码处理：13812345678 -> 138****5678
@@ -77,7 +78,7 @@ const formatMember = (user: any): Member => {
   };
 };
 
-const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({ onBack }) => {
+const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({ onBack, onNavigateJoinOrganization }) => {
   const currentUserObj = getCurrentUser();
   const currentUserId = currentUserObj?.userId || currentUserObj?.id;
   const fallbackTenant = mockTenants.find((item) => String(item.id) === String(currentUserObj?.tenantId)) || mockTenants[0];
@@ -374,6 +375,35 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
     m.name.includes(searchQuery) || m.phone.includes(searchQuery)
   );
 
+  const handleJoinOrganization = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onNavigateJoinOrganization();
+  };
+
+  const joinOrganizationCard = (
+    <button
+      type="button"
+      onClick={handleJoinOrganization}
+      className="w-full rounded-[20px] border border-[#E2EBF5] bg-[#FFFFFF] px-4 py-3.5 text-left shadow-[0_8px_22px_rgba(15,40,72,0.06)] transition-all active:scale-[0.99]"
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] bg-[#ECFDF5] text-[#10B981]">
+          <Plus size={22} strokeWidth={2.4} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[15px] font-medium leading-[20px] text-[#0F2848]">加入组织</h3>
+          <p className="mt-1 truncate text-[12px] font-normal leading-[16px] text-[#8AA2BF]">
+            组织/团队已在使用，我要加入
+          </p>
+        </div>
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[#ECFDF5] text-[#10B981]">
+          <Briefcase size={22} strokeWidth={2.1} />
+        </div>
+      </div>
+    </button>
+  );
+
   return (
     <div className="flex flex-col h-screen xl-page">
       {/* Header */}
@@ -437,6 +467,9 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
             <p className="text-[13px] text-[#8AA2BF] font-medium text-center leading-relaxed max-w-[260px] px-2">
               您当前在 <span className="text-[#476285] font-medium">{tenantName}</span> 的身份为成员，仅管理员可进行组织管理操作。
             </p>
+            <div className="mt-6 w-full max-w-[320px]">
+              {joinOrganizationCard}
+            </div>
           </div>
         ) : (
           <div className="space-y-5">
@@ -448,6 +481,8 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
               <UserPlus size={18} strokeWidth={2.5} />
               <span className="text-[15px] font-medium tracking-wide">邀请新成员</span>
             </button>
+
+            {joinOrganizationCard}
 
             {/* Section Header & Search */}
             <div className="flex items-center justify-between">

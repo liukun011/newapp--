@@ -8,7 +8,7 @@ export enum View {
   AI_GENERATION = 'AI_GENERATION',    // AiGenerationPage - 自动生成报告页
   CORPORATE_EDIT = 'CORPORATE_EDIT',  // CorporateEditPage - 企业信息编辑页
   MY_TEMPLATES = 'MY_TEMPLATES',      // MyTemplatesPage - 报告模板页
-  UPLOAD_TEMPLATE = 'UPLOAD_TEMPLATE',// UploadTemplatePage - 上传访谈模板页
+  UPLOAD_TEMPLATE = 'UPLOAD_TEMPLATE',// UploadTemplatePage - 上传报告样例页
   TEMPLATE_SELECTION = 'TEMPLATE_SELECTION', // TemplateSelectionPage - 模板选择页
   TEMPLATE_PREVIEW = 'TEMPLATE_PREVIEW',     // TemplatePreviewPage - 模板预览页
   QUESTIONS_LIST = 'QUESTIONS_LIST',  // QuestionsListPage - 常用问题集合页
@@ -23,6 +23,7 @@ export enum View {
   PRIVACY_POLICY = 'PRIVACY_POLICY',  // PrivacyPolicyPage - 隐私政策页
   INVITATION_CENTER = 'INVITATION_CENTER', // InvitationCenterPage - 邀请中心页
   ORGANIZATION_MANAGEMENT = 'ORGANIZATION_MANAGEMENT', // OrganizationManagementPage - 组织管理页
+  JOIN_ORGANIZATION = 'JOIN_ORGANIZATION', // JoinOrganizationPage - 申请加入组织页
   SHARE_APP = 'SHARE_APP',             // ShareAppPage - 分享应用页
   ENTERPRISE_DETAIL = 'ENTERPRISE_DETAIL', // EnterpriseDetailPage - 企查查资料详情页
 }

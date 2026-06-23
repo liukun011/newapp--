@@ -32,11 +32,13 @@ import HistoryRecordsPage from './pages/HistoryRecordsPage';
 import HistoryDetailPage from './pages/HistoryDetailPage';
 import ReportPreviewPage from './pages/ReportPreviewPage';
 import OrganizationManagementPage from './pages/OrganizationManagementPage';
+import JoinOrganizationPage from './pages/JoinOrganizationPage';
 import ShareAppPage from './pages/ShareAppPage';
 import EnterpriseDetailPage from './pages/EnterpriseDetailPage';
 import { TemplateEnabledStatus, View, DealRecord } from './types';
 
 import RecordingFloatBubble from './components/RecordingFloatBubble';
+import QuestionListPicker from './components/QuestionListPicker';
 import { nativeBridge } from './services/nativeBridge';
 
 const App: React.FC = () => {
@@ -310,6 +312,8 @@ const App: React.FC = () => {
   const [enterpriseOptions, setEnterpriseOptions] = useState<any[]>([]);
   const [templateOptions, setTemplateOptions] = useState<ReportTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [selectedQuestionTemplate, setSelectedQuestionTemplate] = useState<any>(null);
+  const [showCreateQuestionPicker, setShowCreateQuestionPicker] = useState(false);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -322,6 +326,8 @@ const App: React.FC = () => {
     setCompanyName("");
     setEnterpriseOptions([]);
     setSelectedTemplateId("");
+    setSelectedQuestionTemplate(null);
+    setShowCreateQuestionPicker(false);
     setShowTemplatePicker(false);
   };
 
@@ -835,11 +841,27 @@ const App: React.FC = () => {
 
     try {
       setCreating(true);
+      const selectedQuestionList = selectedQuestionTemplate && Array.isArray(selectedQuestionTemplate.questionList)
+        ? selectedQuestionTemplate.questionList.map((question: any, index: number) => ({
+          ...question,
+          id: question.id ? String(question.id) : `temp_create_${Date.now()}_${index}`,
+          questionIndex: index + 1,
+          questionAnswer: question.questionAnswer ?? null,
+          questionAnswerTime: question.questionAnswerTime ?? null,
+          questionStatus: question.questionStatus ?? '0',
+          recStatus: question.recStatus ?? '1',
+          templateId: String(question.templateId || selectedQuestionTemplate.id || ''),
+          agencyId: question.agencyId ?? '',
+          CHECKED: question.CHECKED ?? false,
+        }))
+        : undefined;
       const res = await dealService.createOrUpdateDealInst({
         interviewCust: newCustomerName.trim(),
         companyName: companyName || undefined,
         creditCode: creditCode || undefined,
         templateId: selectedTemplateId || undefined,
+        questionId: selectedQuestionTemplate?.id || undefined,
+        questionInfoList: selectedQuestionList,
       });
 
       if (res.success && res.data) {
@@ -1678,6 +1700,13 @@ const App: React.FC = () => {
               {currentView === View.ORGANIZATION_MANAGEMENT && (
                 <OrganizationManagementPage 
                   onBack={() => navigateBackward(View.SETTINGS)}
+                  onNavigateJoinOrganization={() => navigateForward(View.JOIN_ORGANIZATION)}
+                />
+              )}
+              {currentView === View.JOIN_ORGANIZATION && (
+                <JoinOrganizationPage
+                  onBack={() => navigateBackward(View.ORGANIZATION_MANAGEMENT)}
+                  onSuccess={() => navigateBackward(View.ORGANIZATION_MANAGEMENT)}
                 />
               )}
               {currentView === View.SHARE_APP && (
@@ -2033,6 +2062,34 @@ const App: React.FC = () => {
               </button>
             </div>
 
+            {/* 问题清单 */}
+            <div className="mb-4 relative z-20">
+              <div className="flex justify-between items-end mb-2 pl-1">
+                <span className="text-[12px] text-[#476285] font-normal">问题清单</span>
+              </div>
+              <button
+                type="button"
+                className="w-full min-h-[52px] px-4 bg-[#FFFFFF] rounded-[16px] border border-[#E2EBF5] flex items-center justify-between gap-3 active:bg-[#2563EB1A] transition-colors"
+                onClick={() => setShowCreateQuestionPicker(true)}
+              >
+                <div className="min-w-0 text-left">
+                  <div className="text-[14px] leading-[18px] font-medium text-[#0F2848] truncate">
+                    {selectedQuestionTemplate?.templateName || '选择问题清单'}
+                  </div>
+                  <div className="mt-1 text-[10.5px] font-normal text-[#476285] truncate">
+                    {selectedQuestionTemplate
+                      ? `${selectedQuestionTemplate.questionList?.length || 0} 个预制问题`
+                      : '用于访谈提问和问题覆盖'}
+                  </div>
+                </div>
+                <ChevronDown
+                  size={18}
+                  strokeWidth={2.3}
+                  className="text-[#2563EB] flex-shrink-0"
+                />
+              </button>
+            </div>
+
             {/* 企业关联搜索 (选填) */}
             <div className="mb-6 relative">
               <div className="flex justify-between items-end mb-2 pl-1">
@@ -2116,6 +2173,16 @@ const App: React.FC = () => {
 
         </div>
       )}
+      <QuestionListPicker
+        visible={showCreateQuestionPicker}
+        onClose={() => setShowCreateQuestionPicker(false)}
+        onAdd={async (_ids, selectedTemplates = []) => {
+          setSelectedQuestionTemplate(selectedTemplates[0] || null);
+        }}
+        title="选择问题清单"
+        confirmText="确认选择"
+        singleSelect
+      />
       {/* 录音中断提醒弹窗（受控模式，恢复时可自动关闭） */}
       <Dialog
         visible={showInterruptDialog}

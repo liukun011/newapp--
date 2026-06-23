@@ -420,7 +420,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
         {/* Tabs */}
         <div className="flex relative">
           {[
-            { key: 'templates' as const, label: '报告模板' },
+            { key: 'templates' as const, label: '报告样例' },
             { key: 'questions' as const, label: '问题清单' },
           ].map((tab, idx) => {
             const isActive = activeTab === tab.key;
@@ -454,7 +454,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
         ) : activeTab === 'templates' ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between mb-1 px-0.5">
-              <h2 className="text-[14px] font-medium text-[#0F2848]">全部模板</h2>
+              <h2 className="text-[14px] font-medium text-[#0F2848]">全部样例</h2>
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 bg-[#FFFFFF] rounded-[999px] text-[10px] font-medium text-[#476285] shadow-[0_3px_10px_rgba(15,40,72,0.04)] border border-[#E2EBF5]/50">
                   共 <span className="text-[#2563EB]">{templates.length}</span> 份
@@ -462,7 +462,7 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
                 <button
                   onClick={() => onUpload()}
                   className="flex items-center gap-1 px-3 py-1 bg-primary-gradient text-[#FFFFFF] text-[12px] font-medium rounded-[999px] shadow-md active:scale-95 transition-all"
-                  aria-label="上传报告模板"
+                  aria-label="上传报告样例"
                 >
                   <FileUp size={14} strokeWidth={2.6} /> 上传
                 </button>
@@ -489,7 +489,9 @@ const MyTemplatesPage: React.FC<MyTemplatesPageProps> = ({ onBack, onUpload, onP
 
                       <div className="flex-1 min-w-0 pr-1 flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-[15px] font-medium text-[#0F2848] truncate">{template.reportTemplateName}</h3>
+                          <h3 className="text-[15px] font-medium text-[#0F2848] truncate">
+                            {template.reportTemplateName?.replace(/模板/g, '样例')}
+                          </h3>
                           {template.businessType ? (
                             <span className="inline-flex items-center rounded-[999px] border border-[#E2EBF5] bg-[#2563EB1A] text-[#2563EB] px-1.5 py-px text-[10px] font-medium mt-0.5">
                               {getCategoryTitle(template.businessType)}
