@@ -6,13 +6,19 @@ import { dealService } from '../services/dealService';
 interface QuestionListPickerProps {
   visible: boolean;
   onClose: () => void;
-  onAdd: (ids: string[]) => Promise<void>;
+  onAdd: (ids: string[], selectedTemplates?: any[]) => Promise<void>;
+  title?: string;
+  confirmText?: string;
+  singleSelect?: boolean;
 }
 
 const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
   visible,
   onClose,
-  onAdd
+  onAdd,
+  title = '添加问题清单',
+  confirmText = '确认添加',
+  singleSelect = false,
 }) => {
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -42,15 +48,19 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
   }, [visible]);
 
   const toggle = (id: string) => {
-    setTempSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+    setTempSelectedIds((prev) => {
+      if (singleSelect) {
+        return prev.includes(id) ? [] : [id];
+      }
+      return prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id];
+    });
   };
 
   const handleConfirm = async () => {
     setSubmitting(true);
     try {
-      await onAdd(tempSelectedIds);
+      const selectedTemplates = templates.filter((tpl) => tempSelectedIds.includes(String(tpl.id)));
+      await onAdd(tempSelectedIds, selectedTemplates);
       onClose();
     } catch (e) {
       // 错误已在父级处理
@@ -79,7 +89,7 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
         {/* Fixed Header */}
         <div className="px-5 pt-6 pb-3 shrink-0">
           <div className="px-1">
-            <h2 className="text-[17px] font-semibold text-[#0F2848]">添加问题清单</h2>
+            <h2 className="text-[17px] font-semibold text-[#0F2848]">{title}</h2>
           </div>
         </div>
 
@@ -99,13 +109,14 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
           ) : (
             <div className="space-y-1.5">
               {templates.map((tpl) => {
-                const isChecked = tempSelectedIds.includes(tpl.id);
+                const tplId = String(tpl.id);
+                const isChecked = tempSelectedIds.includes(tplId);
                 const questionCount = tpl.questionList?.length || 0;
 
                 return (
                   <div
-                    key={tpl.id}
-                    onClick={() => toggle(tpl.id)}
+                    key={tplId}
+                    onClick={() => toggle(tplId)}
                     className={`
                       flex items-center justify-between
                       relative rounded-[14px] px-4 py-3.5 transition-all border cursor-pointer active:scale-[0.98] active:bg-[#2563EB1A]
@@ -155,7 +166,7 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
             ) : (
               <>
                 <Check size={16} strokeWidth={3} />
-                确认添加{tempSelectedIds.length > 0 ? `（已选 ${tempSelectedIds.length} 个）` : ''}
+                {confirmText}
               </>
             )}
           </button>

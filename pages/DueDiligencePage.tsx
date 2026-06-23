@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw, MoreHorizontal, Camera, Image, Upload } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw, MoreHorizontal, Camera, Image, Upload, Plus } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
-import { DealRecord, DealReportStatusEnum, SummaryStatusEnum } from '../types';
+import { DealRecord, DealReportStatusEnum, SummaryStatusEnum, QuestionInfo } from '../types';
 import { dealService } from '../services/dealService';
 import { nativeBridge } from '@/services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
@@ -53,6 +53,10 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [showLimitTips, setShowLimitTips] = useState(false);
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
   const [templateModalVisible, setTemplateModalVisible] = useState(false);
+  const [questionPickerMode, setQuestionPickerMode] = useState<'add' | 'replace'>('add');
+  const [addQuestionVisible, setAddQuestionVisible] = useState(false);
+  const [manualQuestionName, setManualQuestionName] = useState('');
+  const [isSavingManualQuestion, setIsSavingManualQuestion] = useState(false);
   const [isAnalyzingAi, setIsAnalyzingAi] = useState(false);
   const [aiInsightList, setAiInsightList] = useState<any[]>([]);
   const [voiceModalInitialContent, setVoiceModalInitialContent] = useState('');
@@ -754,8 +758,76 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     onNavigateToRecording();
   }, 1000);
 
-  const handleAddQuestionList = async (questionIds: string[]) => {
+  const openQuestionListPicker = (mode: 'add' | 'replace') => {
+    setQuestionPickerMode(mode);
+    setTemplateModalVisible(true);
+  };
+
+  const handleAddQuestionList = async (questionIds: string[], selectedTemplates: any[] = []) => {
     if (!currentDeal?.id) return;
+    if (questionPickerMode === 'replace') {
+      const replacementQuestions: QuestionInfo[] = selectedTemplates
+        .flatMap((template) => Array.isArray(template.questionList) ? template.questionList : [])
+        .map((question: any, index: number) => ({
+          ...question,
+          id: question.id ? String(question.id) : `temp_replace_${Date.now()}_${index}`,
+          questionIndex: index + 1,
+          questionAnswer: question.questionAnswer ?? null,
+          questionAnswerTime: question.questionAnswerTime ?? null,
+          questionStatus: question.questionStatus ?? '0',
+          recStatus: question.recStatus ?? '1',
+          templateId: String(question.templateId || selectedTemplates[0]?.id || currentDeal.questionId || ''),
+          agencyId: question.agencyId ?? '',
+          CHECKED: question.CHECKED ?? false,
+        }));
+
+      if (replacementQuestions.length === 0) {
+        Toast.info('所选清单暂无问题');
+        return;
+      }
+
+      try {
+        await Dialog.confirm({
+          title: '确认更换问题清单？',
+          message: '更换后将使用新清单覆盖当前问题清单，原清单中的问题将不再保留。',
+          cancelButtonText: '暂不更换',
+          confirmButtonText: '确认更换',
+          confirmButtonColor: '#2563EB',
+        });
+      } catch {
+        throw new Error('replace_question_list_cancelled');
+      }
+
+      try {
+        Toast.loading({ message: '更换中...', duration: 0 });
+        const res = await dealService.createOrUpdateDealInst({
+          id: currentDeal.id,
+          questionId: questionIds.length === 1 ? questionIds[0] : questionIds.join(','),
+          questionInfoList: replacementQuestions,
+        });
+        Toast.clear();
+        if (res.success) {
+          const nextDeal = {
+            ...currentDeal,
+            questionId: questionIds.length === 1 ? questionIds[0] : questionIds.join(','),
+            questionInfoList: replacementQuestions,
+          };
+          setDealDetail(nextDeal as DealRecord);
+          onDealDetailLoadedRef.current?.(nextDeal as DealRecord);
+          lastSavedQuestionsRef.current = JSON.stringify(replacementQuestions);
+          Toast.success('清单已更换');
+          await fetchDealDetail();
+        } else {
+          Toast.fail(res.message || '更换失败');
+        }
+      } catch (e: any) {
+        Toast.clear();
+        console.error('Replace question list failed:', e);
+        Toast.fail(e.message || '更换失败');
+      }
+      return;
+    }
+
     try {
       Toast.loading({ message: '添加中...', duration: 0 });
       const res = await dealService.addReportQuestionList({
@@ -771,6 +843,66 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       Toast.clear();
       console.error('Add question list failed:', e);
       Toast.fail(e.message || '添加失败');
+    }
+  };
+
+  const handleOpenManualQuestion = () => {
+    if (!currentDeal?.questionInfoList || currentDeal.questionInfoList.length === 0) {
+      Toast.info('请先选择问题清单');
+      openQuestionListPicker('add');
+      return;
+    }
+    setManualQuestionName('');
+    setAddQuestionVisible(true);
+  };
+
+  const handleAddManualQuestion = async () => {
+    const questionName = manualQuestionName.trim();
+    if (!currentDeal?.id || !questionName || isSavingManualQuestion) return;
+
+    const currentQuestions = currentDeal.questionInfoList || [];
+    const newQuestion: QuestionInfo = {
+      id: `temp_${Date.now()}`,
+      questionName,
+      questionIndex: currentQuestions.length + 1,
+      recStatus: '1',
+      questionAnswer: null,
+      questionAnswerTime: null,
+      questionStatus: '0',
+      questionType: '3',
+      templateId: String(currentDeal.questionId || currentQuestions[0]?.templateId || ''),
+      agencyId: '',
+      CHECKED: false,
+    };
+    const nextQuestions = [...currentQuestions, newQuestion];
+
+    try {
+      setIsSavingManualQuestion(true);
+      Toast.loading({ message: '保存中...', duration: 0 });
+      const res = await dealService.createOrUpdateDealInst({
+        id: currentDeal.id,
+        questionId: currentDeal.questionId,
+        questionInfoList: nextQuestions,
+      });
+      Toast.clear();
+      if (res.success) {
+        const nextDeal = { ...currentDeal, questionInfoList: nextQuestions };
+        setDealDetail(nextDeal as DealRecord);
+        onDealDetailLoadedRef.current?.(nextDeal as DealRecord);
+        lastSavedQuestionsRef.current = JSON.stringify(nextQuestions);
+        setAddQuestionVisible(false);
+        setManualQuestionName('');
+        Toast.success('问题已添加');
+        await fetchDealDetail();
+      } else {
+        Toast.fail(res.message || '保存失败');
+      }
+    } catch (e: any) {
+      Toast.clear();
+      console.error('Add manual question failed:', e);
+      Toast.fail(e.message || '保存失败');
+    } finally {
+      setIsSavingManualQuestion(false);
     }
   };
 
@@ -1174,9 +1306,19 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               <div className="flex items-center justify-between mb-2.5">
                 <h3 className="xl-section-title">问题清单</h3>
                 {!isReadOnly && (
-                  <div className="flex gap-2">
-                    <button onClick={() => setTemplateModalVisible(true)} className="xl-btn-ghost px-3 min-h-[34px] text-[11px]">添加</button>
-                    <button onClick={handleAiInsight} disabled={!hasEnterpriseName || isAnalyzingAi} className="xl-btn-primary px-3 min-h-[34px] text-[11px] disabled:opacity-50">{isAnalyzingAi ? '生成中' : 'AI 洞察'}</button>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {questionList.length === 0 ? (
+                      <button onClick={() => openQuestionListPicker('add')} className="xl-btn-primary px-3 min-h-[34px] text-[11px]">选择清单</button>
+                    ) : (
+                      <>
+                        <button onClick={handleOpenManualQuestion} className="xl-btn-ghost px-3 min-h-[34px] text-[11px] inline-flex items-center gap-1">
+                          <Plus size={13} />
+                          添加问题
+                        </button>
+                        <button onClick={() => openQuestionListPicker('replace')} className="xl-btn-ghost px-3 min-h-[34px] text-[11px]">更换清单</button>
+                        <button onClick={handleAiInsight} disabled={!hasEnterpriseName || isAnalyzingAi} className="xl-btn-primary px-3 min-h-[34px] text-[11px] disabled:opacity-50">{isAnalyzingAi ? '生成中' : 'AI 洞察'}</button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -1189,7 +1331,14 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                     <p className="text-[12px] leading-[17px] font-normal text-[#0F2848]">{q.questionName}</p>
                   </div>
                 ))}
-                {questionList.length === 0 && <div className="xl-card-flat p-4 text-center xl-body">暂无问题条目</div>}
+                {questionList.length === 0 && (
+                  <div className="xl-card-flat p-4 text-center">
+                    <p className="xl-body">请先选择问题清单</p>
+                    {!isReadOnly && (
+                      <button onClick={() => openQuestionListPicker('add')} className="mt-3 xl-btn-ghost px-4 min-h-[34px] text-[11px]">选择问题清单</button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1405,11 +1554,57 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           }
         }}
       />
+      {addQuestionVisible && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/35"
+          onClick={() => !isSavingManualQuestion && setAddQuestionVisible(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-[24px] bg-[#FFFFFF] px-5 pb-6 pt-4 shadow-[0_-16px_40px_rgba(15,40,72,0.16)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#D8E3F2]" />
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-[16px] font-medium text-[#0F2848]">添加问题</h3>
+              <span className="text-[12px] text-[#8AA2BF]">{manualQuestionName.trim().length}/80</span>
+            </div>
+            <textarea
+              value={manualQuestionName}
+              onChange={(event) => setManualQuestionName(event.target.value.slice(0, 80))}
+              placeholder="请输入需要补充的问题"
+              rows={4}
+              autoFocus
+              className="w-full resize-none rounded-[16px] border border-[#E2EBF5] bg-[#F7FAFE] px-4 py-3 text-[14px] leading-[20px] text-[#0F2848] outline-none placeholder:text-[#8AA2BF] focus:border-[#4C8BF5] focus:ring-4 focus:ring-[#2563EB1A]"
+            />
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                disabled={isSavingManualQuestion}
+                onClick={() => setAddQuestionVisible(false)}
+                className="h-11 flex-1 rounded-[999px] border border-[#E2EBF5] bg-[#FFFFFF] text-[14px] font-medium text-[#476285] active:bg-[#F7FAFE] disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                disabled={!manualQuestionName.trim() || isSavingManualQuestion}
+                onClick={handleAddManualQuestion}
+                className="h-11 flex-1 rounded-[999px] bg-[#2563EB] text-[14px] font-medium text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] active:scale-[0.98] disabled:bg-[#E2EBF5] disabled:text-[#8AA2BF] disabled:shadow-none"
+              >
+                {isSavingManualQuestion ? '保存中' : '确认添加'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Template Switch Modal */}
       <QuestionListPicker
         visible={templateModalVisible}
         onClose={() => setTemplateModalVisible(false)}
         onAdd={handleAddQuestionList}
+        title={questionPickerMode === 'replace' ? '更换问题清单' : '选择问题清单'}
+        confirmText={questionPickerMode === 'replace' ? '确认更换' : '确认选择'}
+        singleSelect={questionPickerMode === 'replace'}
       />
     </div>
   );
