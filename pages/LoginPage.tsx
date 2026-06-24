@@ -52,7 +52,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [returnToModal, setReturnToModal] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const isAndroid = /Android/i.test(navigator.userAgent);
-  
+
   // 键盘状态检测（用于隐藏底部复选框等）
   const keyboardStatus = useKeyboardStatus();
   // 仅在安卓端通过输入框聚焦状态来判定“键盘开启”，iOS 端保持原生行为
@@ -92,7 +92,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
         if (res.successful && res.data) {
           localStorage.setItem('zov-user-token', res.data.accessToken);
-          
+
           // 获取完整用户信息并存储
           try {
             const infoRes = await authService.getUserInfo();
@@ -217,9 +217,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     // If visibility was triggered by "One Click Login", ideally we should distinguish or just proceed with main login if form filled.
     // Given the flow, checking input validity for proceed is good.
     // But simplistic approach: if modal confirmed, user obviously wants to proceed.
-    // However, we don't know which button triggered it. 
+    // However, we don't know which button triggered it.
     // For simplicity: after confirming agreement, we execute the main login if we are in PASSWORD/SMS view.
-    if (viewState === 'PASSWORD' || viewState === 'SMS') {
+    if (viewState === 'REGISTER') {
+      if (registerPhone && registerCode && registerPassword && registerConfirmPassword) {
+        performRegister();
+      }
+    } else if (viewState === 'PASSWORD' || viewState === 'SMS') {
        if (phone && (password || code)) {
           performLogin();
        }
@@ -321,7 +325,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     return (
       <div className="fixed inset-0 z-50 bg-white flex flex-col">
         <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
-          <button 
+          <button
             onClick={() => {
               setViewState(previousViewState || 'SMS');
               if (returnToModal) {
@@ -390,7 +394,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     return (
       <div className="fixed inset-0 z-50 bg-white flex flex-col">
         <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-white flex-shrink-0">
-          <button 
+          <button
             onClick={() => {
               setViewState(previousViewState || 'SMS');
               if (returnToModal) {
@@ -409,7 +413,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
              <p>本版本发布日期：2026年1月28日</p>
              <p>生效日期：2026年1月28日</p>
            </div>
-           
+
            <h2 className="text-xl font-medium mb-4">1. 引言</h2>
            <p className="text-[15px] leading-relaxed mb-8 text-justify text-slate-600">
              欢迎使用“小狸报告”（简称“本平台”）。作为一款专注于线下访谈与调研场景的效率工具，通过“录音转写 + 自动报告生成”双核心能力，帮助业务人员突破时空限制，显著提升现场信息整理与调研报告输出效率，为后续分析与决策提供清晰可靠的信息支持。本平台由北京零壹视界科技有限公司（简称“我们”）提供服务或运营控制。
@@ -485,7 +489,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
            <p className="text-[15px] leading-relaxed mb-6 text-justify text-slate-600">
              为保障我们的应用软件实现相关功能,保障该APP安全稳定运行,我们会接入由第三方提供的软件开发包(SDK)实现使用目的。我们会对合作方获取信息的软件工具开发包(SDK)进行严格的安全监测，以保护用户的数据安全。
            </p>
-           
+
            <div className="bg-gray-50 rounded-xl p-4 mb-4 text-[14px]">
              <h3 className="font-medium mb-2 text-slate-800">8.1 极光推送 – JPush SDK – Android</h3>
              <ul className="space-y-2 text-slate-600">
@@ -510,148 +514,355 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   }
 
 
-  // Forgot Password View
-  if (viewState === 'FORGOT_PASSWORD') {
+  // Register View
+  if (viewState === 'REGISTER') {
     return (
-      <div className="min-h-screen bg-white flex flex-col p-6 relative">
-        {/* Header (Back button omitted as per design or kept just in case but made transparent, I'll keep the back button to allow users to exit) */}
-        <div className="flex items-center py-2 mb-8">
-          <button 
-            onClick={() => setViewState('PASSWORD')}
-            className="p-2 -ml-2 text-slate-800 hover:bg-slate-50 rounded-full transition-colors"
+      <div className="min-h-[100dvh] bg-[#F7FAFE] flex flex-col relative">
+        {/* Header */}
+        <div className="relative h-[60px] bg-[#FFFFFF] border-b border-[#E2EBF5]/70 flex items-center justify-center px-4">
+          <button
+            type="button"
+            onClick={() => setViewState('SMS')}
+            className="absolute left-4 h-10 w-10 flex items-center justify-center text-[#0F2848] hover:bg-[#F7FAFE] rounded-[14px] transition-colors active:scale-95"
+            aria-label="返回登录"
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={22} strokeWidth={2.2} />
           </button>
+          <h1 className="text-[18px] font-medium text-[#0F2848] tracking-normal">注册账号</h1>
         </div>
 
-        {/* Title */}
-        <div className="mb-12 flex justify-center">
-          <h1 className="text-[26px] font-medium text-slate-800 tracking-wider">
-            找回密码
-          </h1>
-        </div>
+        <div className="flex-1 px-6 pt-8 pb-8 overflow-y-auto">
+          <div className="mb-7">
+            <h2 className="text-[22px] font-medium leading-[30px] text-[#0F2848]">创建账号</h2>
+            <p className="mt-1.5 text-[13px] font-normal leading-[19px] text-[#476285]">
+              完成验证后即可开始管理尽调项目
+            </p>
+          </div>
 
-        {/* Inputs */}
-        <div className="space-y-4">
-          <Input 
-            type="tel" 
-            placeholder="请输入手机号" 
-            value={forgotPhone}
-            onChange={(e) => setForgotPhone(e.target.value)}
-            onFocus={() => setIsInputFocused(true)}
-            onBlur={() => setIsInputFocused(false)}
-          />
-          
-          <Input 
-            type="number" 
-            placeholder="请输入6位验证码" 
-            value={forgotCode}
-            onChange={(e) => setForgotCode(e.target.value)}
-            onFocus={() => setIsInputFocused(true)}
-            onBlur={() => setIsInputFocused(false)}
-            suffix={
-              <button 
-                disabled={forgotCountdown > 0}
+          <div className="space-y-4">
+            <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB] ${registerPhone ? 'border-[#2563EB] ring-1 ring-[#2563EB]' : 'border-[#E2EBF5]'}`}>
+              <span className="text-slate-800 font-medium mr-4">+86</span>
+              <input
+                type="tel"
+                placeholder="请输入手机号"
+                value={registerPhone}
+                onChange={(e) => setRegisterPhone(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
+                className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
+              />
+            </div>
+
+            <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB] ${registerCode ? 'border-[#2563EB] ring-1 ring-[#2563EB]' : 'border-[#E2EBF5]'}`}>
+              <input
+                type="number"
+                placeholder="请输入验证码"
+                value={registerCode}
+                onChange={(e) => setRegisterCode(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
+                className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
+              />
+              <button
+                disabled={registerCountdown > 0}
                 onClick={async () => {
-                  if (!forgotPhone) {
+                  if (!registerPhone) {
                     Toast.info('请输入手机号');
                     return;
                   }
                   try {
-                    const res = await authService.sendResetPwdSms(forgotPhone);
+                    const res = await authService.sendSms(registerPhone);
                     if (res.successful) {
-                      setForgotCountdown(60);
+                      setRegisterCountdown(60);
+                      setRegisterSmsSent(true);
                       Toast.success('验证码已发送');
                     } else {
                       Toast.fail(res.message || '发送失败');
                     }
-                  } catch (error) {
-                    console.error('Send SMS error:', error);
+                  } catch (e) {
+                    console.error('Send SMS error:', e);
                   }
                 }}
-                className={`text-[15px] min-w-[5em] ${forgotCountdown > 0 ? 'text-gray-400' : 'text-[#2563EB] hover:text-[#2563EB]'}`}
+                className={`text-[14px] font-medium min-w-[5em] ${registerCountdown > 0 ? 'text-[#8AA2BF]' : 'text-[#2563EB]'}`}
               >
-                {forgotCountdown > 0 ? `${forgotCountdown}s` : '获取验证码'}
+                {registerCountdown > 0 ? `${registerCountdown}s` : (registerSmsSent ? '重新获取' : '获取验证码')}
               </button>
-            }
-          />
+            </div>
 
-          <Input 
-            type={forgotShowPassword ? "text" : "password"} 
-            placeholder="请输入新密码" 
-            value={forgotNewPassword}
-            onChange={(e) => setForgotNewPassword(e.target.value)}
-            onFocus={() => setIsInputFocused(true)}
-            onBlur={() => setIsInputFocused(false)}
-            suffix={
-              <button 
+            <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB] ${registerPassword ? 'border-[#2563EB] ring-1 ring-[#2563EB]' : 'border-[#E2EBF5]'}`}>
+              <input
+                type={registerShowPassword ? 'text' : 'password'}
+                placeholder="设置登录密码（至少 6 位）"
+                value={registerPassword}
+                onChange={(e) => setRegisterPassword(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
+                className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
+              />
+              <button
                 type="button"
-                onClick={() => setForgotShowPassword(!forgotShowPassword)}
-                className="text-gray-400 p-1 hover:text-gray-600 focus:outline-none"
+                onClick={() => setRegisterShowPassword(!registerShowPassword)}
+                className="text-[#8AA2BF] p-1 hover:text-[#476285] focus:outline-none"
               >
-                {forgotShowPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                {registerShowPassword ? <Eye size={18} /> : <EyeOff size={18} />}
               </button>
-            }
-          />
+            </div>
 
-          <Input 
-            type={forgotShowConfirmPassword ? "text" : "password"} 
-            placeholder="请再次输入新密码" 
-            value={forgotConfirmPassword}
-            onChange={(e) => setForgotConfirmPassword(e.target.value)}
-            onFocus={() => setIsInputFocused(true)}
-            onBlur={() => setIsInputFocused(false)}
-            suffix={
-              <button 
+            <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB] ${registerConfirmPassword ? 'border-[#2563EB] ring-1 ring-[#2563EB]' : 'border-[#E2EBF5]'}`}>
+              <input
+                type={registerShowConfirmPassword ? 'text' : 'password'}
+                placeholder="请再次输入密码"
+                value={registerConfirmPassword}
+                onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
+                className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
+              />
+              <button
                 type="button"
-                onClick={() => setForgotShowConfirmPassword(!forgotShowConfirmPassword)}
-                className="text-gray-400 p-1 hover:text-gray-600 focus:outline-none"
+                onClick={() => setRegisterShowConfirmPassword(!registerShowConfirmPassword)}
+                className="text-[#8AA2BF] p-1 hover:text-[#476285] focus:outline-none"
               >
-                {forgotShowConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                {registerShowConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
               </button>
-            }
-          />
+            </div>
+          </div>
+
+          {!isKeyboardOpen && (
+            <label className="mt-5 min-h-[22px] flex items-center justify-center space-x-2 text-[12px] text-[#8C93A3] cursor-pointer">
+              <div className="relative flex items-center justify-center w-[15px] h-[15px] rounded-full border border-[#2563EB] shrink-0">
+                <input
+                  type="checkbox"
+                  className="appearance-none absolute inset-0 w-full h-full opacity-0 cursor-pointer peer z-10"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                />
+                <div className={`absolute pointer-events-none rounded-full transition-transform ${agreed ? 'w-[9px] h-[9px] bg-[#2563EB] scale-100' : 'w-[9px] h-[9px] bg-transparent scale-0'}`} />
+              </div>
+              <span>
+                我已阅读并同意
+                <span
+                  className="text-[#2563EB] mx-1 active:opacity-70"
+                  onClick={(e) => { e.preventDefault(); openLegalView('AGREEMENT'); }}
+                >
+                  用户协议
+                </span>
+                和
+                <span
+                  className="text-[#2563EB] mx-1 active:opacity-70"
+                  onClick={(e) => { e.preventDefault(); openLegalView('PRIVACY'); }}
+                >
+                  隐私政策
+                </span>
+              </span>
+            </label>
+          )}
+
+          <div className="mt-7">
+            <Button
+              block
+              size="large"
+              onClick={handleRegisterSubmit}
+              disabled={!registerPhone || !registerCode || !registerPassword || !registerConfirmPassword}
+              className="rounded-full !bg-[#2563EB] active:!bg-[#2563EB] h-12 text-[16px] shadow-[0_8px_18px_rgba(37,99,235,0.14)]"
+            >
+              注册并登录
+            </Button>
+          </div>
         </div>
 
-        {/* Action Button */}
-        <div className="mt-12">
-          <Button 
-            block 
-            size="large" 
-            disabled={!forgotPhone || !forgotCode || !forgotNewPassword || !forgotConfirmPassword}
-            onClick={async () => {
-              if (forgotNewPassword !== forgotConfirmPassword) {
-                Toast.info('两次输入的密码不一致');
-                return;
-              }
-              try {
-                const res = await authService.resetPassword({
-                  mobile: forgotPhone,
-                  captcha: forgotCode,
-                  newPassword: forgotNewPassword,
-                  confirmPassword: forgotConfirmPassword,
-                });
-                if (res.successful) {
-                  Toast.success('密码重置成功');
-                  // 重置找回密码表单
-                  setForgotPhone('');
-                  setForgotCode('');
-                  setForgotNewPassword('');
-                  setForgotConfirmPassword('');
-                  setForgotCountdown(0);
-                  setViewState('PASSWORD');
-                } else {
-                  Toast.fail(res.message || '重置失败');
-                }
-              } catch (error) {
-                // request.ts 拦截器已全局弹出错误 Toast，此处不重复弹出
-                console.error('Reset password error:', error);
-              }
-            }}
-            className="shadow-md"
+        {showAgreementModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-black/40 backdrop-blur-[2px]">
+            <div className="bg-white w-full max-w-[320px] rounded-2xl p-6 flex flex-col items-center animate-[scale_0.2s_ease-out]">
+              <h3 className="text-lg font-medium text-slate-900 mb-4">账号使用协议及隐私保护</h3>
+              <p className="text-[14px] text-slate-600 leading-relaxed text-center mb-6">
+                为保障你的合法权益，请阅读并同意
+                <span
+                  className="text-[#2563EB] cursor-pointer mx-1"
+                  onClick={() => {
+                    setShowAgreementModal(false);
+                    setReturnToModal(true);
+                    openLegalView('AGREEMENT');
+                  }}
+                >
+                  账号使用协议
+                </span>
+                和
+                <span
+                  className="text-[#2563EB] cursor-pointer mx-1"
+                  onClick={() => {
+                    setShowAgreementModal(false);
+                    setReturnToModal(true);
+                    openLegalView('PRIVACY');
+                  }}
+                >
+                  隐私政策
+                </span>
+              </p>
+              <div className="grid grid-cols-2 gap-3 w-full">
+                <Button
+                  block
+                  onClick={() => setShowAgreementModal(false)}
+                  className="!bg-white !text-[#476285] border border-[#E2EBF5]"
+                >
+                  取消
+                </Button>
+                <Button block onClick={handleAgreementConfirm}>同意</Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+
+  // Forgot Password View
+  if (viewState === 'FORGOT_PASSWORD') {
+    return (
+      <div className="min-h-[100dvh] bg-[#F7FAFE] flex flex-col relative">
+        {/* Header */}
+        <div className="relative h-[60px] bg-[#FFFFFF] border-b border-[#E2EBF5]/70 flex items-center justify-center px-4">
+          <button
+            onClick={() => setViewState('PASSWORD')}
+            className="absolute left-4 h-10 w-10 flex items-center justify-center text-[#0F2848] hover:bg-[#F7FAFE] rounded-[14px] transition-colors active:scale-95"
+            aria-label="返回"
           >
-            确定
-          </Button>
+            <ArrowLeft size={22} strokeWidth={2.2} />
+          </button>
+          <h1 className="text-[18px] font-medium text-[#0F2848] tracking-normal">重置密码</h1>
+        </div>
+
+        <div className="px-6 pt-8">
+          <div className="mb-7">
+            <h2 className="text-[22px] font-medium leading-[30px] text-[#0F2848]">验证手机号</h2>
+            <p className="mt-1.5 text-[13px] font-normal leading-[19px] text-[#476285]">
+              输入验证码后设置新的登录密码
+            </p>
+          </div>
+
+          {/* Inputs */}
+          <div className="space-y-4">
+            <Input
+              type="tel"
+              placeholder="请输入手机号"
+              value={forgotPhone}
+              onChange={(e) => setForgotPhone(e.target.value)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
+            />
+
+            <Input
+              type="number"
+              placeholder="请输入6位验证码"
+              value={forgotCode}
+              onChange={(e) => setForgotCode(e.target.value)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
+              suffix={
+                <button
+                  disabled={forgotCountdown > 0}
+                  onClick={async () => {
+                    if (!forgotPhone) {
+                      Toast.info('请输入手机号');
+                      return;
+                    }
+                    try {
+                      const res = await authService.sendResetPwdSms(forgotPhone);
+                      if (res.successful) {
+                        setForgotCountdown(60);
+                        Toast.success('验证码已发送');
+                      } else {
+                        Toast.fail(res.message || '发送失败');
+                      }
+                    } catch (error) {
+                      console.error('Send SMS error:', error);
+                    }
+                  }}
+                  className={`text-[14px] font-medium min-w-[5em] ${forgotCountdown > 0 ? 'text-[#8AA2BF]' : 'text-[#2563EB] hover:text-[#2563EB]'}`}
+                >
+                  {forgotCountdown > 0 ? `${forgotCountdown}s` : '获取验证码'}
+                </button>
+              }
+            />
+
+            <Input
+              type={forgotShowPassword ? "text" : "password"}
+              placeholder="请输入新密码"
+              value={forgotNewPassword}
+              onChange={(e) => setForgotNewPassword(e.target.value)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
+              suffix={
+                <button
+                  type="button"
+                  onClick={() => setForgotShowPassword(!forgotShowPassword)}
+                  className="text-[#8AA2BF] p-1 hover:text-[#476285] focus:outline-none"
+                >
+                  {forgotShowPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                </button>
+              }
+            />
+
+            <Input
+              type={forgotShowConfirmPassword ? "text" : "password"}
+              placeholder="请再次输入新密码"
+              value={forgotConfirmPassword}
+              onChange={(e) => setForgotConfirmPassword(e.target.value)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
+              suffix={
+                <button
+                  type="button"
+                  onClick={() => setForgotShowConfirmPassword(!forgotShowConfirmPassword)}
+                  className="text-[#8AA2BF] p-1 hover:text-[#476285] focus:outline-none"
+                >
+                  {forgotShowConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                </button>
+              }
+            />
+          </div>
+
+          {/* Action Button */}
+          <div className="mt-8">
+            <Button
+              block
+              size="large"
+              disabled={!forgotPhone || !forgotCode || !forgotNewPassword || !forgotConfirmPassword}
+              onClick={async () => {
+                if (forgotNewPassword !== forgotConfirmPassword) {
+                  Toast.info('两次输入的密码不一致');
+                  return;
+                }
+                try {
+                  const res = await authService.resetPassword({
+                    mobile: forgotPhone,
+                    captcha: forgotCode,
+                    newPassword: forgotNewPassword,
+                    confirmPassword: forgotConfirmPassword,
+                  });
+                  if (res.successful) {
+                    Toast.success('密码重置成功');
+                    // 重置密码表单
+                    setForgotPhone('');
+                    setForgotCode('');
+                    setForgotNewPassword('');
+                    setForgotConfirmPassword('');
+                    setForgotCountdown(0);
+                    setViewState('PASSWORD');
+                  } else {
+                    Toast.fail(res.message || '重置失败');
+                  }
+                } catch (error) {
+                  // request.ts 拦截器已全局弹出错误 Toast，此处不重复弹出
+                  console.error('Reset password error:', error);
+                }
+              }}
+              className="shadow-[0_8px_18px_rgba(37,99,235,0.14)]"
+            >
+              确定
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -676,11 +887,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               {slide.desc}
             </p>
           </div>
-          
+
           {/* Slide Image */}
           <div className="w-full flex-1 flex items-end justify-center relative z-10">
-            <img 
-              src={`${basePath}assets/login${slide.id}.png`} 
+            <img
+              src={`${basePath}assets/login${slide.id}.png`}
               alt={slide.title}
               className="w-[280px] sm:w-[320px] h-auto object-contain object-bottom -mb-1"
             />
@@ -692,15 +903,25 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="bg-white rounded-t-[24px] px-8 pt-6 pb-24 shadow-[0_-10px_32px_rgba(17,24,39,0.04)] z-20 flex flex-col w-full relative shrink-0">
         {/* Tabs */}
         {isRegisterMode ? (
-          <div className="flex items-start justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-[22px] font-medium text-slate-900 leading-tight">注册账号</h1>
-              <p className="text-[12px] text-slate-500 mt-1">创建账号后即可开始管理尽调项目</p>
+          <div className="mb-6">
+            <div className="relative h-10 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => setViewState('SMS')}
+                className="absolute left-0 h-10 w-10 flex items-center justify-center rounded-[14px] text-[#0F2848] hover:bg-[#F7FAFE] transition-colors active:scale-95"
+                aria-label="返回登录"
+              >
+                <ArrowLeft size={22} strokeWidth={2.2} />
+              </button>
+              <h1 className="text-[18px] font-medium text-[#0F2848] tracking-normal">注册账号</h1>
             </div>
+            <p className="mt-3 text-center text-[13px] font-normal leading-[19px] text-[#476285]">
+              创建账号后即可开始管理尽调项目
+            </p>
             <button
               type="button"
               onClick={() => setViewState('SMS')}
-              className="h-9 px-3 rounded-full border border-[#E2EBF5] bg-[#F7FAFE] text-[12px] font-medium text-[#2563EB] active:scale-[0.98] transition"
+              className="sr-only"
             >
               去登录
             </button>
@@ -708,7 +929,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         ) : (
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="flex gap-6">
-              <button 
+              <button
                 className={`text-[18px] font-medium relative pb-2 transition-colors ${!isPasswordMode ? 'text-slate-900' : 'text-slate-400'}`}
                 onClick={() => setViewState('SMS')}
               >
@@ -717,7 +938,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[4px] bg-[#2563EB] rounded-full" />
                 )}
               </button>
-              <button 
+              <button
                 className={`text-[18px] font-medium relative pb-2 transition-colors ${isPasswordMode ? 'text-slate-900' : 'text-slate-400'}`}
                 onClick={() => setViewState('PASSWORD')}
               >
@@ -742,7 +963,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           <div className="space-y-4">
             <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB] ${registerPhone ? 'border-[#2563EB] ring-1 ring-[#2563EB]' : 'border-[#E2EBF5]'}`}>
               <span className="text-slate-800 font-medium mr-4">+86</span>
-              <input 
+              <input
                 type="tel"
                 placeholder="请输入手机号"
                 value={registerPhone}
@@ -754,7 +975,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </div>
 
             <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB] ${registerCode ? 'border-[#2563EB] ring-1 ring-[#2563EB]' : 'border-[#E2EBF5]'}`}>
-              <input 
+              <input
                 type="number"
                 placeholder="请输入验证码"
                 value={registerCode}
@@ -763,7 +984,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 onBlur={() => setIsInputFocused(false)}
                 className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
               />
-              <button 
+              <button
                 disabled={registerCountdown > 0}
                 onClick={async () => {
                   if (!registerPhone) { Toast.info('请输入手机号'); return; }
@@ -782,7 +1003,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </div>
 
             <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB] ${registerPassword ? 'border-[#2563EB] ring-1 ring-[#2563EB]' : 'border-[#E2EBF5]'}`}>
-              <input 
+              <input
                 type={registerShowPassword ? "text" : "password"}
                 placeholder="设置登录密码（至少 6 位）"
                 value={registerPassword}
@@ -797,7 +1018,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </div>
 
             <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB] ${registerConfirmPassword ? 'border-[#2563EB] ring-1 ring-[#2563EB]' : 'border-[#E2EBF5]'}`}>
-              <input 
+              <input
                 type={registerShowConfirmPassword ? "text" : "password"}
                 placeholder="再次输入密码"
                 value={registerConfirmPassword}
@@ -816,7 +1037,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             {/* Phone Input */}
             <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB] ${phone ? 'border-[#2563EB] ring-1 ring-[#2563EB]' : 'border-[#E2EBF5]'}`}>
               <span className="text-slate-800 font-medium mr-4">+86</span>
-              <input 
+              <input
                 type="tel"
                 placeholder="请输入手机号"
                 value={phone}
@@ -830,7 +1051,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             {!isPasswordMode ? (
               /* SMS Code Input */
               <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB] ${code ? 'border-[#2563EB] ring-1 ring-[#2563EB]' : 'border-[#E2EBF5]'}`}>
-                <input 
+                <input
                   type="number"
                   placeholder="请输入验证码"
                   value={code}
@@ -839,7 +1060,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   onBlur={() => setIsInputFocused(false)}
                   className="flex-1 min-w-0 bg-transparent text-[15px] outline-none text-slate-800 placeholder-slate-400"
                 />
-                <button 
+                <button
                   disabled={countdown > 0}
                   onClick={async () => {
                     if (!phone) { Toast.info('请输入手机号'); return; }
@@ -859,7 +1080,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             ) : (
               /* Password Input */
               <div className={`flex items-center border rounded-full px-5 py-3.5 transition-colors focus-within:border-[#2563EB] focus-within:ring-1 focus-within:ring-[#2563EB] ${password ? 'border-[#2563EB] ring-1 ring-[#2563EB]' : 'border-[#E2EBF5]'}`}>
-                <input 
+                <input
                   type={showPassword ? "text" : "password"}
                   placeholder="请输入密码"
                   value={password}
@@ -884,7 +1105,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <span className="text-[12px] text-slate-500">未注册的手机号登录成功后将自动注册</span>
           ) : (
             <div className="w-full flex justify-end">
-              <button 
+              <button
                 onClick={() => setViewState('FORGOT_PASSWORD')}
                 className="text-[12px] text-[#2563EB]"
               >
@@ -926,15 +1147,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         )}
 
         {/* Login Button */}
-        <Button 
-          block 
-          size="large" 
+        <Button
+          block
+          size="large"
           onClick={isRegisterMode ? handleRegisterSubmit : handleMainLogin}
           disabled={isRegisterMode ? (!registerPhone || !registerCode || !registerPassword || !registerConfirmPassword) : (!phone || (!isPasswordMode ? !code : !password))}
           className="rounded-full !bg-[#2563EB] active:!bg-[#2563EB] h-12 text-[16px]"
         >
           {isRegisterMode ? '注册并登录' : '登 录'}
-        </Button> 
+        </Button>
 
       </div>
 
@@ -945,40 +1166,40 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <h3 className="text-lg font-medium text-slate-900 mb-4">账号使用协议及隐私保护</h3>
             <p className="text-[14px] text-slate-600 leading-relaxed text-center mb-6">
               为保障你的合法权益，请阅读并同意
-              <span 
+              <span
                 className="text-[#2563EB] cursor-pointer mx-1"
-                onClick={() => { 
-                  setShowAgreementModal(false); 
-                  setReturnToModal(true); 
-                  openLegalView('AGREEMENT'); 
+                onClick={() => {
+                  setShowAgreementModal(false);
+                  setReturnToModal(true);
+                  openLegalView('AGREEMENT');
                 }}
               >
                 账号使用协议
               </span>
               和
-              <span 
+              <span
                 className="text-[#2563EB] cursor-pointer mx-1"
-                onClick={() => { 
-                  setShowAgreementModal(false); 
-                  setReturnToModal(true); 
-                  openLegalView('PRIVACY'); 
+                onClick={() => {
+                  setShowAgreementModal(false);
+                  setReturnToModal(true);
+                  openLegalView('PRIVACY');
                 }}
               >
                 隐私政策
               </span>
               ，我们将严格保护你的个人信息安全。
             </p>
-            
+
             <div className="w-full space-y-3">
-              <Button 
-                block 
+              <Button
+                block
                 className="!bg-[#2563EB] !rounded-full !h-11 !text-[16px] shadow-[0_6px_14px_rgba(37, 99, 235,0.14)]"
                 onClick={handleAgreementConfirm}
               >
                 同意并继续
               </Button>
-              <Button 
-                block 
+              <Button
+                block
                 variant="secondary"
                 className="!bg-gray-100 !border-0 !text-slate-500 !rounded-full !h-11 !text-[16px]"
                 onClick={() => setShowAgreementModal(false)}
