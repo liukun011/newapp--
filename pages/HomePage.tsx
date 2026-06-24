@@ -639,7 +639,6 @@ const HomePage: React.FC<HomePageProps> = ({
                   </div>
                   <div>
                     <h2 className="text-[14px] leading-[18px] font-medium text-[#0F2848]">工作概览</h2>
-                    <p className="text-[10.5px] leading-[13px] text-[#8AA2BF]">今日数据概览</p>
                   </div>
                 </div>
               </div>
