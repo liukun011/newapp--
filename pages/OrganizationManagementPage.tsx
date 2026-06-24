@@ -412,9 +412,9 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
           <ChevronLeft size={21} />
         </button>
         
-        <div className="flex flex-col items-center">
+        <div className="min-w-0 flex flex-col items-center">
             {isEditing ? (
-              <div className="relative flex items-center justify-center">
+              <div className="relative flex w-[min(58vw,260px)] items-center justify-center">
                 <input
                   ref={inputRef}
                   type="text"
@@ -422,7 +422,8 @@ const OrganizationManagementPage: React.FC<OrganizationManagementPageProps> = ({
                   onChange={(e) => setEditValue(e.target.value)}
                   onBlur={handleSave}
                   onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                  className="text-center text-[18px] font-medium text-[#0F2848] bg-[#F7FAFE] border-2 border-[#2563EB] rounded-[12px] px-4 py-1.5 focus:outline-none min-w-[180px] max-w-[280px]"
+                  className="xl-tenant-name-input h-9 w-full appearance-none rounded-[14px] border border-[#BFD2EA] bg-white/90 px-3 text-center text-[17px] font-medium leading-none text-[#0F2848] shadow-[0_4px_14px_rgba(15,40,72,0.05)] outline-none ring-0 transition-colors focus:border-[#BFD2EA] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                  style={{ WebkitAppearance: 'none', boxShadow: '0 4px 14px rgba(15,40,72,0.05)' }}
                 />
               </div>
             ) : (

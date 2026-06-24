@@ -1108,6 +1108,15 @@ textarea:focus {
   font-weight: 400;
 }
 
+.xl-tenant-name-input,
+.xl-tenant-name-input:focus,
+.xl-tenant-name-input:focus-visible,
+.xl-tenant-name-input:active {
+  outline: none !important;
+  box-shadow: 0 4px 14px rgba(15, 40, 72, 0.05) !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .rv-popup,
 .rv-dialog {
   --rv-primary-color: var(--xl-primary);
