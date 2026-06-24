@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw, MoreHorizontal, Camera, Image, Upload, Plus } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw, MoreHorizontal, Camera, Image, Upload, Plus, Clock, CheckCircle2, AlertCircle, X, Trash2 } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
 import { DealRecord, DealReportStatusEnum, SummaryStatusEnum, QuestionInfo } from '../types';
@@ -11,6 +11,121 @@ import VoiceInputModal from '../components/VoiceInputModal';
 import QuestionListPicker from '../components/QuestionListPicker';
 import config from '../config';
 import {markdownToHtml} from "@/utils/markdownToHtml.ts";
+
+const REPORT_GENERATION_STEPS = [
+  { key: 'prepare', title: '整理资料', description: '检查访谈记录、补充资料、问题清单和报告样例。', threshold: 0 },
+  { key: 'analyze', title: '提取要点', description: '提取访谈回答、资料线索、企业信息和风险提示。', threshold: 25 },
+  { key: 'write', title: '撰写报告', description: '按照报告样例生成企业情况、访谈结论和风险分析。', threshold: 55 },
+  { key: 'check', title: '检查内容', description: '检查章节完整性、关键信息缺口和可下载文件。', threshold: 82 },
+  { key: 'done', title: '生成完成', description: '报告已生成，可以预览或下载。', threshold: 100 },
+];
+
+const getReportGenerationStep = (progress: number, status?: DealReportStatusEnum | string) => {
+  if (status === DealReportStatusEnum.REPORT_GENERATED) {
+    return REPORT_GENERATION_STEPS[REPORT_GENERATION_STEPS.length - 1];
+  }
+
+  const safeProgress = Math.max(0, Math.min(100, Math.round(progress || 0)));
+  return [...REPORT_GENERATION_STEPS]
+    .reverse()
+    .find((step) => safeProgress >= step.threshold) || REPORT_GENERATION_STEPS[0];
+};
+
+const getReportGenerationMessage = (progress: number, status?: DealReportStatusEnum | string) => {
+  if (status === DealReportStatusEnum.REPORT_FAILED) {
+    return '可能是网络不稳定，或 AI 服务暂时连不上。当前资料和设置都会保留。';
+  }
+
+  if (status === DealReportStatusEnum.REPORT_GENERATED) {
+    return '可以预览、下载，或根据最新资料重新生成。';
+  }
+
+  const step = getReportGenerationStep(progress, status);
+  return step.description;
+};
+
+type AiInsightQuestion = {
+  id: string;
+  category: string;
+  issue: string;
+  evidence: string;
+  question: string;
+  source: string;
+};
+
+type AiInsightMetric = {
+  label: string;
+  value: string;
+  tone: 'blue' | 'green' | 'amber' | 'red';
+};
+
+const getAiInsightText = (item: any, keys: string[], fallback = '') => {
+  for (const key of keys) {
+    const value = item?.[key];
+    if (value !== undefined && value !== null && String(value).trim()) {
+      return String(value).trim();
+    }
+  }
+  return fallback;
+};
+
+const extractAiInsightList = (payload: any): any[] => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.list)) return payload.list;
+  if (Array.isArray(payload?.records)) return payload.records;
+  if (Array.isArray(payload?.aiInsights)) return payload.aiInsights;
+  if (Array.isArray(payload?.questions)) return payload.questions;
+  return [];
+};
+
+const normalizeAiInsightQuestions = (list: any[] = []): AiInsightQuestion[] => (
+  list
+    .map((item, index) => {
+      const question = getAiInsightText(item, ['questionContent', 'questionName', 'question', 'content', 'title', 'questionText']);
+      if (!question) return null;
+
+      return {
+        id: getAiInsightText(item, ['id', 'questionId'], `ai_insight_${index}`),
+        category: getAiInsightText(item, ['category', 'questionType', 'type'], '资料分析'),
+        issue: getAiInsightText(item, ['issue', 'riskPoint', 'tag'], '需要进一步核实'),
+        evidence: getAiInsightText(item, ['evidence', 'reason', 'sourceDesc', 'source'], '结合企业信息、访谈记录和已上传资料生成'),
+        question,
+        source: getAiInsightText(item, ['source'], 'AI 资料分析'),
+      };
+    })
+    .filter(Boolean) as AiInsightQuestion[]
+);
+
+const normalizeRiskSignals = (riskTags: any[] = [], insightQuestions: AiInsightQuestion[] = []) => {
+  const tagSignals = riskTags.map((item, index) => {
+    if (typeof item === 'string') {
+      return { id: `risk_tag_${index}`, title: item, detail: '企业公开信息中识别到的风险标签。' };
+    }
+
+    return {
+      id: getAiInsightText(item, ['id', 'riskId'], `risk_tag_${index}`),
+      title: getAiInsightText(item, ['name', 'label', 'title', 'riskName'], '风险信号'),
+      detail: getAiInsightText(item, ['detail', 'description', 'summary', 'content'], '企业公开信息中识别到的风险标签。'),
+    };
+  });
+
+  const questionSignals = insightQuestions
+    .filter((item) => ['法律', '诉讼', '合规', '财务', '经营', '风险', '异常'].some((keyword) => (
+      item.category.includes(keyword) || item.issue.includes(keyword) || item.question.includes(keyword)
+    )))
+    .slice(0, 3)
+    .map((item, index) => ({
+      id: `risk_question_${index}`,
+      title: item.issue,
+      detail: item.question,
+    }));
+
+  const merged = [...tagSignals, ...questionSignals];
+  return merged.filter((item, index, array) => (
+    array.findIndex((candidate) => candidate.title === item.title && candidate.detail === item.detail) === index
+  ));
+};
 
 interface DueDiligencePageProps {
   deal: DealRecord | null;
@@ -56,14 +171,21 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [questionPickerMode, setQuestionPickerMode] = useState<'add' | 'replace'>('add');
   const [addQuestionVisible, setAddQuestionVisible] = useState(false);
   const [manualQuestionName, setManualQuestionName] = useState('');
+  const [editQuestionVisible, setEditQuestionVisible] = useState(false);
+  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
+  const [editingQuestionName, setEditingQuestionName] = useState('');
   const [isSavingManualQuestion, setIsSavingManualQuestion] = useState(false);
   const [isAnalyzingAi, setIsAnalyzingAi] = useState(false);
   const [aiInsightList, setAiInsightList] = useState<any[]>([]);
+  const [aiInsightPanelVisible, setAiInsightPanelVisible] = useState(false);
+  const [selectedAiInsightIds, setSelectedAiInsightIds] = useState<string[]>([]);
+  const [isAcceptingAiInsight, setIsAcceptingAiInsight] = useState(false);
   const [voiceModalInitialContent, setVoiceModalInitialContent] = useState('');
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   // 尽调总结本地状态：IDLE/GENERATING/GENERATED/FAILED，驱动按钮和内容区展示
   const [summaryStatus, setSummaryStatus] = useState<SummaryStatusEnum>(SummaryStatusEnum.IDLE);
   const [reportProgress, setReportProgress] = useState(68);
+  const [reportProcessVisible, setReportProcessVisible] = useState(false);
   // 追踪当前 WebSocket 实例，防止重复连接
   const wsRef = React.useRef<WebSocket | null>(null);
   const [interviewRecords, setInterviewRecords] = useState<any[]>([]);
@@ -283,6 +405,16 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             console.log('[WebSocket] Updating local reportStatus to:', data.reportStatus);
             return { ...prev, reportStatus: data.reportStatus };
           });
+
+          if (data.reportStatus === DealReportStatusEnum.REPORT_GENERATED) {
+            setReportProgress(100);
+            Toast.success('报告已生成');
+            fetchDealDetail();
+          } else if (data.reportStatus === DealReportStatusEnum.REPORT_FAILED) {
+            setReportProgress(0);
+            Toast.fail({ message: '报告生成失败，请稍后重试', duration: 3000 });
+            fetchDealDetail();
+          }
         }
 
         const nextProgress = data.percent ?? data.progress ?? data.reportProgress;
@@ -335,6 +467,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
     socket.onerror = (error) => {
       console.error('[WebSocket] Error occurred:', error);
+      Toast.info({ message: '网络连接不稳定，生成状态可能会延迟更新', duration: 2500 });
     };
 
     socket.onclose = (e) => {
@@ -906,17 +1039,118 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     }
   };
 
+  const handleOpenEditQuestion = (question: QuestionInfo, index: number) => {
+    setEditingQuestionIndex(index);
+    setEditingQuestionName(question.questionName || '');
+    setEditQuestionVisible(true);
+  };
+
+  const handleEditQuestion = async () => {
+    const questionName = editingQuestionName.trim();
+    if (!currentDeal?.id || editingQuestionIndex === null || !questionName || isSavingManualQuestion) return;
+
+    const currentQuestions = currentDeal.questionInfoList || [];
+    const nextQuestions = currentQuestions.map((question, index) => (
+      index === editingQuestionIndex
+        ? { ...question, questionName }
+        : question
+    ));
+
+    try {
+      setIsSavingManualQuestion(true);
+      Toast.loading({ message: '保存中...', duration: 0 });
+      const res = await dealService.createOrUpdateDealInst({
+        id: currentDeal.id,
+        questionId: currentDeal.questionId,
+        questionInfoList: nextQuestions,
+      });
+      Toast.clear();
+      if (res.success) {
+        const nextDeal = { ...currentDeal, questionInfoList: nextQuestions };
+        setDealDetail(nextDeal as DealRecord);
+        onDealDetailLoadedRef.current?.(nextDeal as DealRecord);
+        lastSavedQuestionsRef.current = JSON.stringify(nextQuestions);
+        setEditQuestionVisible(false);
+        setEditingQuestionIndex(null);
+        setEditingQuestionName('');
+        Toast.success('问题已更新');
+        await fetchDealDetail();
+      } else {
+        Toast.fail(res.message || '保存失败');
+      }
+    } catch (e: any) {
+      Toast.clear();
+      console.error('Edit question failed:', e);
+      Toast.fail(e.message || '保存失败');
+    } finally {
+      setIsSavingManualQuestion(false);
+    }
+  };
+
+  const handleDeleteQuestion = async (index: number) => {
+    if (!currentDeal?.id || isSavingManualQuestion) return;
+
+    try {
+      await Dialog.confirm({
+        title: '删除问题？',
+        message: '删除后，该问题将不再出现在当前问题清单中。',
+        cancelButtonText: '取消',
+        confirmButtonText: '确认删除',
+        confirmButtonColor: '#DC2626',
+      });
+    } catch {
+      return;
+    }
+
+    const currentQuestions = currentDeal.questionInfoList || [];
+    const nextQuestions = currentQuestions
+      .filter((_, questionIndex) => questionIndex !== index)
+      .map((question, questionIndex) => ({
+        ...question,
+        questionIndex: questionIndex + 1,
+      }));
+
+    try {
+      setIsSavingManualQuestion(true);
+      Toast.loading({ message: '删除中...', duration: 0 });
+      const res = await dealService.createOrUpdateDealInst({
+        id: currentDeal.id,
+        questionId: currentDeal.questionId,
+        questionInfoList: nextQuestions,
+      });
+      Toast.clear();
+      if (res.success) {
+        const nextDeal = { ...currentDeal, questionInfoList: nextQuestions };
+        setDealDetail(nextDeal as DealRecord);
+        onDealDetailLoadedRef.current?.(nextDeal as DealRecord);
+        lastSavedQuestionsRef.current = JSON.stringify(nextQuestions);
+        Toast.success('问题已删除');
+        await fetchDealDetail();
+      } else {
+        Toast.fail(res.message || '删除失败');
+      }
+    } catch (e: any) {
+      Toast.clear();
+      console.error('Delete question failed:', e);
+      Toast.fail(e.message || '删除失败');
+    } finally {
+      setIsSavingManualQuestion(false);
+    }
+  };
+
   const handleAiInsight = async () => {
     if (!currentDeal?.id || isAnalyzingAi) return;
     try {
       setIsAnalyzingAi(true);
+      setAiInsightPanelVisible(true);
       const res = await dealService.getAiInsight(currentDeal.id, true);
       if (res.success) {
-        if (res.success && Array.isArray(res.data)) {
-          setAiInsightList(res.data); // 更新本地展示区
-        }
+        const nextInsights = extractAiInsightList(res.data);
+        const nextNormalizedInsights = normalizeAiInsightQuestions(nextInsights);
+        setAiInsightList(nextInsights);
+        setSelectedAiInsightIds(nextNormalizedInsights.map((item) => item.id));
         await fetchDealDetail();
-        Toast.success('AI 洞察生成成功');
+        Toast.success(nextInsights.length > 0 ? '资料分析完成' : '暂未生成建议问题');
       } else {
         Toast.info(res.message || '查询异常：该尽调无企业信息，无法生成AI洞察');
       }
@@ -925,6 +1159,34 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       Toast.info(e.message || '查询异常：该尽调无企业信息，无法生成AI洞察');
     } finally {
       setIsAnalyzingAi(false);
+    }
+  };
+
+  const handleAcceptAiInsight = async () => {
+    const selectedInsights = normalizedAiInsights.filter((item) => selectedAiInsightIds.includes(item.id));
+    if (!currentDeal?.id || selectedInsights.length === 0 || isAcceptingAiInsight) return;
+
+    try {
+      setIsAcceptingAiInsight(true);
+      Toast.loading({ message: '正在加入问题清单...', duration: 0 });
+      const res = await dealService.acceptAiInsight(
+        currentDeal.id,
+        selectedInsights.map((item) => ({ id: item.id, questionContent: item.question })),
+      );
+      Toast.clear();
+      if (res.success) {
+        Toast.success(`已加入 ${selectedInsights.length} 个问题`);
+        setAiInsightPanelVisible(false);
+        await fetchDealDetail();
+      } else {
+        Toast.fail(res.message || '加入失败');
+      }
+    } catch (e: any) {
+      Toast.clear();
+      console.error('Accept AI Insight failed:', e);
+      Toast.fail(e.message || '加入失败');
+    } finally {
+      setIsAcceptingAiInsight(false);
     }
   };
 
@@ -1033,6 +1295,12 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
   const materialCount = (currentDeal?.resources?.length || 0) + (Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary.length : 0);
   const questionList = currentDeal?.questionInfoList || [];
+  const normalizedAiInsights = normalizeAiInsightQuestions(aiInsightList);
+  useEffect(() => {
+    if (normalizedAiInsights.length > 0 && selectedAiInsightIds.length === 0) {
+      setSelectedAiInsightIds(normalizedAiInsights.map((item) => item.id));
+    }
+  }, [normalizedAiInsights.length, selectedAiInsightIds.length]);
   const enterpriseRiskTags = Array.isArray(basicInfo.riskTags) ? basicInfo.riskTags : [];
   const enterpriseMetrics = basicInfo.operationMetrics || {};
   const enterpriseEquityChanges = (() => {
@@ -1053,9 +1321,70 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const hasInterviewRecords = interviewTotalCount > 0
     || ['4', '5'].includes(String(currentDeal?.status || ''))
     || completedInstList.length > 0;
+  const companyDisplayName = basicInfo.name || currentDeal?.companyName || currentDeal?.interviewCust || '当前企业';
+  const hasCoreEnterpriseInfo = Boolean(basicInfo.name || currentDeal?.companyName || currentDeal?.creditCode);
+  const riskSignals = normalizeRiskSignals(enterpriseRiskTags, normalizedAiInsights);
+  const aiRiskCount = riskSignals.length;
+  const aiInsightMetrics: AiInsightMetric[] = [
+    {
+      label: '主体信息',
+      value: hasCoreEnterpriseInfo ? '已补充' : '待补充',
+      tone: hasCoreEnterpriseInfo ? 'green' : 'amber',
+    },
+    {
+      label: '风险信号',
+      value: `${aiRiskCount} 项`,
+      tone: aiRiskCount >= 3 ? 'red' : aiRiskCount > 0 ? 'amber' : 'green',
+    },
+    {
+      label: '建议问题',
+      value: `${normalizedAiInsights.length} 个`,
+      tone: normalizedAiInsights.length > 0 ? 'blue' : 'amber',
+    },
+    {
+      label: '资料数量',
+      value: `${materialCount} 份`,
+      tone: materialCount > 0 ? 'blue' : 'amber',
+    },
+  ];
+  const aiInsightSummaryLines = [
+    hasCoreEnterpriseInfo
+      ? `${companyDisplayName} 已具备基础企业信息，可用于核验主体、行业、股东和经营口径。`
+      : '企业名称或统一社会信用代码仍需补充，否则资料分析的主体判断会不完整。',
+    materialCount > 0
+      ? `当前已有 ${materialCount} 份资料可用于报告和访谈核验。`
+      : '当前还没有补充资料，建议上传营业执照、财报、合同、流水或其他授信材料。',
+    normalizedAiInsights.length > 0
+      ? `已生成 ${normalizedAiInsights.length} 个建议问题，可选择采纳到问题清单。`
+      : '点击 AI 洞察后，会根据企业信息、资料和访谈内容生成建议问题。',
+  ];
   const isGenerated = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATED;
   const isGenerating = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_GENERATING;
   const isFailed = currentDeal?.reportStatus == DealReportStatusEnum.REPORT_FAILED;
+  const currentReportStep = getReportGenerationStep(reportProgress, currentDeal?.reportStatus);
+  const reportGenerationMessage = getReportGenerationMessage(reportProgress, currentDeal?.reportStatus);
+  const reportBasisItems = [
+    {
+      label: '访谈记录',
+      value: `${interviewTotalCount || completedInstList.length} 条`,
+      hint: hasInterviewRecords ? '将提取访谈回答和现场结论' : '暂无访谈记录',
+    },
+    {
+      label: '补充资料',
+      value: `${materialCount} 份`,
+      hint: materialCount > 0 ? '将用于补充报告依据' : '暂无补充资料',
+    },
+    {
+      label: '问题清单',
+      value: `${questionList.length} 个`,
+      hint: questionList.length > 0 ? '将核对问题覆盖情况' : '暂无问题清单',
+    },
+  ];
+  const reportGenerationTips = isFailed
+    ? ['资料和设置不会丢失，可以直接重新生成。', '如果多次失败，建议检查网络后再试。']
+    : isGenerated
+      ? ['报告已生成，可先预览确认内容。', '资料或访谈更新后，可以重新生成。']
+      : ['生成过程中可以返回页面继续查看资料。', '完成后会自动更新为可预览和下载。'];
 
   let reportCardState: 'notStarted' | 'interviewDone' | 'generating' | 'generated' | 'failed' | 'loading' = 'loading';
   if (isGenerated) {
@@ -1083,9 +1412,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   };
   const reportCardDescMap: Record<typeof reportCardState, string> = {
     loading: '',
-    generating: '预计还需 46 秒，完成后可预览和下载',
-    generated: '访谈即报告，小狸智能捕捉核心洞察',
-    failed: '请重试或检查资料内容',
+    generating: reportGenerationMessage,
+    generated: '可以预览、下载，或根据最新资料重新生成。',
+    failed: reportGenerationMessage,
     interviewDone: '访谈即报告，小狸智能捕捉核心洞察',
     notStarted: '暂无访谈记录，请先开始访谈',
   };
@@ -1173,18 +1502,39 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                   </div>
 
                   <div className="flex flex-col gap-2.5">
+                    {reportCardState !== 'notStarted' && (
+                      <div className="xl-report-basis-grid">
+                        {reportBasisItems.map((item) => (
+                          <div key={item.label} className="xl-report-basis-item">
+                            <span>{item.label}</span>
+                            <strong>{item.value}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     {isGenerating ? (
-                      <div className="xl-report-progress">
-                        <div className="flex items-center justify-between gap-3">
-                          <span>报告生成中</span>
-                          <strong>{reportProgress}%</strong>
+                      <div className="space-y-2.5">
+                        <div className="xl-report-progress">
+                          <div className="flex items-center justify-between gap-3">
+                            <span>{currentReportStep.title}</span>
+                            <strong>{reportProgress}%</strong>
+                          </div>
+                          <div className="xl-report-progress-track">
+                            <div style={{ width: `${reportProgress}%` }} />
+                          </div>
+                          <p className="xl-report-progress-desc">{currentReportStep.description}</p>
                         </div>
-                        <div className="xl-report-progress-track">
-                          <div style={{ width: `${reportProgress}%` }} />
-                        </div>
+                        <button
+                          onClick={() => setReportProcessVisible(true)}
+                          className="xl-report-btn ghost w-full"
+                        >
+                          <Clock size={15} />
+                          <span>查看进度</span>
+                        </button>
                       </div>
                     ) : (
-                      !isReadOnly && (
+                      !isReadOnly && !isFailed && (
                         <button
                           onClick={handleGenerateReportThrottled}
                           className={`xl-report-btn ${isGenerated ? 'soft' : 'primary'} w-full`}
@@ -1195,7 +1545,24 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                       )
                     )}
 
-                    {isGenerated && !isGenerating ? (
+                    {isFailed && !isReadOnly ? (
+                      <div className="xl-report-actions two">
+                        <button
+                          onClick={handleGenerateReportThrottled}
+                          className="xl-report-btn primary"
+                        >
+                          <RefreshCw size={15} />
+                          <span>重新生成</span>
+                        </button>
+                        <button
+                          onClick={() => fetchDealDetail()}
+                          className="xl-report-btn ghost"
+                        >
+                          <Clock size={15} />
+                          <span>稍后再试</span>
+                        </button>
+                      </div>
+                    ) : isGenerated && !isGenerating ? (
                       <div className={`xl-report-actions ${isReadOnly ? 'two' : 'three'}`}>
                         <button onClick={handleReportPreviewThrottled} className="xl-report-btn ghost vertical">
                           <Eye size={15} />
@@ -1316,19 +1683,61 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                           添加问题
                         </button>
                         <button onClick={() => openQuestionListPicker('replace')} className="xl-btn-ghost px-3 min-h-[34px] text-[11px]">更换清单</button>
-                        <button onClick={handleAiInsight} disabled={!hasEnterpriseName || isAnalyzingAi} className="xl-btn-primary px-3 min-h-[34px] text-[11px] disabled:opacity-50">{isAnalyzingAi ? '生成中' : 'AI 洞察'}</button>
+                        <button onClick={handleAiInsight} disabled={!hasEnterpriseName || isAnalyzingAi} className="xl-btn-primary px-3 min-h-[34px] text-[11px] disabled:opacity-50">{isAnalyzingAi ? '分析中' : '资料分析'}</button>
                       </>
                     )}
                   </div>
                 )}
               </div>
+              {normalizedAiInsights.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setAiInsightPanelVisible(true)}
+                  className="mb-3 w-full rounded-[16px] border border-[#D6E4FF] bg-[#F7FAFE] p-3 text-left active:scale-[0.99] transition-transform"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-[#2563EB1A] px-2 py-0.5 text-[10px] font-medium text-[#2563EB]">资料分析</span>
+                        <span className="text-[10.5px] text-[#8AA2BF]">{normalizedAiInsights.length} 个建议问题</span>
+                      </div>
+                      <p className="mt-2 text-[12px] leading-[18px] text-[#0F2848]">
+                        已结合企业信息、资料和访谈内容生成核验建议。
+                      </p>
+                    </div>
+                    <ChevronRight size={16} className="mt-1 shrink-0 text-[#8AA2BF]" />
+                  </div>
+                </button>
+              )}
               <div className="space-y-2">
                 {questionList.map((q, idx) => (
-                  <div key={idx} className="xl-card-flat p-3 flex items-start gap-2.5">
-                    <span className="mt-0.5 w-5 h-5 rounded-[8px] bg-[#F7FAFE] border border-[#E2EBF5] text-[#2563EB] text-[10px] leading-none font-medium flex items-center justify-center shrink-0">
-                      {idx + 1}
-                    </span>
-                    <p className="text-[12px] leading-[17px] font-normal text-[#0F2848]">{q.questionName}</p>
+                  <div key={q.id || idx} className="xl-card-flat p-3 flex items-start gap-2.5">
+                    <div className="flex min-w-0 flex-1 items-start gap-2.5">
+                      <span className="mt-0.5 w-5 h-5 rounded-[8px] bg-[#F7FAFE] border border-[#E2EBF5] text-[#2563EB] text-[10px] leading-none font-medium flex items-center justify-center shrink-0">
+                        {idx + 1}
+                      </span>
+                      <p className="min-w-0 flex-1 text-[12px] leading-[17px] font-normal text-[#0F2848]">{q.questionName}</p>
+                    </div>
+                    {!isReadOnly && (
+                      <div className="ml-1 flex shrink-0 items-center gap-1">
+                        <button
+                          type="button"
+                          aria-label="编辑问题"
+                          onClick={() => handleOpenEditQuestion(q, idx)}
+                          className="h-8 w-8 rounded-[10px] border border-[#E2EBF5] bg-[#FFFFFF] text-[#476285] flex items-center justify-center active:scale-95"
+                        >
+                          <Edit2 size={14} strokeWidth={1.9} />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="删除问题"
+                          onClick={() => handleDeleteQuestion(idx)}
+                          className="h-8 w-8 rounded-[10px] border border-[#FAD1D1] bg-[#FFF7F7] text-[#DC2626] flex items-center justify-center active:scale-95"
+                        >
+                          <Trash2 size={14} strokeWidth={1.9} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {questionList.length === 0 && (
@@ -1533,6 +1942,311 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         </div>
       </div>
 
+      {aiInsightPanelVisible && (
+        <div
+          className="fixed inset-0 z-[72] flex items-end justify-center bg-black/35"
+          onClick={() => !isAnalyzingAi && !isAcceptingAiInsight && setAiInsightPanelVisible(false)}
+        >
+          <div
+            className="flex max-h-[86vh] w-full max-w-md flex-col rounded-t-[24px] bg-[#FFFFFF] px-5 pb-6 pt-4 shadow-[0_-16px_40px_rgba(15,40,72,0.16)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#D8E3F2]" />
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-[16px] font-medium text-[#0F2848]">资料分析</h3>
+                  {isAnalyzingAi && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#2563EB1A] px-2 py-0.5 text-[10px] text-[#2563EB]">
+                      <RefreshCw size={10} className="animate-spin" />
+                      分析中
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-[12px] leading-[18px] text-[#476285]">
+                  用于快速判断资料缺口、风险线索和下一步访谈问题。
+                </p>
+              </div>
+              <button
+                type="button"
+                aria-label="关闭资料分析"
+                onClick={() => setAiInsightPanelVisible(false)}
+                disabled={isAnalyzingAi || isAcceptingAiInsight}
+                className="h-8 w-8 shrink-0 rounded-full bg-[#F7FAFE] text-[#476285] flex items-center justify-center active:scale-95 disabled:opacity-50"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 gap-2">
+                {aiInsightMetrics.map((metric) => (
+                  <div key={metric.label} className={`xl-ai-metric is-${metric.tone}`}>
+                    <span>{metric.label}</span>
+                    <strong>{metric.value}</strong>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 rounded-[16px] border border-[#E2EBF5] bg-[#FFFFFF] p-3">
+                <div className="mb-2 flex items-center gap-2">
+                  <FileText size={14} className="text-[#2563EB]" />
+                  <span className="text-[12px] font-medium text-[#0F2848]">分析摘要</span>
+                </div>
+                <div className="space-y-2">
+                  {aiInsightSummaryLines.map((line, index) => (
+                    <p key={index} className="text-[12px] leading-[18px] text-[#476285]">{line}</p>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-[16px] border border-[#E2EBF5] bg-[#FFFFFF] p-3">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle size={14} className={riskSignals.length > 0 ? 'text-[#D97706]' : 'text-[#8AA2BF]'} />
+                    <span className="text-[12px] font-medium text-[#0F2848]">风险信号</span>
+                  </div>
+                  <span className="text-[10.5px] text-[#8AA2BF]">{riskSignals.length} 项</span>
+                </div>
+                {riskSignals.length > 0 ? (
+                  <div className="space-y-2">
+                    {riskSignals.slice(0, 4).map((risk) => (
+                      <div key={risk.id} className="rounded-[12px] bg-[#FFF7ED] px-3 py-2">
+                        <p className="text-[12px] font-medium leading-[17px] text-[#92400E]">{risk.title}</p>
+                        <p className="mt-1 text-[11.5px] leading-[17px] text-[#B45309]">{risk.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[12px] leading-[18px] text-[#476285]">
+                    暂未识别到明确风险信号，建议继续结合访谈和补充资料核验。
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-4">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <span className="text-[12px] font-medium text-[#0F2848]">建议访谈问题</span>
+                  <span className="text-[10.5px] text-[#8AA2BF]">
+                    已选 {selectedAiInsightIds.length}/{normalizedAiInsights.length}
+                  </span>
+                </div>
+                {isAnalyzingAi && normalizedAiInsights.length === 0 ? (
+                  <div className="rounded-[16px] border border-dashed border-[#D6E4FF] bg-[#F7FAFE] p-5 text-center">
+                    <RefreshCw size={20} className="mx-auto animate-spin text-[#2563EB]" />
+                    <p className="mt-3 text-[12px] text-[#476285]">正在分析企业信息和资料...</p>
+                  </div>
+                ) : normalizedAiInsights.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {normalizedAiInsights.map((item, index) => {
+                      const isSelected = selectedAiInsightIds.includes(item.id);
+                      return (
+                      <button
+                        key={`${item.id}-${index}`}
+                        type="button"
+                        onClick={() => {
+                          setSelectedAiInsightIds((previous) => (
+                            previous.includes(item.id)
+                              ? previous.filter((id) => id !== item.id)
+                              : [...previous, item.id]
+                          ));
+                        }}
+                        className={`w-full rounded-[16px] border p-3 text-left transition-transform active:scale-[0.99] ${
+                          isSelected ? 'border-[#2563EB] bg-[#F7FAFE]' : 'border-[#E2EBF5] bg-[#FFFFFF]'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                            <span className="rounded-full bg-[#2563EB1A] px-2 py-0.5 text-[10px] font-medium text-[#2563EB]">{item.category}</span>
+                            <span className="rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[10px] font-medium text-[#D97706]">{item.issue}</span>
+                          </div>
+                          <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[7px] border ${
+                            isSelected ? 'border-[#2563EB] bg-[#2563EB] text-white' : 'border-[#CBD7E5] bg-white text-transparent'
+                          }`}>
+                            <CheckCircle2 size={13} />
+                          </span>
+                        </div>
+                        <p className="mt-2 text-[13px] leading-[19px] font-medium text-[#0F2848]">{item.question}</p>
+                        <p className="mt-2 text-[11.5px] leading-[17px] text-[#8AA2BF]">{item.evidence}</p>
+                      </button>
+                    );
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-[16px] border border-dashed border-[#E2EBF5] bg-[#F7FAFE] p-5 text-center">
+                    <p className="text-[12px] leading-[18px] text-[#476285]">还没有生成资料分析，点击下方按钮开始分析。</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={handleAiInsight}
+                disabled={!hasEnterpriseName || isAnalyzingAi || isAcceptingAiInsight}
+                className="h-11 flex-1 rounded-[999px] border border-[#E2EBF5] bg-[#FFFFFF] text-[14px] font-medium text-[#2563EB] active:bg-[#F7FAFE] disabled:opacity-50"
+              >
+                {normalizedAiInsights.length > 0 ? '重新分析' : '开始分析'}
+              </button>
+              <button
+                type="button"
+                onClick={handleAcceptAiInsight}
+                disabled={selectedAiInsightIds.length === 0 || isAnalyzingAi || isAcceptingAiInsight}
+                className="h-11 flex-1 rounded-[999px] bg-[#2563EB] text-[14px] font-medium text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] active:scale-[0.98] disabled:bg-[#E2EBF5] disabled:text-[#8AA2BF] disabled:shadow-none"
+              >
+                {isAcceptingAiInsight ? '加入中' : `加入已选 ${selectedAiInsightIds.length} 个`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {reportProcessVisible && (
+        <div
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-black/35"
+          onClick={() => setReportProcessVisible(false)}
+        >
+          <div
+            className="flex max-h-[86vh] w-full max-w-md flex-col rounded-t-[24px] bg-[#FFFFFF] px-5 pb-6 pt-4 shadow-[0_-16px_40px_rgba(15,40,72,0.16)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#D8E3F2]" />
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-[16px] font-medium text-[#0F2848]">
+                  {isFailed ? '报告生成失败' : isGenerated ? '报告已生成' : '报告生成中'}
+                </h3>
+                <p className="mt-1 text-[12px] leading-[18px] text-[#476285]">{reportGenerationMessage}</p>
+              </div>
+              <button
+                type="button"
+                aria-label="关闭报告生成进度"
+                onClick={() => setReportProcessVisible(false)}
+                className="h-8 w-8 shrink-0 rounded-full bg-[#F7FAFE] text-[#476285] flex items-center justify-center active:scale-95"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            <div className="xl-report-process-summary">
+              <div>
+                <span>当前进度</span>
+                <strong>{isGenerated ? 100 : reportProgress}%</strong>
+              </div>
+              <div>
+                <span>当前步骤</span>
+                <strong>{isFailed ? '生成失败' : currentReportStep.title}</strong>
+              </div>
+              <div>
+                <span>生成内容</span>
+                <strong>尽调报告</strong>
+              </div>
+              <div>
+                <span>完成后</span>
+                <strong>{isGenerated ? '可预览下载' : '自动更新状态'}</strong>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-[16px] border border-[#E2EBF5] bg-[#F7FAFE] p-3">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="text-[12px] font-medium text-[#0F2848]">本次生成依据</span>
+                <span className="text-[10.5px] text-[#8AA2BF]">用于组织报告内容</span>
+              </div>
+              <div className="space-y-2">
+                {reportBasisItems.map((item) => (
+                  <div key={item.label} className="flex items-start justify-between gap-3 rounded-[12px] bg-white px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-medium leading-[17px] text-[#0F2848]">{item.label}</p>
+                      <p className="mt-0.5 text-[11px] leading-[16px] text-[#8AA2BF]">{item.hint}</p>
+                    </div>
+                    <span className="shrink-0 text-[12px] font-semibold text-[#2563EB]">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {REPORT_GENERATION_STEPS.map((step, index) => {
+                const stepDone = isGenerated || (!isFailed && reportProgress >= step.threshold && step.threshold < currentReportStep.threshold);
+                const stepActive = !isGenerated && !isFailed && step.key === currentReportStep.key;
+                return (
+                  <div key={step.key} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className={`xl-report-step-dot ${stepDone ? 'is-done' : ''} ${stepActive ? 'is-active' : ''} ${isFailed && step.key === currentReportStep.key ? 'is-failed' : ''}`}>
+                        {stepDone || isGenerated ? (
+                          <CheckCircle2 size={14} />
+                        ) : isFailed && step.key === currentReportStep.key ? (
+                          <AlertCircle size={14} />
+                        ) : stepActive ? (
+                          <RefreshCw size={13} className="animate-spin" />
+                        ) : (
+                          <span />
+                        )}
+                      </div>
+                      {index < REPORT_GENERATION_STEPS.length - 1 && <div className="xl-report-step-line" />}
+                    </div>
+                    <div className="min-w-0 pb-1">
+                      <p className={`text-[13px] leading-[18px] font-medium ${stepActive || stepDone || isGenerated ? 'text-[#0F2848]' : 'text-[#8AA2BF]'}`}>
+                        {step.title}
+                      </p>
+                      <p className="mt-0.5 text-[11.5px] leading-[17px] text-[#8AA2BF]">{step.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 rounded-[16px] border border-[#E2EBF5] bg-[#FFFFFF] p-3">
+              <div className="mb-2 flex items-center gap-2">
+                <AlertCircle size={14} className={isFailed ? 'text-[#DC2626]' : 'text-[#2563EB]'} />
+                <span className="text-[12px] font-medium text-[#0F2848]">提示</span>
+              </div>
+              <div className="space-y-1.5">
+                {reportGenerationTips.map((tip) => (
+                  <p key={tip} className="text-[11.5px] leading-[17px] text-[#476285]">{tip}</p>
+                ))}
+              </div>
+            </div>
+
+            </div>
+
+            <div className="mt-5 flex shrink-0 gap-3">
+              {isFailed ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setReportProcessVisible(false)}
+                    className="h-11 flex-1 rounded-[999px] border border-[#E2EBF5] bg-[#FFFFFF] text-[14px] font-medium text-[#476285] active:bg-[#F7FAFE]"
+                  >
+                    稍后再试
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReportProcessVisible(false);
+                      handleGenerateReportThrottled();
+                    }}
+                    className="h-11 flex-1 rounded-[999px] bg-[#2563EB] text-[14px] font-medium text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] active:scale-[0.98]"
+                  >
+                    重新生成
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setReportProcessVisible(false)}
+                  className="h-11 flex-1 rounded-[999px] bg-[#2563EB] text-[14px] font-medium text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] active:scale-[0.98]"
+                >
+                  知道了
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Voice Input Modal */}
       <VoiceInputModal
         visible={voiceModalVisible}
@@ -1592,6 +2306,49 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 className="h-11 flex-1 rounded-[999px] bg-[#2563EB] text-[14px] font-medium text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] active:scale-[0.98] disabled:bg-[#E2EBF5] disabled:text-[#8AA2BF] disabled:shadow-none"
               >
                 {isSavingManualQuestion ? '保存中' : '确认添加'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {editQuestionVisible && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/35"
+          onClick={() => !isSavingManualQuestion && setEditQuestionVisible(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-[24px] bg-[#FFFFFF] px-5 pb-6 pt-4 shadow-[0_-16px_40px_rgba(15,40,72,0.16)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#D8E3F2]" />
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-[16px] font-medium text-[#0F2848]">编辑问题</h3>
+              <span className="text-[12px] text-[#8AA2BF]">{editingQuestionName.trim().length}/80</span>
+            </div>
+            <textarea
+              value={editingQuestionName}
+              onChange={(event) => setEditingQuestionName(event.target.value.slice(0, 80))}
+              placeholder="请输入问题内容"
+              rows={4}
+              autoFocus
+              className="w-full resize-none rounded-[16px] border border-[#E2EBF5] bg-[#F7FAFE] px-4 py-3 text-[14px] leading-[20px] text-[#0F2848] outline-none placeholder:text-[#8AA2BF] focus:border-[#4C8BF5] focus:ring-4 focus:ring-[#2563EB1A]"
+            />
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                disabled={isSavingManualQuestion}
+                onClick={() => setEditQuestionVisible(false)}
+                className="h-11 flex-1 rounded-[999px] border border-[#E2EBF5] bg-[#FFFFFF] text-[14px] font-medium text-[#476285] active:bg-[#F7FAFE] disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                disabled={!editingQuestionName.trim() || isSavingManualQuestion}
+                onClick={handleEditQuestion}
+                className="h-11 flex-1 rounded-[999px] bg-[#2563EB] text-[14px] font-medium text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] active:scale-[0.98] disabled:bg-[#E2EBF5] disabled:text-[#8AA2BF] disabled:shadow-none"
+              >
+                {isSavingManualQuestion ? '保存中' : '保存修改'}
               </button>
             </div>
           </div>

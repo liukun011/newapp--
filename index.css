@@ -658,6 +658,180 @@ html, body {
   transition: width 0.28s ease;
 }
 
+.xl-detail .xl-report-progress-desc {
+  margin-top: 8px;
+  color: var(--xl-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.xl-report-basis-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.xl-report-basis-item {
+  min-height: 54px;
+  border-radius: 12px;
+  border: 1px solid var(--xl-line);
+  background: #F7FAFE;
+  padding: 9px 8px;
+}
+
+.xl-report-basis-item span {
+  display: block;
+  color: var(--xl-muted);
+  font-size: 10px;
+  line-height: 13px;
+}
+
+.xl-report-basis-item strong {
+  display: block;
+  margin-top: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--xl-ink);
+  font-size: 12px;
+  line-height: 15px;
+  font-weight: 700;
+}
+
+.xl-report-process-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.xl-report-process-summary > div {
+  min-height: 62px;
+  border-radius: 14px;
+  border: 1px solid var(--xl-line);
+  background: #F7FAFE;
+  padding: 11px 12px;
+}
+
+.xl-report-process-summary span {
+  display: block;
+  color: var(--xl-muted);
+  font-size: 10.5px;
+  line-height: 14px;
+}
+
+.xl-report-process-summary strong {
+  display: block;
+  margin-top: 7px;
+  color: var(--xl-ink);
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 700;
+}
+
+.xl-report-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--xl-line);
+  background: #FFFFFF;
+  color: #8AA2BF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.xl-report-step-dot > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.xl-report-step-dot.is-active {
+  border-color: #2563EB;
+  background: #2563EB;
+  color: #FFFFFF;
+}
+
+.xl-report-step-dot.is-done {
+  border-color: rgba(16, 185, 129, 0.22);
+  background: #ECFDF5;
+  color: #10B981;
+}
+
+.xl-report-step-dot.is-failed {
+  border-color: rgba(220, 38, 38, 0.18);
+  background: #FEF2F2;
+  color: #DC2626;
+}
+
+.xl-report-step-line {
+  width: 1px;
+  height: 24px;
+  margin-top: 5px;
+  background: var(--xl-line);
+}
+
+.xl-ai-metric {
+  min-height: 64px;
+  border-radius: 14px;
+  border: 1px solid var(--xl-line);
+  background: #F7FAFE;
+  padding: 11px 12px;
+}
+
+.xl-ai-metric span {
+  display: block;
+  color: var(--xl-muted);
+  font-size: 10.5px;
+  line-height: 14px;
+}
+
+.xl-ai-metric strong {
+  display: block;
+  margin-top: 7px;
+  color: var(--xl-ink);
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 700;
+}
+
+.xl-ai-metric.is-blue {
+  border-color: rgba(37, 99, 235, 0.16);
+  background: #F7FAFE;
+}
+
+.xl-ai-metric.is-blue strong {
+  color: #2563EB;
+}
+
+.xl-ai-metric.is-green {
+  border-color: rgba(16, 185, 129, 0.2);
+  background: #ECFDF5;
+}
+
+.xl-ai-metric.is-green strong {
+  color: #059669;
+}
+
+.xl-ai-metric.is-amber {
+  border-color: rgba(217, 119, 6, 0.2);
+  background: #FFF7ED;
+}
+
+.xl-ai-metric.is-amber strong {
+  color: #D97706;
+}
+
+.xl-ai-metric.is-red {
+  border-color: rgba(220, 38, 38, 0.18);
+  background: #FEF2F2;
+}
+
+.xl-ai-metric.is-red strong {
+  color: #DC2626;
+}
+
 .xl-detail .xl-report-btn {
   min-height: 40px;
   border-radius: 12px;
