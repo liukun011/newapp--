@@ -2379,7 +2379,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                             <span className="rounded-full bg-[#2563EB1A] px-2 py-0.5 text-[10px] font-medium text-[#2563EB]">{item.category}</span>
-                            <span className="rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[10px] font-medium text-[#D97706]">{item.issue}</span>
                           </div>
                           <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[7px] border ${
                             isSelected ? 'border-[#2563EB] bg-[#2563EB] text-white' : 'border-[#CBD7E5] bg-white text-transparent'
