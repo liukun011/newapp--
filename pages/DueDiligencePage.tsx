@@ -749,8 +749,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
   const getMaterialParseState = (resource: Resource) => {
     const progressInfo = fileProgressMap[resource.id];
-    const status = progressInfo?.status;
-    const progress = normalizeFileProgress(progressInfo?.progress);
+    const status = String(progressInfo?.status || resource.fileStatus || resource.status || '');
+    const progress = normalizeFileProgress(progressInfo?.progress ?? resource.progress);
 
     if (status === '4') {
       return {
@@ -2070,20 +2070,20 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                                 />
                               </div>
                             )}
-
-                            {parseState.type === 'failed' && (
-                              <button
-                                type="button"
-                                onClick={() => handleReparseMaterial(item)}
-                                className="mt-2 text-[11px] font-medium text-[#2563EB]"
-                              >
-                                重新解析
-                              </button>
-                            )}
                           </div>
 
                           {!isReadOnly && (
                             <div className="flex shrink-0 items-center gap-1">
+                              {parseState.type === 'failed' && (
+                                <button
+                                  type="button"
+                                  aria-label="重新解析资料"
+                                  onClick={() => handleReparseMaterial(item)}
+                                  className="h-8 w-8 rounded-[10px] border border-[#CFE0FF] bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center active:scale-95 active:bg-[#DBEAFE]"
+                                >
+                                  <RefreshCw size={14} strokeWidth={1.9} />
+                                </button>
+                              )}
                               {canRename && (
                                 <button
                                   type="button"
@@ -2725,7 +2725,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         onAdd={handleAddQuestionList}
         title={questionPickerMode === 'replace' ? '更换问题清单' : '选择问题清单'}
         confirmText={questionPickerMode === 'replace' ? '确认更换' : '确认选择'}
-        singleSelect={questionPickerMode === 'replace'}
       />
     </div>
   );

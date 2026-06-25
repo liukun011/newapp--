@@ -270,6 +270,23 @@ export const mockDeals: DealRecord[] = [
         fileCreateFinishTime: '2026-06-02 14:22:00',
         fileTags: ['经营资料'],
       },
+      {
+        id: 'resource-parse-failed-001',
+        fileName: '合同扫描件_模糊版.png',
+        fileUrl: textResource('合同扫描件_模糊版', '该文件为解析异常示例，用于展示资料解析失败后的重试、重命名和删除操作。'),
+        type: 'image',
+        status: '4',
+        progress: 0,
+        fileStatus: '4',
+        createDate: '2026-06-03 10:18:00',
+        lastModifiedTime: '2026-06-03 10:18:00',
+        relationId: 'deal-001',
+        matchNum: 0,
+        total: 0,
+        finishTime: null,
+        fileCreateFinishTime: null,
+        fileTags: ['解析异常'],
+      },
     ],
     supplementary: [
       {

@@ -312,7 +312,7 @@ const App: React.FC = () => {
   const [enterpriseOptions, setEnterpriseOptions] = useState<any[]>([]);
   const [templateOptions, setTemplateOptions] = useState<ReportTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
-  const [selectedQuestionTemplate, setSelectedQuestionTemplate] = useState<any>(null);
+  const [selectedQuestionTemplates, setSelectedQuestionTemplates] = useState<any[]>([]);
   const [showCreateQuestionPicker, setShowCreateQuestionPicker] = useState(false);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
@@ -326,7 +326,7 @@ const App: React.FC = () => {
     setCompanyName("");
     setEnterpriseOptions([]);
     setSelectedTemplateId("");
-    setSelectedQuestionTemplate(null);
+    setSelectedQuestionTemplates([]);
     setShowCreateQuestionPicker(false);
     setShowTemplatePicker(false);
   };
@@ -838,11 +838,20 @@ const App: React.FC = () => {
       Toast.info('请输入访谈对象名称');
       return;
     }
+    if (selectedQuestionTemplates.length === 0) {
+      Toast.info('请选择问题清单');
+      setShowCreateQuestionPicker(true);
+      return;
+    }
 
     try {
       setCreating(true);
-      const selectedQuestionList = selectedQuestionTemplate && Array.isArray(selectedQuestionTemplate.questionList)
-        ? selectedQuestionTemplate.questionList.map((question: any, index: number) => ({
+      const selectedQuestionList = selectedQuestionTemplates.length > 0
+        ? selectedQuestionTemplates
+          .flatMap((template) => Array.isArray(template.questionList)
+            ? template.questionList.map((question: any) => ({ ...question, sourceTemplateId: template.id }))
+            : [])
+          .map((question: any, index: number) => ({
           ...question,
           id: question.id ? String(question.id) : `temp_create_${Date.now()}_${index}`,
           questionIndex: index + 1,
@@ -850,7 +859,7 @@ const App: React.FC = () => {
           questionAnswerTime: question.questionAnswerTime ?? null,
           questionStatus: question.questionStatus ?? '0',
           recStatus: question.recStatus ?? '1',
-          templateId: String(question.templateId || selectedQuestionTemplate.id || ''),
+          templateId: String(question.templateId || question.sourceTemplateId || selectedQuestionTemplates[0]?.id || ''),
           agencyId: question.agencyId ?? '',
           CHECKED: question.CHECKED ?? false,
         }))
@@ -860,7 +869,7 @@ const App: React.FC = () => {
         companyName: companyName || undefined,
         creditCode: creditCode || undefined,
         templateId: selectedTemplateId || undefined,
-        questionId: selectedQuestionTemplate?.id || undefined,
+        questionId: selectedQuestionTemplates.length > 0 ? selectedQuestionTemplates.map((template) => template.id).join(',') : undefined,
         questionInfoList: selectedQuestionList,
       });
 
@@ -2065,7 +2074,9 @@ const App: React.FC = () => {
             {/* 问题清单 */}
             <div className="mb-4 relative z-20">
               <div className="flex justify-between items-end mb-2 pl-1">
-                <span className="text-[12px] text-[#476285] font-normal">问题清单</span>
+                <span className="text-[12px] text-[#476285] font-normal">
+                  问题清单<span className="ml-0.5 text-[#DC2626]">*</span>
+                </span>
               </div>
               <button
                 type="button"
@@ -2074,11 +2085,13 @@ const App: React.FC = () => {
               >
                 <div className="min-w-0 text-left">
                   <div className="text-[14px] leading-[18px] font-medium text-[#0F2848] truncate">
-                    {selectedQuestionTemplate?.templateName || '选择问题清单'}
+                    {selectedQuestionTemplates.length > 0
+                      ? selectedQuestionTemplates.map((template) => template.templateName).join('、')
+                      : '选择问题清单'}
                   </div>
                   <div className="mt-1 text-[10.5px] font-normal text-[#476285] truncate">
-                    {selectedQuestionTemplate
-                      ? `${selectedQuestionTemplate.questionList?.length || 0} 个预制问题`
+                    {selectedQuestionTemplates.length > 0
+                      ? `已选 ${selectedQuestionTemplates.length} 个清单，共 ${selectedQuestionTemplates.reduce((total, template) => total + (template.questionList?.length || 0), 0)} 个预制问题`
                       : '用于访谈提问和问题覆盖'}
                   </div>
                 </div>
@@ -2177,11 +2190,10 @@ const App: React.FC = () => {
         visible={showCreateQuestionPicker}
         onClose={() => setShowCreateQuestionPicker(false)}
         onAdd={async (_ids, selectedTemplates = []) => {
-          setSelectedQuestionTemplate(selectedTemplates[0] || null);
+          setSelectedQuestionTemplates(selectedTemplates);
         }}
         title="选择问题清单"
         confirmText="确认选择"
-        singleSelect
       />
       {/* 录音中断提醒弹窗（受控模式，恢复时可自动关闭） */}
       <Dialog
