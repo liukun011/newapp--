@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw, MoreHorizontal, Camera, Image, Upload, Plus, Clock, CheckCircle2, AlertCircle, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw, MoreHorizontal, Camera, Image, Upload, Plus, Clock, CheckCircle2, AlertCircle, X, Trash2, Loader2 } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
-import { DealRecord, DealReportStatusEnum, SummaryStatusEnum, QuestionInfo } from '../types';
+import { DealRecord, DealReportStatusEnum, SummaryStatusEnum, QuestionInfo, Resource } from '../types';
 import { dealService } from '../services/dealService';
 import { nativeBridge } from '@/services/nativeBridge';
 import { useRecordingStore } from '../store/useRecordingStore';
@@ -186,6 +186,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [summaryStatus, setSummaryStatus] = useState<SummaryStatusEnum>(SummaryStatusEnum.IDLE);
   const [reportProgress, setReportProgress] = useState(68);
   const [reportProcessVisible, setReportProcessVisible] = useState(false);
+  const [fileProgressMap, setFileProgressMap] = useState<Record<string, { progress: number; status: string }>>({});
+  const [renameMaterialVisible, setRenameMaterialVisible] = useState(false);
+  const [renameMaterialTarget, setRenameMaterialTarget] = useState<Resource | null>(null);
+  const [renameMaterialName, setRenameMaterialName] = useState('');
+  const [isSavingMaterial, setIsSavingMaterial] = useState(false);
   // 追踪当前 WebSocket 实例，防止重复连接
   const wsRef = React.useRef<WebSocket | null>(null);
   const [interviewRecords, setInterviewRecords] = useState<any[]>([]);
@@ -484,6 +489,85 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     };
   }, [wsShouldBeConnected, currentDeal?.id]);
 
+  useEffect(() => {
+    if (config.isMock || !currentDeal?.id) return;
+
+    const token = localStorage.getItem('zov-user-token') || '';
+    let wsUrl = '';
+    try {
+      const url = new URL(config.apiBaseUrl);
+      const protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+      const pathBase = url.pathname.replace(/\/api\/?$/, '');
+      wsUrl = `${protocol}//${url.host}${pathBase}/ws/connect?dealInstId=${currentDeal.id}&token=${token}`;
+    } catch (error) {
+      console.error('[FileProgressWS] Failed to parse apiBaseUrl:', error);
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${protocol}//${window.location.host}/ws/connect?dealInstId=${currentDeal.id}&token=${token}`;
+    }
+
+    let ws: WebSocket | null = null;
+    let pingInterval: ReturnType<typeof setInterval> | null = null;
+
+    try {
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        pingInterval = setInterval(() => {
+          if (ws?.readyState === WebSocket.OPEN) ws.send('ping');
+        }, 15000);
+      };
+
+      ws.onmessage = (event) => {
+        if (event.data === 'pong') return;
+        try {
+          const data = JSON.parse(event.data);
+          if (data.event !== 'DEAL_FILE_PROGRESS' || !Array.isArray(data.files)) return;
+
+          setFileProgressMap((prev) => {
+            const nextMap = { ...prev };
+            let changed = false;
+            let shouldRefresh = false;
+
+            data.files.forEach((file: any) => {
+              if (!file?.id) return;
+              const status = String(file.status);
+              const progress = Number(file.progress || 0);
+              const prevItem = prev[file.id];
+
+              if (!prevItem || prevItem.status !== status || prevItem.progress !== progress) {
+                nextMap[file.id] = { status, progress };
+                changed = true;
+              }
+
+              if (status === '3' && prevItem?.status !== '3') {
+                shouldRefresh = true;
+              }
+            });
+
+            if (shouldRefresh) {
+              setTimeout(() => fetchDealDetail(), 800);
+            }
+
+            return changed ? nextMap : prev;
+          });
+        } catch (error) {
+          console.warn('[FileProgressWS] Ignore non-progress message:', error);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('[FileProgressWS] Error:', error);
+      };
+    } catch (error) {
+      console.error('[FileProgressWS] Connection failed:', error);
+    }
+
+    return () => {
+      if (pingInterval) clearInterval(pingInterval);
+      if (ws) ws.close();
+    };
+  }, [currentDeal?.id]);
+
   // 引用隐藏的 input 元素
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
   const galleryInputRef = React.useRef<HTMLInputElement>(null);
@@ -644,6 +728,160 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
     // 清空 input 以便再次选择同一文件
     e.target.value = '';
+  };
+
+  const getFileIconSrc = (fileName: string): string => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    if (['xlsx', 'xls', 'csv'].includes(ext)) return `${basePath}assets/excel.png`;
+    if (['doc', 'docx'].includes(ext)) return `${basePath}assets/word.png`;
+    if (ext === 'pdf') return `${basePath}assets/pdf.png`;
+    if (['ppt', 'pptx'].includes(ext)) return `${basePath}assets/ppt.png`;
+    if (['mp3', 'wav', 'm4a', 'aac', 'flac', 'amr', '3gp', 'ogg'].includes(ext)) return `${basePath}assets/wav.png`;
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext)) return `${basePath}assets/image.png`;
+    return `${basePath}assets/txt.png`;
+  };
+
+  const normalizeFileProgress = (progress?: number) => {
+    const safeProgress = Number(progress || 0);
+    if (Number.isNaN(safeProgress)) return 0;
+    return Math.max(0, Math.min(100, Math.round(safeProgress <= 1 ? safeProgress * 100 : safeProgress)));
+  };
+
+  const getMaterialParseState = (resource: Resource) => {
+    const progressInfo = fileProgressMap[resource.id];
+    const status = progressInfo?.status;
+    const progress = normalizeFileProgress(progressInfo?.progress);
+
+    if (status === '4') {
+      return {
+        type: 'failed' as const,
+        label: '解析异常',
+        progress,
+      };
+    }
+
+    if (status === '3' || resource.finishTime || resource.fileCreateFinishTime) {
+      return {
+        type: 'success' as const,
+        label: '解析完成',
+        progress: 100,
+      };
+    }
+
+    if (status && status !== '1') {
+      return {
+        type: 'parsing' as const,
+        label: '解析中',
+        progress,
+      };
+    }
+
+    return {
+      type: 'ready' as const,
+      label: '可用于报告',
+      progress: 0,
+    };
+  };
+
+  const handleOpenRenameMaterial = (resource: Resource) => {
+    const nameParts = resource.fileName.split('.');
+    if (nameParts.length > 1) nameParts.pop();
+    setRenameMaterialTarget(resource);
+    setRenameMaterialName(nameParts.join('.'));
+    setRenameMaterialVisible(true);
+  };
+
+  const handleConfirmRenameMaterial = async () => {
+    if (!renameMaterialTarget || isSavingMaterial) return;
+
+    const nextName = renameMaterialName.trim();
+    if (!nextName) {
+      Toast.info('文件名不能为空');
+      return;
+    }
+
+    const nameParts = renameMaterialTarget.fileName.split('.');
+    const ext = nameParts.length > 1 ? nameParts.pop() : '';
+    const fullName = ext ? `${nextName}.${ext}` : nextName;
+
+    try {
+      setIsSavingMaterial(true);
+      Toast.loading({ message: '重命名中...', duration: 0 });
+      const res = await dealService.renameDealMaterial(renameMaterialTarget.id, fullName);
+      Toast.clear();
+      if (res.success) {
+        Toast.success('重命名成功');
+        setRenameMaterialVisible(false);
+        setRenameMaterialTarget(null);
+        setRenameMaterialName('');
+        await fetchDealDetail();
+      } else {
+        Toast.fail(res.message || '重命名失败');
+      }
+    } catch (error) {
+      Toast.clear();
+      console.error('Rename material failed:', error);
+      Toast.fail('重命名失败');
+    } finally {
+      setIsSavingMaterial(false);
+    }
+  };
+
+  const handleDeleteMaterial = async (resource: Resource) => {
+    if (!currentDeal?.id || isSavingMaterial) return;
+
+    try {
+      await Dialog.confirm({
+        title: '删除资料？',
+        message: `确定删除「${resource.fileName || '资料文件'}」吗？删除后无法恢复。`,
+        cancelButtonText: '取消',
+        confirmButtonText: '确认删除',
+        confirmButtonColor: '#DC2626',
+      });
+    } catch {
+      return;
+    }
+
+    try {
+      setIsSavingMaterial(true);
+      Toast.loading({ message: '删除中...', duration: 0 });
+      const res = await dealService.deleteDealMaterial(currentDeal.id, resource.id);
+      Toast.clear();
+      if (res.success) {
+        Toast.success('删除成功');
+        await fetchDealDetail();
+      } else {
+        Toast.fail(res.message || '删除失败');
+      }
+    } catch (error) {
+      Toast.clear();
+      console.error('Delete material failed:', error);
+      Toast.fail('删除失败');
+    } finally {
+      setIsSavingMaterial(false);
+    }
+  };
+
+  const handleReparseMaterial = async (resource: Resource) => {
+    if (!currentDeal?.id || isSavingMaterial) return;
+    try {
+      setIsSavingMaterial(true);
+      Toast.loading({ message: '重新解析中...', duration: 0 });
+      const res = await dealService.reparseFile(currentDeal.id, resource.id);
+      Toast.clear();
+      if (res.success) {
+        Toast.success('已开始重新解析');
+        await fetchDealDetail();
+      } else {
+        Toast.fail(res.message || '操作失败');
+      }
+    } catch (error) {
+      Toast.clear();
+      console.error('Reparse material failed:', error);
+      Toast.fail('操作失败');
+    } finally {
+      setIsSavingMaterial(false);
+    }
   };
   // 批量保存问题逻辑 (应对模板更换后的同步)
   const saveQuestions = async () => {
@@ -1293,7 +1531,11 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     }
   }, 1000);
 
-  const materialCount = (currentDeal?.resources?.length || 0) + (Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary.length : 0);
+  const materialList: Resource[] = [
+    ...(currentDeal?.resources || []),
+    ...(Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary : []),
+  ] as Resource[];
+  const materialCount = materialList.length;
   const questionList = currentDeal?.questionInfoList || [];
   const normalizedAiInsights = normalizeAiInsightQuestions(aiInsightList);
   useEffect(() => {
@@ -1774,27 +2016,96 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 </div>
               )}
               <div className="xl-card p-4">
-                <div className="space-y-1">
-                  {[
-                    ...(currentDeal?.resources || []),
-                    ...(Array.isArray(currentDeal?.supplementary) ? currentDeal.supplementary : []),
-                  ].map((item: any, idx: number) => {
-                    const fileTileClass = idx % 3 === 0
-                      ? 'bg-[#2563EB1A] text-[#2563EB] border-[#E2EBF5]'
-                      : idx % 3 === 1
-                        ? 'bg-[#F7FAFE] text-[#2563EB] border-[#E2EBF5]'
-                        : 'bg-[#2563EB1A] text-[#2563EB] border-[#E2EBF5]';
+                <div className="space-y-2">
+                  {materialList.map((item) => {
+                    const parseState = getMaterialParseState(item);
+                    const canRename = item.type !== '4';
                     return (
-                    <div key={idx} className="flex items-center gap-3 py-2.5 border-b border-[#E2EBF5]/70 last:border-b-0">
-                      <div className={`w-9 h-9 rounded-[12px] border flex items-center justify-center text-[11px] font-semibold ${fileTileClass}`}>
-                        {(item.fileName || item.name || 'PDF').split('.').pop()?.slice(0, 3).toUpperCase()}
+                      <div key={item.id} className="xl-card-flat p-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-[13px] border border-[#E2EBF5] bg-[#F7FAFE] flex items-center justify-center shrink-0 overflow-hidden">
+                            <img
+                              src={getFileIconSrc(item.fileName || item.name || '')}
+                              alt=""
+                              className="h-7 w-7 object-contain"
+                            />
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <h3 className="xl-card-title truncate">{item.fileName || item.name || '资料文件'}</h3>
+                              {parseState.type === 'success' && <CheckCircle2 size={14} className="shrink-0 text-[#10B981]" />}
+                              {parseState.type === 'failed' && <AlertCircle size={14} className="shrink-0 text-[#DC2626]" />}
+                              {parseState.type === 'parsing' && <Loader2 size={14} className="shrink-0 animate-spin text-[#2563EB]" />}
+                            </div>
+
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] leading-[14px] ${
+                                parseState.type === 'success'
+                                  ? 'bg-[#ECFDF5] text-[#047857]'
+                                  : parseState.type === 'failed'
+                                    ? 'bg-[#FEF2F2] text-[#DC2626]'
+                                    : parseState.type === 'parsing'
+                                      ? 'bg-[#EFF6FF] text-[#2563EB]'
+                                      : 'bg-[#F7FAFE] text-[#476285]'
+                              }`}>
+                                {parseState.label}
+                              </span>
+                              {item.fileTags && (
+                                (Array.isArray(item.fileTags) ? item.fileTags : String(item.fileTags).split(','))
+                                  .slice(0, 2)
+                                  .map((tag: string) => tag.trim() && (
+                                    <span key={tag} className="rounded-full bg-[#F7FAFE] px-2 py-0.5 text-[10px] leading-[14px] text-[#476285]">
+                                      {tag.trim()}
+                                    </span>
+                                  ))
+                              )}
+                            </div>
+
+                            {parseState.type === 'parsing' && (
+                              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#E2EBF5]">
+                                <div
+                                  className="h-full rounded-full bg-[#2563EB] transition-all"
+                                  style={{ width: `${Math.max(8, parseState.progress)}%` }}
+                                />
+                              </div>
+                            )}
+
+                            {parseState.type === 'failed' && (
+                              <button
+                                type="button"
+                                onClick={() => handleReparseMaterial(item)}
+                                className="mt-2 text-[11px] font-medium text-[#2563EB]"
+                              >
+                                重新解析
+                              </button>
+                            )}
+                          </div>
+
+                          {!isReadOnly && (
+                            <div className="flex shrink-0 items-center gap-1">
+                              {canRename && (
+                                <button
+                                  type="button"
+                                  aria-label="重命名资料"
+                                  onClick={() => handleOpenRenameMaterial(item)}
+                                  className="h-8 w-8 rounded-[10px] border border-[#E2EBF5] bg-white text-[#476285] flex items-center justify-center active:scale-95"
+                                >
+                                  <Edit2 size={14} strokeWidth={1.9} />
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                aria-label="删除资料"
+                                onClick={() => handleDeleteMaterial(item)}
+                                className="h-8 w-8 rounded-[10px] border border-[#FAD1D1] bg-[#FFF7F7] text-[#DC2626] flex items-center justify-center active:scale-95"
+                              >
+                                <Trash2 size={14} strokeWidth={1.9} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="xl-card-title truncate">{item.fileName || item.name || '资料文件'}</h3>
-                        <p className="xl-meta mt-1">可用于报告</p>
-                      </div>
-                      <span className="xl-pill">可用</span>
-                    </div>
                     );
                   })}
                   {materialCount === 0 && <div className="xl-card-flat p-4 text-center xl-body">暂无资料</div>}
@@ -2349,6 +2660,59 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 className="h-11 flex-1 rounded-[999px] bg-[#2563EB] text-[14px] font-medium text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] active:scale-[0.98] disabled:bg-[#E2EBF5] disabled:text-[#8AA2BF] disabled:shadow-none"
               >
                 {isSavingManualQuestion ? '保存中' : '保存修改'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {renameMaterialVisible && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/35"
+          onClick={() => !isSavingMaterial && setRenameMaterialVisible(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-[24px] bg-[#FFFFFF] px-5 pb-6 pt-4 shadow-[0_-16px_40px_rgba(15,40,72,0.16)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#D8E3F2]" />
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-[16px] font-medium text-[#0F2848]">文件重命名</h3>
+              <span className="text-[12px] text-[#8AA2BF]">{renameMaterialName.trim().length}/30</span>
+            </div>
+            <input
+              type="text"
+              value={renameMaterialName}
+              onChange={(event) => {
+                const value = event.target.value
+                  .replace(/([\\|/?*<>]|\.\.)/g, '')
+                  .slice(0, 30);
+                setRenameMaterialName(value);
+              }}
+              placeholder="请输入文件名"
+              autoFocus
+              className="h-12 w-full rounded-[16px] border border-[#E2EBF5] bg-[#F7FAFE] px-4 text-[14px] text-[#0F2848] outline-none placeholder:text-[#8AA2BF] focus:border-[#4C8BF5] focus:ring-4 focus:ring-[#2563EB1A]"
+            />
+            {renameMaterialTarget?.fileName?.includes('.') && (
+              <p className="mt-2 text-[11px] text-[#8AA2BF]">
+                文件后缀将保持为 .{renameMaterialTarget.fileName.split('.').pop()}
+              </p>
+            )}
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                disabled={isSavingMaterial}
+                onClick={() => setRenameMaterialVisible(false)}
+                className="h-11 flex-1 rounded-[999px] border border-[#E2EBF5] bg-[#FFFFFF] text-[14px] font-medium text-[#476285] active:bg-[#F7FAFE] disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                disabled={!renameMaterialName.trim() || isSavingMaterial}
+                onClick={handleConfirmRenameMaterial}
+                className="h-11 flex-1 rounded-[999px] bg-[#2563EB] text-[14px] font-medium text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] active:scale-[0.98] disabled:bg-[#E2EBF5] disabled:text-[#8AA2BF] disabled:shadow-none"
+              >
+                {isSavingMaterial ? '保存中' : '确认'}
               </button>
             </div>
           </div>
