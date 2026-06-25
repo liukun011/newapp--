@@ -773,11 +773,11 @@ html, body {
 }
 
 .xl-ai-metric {
-  min-height: 64px;
-  border-radius: 14px;
+  min-height: 56px;
+  border-radius: 13px;
   border: 1px solid var(--xl-line);
   background: #F7FAFE;
-  padding: 11px 12px;
+  padding: 9px 10px;
 }
 
 .xl-ai-metric span {
@@ -789,11 +789,11 @@ html, body {
 
 .xl-ai-metric strong {
   display: block;
-  margin-top: 7px;
+  margin-top: 5px;
   color: var(--xl-ink);
-  font-size: 14px;
-  line-height: 18px;
-  font-weight: 700;
+  font-size: 13px;
+  line-height: 17px;
+  font-weight: 650;
 }
 
 .xl-ai-metric.is-blue {

@@ -1147,6 +1147,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
           questionAnswerTime: question.questionAnswerTime ?? null,
           questionStatus: question.questionStatus ?? '0',
           recStatus: question.recStatus ?? '1',
+          questionType: question.questionType ?? '1',
           templateId: String(question.templateId || selectedTemplates[0]?.id || currentDeal.questionId || ''),
           agencyId: question.agencyId ?? '',
           CHECKED: question.CHECKED ?? false,
@@ -1409,7 +1410,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       Toast.loading({ message: '正在加入问题清单...', duration: 0 });
       const res = await dealService.acceptAiInsight(
         currentDeal.id,
-        selectedInsights.map((item) => ({ id: item.id, questionContent: item.question })),
+        selectedInsights.map((item) => ({ id: item.id, questionContent: item.question, questionType: '2' })),
       );
       Toast.clear();
       if (res.success) {
@@ -1538,6 +1539,31 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const materialCount = materialList.length;
   const questionList = currentDeal?.questionInfoList || [];
   const normalizedAiInsights = normalizeAiInsightQuestions(aiInsightList);
+  const getQuestionTypeMeta = (question: QuestionInfo) => {
+    const questionType = String(question.questionType || '');
+    const questionName = question.questionName || '';
+    const isAiQuestion = questionType === '2'
+      || normalizedAiInsights.some((item) => item.question === questionName);
+
+    if (questionType === '3') {
+      return {
+        label: '手动添加问题',
+        className: 'bg-[#EFF6FF] text-[#2563EB]',
+      };
+    }
+
+    if (isAiQuestion) {
+      return {
+        label: '资料分析问题',
+        className: 'bg-[#ECFDF5] text-[#059669]',
+      };
+    }
+
+    return {
+      label: '清单添加问题',
+      className: 'bg-[#EEF2FF] text-[#2563EB]',
+    };
+  };
   useEffect(() => {
     if (normalizedAiInsights.length > 0 && selectedAiInsightIds.length === 0) {
       setSelectedAiInsightIds(normalizedAiInsights.map((item) => item.id));
@@ -1567,11 +1593,12 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const hasCoreEnterpriseInfo = Boolean(basicInfo.name || currentDeal?.companyName || currentDeal?.creditCode);
   const riskSignals = normalizeRiskSignals(enterpriseRiskTags, normalizedAiInsights);
   const aiRiskCount = riskSignals.length;
+  const pendingMaterialCount = Math.max(0, 4 - materialCount);
   const aiInsightMetrics: AiInsightMetric[] = [
     {
-      label: '主体信息',
-      value: hasCoreEnterpriseInfo ? '已补充' : '待补充',
-      tone: hasCoreEnterpriseInfo ? 'green' : 'amber',
+      label: '待补充材料',
+      value: pendingMaterialCount > 0 ? `${pendingMaterialCount} 项` : '已齐备',
+      tone: pendingMaterialCount > 0 ? 'amber' : 'green',
     },
     {
       label: '风险信号',
@@ -1582,11 +1609,6 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       label: '建议问题',
       value: `${normalizedAiInsights.length} 个`,
       tone: normalizedAiInsights.length > 0 ? 'blue' : 'amber',
-    },
-    {
-      label: '资料数量',
-      value: `${materialCount} 份`,
-      tone: materialCount > 0 ? 'blue' : 'amber',
     },
   ];
   const aiInsightSummaryLines = [
@@ -1954,36 +1976,46 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 </button>
               )}
               <div className="space-y-2">
-                {questionList.map((q, idx) => (
-                  <div key={q.id || idx} className="xl-card-flat p-3 flex items-start gap-2.5">
-                    <div className="flex min-w-0 flex-1 items-start gap-2.5">
-                      <span className="mt-0.5 w-5 h-5 rounded-[8px] bg-[#F7FAFE] border border-[#E2EBF5] text-[#2563EB] text-[10px] leading-none font-medium flex items-center justify-center shrink-0">
-                        {idx + 1}
-                      </span>
-                      <p className="min-w-0 flex-1 text-[12px] leading-[17px] font-normal text-[#0F2848]">{q.questionName}</p>
-                    </div>
-                    {!isReadOnly && (
-                      <div className="ml-1 flex shrink-0 items-center gap-1">
-                        <button
-                          type="button"
-                          aria-label="编辑问题"
-                          onClick={() => handleOpenEditQuestion(q, idx)}
-                          className="h-8 w-8 rounded-[10px] border border-[#E2EBF5] bg-[#FFFFFF] text-[#476285] flex items-center justify-center active:scale-95"
-                        >
-                          <Edit2 size={14} strokeWidth={1.9} />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="删除问题"
-                          onClick={() => handleDeleteQuestion(idx)}
-                          className="h-8 w-8 rounded-[10px] border border-[#FAD1D1] bg-[#FFF7F7] text-[#DC2626] flex items-center justify-center active:scale-95"
-                        >
-                          <Trash2 size={14} strokeWidth={1.9} />
-                        </button>
+                {questionList.map((q, idx) => {
+                  const typeMeta = getQuestionTypeMeta(q);
+                  return (
+                    <div key={q.id || idx} className="xl-card-flat p-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className={`inline-flex max-w-full items-center rounded-full px-2 py-0.5 text-[10px] leading-[14px] font-medium ${typeMeta.className}`}>
+                          {typeMeta.label}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <div className="mt-2 flex min-w-0 items-start gap-2.5">
+                        <span className="mt-0.5 w-5 h-5 rounded-[8px] bg-[#F7FAFE] border border-[#E2EBF5] text-[#2563EB] text-[10px] leading-none font-medium flex items-center justify-center shrink-0">
+                          {idx + 1}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="min-w-0 text-[12px] leading-[18px] font-normal text-[#0F2848]">{q.questionName}</p>
+                        </div>
+                        {!isReadOnly && (
+                          <div className="ml-1 flex shrink-0 items-center gap-1">
+                            <button
+                              type="button"
+                              aria-label="编辑问题"
+                              onClick={() => handleOpenEditQuestion(q, idx)}
+                              className="h-8 w-8 rounded-[10px] border border-[#E2EBF5] bg-[#FFFFFF] text-[#476285] flex items-center justify-center active:scale-95"
+                            >
+                              <Edit2 size={14} strokeWidth={1.9} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="删除问题"
+                              onClick={() => handleDeleteQuestion(idx)}
+                              className="h-8 w-8 rounded-[10px] border border-[#FAD1D1] bg-[#FFF7F7] text-[#DC2626] flex items-center justify-center active:scale-95"
+                            >
+                              <Trash2 size={14} strokeWidth={1.9} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
                 {questionList.length === 0 && (
                   <div className="xl-card-flat p-4 text-center">
                     <p className="xl-body">请先选择问题清单</p>
@@ -2292,7 +2324,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {aiInsightMetrics.map((metric) => (
                   <div key={metric.label} className={`xl-ai-metric is-${metric.tone}`}>
                     <span>{metric.label}</span>
@@ -2313,33 +2345,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[16px] border border-[#E2EBF5] bg-[#FFFFFF] p-3">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle size={14} className={riskSignals.length > 0 ? 'text-[#D97706]' : 'text-[#8AA2BF]'} />
-                    <span className="text-[12px] font-medium text-[#0F2848]">风险信号</span>
-                  </div>
-                  <span className="text-[10.5px] text-[#8AA2BF]">{riskSignals.length} 项</span>
-                </div>
-                {riskSignals.length > 0 ? (
-                  <div className="space-y-2">
-                    {riskSignals.slice(0, 4).map((risk) => (
-                      <div key={risk.id} className="rounded-[12px] bg-[#FFF7ED] px-3 py-2">
-                        <p className="text-[12px] font-medium leading-[17px] text-[#92400E]">{risk.title}</p>
-                        <p className="mt-1 text-[11.5px] leading-[17px] text-[#B45309]">{risk.detail}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-[12px] leading-[18px] text-[#476285]">
-                    暂未识别到明确风险信号，建议继续结合访谈和补充资料核验。
-                  </p>
-                )}
-              </div>
-
               <div className="mt-4">
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className="text-[12px] font-medium text-[#0F2848]">建议访谈问题</span>
+                  <span className="text-[12px] font-medium text-[#0F2848]">访谈问题</span>
                   <span className="text-[10.5px] text-[#8AA2BF]">
                     已选 {selectedAiInsightIds.length}/{normalizedAiInsights.length}
                   </span>
