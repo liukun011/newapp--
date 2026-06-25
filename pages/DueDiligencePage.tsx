@@ -1912,20 +1912,22 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
 
           {activeDetailTab === 'questions' && (
             <div className="xl-card p-4">
-              <div className="flex items-center justify-between mb-2.5">
-                <h3 className="xl-section-title">问题清单</h3>
+              <div className="mb-3 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h3 className="xl-section-title whitespace-nowrap">问题清单</h3>
+                </div>
                 {!isReadOnly && (
-                  <div className="flex flex-wrap justify-end gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {questionList.length === 0 ? (
-                      <button onClick={() => openQuestionListPicker('add')} className="xl-btn-primary px-3 min-h-[34px] text-[11px]">选择清单</button>
+                      <button onClick={() => openQuestionListPicker('add')} className="xl-btn-primary min-h-[34px] flex-1 px-3 text-[11px]">选择清单</button>
                     ) : (
                       <>
-                        <button onClick={handleOpenManualQuestion} className="xl-btn-ghost px-3 min-h-[34px] text-[11px] inline-flex items-center gap-1">
+                        <button onClick={handleOpenManualQuestion} className="xl-btn-ghost min-h-[34px] min-w-[84px] flex-1 px-2.5 text-[11px] inline-flex items-center justify-center gap-1">
                           <Plus size={13} />
                           添加问题
                         </button>
-                        <button onClick={() => openQuestionListPicker('add')} className="xl-btn-ghost px-3 min-h-[34px] text-[11px]">添加清单</button>
-                        <button onClick={handleAiInsight} disabled={!hasEnterpriseName || isAnalyzingAi} className="xl-btn-primary px-3 min-h-[34px] text-[11px] disabled:opacity-50">{isAnalyzingAi ? '分析中' : '资料分析'}</button>
+                        <button onClick={() => openQuestionListPicker('add')} className="xl-btn-ghost min-h-[34px] min-w-[84px] flex-1 px-2.5 text-[11px]">添加清单</button>
+                        <button onClick={handleAiInsight} disabled={!hasEnterpriseName || isAnalyzingAi} className="xl-btn-primary min-h-[34px] min-w-[84px] flex-1 px-2.5 text-[11px] disabled:opacity-50">{isAnalyzingAi ? '分析中' : '资料分析'}</button>
                       </>
                     )}
                   </div>
