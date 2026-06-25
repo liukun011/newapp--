@@ -1208,7 +1208,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       if (res.success) {
         Toast.clear();
         await fetchDealDetail();
-        Toast.success('清单已更新');
+        Toast.success('清单已添加');
       }
     } catch (e: any) {
       Toast.clear();
@@ -1924,7 +1924,7 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
                           <Plus size={13} />
                           添加问题
                         </button>
-                        <button onClick={() => openQuestionListPicker('replace')} className="xl-btn-ghost px-3 min-h-[34px] text-[11px]">更换清单</button>
+                        <button onClick={() => openQuestionListPicker('add')} className="xl-btn-ghost px-3 min-h-[34px] text-[11px]">添加清单</button>
                         <button onClick={handleAiInsight} disabled={!hasEnterpriseName || isAnalyzingAi} className="xl-btn-primary px-3 min-h-[34px] text-[11px] disabled:opacity-50">{isAnalyzingAi ? '分析中' : '资料分析'}</button>
                       </>
                     )}
@@ -2723,8 +2723,8 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         visible={templateModalVisible}
         onClose={() => setTemplateModalVisible(false)}
         onAdd={handleAddQuestionList}
-        title={questionPickerMode === 'replace' ? '更换问题清单' : '选择问题清单'}
-        confirmText={questionPickerMode === 'replace' ? '确认更换' : '确认选择'}
+        title={questionPickerMode === 'replace' ? '更换问题清单' : '添加问题清单'}
+        confirmText={questionPickerMode === 'replace' ? '确认更换' : '确认添加'}
       />
     </div>
   );
