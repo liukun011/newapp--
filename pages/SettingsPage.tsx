@@ -14,6 +14,7 @@ interface SettingsPageProps {
   onNavigateToPrivacyPolicy?: () => void;
   onNavigateToOrganizationManagement?: () => void;
   onNavigateToShareApp?: () => void;
+  onBottomNavHiddenChange?: (hidden: boolean) => void;
 }
 
 const SettingsPage: React.FC<SettingsPageProps> = ({
@@ -22,7 +23,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   onNavigateToUserAgreement,
   onNavigateToPrivacyPolicy,
   onNavigateToOrganizationManagement,
-  onNavigateToShareApp
+  onNavigateToShareApp,
+  onBottomNavHiddenChange
 }) => {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
@@ -36,6 +38,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [newNickName, setNewNickName] = useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    onBottomNavHiddenChange?.(renameModalVisible);
+    return () => onBottomNavHiddenChange?.(false);
+  }, [renameModalVisible, onBottomNavHiddenChange]);
 
   React.useEffect(() => {
     const fetchUserInfo = async () => {

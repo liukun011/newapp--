@@ -259,6 +259,7 @@ const App: React.FC = () => {
 
   // 录音中断弹窗显示状态
   const [showInterruptDialog, setShowInterruptDialog] = useState(false);
+  const [hideBottomNav, setHideBottomNav] = useState(false);
 
   // 页面滚动位置缓存
   const [scrollPositions, setScrollPositions] = useState<Record<View, number>>({} as Record<View, number>);
@@ -1704,6 +1705,7 @@ const App: React.FC = () => {
                       setPreviousView(View.SETTINGS);
                       navigateForward(View.SHARE_APP);
                   }}
+                  onBottomNavHiddenChange={setHideBottomNav}
                 />
               )}
               {currentView === View.ORGANIZATION_MANAGEMENT && (
@@ -1832,9 +1834,9 @@ const App: React.FC = () => {
           )}
 
           {/* Global Fixed Bottom Navigation Bar - Only for Home, Management, Reports and Settings */}
-          {(currentView === View.HOME || currentView === View.SETTINGS || currentView === View.MANAGEMENT || currentView === View.REPORTS_LIST) && (
+          {!hideBottomNav && (currentView === View.HOME || currentView === View.SETTINGS || currentView === View.MANAGEMENT || currentView === View.REPORTS_LIST) && (
             <div
-              className="fixed bottom-0 left-1/2 right-auto w-full max-w-md -translate-x-1/2 bg-[#FFFFFF]/92 backdrop-blur-xl border-t border-[#E2EBF5] z-50 flex items-center justify-around pb-1 shadow-[0_-6px_18px_rgba(15,40,72,0.055)]"
+              className="fixed bottom-0 left-1/2 right-auto w-full max-w-md -translate-x-1/2 bg-[#FFFFFF]/92 backdrop-blur-xl z-50 flex items-center justify-around pb-1 shadow-[0_-8px_24px_rgba(15,40,72,0.075)]"
               style={{ height: 72 }}
             >
               {/* 首页 */}
