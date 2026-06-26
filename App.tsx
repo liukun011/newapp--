@@ -1946,7 +1946,7 @@ const App: React.FC = () => {
                     </button>
                   )}
                   <h3 className="text-[20px] leading-[26px] font-semibold text-[#0F2848]">
-                    {showTemplatePicker ? '选择报告模板' : '新建尽调项目'}
+                    {showTemplatePicker ? '选择报告模板' : '新建报告项目'}
                   </h3>
                 </div>
                 <button
@@ -2025,7 +2025,7 @@ const App: React.FC = () => {
             {/* 访谈对象名 (必填) */}
             <div className="mb-4 relative">
               <div className="flex justify-between items-end mb-2 pl-1">
-                <span className="text-[12px] text-[#476285] font-normal">访谈对象 <span className="text-red-500">*</span></span>
+                <span className="text-[12px] text-[#476285] font-normal">项目名称 <span className="text-red-500">*</span></span>
                 <span className="text-[11px] text-[#8AA2BF]">
                   {newCustomerName.length}/30
                 </span>
@@ -2046,6 +2046,61 @@ const App: React.FC = () => {
               />
             </div>
 
+            {/* 企业关联搜索 (选填) */}
+            <div className="mb-6 relative">
+              <div className="flex justify-between items-end mb-2 pl-1">
+                <div className="flex flex-col items-start">
+                  <span className="text-[12px] text-[#476285] font-normal">关联企业</span>
+                  <span className="text-[10px] text-[#8AA2BF] font-normal leading-none mt-0.5">信用代码选填</span>
+                </div>
+              </div>
+              
+              <div className="relative">
+                <input
+                  type="text"
+                  value={companyName || ""}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    if (val.length > 50) val = val.slice(0, 50);
+                    setCompanyName(val);
+                    setCreditCode(""); // 手动输入时清除代码
+                  }}
+                  placeholder="搜索或输入企业全称"
+                  className="w-full h-12 px-4 bg-[#FFFFFF] rounded-[16px] text-[14px] font-normal text-[#0F2848] border border-[#E2EBF5] focus:ring-2 focus:ring-[#4C8BF5] transition-all outline-none"
+                />
+                
+                {/* 搜索结果下拉列表 */}
+                {enterpriseOptions.length > 0 && (
+                  <div className="absolute top-13 left-0 right-0 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E2EBF5] max-h-48 overflow-y-auto z-[110] py-1 animate-in fade-in slide-in-from-top-2">
+                    {enterpriseOptions.map((item, index) => (
+                      <div
+                        key={index}
+                        className="px-4 py-3 hover:bg-[#2563EB1A] active:bg-[#2563EB1A] transition-colors cursor-pointer border-b border-[#E2EBF5]/60 last:border-none"
+                        onClick={() => {
+                          setCompanyName(item.name || "");
+                          setCreditCode(item.creditCode || "");
+                          // 自动回填访谈对象
+                          if (!newCustomerName.trim()) {
+                            setNewCustomerName(item.name || "");
+                          }
+                          setEnterpriseOptions([]);
+                        }}
+                      >
+                        <div className="text-[14px] font-medium text-[#0F2848] truncate mb-0.5">{item.name}</div>
+                        <div className="text-[11px] text-[#476285] font-medium">{item.creditCode}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {searching && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-[#4C8BF5] border-t-[#2563EB] rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
             {/* 报告模板 */}
             <div className="mb-4 relative z-30">
               <div className="flex justify-between items-end mb-2 pl-1">
@@ -2105,61 +2160,6 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            {/* 企业关联搜索 (选填) */}
-            <div className="mb-6 relative">
-              <div className="flex justify-between items-end mb-2 pl-1">
-                <div className="flex flex-col items-start">
-                  <span className="text-[12px] text-[#476285] font-normal">关联企业</span>
-                  <span className="text-[10px] text-[#8AA2BF] font-normal leading-none mt-0.5">信用代码选填</span>
-                </div>
-              </div>
-              
-              <div className="relative">
-                <input
-                  type="text"
-                  value={companyName || ""}
-                  onChange={(e) => {
-                    let val = e.target.value;
-                    if (val.length > 50) val = val.slice(0, 50);
-                    setCompanyName(val);
-                    setCreditCode(""); // 手动输入时清除代码
-                  }}
-                  placeholder="搜索或输入企业全称"
-                  className="w-full h-12 px-4 bg-[#FFFFFF] rounded-[16px] text-[14px] font-normal text-[#0F2848] border border-[#E2EBF5] focus:ring-2 focus:ring-[#4C8BF5] transition-all outline-none"
-                />
-                
-                {/* 搜索结果下拉列表 */}
-                {enterpriseOptions.length > 0 && (
-                  <div className="absolute top-13 left-0 right-0 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E2EBF5] max-h-48 overflow-y-auto z-[110] py-1 animate-in fade-in slide-in-from-top-2">
-                    {enterpriseOptions.map((item, index) => (
-                      <div
-                        key={index}
-                        className="px-4 py-3 hover:bg-[#2563EB1A] active:bg-[#2563EB1A] transition-colors cursor-pointer border-b border-[#E2EBF5]/60 last:border-none"
-                        onClick={() => {
-                          setCompanyName(item.name || "");
-                          setCreditCode(item.creditCode || "");
-                          // 自动回填访谈对象
-                          if (!newCustomerName.trim()) {
-                            setNewCustomerName(item.name || "");
-                          }
-                          setEnterpriseOptions([]);
-                        }}
-                      >
-                        <div className="text-[14px] font-medium text-[#0F2848] truncate mb-0.5">{item.name}</div>
-                        <div className="text-[11px] text-[#476285] font-medium">{item.creditCode}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {searching && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="w-4 h-4 border-2 border-[#4C8BF5] border-t-[#2563EB] rounded-full animate-spin"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-            
             {/* 隐藏字段提交 */}
             <input type="hidden" value={creditCode} />
             <input type="hidden" value={companyName} />
