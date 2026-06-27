@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
 import { useKeyboardStatus } from '../hooks/useKeyboardStatus';
-import { ArrowLeft, Plus, Search, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 import { Toast } from 'react-vant';
 import Button from '../components/Button';
 import { DealRecord } from '../types';
@@ -16,19 +16,10 @@ interface CorporateEditPageProps {
   setIsEnterpriseSyncing?: (syncing: boolean) => void;
 }
 
-const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onConfirm, setIsEnterpriseSyncing }) => {
+const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onConfirm }) => {
   // 访谈对象名 (对应后端的 interviewCust)
   const [interviewCust, setInterviewCust] = useState(deal?.interviewCust || '');
-  // 关联企业信息 - 直接从 deal 根字段读取
-  const [companyName, setCompanyName] = useState(deal?.companyName || '');
-  const [creditCode, setCreditCode] = useState(deal?.creditCode || '');
   const [logoUrl, setLogoUrl] = useState(deal?.logo || '');
-
-  // 搜索相关状态
-  const [enterpriseOptions, setEnterpriseOptions] = useState<any[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [showOptions, setShowOptions] = useState(false);
-  const searchTimerRef = useRef<any>(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -54,58 +45,8 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
     if (deal) {
       setInterviewCust(deal.interviewCust || '');
       setLogoUrl(deal.logo || '');
-      // 直接从根字段获取
-      setCompanyName(deal.companyName || '');
-      setCreditCode(deal.creditCode || '');
     }
   }, [deal]);
-
-  // 企业搜索逻辑
-  const handleEnterpriseSearch = async (val: string) => {
-    if (!val || val.length < 2) {
-      setEnterpriseOptions([]);
-      setShowOptions(false);
-      return;
-    }
-    setSearching(true);
-    try {
-      const res = await dealService.searchEnterprise(val);
-      if (res.success && res.data) {
-        setEnterpriseOptions(res.data || []);
-        setShowOptions(true);
-      }
-    } catch (e) {
-      console.error('Search enterprise failed:', e);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const onSearchInputChange = (val: string) => {
-    setCompanyName(val);
-    if (!val.trim()) {
-      setCreditCode('');
-      setEnterpriseOptions([]);
-      setShowOptions(false);
-    }
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    if (val.trim()) {
-      searchTimerRef.current = setTimeout(() => {
-        handleEnterpriseSearch(val);
-      }, 500);
-    }
-  };
-
-  const selectEnterprise = (ent: any) => {
-    setCompanyName(ent.name);
-    setCreditCode(ent.creditCode);
-    setShowOptions(false);
-    // 如果访谈对象名为空，自动填入
-    if (!interviewCust) {
-        setInterviewCust(ent.name);
-    }
-    // 如果有 Logo，可以尝试同步 (TBD: TYC 搜索结果不一定带 Logo)
-  };
 
   // 图片上传逻辑 (保持原样)
   const uploadNativeFile = async (localPath: string) => {
@@ -163,45 +104,12 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
     try {
       setLoading(true);
       
-      // 判断企业信息是否发生变化
-      const isCompanyChanged = (companyName.trim() !== (deal.companyName || '')) || (creditCode.trim() !== (deal.creditCode || ''));
-      // 后端要求：若 companyName 从有值变为空，需显式传递 clearCompany:true 才能清空
-      const isCompanyCleared = !!(deal?.companyName && !companyName.trim());
-
-      // 如果企业信息变了，清除旧的 AI 洞察结果
-      if (isCompanyChanged) {
-        try {
-          await dealService.clearAiInsight(deal.id);
-          console.log('[CorporateEdit] AI Insights cleared due to company change');
-        } catch (e) {
-          console.error('Failed to clear AI insights:', e);
-        }
-      }
-
       await dealService.createOrUpdateDealInst({
         id: deal.id,
         interviewCust: interviewCust.trim(),
-        companyName: companyName.trim() || undefined,
-        creditCode: creditCode.trim() || undefined,
         logo: logoUrl.trim(),
-        clearCompany: isCompanyCleared || undefined,  // 清空企业名称时通知后端，避免被忽略
       });
 
-      // 如果企业信息变了，触发同步更新
-      if (isCompanyChanged && (companyName || creditCode)) {
-          try {
-              setIsEnterpriseSyncing?.(true);
-              console.log('[CorporateEdit] Starting enterprise sync...');
-              const syncRes = await dealService.syncEnterprise(deal.id);
-              if (!syncRes.success) {
-                  console.warn('Sync enterprise returned failure:', syncRes.message);
-              }
-          } catch (e) {
-              console.error('Sync failed:', e);
-          } finally {
-              setIsEnterpriseSyncing?.(false);
-          }
-      }
       Toast.success('更新成功');
       onConfirm(interviewCust.trim(), logoUrl.trim());
     } catch (error: any) {
@@ -221,7 +129,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
         <button onClick={handleBackThrottled} className="p-2 -ml-2 text-[#476285] hover:bg-[#F7FAFE] rounded-[999px] transition-colors">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-lg font-semibold text-[#0F2848] tracking-[-0.01em]">编辑访谈资料</h1>
+        <h1 className="text-lg font-semibold text-[#0F2848] tracking-[-0.01em]">编辑项目资料</h1>
         <div className="w-8"></div>
       </div>
 
@@ -229,7 +137,6 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
       <div
         ref={scrollContainerRef}
         className="flex-1 w-full overflow-y-auto p-6 flex flex-col items-center pb-32"
-        onClick={() => setShowOptions(false)}
       >
         {/* Logo Preview */}
         <div className="mt-4 mb-8 flex flex-col items-center justify-center shrink-0">
@@ -250,7 +157,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
                     </div>
                 )}
             </div>
-            <span className="text-[11px] font-normal mt-1 text-[#8AA2BF]">点击上传企业/访谈照片</span>
+            <span className="text-[11px] font-normal mt-1 text-[#8AA2BF]">点击上传项目图片</span>
         </div>
 
         {/* Form Fields */}
@@ -274,66 +181,6 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
                         className="w-full text-[16px] text-[#0F2848] font-normal outline-none bg-transparent placeholder-gray-300"
                         placeholder="请输入项目名称"
                     />
-                </div>
-            </div>
-
-            {/* Enterprise Search Section */}
-            <div className="w-full">
-                <div className="flex items-center gap-1.5 mb-2 pl-1">
-                    <span className="text-sm text-[#476285] font-medium">关联企业资料</span>
-                </div>
-
-                <div className="bg-[#FFFFFF] rounded-[18px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-[#E2EBF5]/60 overflow-hidden">
-                    {/* Search Input Part */}
-                    <div className="p-4 flex items-center gap-3 active:bg-[#F7FAFE] transition-colors">
-                        <Search size={18} className="text-[#8AA2BF] shrink-0" />
-                        <input
-                            type="text"
-                            value={companyName}
-                            onChange={(e) => onSearchInputChange(e.target.value)}
-                            onFocus={() => { if (enterpriseOptions.length > 0) setShowOptions(true); }}
-                            className="flex-1 text-[15px] text-[#0F2848] font-normal outline-none bg-transparent placeholder-[#8AA2BF]"
-                            placeholder="搜索企业全称或信用代码"
-                        />
-                        {searching && <Loader2 size={16} className="animate-spin text-[#2563EB] shrink-0" />}
-                    </div>
-
-                    {/* Credit Code Result (Only shows if search results are not open) */}
-                    {creditCode && !showOptions && (
-                        <div className="px-4 pb-4 animate-fadeIn">
-                             <div className="bg-[#2563EB1A]/40 rounded-[14px] p-2.5 flex items-center justify-between border border-[#E2EBF5]/30">
-                                <div className="flex flex-col">
-                                    <span className="text-[9px] text-[#8AA2BF] font-medium uppercase tracking-widest leading-none mb-1">信用代码(CREDIT CODE)</span>
-                                    <span className="text-[13px] text-[#2563EB] font-mono font-medium tracking-tight leading-none">{creditCode}</span>
-                                </div>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setCreditCode(''); setCompanyName(''); }}
-                                    className="text-[11px] text-[#2563EB] font-medium px-2 py-1.5 rounded-lg active:bg-[#2563EB1A] transition-colors"
-                                >
-                                    清除
-                                </button>
-                             </div>
-                        </div>
-                    )}
-
-                    {/* Dropdown Options (Inside the card or floating) */}
-                    {showOptions && enterpriseOptions.length > 0 && (
-                        <div
-                            className="border-t border-[#E2EBF5]/50 max-h-52 overflow-y-auto bg-[#F7FAFE]/30"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {enterpriseOptions.map((ent, idx) => (
-                                <div
-                                    key={idx}
-                                    className="px-4 py-3 hover:bg-[#FFFFFF] active:bg-[#2563EB1A] transition-colors cursor-pointer border-b border-[#E2EBF5]/50 last:border-none"
-                                    onClick={() => selectEnterprise(ent)}
-                                >
-                                    <div className="text-[13px] font-medium text-[#476285] line-clamp-1">{ent.name}</div>
-                                    <div className="text-[10px] text-[#8AA2BF] font-medium mt-0.5">代码: {ent.creditCode || '无'}</div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

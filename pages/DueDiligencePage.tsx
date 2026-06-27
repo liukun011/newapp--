@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useThrottleFn } from '../hooks/useThrottleFn';
-import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw, MoreHorizontal, Camera, Image, Upload, Plus, Clock, CheckCircle2, AlertCircle, X, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Edit2, Mic, Archive, ChevronDown, ChevronUp, RotateCw, FileText, Eye, Download, RefreshCw, MoreHorizontal, Camera, Image, Upload, Plus, Clock, CheckCircle2, AlertCircle, X, Trash2, Loader2, Search } from 'lucide-react';
 import { Toast, Dialog } from 'react-vant';
 
 import { DealRecord, DealReportStatusEnum, SummaryStatusEnum, QuestionInfo, Resource } from '../types';
@@ -210,6 +210,12 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
   const [activeDetailTab, setActiveDetailTab] = useState<'interview' | 'questions' | 'materials' | 'enterprise'>('interview');
   const [isCompressed, setIsCompressed] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [enterpriseAssociateOpen, setEnterpriseAssociateOpen] = useState(false);
+  const [enterpriseKeyword, setEnterpriseKeyword] = useState('');
+  const [enterpriseSearchOptions, setEnterpriseSearchOptions] = useState<any[]>([]);
+  const [enterpriseSearching, setEnterpriseSearching] = useState(false);
+  const [enterpriseSaving, setEnterpriseSaving] = useState(false);
+  const enterpriseSearchTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchDealDetail = async () => {
     if (!deal?.id) return;
@@ -326,6 +332,14 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
         fetchEnterpriseData();
     }
   }, [currentDeal?.companyName, currentDeal?.creditCode]);
+
+  useEffect(() => {
+    return () => {
+      if (enterpriseSearchTimerRef.current) {
+        clearTimeout(enterpriseSearchTimerRef.current);
+      }
+    };
+  }, []);
 
   // 从详情数据同步 summaryStatus 到本地状态（本地状态优先，仅在接口返回后对齐）
   useEffect(() => {
@@ -1504,8 +1518,9 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
     const code = currentDeal?.creditCode?.trim();
 
     if (!name && !code) {
-      Toast.info('请先补充企业名称');
-      onEditInfo?.();
+      setActiveDetailTab('enterprise');
+      setEnterpriseAssociateOpen(true);
+      Toast.info('请先关联企业');
       return;
     }
 
@@ -1531,6 +1546,97 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
       setIsSyncing(false);
     }
   }, 1000);
+
+  const handleEnterpriseSearch = async (keyword: string) => {
+    const word = keyword.trim();
+    if (word.length < 2) {
+      setEnterpriseSearchOptions([]);
+      return;
+    }
+
+    setEnterpriseSearching(true);
+    try {
+      const res = await dealService.searchEnterprise(word);
+      if (res.success) {
+        setEnterpriseSearchOptions(res.data || []);
+      } else {
+        setEnterpriseSearchOptions([]);
+      }
+    } catch (error) {
+      console.error('Search enterprise failed:', error);
+      setEnterpriseSearchOptions([]);
+    } finally {
+      setEnterpriseSearching(false);
+    }
+  };
+
+  const handleEnterpriseKeywordChange = (value: string) => {
+    setEnterpriseKeyword(value);
+    if (enterpriseSearchTimerRef.current) {
+      clearTimeout(enterpriseSearchTimerRef.current);
+    }
+    if (!value.trim()) {
+      setEnterpriseSearchOptions([]);
+      return;
+    }
+    enterpriseSearchTimerRef.current = setTimeout(() => {
+      handleEnterpriseSearch(value);
+    }, 450);
+  };
+
+  const handleAssociateEnterprise = async (enterprise?: any) => {
+    if (!currentDeal?.id || enterpriseSaving) return;
+    const nextCompanyName = String(enterprise?.name || enterpriseKeyword || '').trim();
+    const nextCreditCode = String(enterprise?.creditCode || '').trim();
+
+    if (!nextCompanyName) {
+      Toast.info('请输入企业名称');
+      return;
+    }
+
+    try {
+      setEnterpriseSaving(true);
+      Toast.loading({ message: '正在关联企业', duration: 0 });
+      await dealService.clearAiInsight(currentDeal.id);
+      const res = await dealService.createOrUpdateDealInst({
+        id: currentDeal.id,
+        companyName: nextCompanyName,
+        creditCode: nextCreditCode || undefined,
+      });
+      if (!res.success) {
+        Toast.clear();
+        Toast.fail(res.message || '关联失败');
+        return;
+      }
+
+      const nextDeal = {
+        ...currentDeal,
+        companyName: nextCompanyName,
+        creditCode: nextCreditCode,
+      } as DealRecord;
+      setDealDetail(nextDeal);
+      onDealDetailLoadedRef.current?.(nextDeal);
+
+      try {
+        await dealService.syncEnterprise(currentDeal.id);
+        const basicRes = await dealService.getEnterpriseBasicInfo(currentDeal.id);
+        if (basicRes.success) setEnterpriseInfo(basicRes.data);
+      } catch (syncError) {
+        console.warn('Enterprise sync failed after association:', syncError);
+      }
+
+      setEnterpriseAssociateOpen(false);
+      setEnterpriseKeyword('');
+      setEnterpriseSearchOptions([]);
+      Toast.clear();
+      Toast.success('已关联企业');
+    } catch (error: any) {
+      Toast.clear();
+      Toast.fail(error.message || '关联失败');
+    } finally {
+      setEnterpriseSaving(false);
+    }
+  };
 
   const materialList: Resource[] = [
     ...(currentDeal?.resources || []),
@@ -2153,11 +2259,60 @@ const DueDiligencePage: React.FC<DueDiligencePageProps> = ({
               <div className="flex items-center justify-between mb-4">
                 <h3 className="xl-section-title">企业信息</h3>
                 {!isReadOnly && (
-                  <button onClick={handleSyncEnterpriseThrottled} disabled={isSyncing} className="xl-btn-ghost px-3 min-h-[36px] text-[12px] disabled:opacity-50">
-                    {isSyncing ? '同步中' : '同步'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setEnterpriseAssociateOpen((value) => !value)} className="xl-btn-ghost px-3 min-h-[36px] text-[12px]">
+                      {hasCoreEnterpriseInfo ? '更换企业' : '关联企业'}
+                    </button>
+                    <button onClick={handleSyncEnterpriseThrottled} disabled={isSyncing} className="xl-btn-ghost px-3 min-h-[36px] text-[12px] disabled:opacity-50">
+                      {isSyncing ? '同步中' : '同步'}
+                    </button>
+                  </div>
                 )}
               </div>
+              {!isReadOnly && (enterpriseAssociateOpen || !hasCoreEnterpriseInfo) && (
+                <div className="mb-3 rounded-[18px] border border-[#D6E4FF] bg-[#F7FAFE] p-3">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-medium text-[#0F2848]">关联企业资料</p>
+                      <p className="mt-0.5 text-[10.5px] text-[#8AA2BF]">搜索企业全称或统一社会信用代码</p>
+                    </div>
+                    {enterpriseSearching && <Loader2 size={16} className="shrink-0 animate-spin text-[#2563EB]" />}
+                  </div>
+                  <div className="flex items-center gap-2 rounded-[14px] border border-[#E2EBF5] bg-[#FFFFFF] px-3 py-2.5">
+                    <Search size={16} className="shrink-0 text-[#8AA2BF]" />
+                    <input
+                      type="text"
+                      value={enterpriseKeyword}
+                      onChange={(event) => handleEnterpriseKeywordChange(event.target.value)}
+                      className="min-w-0 flex-1 bg-transparent text-[13px] font-normal text-[#0F2848] outline-none placeholder:text-[#8AA2BF]"
+                      placeholder="请输入企业名称或信用代码"
+                    />
+                    <button
+                      type="button"
+                      disabled={!enterpriseKeyword.trim() || enterpriseSaving}
+                      onClick={() => handleAssociateEnterprise()}
+                      className="shrink-0 rounded-[10px] bg-[#2563EB] px-3 py-1.5 text-[11px] font-medium text-white disabled:bg-[#CBD7E5]"
+                    >
+                      保存
+                    </button>
+                  </div>
+                  {enterpriseSearchOptions.length > 0 && (
+                    <div className="mt-2 max-h-48 overflow-y-auto rounded-[14px] border border-[#E2EBF5] bg-[#FFFFFF]">
+                      {enterpriseSearchOptions.map((enterprise, index) => (
+                        <button
+                          type="button"
+                          key={`${enterprise.creditCode || enterprise.name}-${index}`}
+                          onClick={() => handleAssociateEnterprise(enterprise)}
+                          className="w-full border-b border-[#E2EBF5]/70 px-3 py-2.5 text-left last:border-b-0 active:bg-[#F7FAFE]"
+                        >
+                          <p className="truncate text-[12px] font-medium text-[#0F2848]">{enterprise.name}</p>
+                          <p className="mt-0.5 truncate text-[10.5px] text-[#8AA2BF]">信用代码：{enterprise.creditCode || '暂无'}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="xl-enterprise-grid grid grid-cols-2 gap-3">
                 <div className="xl-card-flat p-3 col-span-2">
                   <p className="xl-meta mb-1.5">企业名称</p>
