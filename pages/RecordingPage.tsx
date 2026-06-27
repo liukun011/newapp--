@@ -822,7 +822,7 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
     <div className="fixed inset-0 flex flex-col xl-page">
 
       {/* NavBar */}
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between sticky top-0 z-20">
+      <div className="px-4 pt-4 pb-3 flex items-center justify-between sticky top-0 z-50">
         <button onClick={onBack} className="xl-icon-btn">
           <ArrowLeft size={21} />
         </button>
@@ -851,11 +851,11 @@ const RecordingPage: React.FC<RecordingPageProps> = ({
           {showMoreMenu && (
             <>
               <button
-                className="fixed inset-0 z-20 cursor-default"
+                className="fixed inset-0 z-[55] cursor-default"
                 aria-label="关闭更多菜单"
                 onClick={() => setShowMoreMenu(false)}
               />
-              <div className="absolute right-0 top-12 z-30 w-[148px] overflow-hidden rounded-[16px] border border-[#E2EBF5] bg-[#FFFFFF] shadow-[0_14px_34px_rgba(15,40,72,0.16)]">
+              <div className="absolute right-0 top-12 z-[60] w-[148px] overflow-hidden rounded-[16px] border border-[#E2EBF5] bg-[#FFFFFF] shadow-[0_14px_34px_rgba(15,40,72,0.16)]">
                 <button
                   className="w-full min-h-[44px] px-3.5 flex items-center gap-2.5 text-[13px] font-normal text-[#0F2848] active:bg-[#2563EB1A]"
                   onClick={() => {

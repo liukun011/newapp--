@@ -836,7 +836,7 @@ const App: React.FC = () => {
   // 处理新建尽调
   const handleCreateDeal = async () => {
     if (!newCustomerName.trim()) {
-      Toast.info('请输入访谈对象名称');
+      Toast.info('请输入项目名称');
       return;
     }
     if (selectedQuestionTemplates.length === 0) {
@@ -2022,7 +2022,7 @@ const App: React.FC = () => {
             ) : (
               <>
             
-            {/* 访谈对象名 (必填) */}
+            {/* 项目名称 (必填) */}
             <div className="mb-4 relative">
               <div className="flex justify-between items-end mb-2 pl-1">
                 <span className="text-[12px] text-[#476285] font-normal">项目名称 <span className="text-red-500">*</span></span>
@@ -2040,7 +2040,7 @@ const App: React.FC = () => {
                   setNewCustomerName(val);
                 }}
                 maxLength={30}
-                placeholder="请输入访谈对象名称"
+                placeholder="请输入项目名称"
                 className="w-full h-12 px-4 bg-[#FFFFFF] rounded-[16px] text-[14px] font-normal text-[#0F2848] border border-[#E2EBF5] focus:ring-2 focus:ring-[#4C8BF5] transition-all outline-none"
                 autoFocus
               />
@@ -2079,7 +2079,7 @@ const App: React.FC = () => {
                         onClick={() => {
                           setCompanyName(item.name || "");
                           setCreditCode(item.creditCode || "");
-                          // 自动回填访谈对象
+                          // 自动回填项目名称
                           if (!newCustomerName.trim()) {
                             setNewCustomerName(item.name || "");
                           }

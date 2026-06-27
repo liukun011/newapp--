@@ -153,7 +153,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
 
   const handleConfirm = async () => {
     if (!interviewCust.trim()) {
-      Toast.info('请输入访谈对象名称');
+      Toast.info('请输入项目名称');
       return;
     }
     if (!deal?.id) {
@@ -258,7 +258,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
             {/* Interview Cust */}
             <div className="w-full">
                 <div className="flex justify-between items-end mb-2 pl-1">
-                    <span className="text-sm text-[#476285] font-medium">访谈对象 <span className="text-red-500">*</span></span>
+                    <span className="text-sm text-[#476285] font-medium">项目名称 <span className="text-red-500">*</span></span>
                     <span className="text-[11px] text-[#8AA2BF] font-normal">{interviewCust.length}/30</span>
                 </div>
                 <div className="bg-[#FFFFFF] rounded-[18px] p-4 shadow-[0_3px_10px_rgba(15,40,72,0.04)] border border-transparent focus-within:border-[#E2EBF5] transition-all">
@@ -272,7 +272,7 @@ const CorporateEditPage: React.FC<CorporateEditPageProps> = ({ deal, onBack, onC
                             setInterviewCust(val);
                         }}
                         className="w-full text-[16px] text-[#0F2848] font-normal outline-none bg-transparent placeholder-gray-300"
-                        placeholder="请输入人员名称/访谈单位"
+                        placeholder="请输入项目名称"
                     />
                 </div>
             </div>
