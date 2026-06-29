@@ -600,7 +600,7 @@ const HomePage: React.FC<HomePageProps> = ({
           <div className="relative">
             <input
               type="text"
-              placeholder="搜索项目 / 客户 / 企业"
+              placeholder="搜索项目名称"
               value={searchTerm}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
