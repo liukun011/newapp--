@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Popup } from 'react-vant';
 import { X, Check, Loader2 } from 'lucide-react';
-import { dealService } from '../services/dealService';
+import { templateService } from '../services/templateService';
 
 interface QuestionListPickerProps {
   visible: boolean;
@@ -26,20 +26,31 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
   const [loadFailed, setLoadFailed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const normalizeTemplates = (data: any): any[] => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.records)) return data.records;
+    if (Array.isArray(data?.list)) return data.list;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.templateInfoVos)) return data.templateInfoVos;
+    return [];
+  };
+
   // 每次打开时重新获取数据
   React.useEffect(() => {
     if (visible) {
       setTempSelectedIds([]);
       setLoadFailed(false);
       setLoading(true);
-      dealService.getTemplateList().then(res => {
+      templateService.getQuestionTemplateList().then(res => {
         if (res.success && res.data) {
-          setTemplates(res.data);
+          setTemplates(normalizeTemplates(res.data));
         } else {
+          setTemplates([]);
           setLoadFailed(true);
         }
       }).catch(err => {
         console.error('Failed to fetch question list templates:', err);
+        setTemplates([]);
         setLoadFailed(true);
       }).finally(() => {
         setLoading(false);
@@ -75,7 +86,8 @@ const QuestionListPicker: React.FC<QuestionListPickerProps> = ({
       onClose={onClose}
       position="bottom"
       round
-      style={{ height: '55%', background: '#FFFFFF' }}
+      style={{ height: '55%', background: '#FFFFFF', zIndex: 130 }}
+      overlayStyle={{ zIndex: 129 }}
     >
       <div className="flex flex-col h-full relative overflow-hidden">
         {/* Close Button */}

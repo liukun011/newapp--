@@ -276,13 +276,30 @@ const HomePage: React.FC<HomePageProps> = ({
   // 加载更多数据
   const getStatusFilter = (tab: "ongoing" | "archived") => (
     tab === "ongoing"
-      ? [String(DealStatusEnum.PREPARE)]
-      : [String(DealStatusEnum.ARCHIVE)]
+      ? [
+          String(DealStatusEnum.PREPARE),
+          String(DealStatusEnum.INTERVIEW),
+          String(DealStatusEnum.INTERVIEWING),
+          String(DealStatusEnum.END),
+        ]
+      : [String(DealStatusEnum.ARCHIVE), 'archive', 'archived', '已归档']
   );
 
   const isArchivedDeal = (item: DealRecord) => {
     const status = String(item.status ?? '').trim().toLowerCase();
     return status === String(DealStatusEnum.ARCHIVE) || status === 'archive' || status === 'archived' || status === '已归档';
+  };
+
+  const filterDealsByTab = (records: DealRecord[], tab: "ongoing" | "archived") => (
+    records.filter((item) => (tab === 'archived' ? isArchivedDeal(item) : !isArchivedDeal(item)))
+  );
+
+  const normalizeDealRecords = (data: any): DealRecord[] => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.records)) return data.records;
+    if (Array.isArray(data?.list)) return data.list;
+    if (Array.isArray(data?.items)) return data.items;
+    return [];
   };
 
   const fetchArchivedFallback = async (pageNoForQuery: number) => {
@@ -293,7 +310,7 @@ const HomePage: React.FC<HomePageProps> = ({
     });
 
     if (fallbackRes.success && fallbackRes.data) {
-      return (fallbackRes.data.records || []).filter(isArchivedDeal);
+      return normalizeDealRecords(fallbackRes.data).filter(isArchivedDeal);
     }
 
     return [];
@@ -329,7 +346,8 @@ const HomePage: React.FC<HomePageProps> = ({
       });
 
       if (res.success && res.data) {
-        const newDeals = res.data.records || [];
+        let newDeals = normalizeDealRecords(res.data);
+        newDeals = filterDealsByTab(newDeals, activeTab);
         setDeals(prev => [...prev, ...newDeals]);
         setPageNo(nextPage);
         setHasMore(newDeals.length >= 10); // 返回10条说明还有更多
@@ -368,8 +386,8 @@ const HomePage: React.FC<HomePageProps> = ({
       const [res] = await Promise.all([apiPromise, delayPromise]);
 
       if (res.success && res.data) {
-        console.log(res.data);
-        let newDeals = res.data.records || [];
+        let newDeals = normalizeDealRecords(res.data);
+        newDeals = filterDealsByTab(newDeals, tab);
         if (tab === 'archived' && newDeals.length === 0) {
           newDeals = await fetchArchivedFallback(currentPage);
         }

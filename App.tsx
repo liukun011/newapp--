@@ -41,15 +41,24 @@ import RecordingFloatBubble from './components/RecordingFloatBubble';
 import QuestionListPicker from './components/QuestionListPicker';
 import { nativeBridge } from './services/nativeBridge';
 
+const normalizeStoredView = (savedView: string | null, token: string | null): View => {
+  if (!token) return View.LOGIN;
+  if (!savedView) return View.HOME;
+
+  // 旧版本曾把模板管理页存为 MY_TEMPLATES，但当前 App 已统一由 MANAGEMENT 承载。
+  if (savedView === View.MY_TEMPLATES) return View.MANAGEMENT;
+
+  return Object.values(View).includes(savedView as View) ? (savedView as View) : View.HOME;
+};
+
 const App: React.FC = () => {
   const appContainerRef = useRef<HTMLDivElement>(null);
   // 启动页状态已禁用
 
   const [currentView, setCurrentView] = useState<View>(() => {
     const token = localStorage.getItem('zov-user-token');
-    if (!token) return View.LOGIN;
     const savedView = sessionStorage.getItem('zov-current-view');
-    return (savedView as View) || View.HOME;
+    return normalizeStoredView(savedView, token);
   });
 
   // Track the previous view to support returning from the Edit screen
@@ -237,6 +246,27 @@ const App: React.FC = () => {
       sessionStorage.removeItem('zov-preview-report');
     }
   }, [previewReport]);
+
+  // 防止旧版本持久化视图或缺失预览数据导致页面无匹配分支而空白。
+  useEffect(() => {
+    if (currentView === View.MY_TEMPLATES) {
+      setCurrentView(View.MANAGEMENT);
+      setViewStack((prev) => prev.map((view) => (view === View.MY_TEMPLATES ? View.MANAGEMENT : view)));
+      return;
+    }
+
+    if (currentView === View.TEMPLATE_PREVIEW && !previewTemplate) {
+      setCurrentView(View.MANAGEMENT);
+      setViewStack([View.HOME, View.MANAGEMENT]);
+      return;
+    }
+
+    if (currentView === View.REPORT_PREVIEW && !previewReport) {
+      const fallbackView = previousView === View.REPORTS_LIST ? View.REPORTS_LIST : View.HOME;
+      setCurrentView(fallbackView);
+      setViewStack([fallbackView]);
+    }
+  }, [currentView, previewReport, previewTemplate, previousView]);
 
   // 记住资料上传页的当前标签页
   const [materialUploadTab, setMaterialUploadTab] = useState<string>('upload');
